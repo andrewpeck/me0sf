@@ -6,7 +6,7 @@ use ieee.numeric_std.all;
 package pat_pkg is
 
   constant CNT_BITS  : natural := 3;
-  constant PAT_BITS  : natural := 4;
+  constant PID_BITS  : natural := 4;
   constant HASH_BITS : natural := 12;
 
   type int_array_t is array(integer range <>) of integer;
@@ -16,7 +16,7 @@ package pat_pkg is
     lo : integer;
   end record;
 
-  type pat_t is record
+  type pat_unit_t is record
     id  : natural;
     ly0 : hi_lo_t;
     ly1 : hi_lo_t;
@@ -26,25 +26,30 @@ package pat_pkg is
     ly5 : hi_lo_t;
   end record;
 
-  type pat_list_t is array (integer range <>) of pat_t;
+  type pat_list_t is array (integer range <>) of pat_unit_t;
 
   type candidate_t is record
     cnt  : unsigned(CNT_BITS-1 downto 0);
-    id   : unsigned(PAT_BITS-1 downto 0);
+    id   : unsigned(PID_BITS-1 downto 0);
     hash : unsigned(HASH_BITS -1 downto 0);
   end record;
 
-  constant CANDIDATE_LENGTH : natural := CNT_BITS + PAT_BITS + HASH_BITS;
+  constant CANDIDATE_LENGTH : natural := CNT_BITS + PID_BITS + HASH_BITS;
 
   type candidate_list_t is array (integer range <>) of candidate_t;
 
-  function mirror_pat (pat : pat_t; id : natural) return pat_t;
+  function mirror_pat_unit (pat : pat_unit_t; id : natural) return pat_unit_t;
+
+  -- to from segment candidate
+  function to_slv (candidate     : candidate_t) return std_logic_vector;
+  function to_candidate (slv     : std_logic_vector) return candidate_t;
 
 end package pat_pkg;
 
 package body pat_pkg is
-  function mirror_pat (pat : pat_t; id : natural) return pat_t is
-    variable result : pat_t;
+
+  function mirror_pat_unit (pat : pat_unit_t; id : natural) return pat_unit_t is
+    variable result : pat_unit_t;
   begin
     result.id  := id;
     result.ly0 := (hi => pat.ly0.lo * (-1), lo => pat.ly0.hi * (-1));
@@ -55,4 +60,25 @@ package body pat_pkg is
     result.ly5 := (hi => pat.ly5.lo * (-1), lo => pat.ly5.hi * (-1));
     return result;
   end;
+
+  function to_slv (candidate : candidate_t) return std_logic_vector is
+    variable result : std_logic_vector (CANDIDATE_LENGTH-1 downto 0);
+  begin
+    result := std_logic_vector(candidate.hash) &
+              std_logic_vector(candidate.cnt) &
+              std_logic_vector(candidate.id);
+    return result;
+  end;
+
+  function to_candidate (slv : std_logic_vector) return candidate_t is
+    variable candidate : candidate_t;
+  begin
+    candidate.id   := unsigned(slv(PID_BITS-1 downto 0));
+    candidate.cnt  := unsigned(slv(CNT_BITS+PID_BITS-1 downto PID_BITS));
+    candidate.hash := unsigned(slv(HASH_BITS+CNT_BITS+PID_BITS-1 downto CNT_BITS+PID_BITS));
+    return candidate;
+  end;
+
+
+
 end package body pat_pkg;

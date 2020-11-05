@@ -45,7 +45,8 @@ architecture behavioral of partition is
   signal ly0_or, ly1_or, ly2_or, ly3_or, ly4_or, ly5_or                         : std_logic_vector (3*64-1 downto 0);
   signal ly0_padded, ly1_padded, ly2_padded, ly3_padded, ly4_padded, ly5_padded : std_logic_vector (3*64-1 + 2*padding_width downto 0);
 
-  signal pat_candidates : candidate_list_t (ly0'length-1 downto 0);
+  signal pat_candidates     : candidate_list_t (ly0'length-1 downto 0);
+  signal pat_candidates_gcl : candidate_list_t (ly0'length-1 downto 0);
 
 begin
 
@@ -54,6 +55,8 @@ begin
     if (rising_edge(clock)) then
       -- FIXME: this should be parameterized, and depend on the station
       -- matters which layer and the orientation of chambers wrt the ip
+      --
+      -- -- but this stupid approach is ok for now
       ly0_or <= ly0 or nx0;
       ly1_or <= ly1 or nx1;
       ly2_or <= ly2 or nx2;
@@ -88,13 +91,18 @@ begin
   end generate;
 
 
-  -- FIXME: need to add ghost cancellation logic
+  gcl_inst : entity work.ghost_cancellation
+    port map (
+      clock            => clock,
+      pat_candidates_i => pat_candidates,
+      pat_candidates_o => pat_candidates_gcl
+      );
 
 --  segment_selector_1 : entity work.segment_selector
 --    generic map (NUM_OUTPUTS => NUM_OUTPUTS)
 --    port map (
 --      clock            => clock,
---      pat_candidates_i => pat_candidates_i,
+--      pat_candidates_i => pat_candidates_gcl,
 --      pat_candidates_o => pat_candidates_o,
 --      sump             => sump);
 

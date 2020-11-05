@@ -119,7 +119,7 @@ begin
           or_reduce(ly4_mask) &
           or_reduce(ly5_mask)),
                                              CNT_BITS);
-        pat_candidates(I).id   <= to_unsigned(patlist(I).id, PAT_BITS);
+        pat_candidates(I).id   <= to_unsigned(patlist(I).id, PID_BITS);
         pat_candidates(I).hash <= (others => '0');  --mask_to_code (ly0_mask, ly1_mask, ly2_mask, ly3_mask, ly4_mask, ly5_mask);
       end if;
     end process;
