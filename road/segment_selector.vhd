@@ -16,12 +16,17 @@ use PoC.components.all;
 
 entity segment_selector is
   generic(
-    WIDTH       : natural := 3;
-    NUM_OUTPUTS : natural := 1
+    WIDTH       : natural := 192;
+    SORTER_SIZE : natural := 256;
+    META_BITS   : natural := 0;         -- additional bits, not sorted but delayed as long as In_Data
+    NUM_OUTPUTS : natural := 16
     );
   port(
 
     clock : in std_logic;
+
+    In_Valid : in std_logic;
+    In_IsKey : in std_logic;
 
     pat_candidates_i : in  candidate_list_t (WIDTH-1 downto 0);
     pat_candidates_o : out candidate_list_t (NUM_OUTPUTS-1 downto 0);
@@ -32,36 +37,41 @@ entity segment_selector is
 end segment_selector;
 
 architecture behavioral of segment_selector is
-  constant SORTER_SIZE    : natural := 16;
   signal candidate_sorted : candidate_list_t (WIDTH-1 downto 0);
-  --type    T_SLM                 is array(natural range <>, natural range <>) of std_logic;
 
-  signal In_Data  : T_SLM(15 downto 0, CANDIDATE_LENGTH - 1 downto 0) := (others => (others => '0'));
-  signal Out_Data : T_SLM(15 downto 0, CANDIDATE_LENGTH - 1 downto 0);
+  constant NUM_SORTERS : natural := WIDTH/SORTER_SIZE;
+
+  signal In_Data  : T_SLM(SORTER_SIZE-1 downto 0, CANDIDATE_LENGTH - 1 downto 0) := (others => (others => '0'));
+  signal Out_Data : T_SLM(SORTER_SIZE-1 downto 0, CANDIDATE_LENGTH - 1 downto 0);
 
   signal local_sump : std_logic_vector (WIDTH-1 downto 0);
 
   attribute DONT_TOUCH : string;
-  --attribute DONT_TOUCH of sortnet_oddevenmergesort_1 : label is "true";
+  --attribute DONT_TOUCH of sortnet_inst : label is "true";
 
 begin
 
-  sortnet_oddevenmergesort_1 : entity PoC.sortnet_oddevenmergesort
+  --sorter_gen : for I in 0 to NUM_SORTERS-1 generate
+  --begin
+  --end generate;
+
+  --sortnet_inst : entity PoC.sortnet_oddevenmergesort
+  sortnet_oddevenmergesort_1 : entity PoC.sortnet_BitonicSort
 
     generic map (
-      INPUTS               => 16,                -- input count -- FIXME: size should be WIDTH up to the next power of 2
-      KEY_BITS             => CANDIDATE_LENGTH,  --CNT_BITS + PID_BITS,  -- the first KEY_BITS of In_Data are used as a sorting critera (key)
+      INPUTS               => SORTER_SIZE,       -- input count -- FIXME: size should be WIDTH up to the next power of 2
+      KEY_BITS             => CANDIDATE_LENGTH,  -- CNT_BITS + PID_BITS,  -- the first KEY_BITS of In_Data are used as a sorting critera (key)
       DATA_BITS            => CANDIDATE_LENGTH,  -- inclusive KEY_BITS
       META_BITS            => 0,                 -- additional bits, not sorted but delayed as long as In_Data
       PIPELINE_STAGE_AFTER => 2,                 -- add a pipline stage after n sorting stages
       ADD_INPUT_REGISTERS  => false,             --
-      ADD_OUTPUT_REGISTERS => true)              --
+      ADD_OUTPUT_REGISTERS => false)             --
     port map (
       clock     => clock,
       reset     => '0',
       inverse   => '0',                          -- sl
-      in_valid  => '1',                          -- sl FIXME
-      in_iskey  => '0',                          -- sl FIXME
+      in_valid  => in_valid,                     -- sl FIXME
+      in_iskey  => in_iskey,                     -- sl FIXME
       in_data   => in_data,                      -- slm (inputs x databits)
       in_meta   => (others => '0'),              -- slv (meta bits)
       out_valid => open,                         -- sl
@@ -78,12 +88,12 @@ begin
 
     -- temporary intermediate slvs to map to/from records to matrix, i.e.
     -- record <--> slv <--> matrix
-    signal candidate_i : std_logic_vector (CANDIDATE_LENGTH-1 downto 0);
-    signal candidate_o : std_logic_vector (CANDIDATE_LENGTH-1 downto 0);
+    signal candidate_i : std_logic_vector(CANDIDATE_LENGTH-1 downto 0);
+    signal candidate_o : std_logic_vector(CANDIDATE_LENGTH-1 downto 0);
 
   begin
 
-    local_sump (strip) <= xor_reduce(candidate_i) xor xor_reduce(candidate_o);
+    --local_sump (strip) <= xor_reduce(candidate_i) xor xor_reduce(candidate_o);
 
     -- input to slv
     candidate_i <= to_slv (pat_candidates_i(strip));

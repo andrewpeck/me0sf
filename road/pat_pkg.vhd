@@ -5,9 +5,17 @@ use ieee.numeric_std.all;
 
 package pat_pkg is
 
+  constant PRT_WIDTH    : natural := 192;
+  constant NUM_SEGMENTS : natural := 16;
+
+
   constant CNT_BITS  : natural := 3;
   constant PID_BITS  : natural := 4;
   constant HASH_BITS : natural := 12;
+
+  subtype layer_t is std_logic_vector(3*64-1 downto 0);
+  type partition_t is array(integer range 0 to 5) of layer_t;
+  type chamber_t is array(integer range 0 to 7) of partition_t;
 
   type int_array_t is array(integer range <>) of integer;
 
@@ -38,11 +46,14 @@ package pat_pkg is
 
   type candidate_list_t is array (integer range <>) of candidate_t;
 
+  type cand_array_t is array (integer range 0 to 7) of candidate_list_t (PRT_WIDTH-1 downto 0);
+  type seg_array_t is array (integer range 0 to 7) of candidate_list_t (NUM_SEGMENTS-1 downto 0);
+
   function mirror_pat_unit (pat : pat_unit_t; id : natural) return pat_unit_t;
 
   -- to from segment candidate
-  function to_slv (candidate     : candidate_t) return std_logic_vector;
-  function to_candidate (slv     : std_logic_vector) return candidate_t;
+  function to_slv (candidate : candidate_t) return std_logic_vector;
+  function to_candidate (slv : std_logic_vector) return candidate_t;
 
 end package pat_pkg;
 

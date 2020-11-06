@@ -126,7 +126,8 @@ begin
   end generate;
 
 
-  -- need flexible N to 1 sorter... recursive..?
+  -- dumb flexible N to 1 sorter...
+  -- TODO: optimize this....
   process (clock) is
     variable best : candidate_t;
   begin

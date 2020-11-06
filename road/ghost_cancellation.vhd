@@ -9,15 +9,14 @@ use work.patterns.all;
 
 entity ghost_cancellation is
   generic(
-    WIDTH       : natural := 3;
-    NUM_OUTPUTS : natural := 1
+    WIDTH : natural := 128
     );
   port(
 
     clock : in std_logic;
 
     pat_candidates_i : in  candidate_list_t (WIDTH-1 downto 0);
-    pat_candidates_o : out candidate_list_t (NUM_OUTPUTS-1 downto 0)
+    pat_candidates_o : out candidate_list_t (WIDTH-1 downto 0)
     );
 end ghost_cancellation;
 
