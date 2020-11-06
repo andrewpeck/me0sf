@@ -5,9 +5,10 @@ use ieee.numeric_std.all;
 
 package pat_pkg is
 
-  constant CNT_THRESH : integer := 4;
-  constant FREQ       : natural := 320;
-  constant PRT_WIDTH  : natural := 192;
+  constant S0_REGION_SIZE  : integer := 8;
+  constant CNT_THRESH      : integer := 4;
+  constant FREQ            : natural := 320;
+  constant PRT_WIDTH       : natural := 192;
 
   constant CNT_BITS  : natural := 3;    -- number of bits to count 6 layers, always 3
   constant PID_BITS  : natural := 3;    -- number of bits to cnt the pids
@@ -57,15 +58,17 @@ package pat_pkg is
 
   type cand_array_t is array (integer range 0 to 7) of candidate_list_t (PRT_WIDTH-1 downto 0);
 
+  type cand_array_s0_t is array (integer range 0 to 7) of candidate_list_t (PRT_WIDTH/S0_REGION_SIZE-1 downto 0);
+
   -- mirror a pattern unit (left/right symmetry)
   function mirror_pat_unit (pat : pat_unit_t; id : natural) return pat_unit_t;
 
   -- comparisons
-  function "<"(L: candidate_t; R: candidate_t) return BOOLEAN;
-  function ">"(L: candidate_t; R: candidate_t) return BOOLEAN;
-  function "="(L: candidate_t; R: candidate_t) return BOOLEAN;
-  function ">="(L: candidate_t; R: candidate_t) return BOOLEAN;
-  function "<="(L: candidate_t; R: candidate_t) return BOOLEAN;
+  function "<"(L  : candidate_t; R : candidate_t) return boolean;
+  function ">"(L  : candidate_t; R : candidate_t) return boolean;
+  function "="(L  : candidate_t; R : candidate_t) return boolean;
+  function ">="(L : candidate_t; R : candidate_t) return boolean;
+  function "<="(L : candidate_t; R : candidate_t) return boolean;
 
   -- to from segment candidate
   function to_slv (candidate : candidate_t) return std_logic_vector;

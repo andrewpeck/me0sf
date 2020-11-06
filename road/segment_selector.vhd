@@ -2,6 +2,7 @@ library ieee;
 use ieee.std_logic_1164.all;
 use ieee.std_logic_misc.all;
 use ieee.numeric_std.all;
+use ieee.math_real.all;
 
 library work;
 use work.pat_pkg.all;
@@ -17,8 +18,6 @@ use PoC.components.all;
 entity segment_selector is
   generic(
     WIDTH       : natural := 192;
-    SORTER_SIZE : natural := 256;
-    META_BITS   : natural := 0;         -- additional bits, not sorted but delayed as long as In_Data
     NUM_OUTPUTS : natural := 16
     );
   port(
@@ -38,6 +37,8 @@ end segment_selector;
 
 architecture behavioral of segment_selector is
   signal candidate_sorted : candidate_list_t (WIDTH-1 downto 0);
+
+  constant SORTER_SIZE : natural := 2**integer(ceil(log2(real(width))));
 
   constant NUM_SORTERS : natural := WIDTH/SORTER_SIZE;
 
@@ -65,7 +66,7 @@ begin
       META_BITS            => 0,                 -- additional bits, not sorted but delayed as long as In_Data
       PIPELINE_STAGE_AFTER => 2,                 -- add a pipline stage after n sorting stages
       ADD_INPUT_REGISTERS  => false,             --
-      ADD_OUTPUT_REGISTERS => false)             --
+      ADD_OUTPUT_REGISTERS => true)              --
     port map (
       clock     => clock,
       reset     => '0',
