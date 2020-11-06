@@ -26,10 +26,10 @@ package patterns is
     ly5 => (lo =>  1, hi => 4)
     );
 
-  constant pat_r : pat_unit_t := mirror_pat_unit (pat_l, 3);
+  constant pat_r : pat_unit_t := mirror_pat_unit (pat_l, 5);
 
   constant pat_ll : pat_unit_t := (
-    id  => 5,
+    id  => 4,
     ly0 => (lo => -5, hi => 2),
     ly1 => (lo => -4, hi => 1),
     ly2 => (lo => -1, hi => 1),
@@ -38,8 +38,8 @@ package patterns is
     ly5 => (lo =>  2, hi => 5)
     );
 
-  constant pat_rr : pat_unit_t := mirror_pat_unit (pat_ll, 4);
+  constant pat_rr : pat_unit_t := mirror_pat_unit (pat_ll, 3);
 
-  constant pat_list : pat_list_t := (pat_straight, pat_l, pat_r, pat_ll,pat_rr);
+  constant pat_list : pat_list_t (4 downto 0):= (pat_straight, pat_l, pat_r, pat_ll,pat_rr);
 
 end package patterns;

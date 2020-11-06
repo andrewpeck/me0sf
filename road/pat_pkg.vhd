@@ -5,10 +5,12 @@ use ieee.numeric_std.all;
 
 package pat_pkg is
 
-  constant PRT_WIDTH    : natural := 192;
+  constant CNT_THRESH : integer := 4;
+  constant FREQ       : natural := 320;
+  constant PRT_WIDTH  : natural := 192;
 
-  constant CNT_BITS  : natural := 3; -- number of bits to count 6 layers, always 3
-  constant PID_BITS  : natural := 3; -- number of bits to cnt the pids
+  constant CNT_BITS  : natural := 3;    -- number of bits to count 6 layers, always 3
+  constant PID_BITS  : natural := 3;    -- number of bits to cnt the pids
   constant HASH_BITS : natural := 12;
 
   subtype layer_t is std_logic_vector(3*64-1 downto 0);
@@ -35,18 +37,35 @@ package pat_pkg is
   type pat_list_t is array (integer range <>) of pat_unit_t;
 
   type candidate_t is record
+    dav  : std_logic;
     cnt  : unsigned(CNT_BITS-1 downto 0);
     id   : unsigned(PID_BITS-1 downto 0);
     hash : unsigned(HASH_BITS -1 downto 0);
   end record;
 
-  constant CANDIDATE_LENGTH : natural := CNT_BITS + PID_BITS + HASH_BITS;
+  constant null_candidate : candidate_t :=
+    (
+      dav  => '0',
+      cnt  => (others => '0'),
+      id   => (others => '0'),
+      hash => (others => '0')
+      );
+
+  constant CANDIDATE_LENGTH : natural := CNT_BITS + PID_BITS + HASH_BITS + 1;
 
   type candidate_list_t is array (integer range <>) of candidate_t;
 
   type cand_array_t is array (integer range 0 to 7) of candidate_list_t (PRT_WIDTH-1 downto 0);
 
+  -- mirror a pattern unit (left/right symmetry)
   function mirror_pat_unit (pat : pat_unit_t; id : natural) return pat_unit_t;
+
+  -- comparisons
+  function "<"(L: candidate_t; R: candidate_t) return BOOLEAN;
+  function ">"(L: candidate_t; R: candidate_t) return BOOLEAN;
+  function "="(L: candidate_t; R: candidate_t) return BOOLEAN;
+  function ">="(L: candidate_t; R: candidate_t) return BOOLEAN;
+  function "<="(L: candidate_t; R: candidate_t) return BOOLEAN;
 
   -- to from segment candidate
   function to_slv (candidate : candidate_t) return std_logic_vector;
@@ -74,19 +93,65 @@ package body pat_pkg is
   begin
     result := std_logic_vector(candidate.hash) &
               std_logic_vector(candidate.cnt) &
-              std_logic_vector(candidate.id);
+              std_logic_vector(candidate.id) &
+              candidate.dav;
     return result;
   end;
 
   function to_candidate (slv : std_logic_vector) return candidate_t is
     variable candidate : candidate_t;
   begin
-    candidate.id   := unsigned(slv(PID_BITS-1 downto 0));
-    candidate.cnt  := unsigned(slv(CNT_BITS+PID_BITS-1 downto PID_BITS));
-    candidate.hash := unsigned(slv(HASH_BITS+CNT_BITS+PID_BITS-1 downto CNT_BITS+PID_BITS));
+    candidate.dav  := slv(0);
+    candidate.id   := unsigned(slv(1+PID_BITS-1 downto 1));
+    candidate.cnt  := unsigned(slv(1+CNT_BITS+PID_BITS-1 downto 1+PID_BITS));
+    candidate.hash := unsigned(slv(1+HASH_BITS+CNT_BITS+PID_BITS-1 downto 1+CNT_BITS+PID_BITS));
     return candidate;
   end;
 
 
+  function "=" (L : candidate_t; R : candidate_t) return boolean is
+  begin
+    if (unsigned(to_slv(L)) = unsigned(to_slv(R))) then
+      return true;
+    else
+      return false;
+    end if;
+  end;
+
+  function ">" (L : candidate_t; R : candidate_t) return boolean is
+  begin
+    if (unsigned(to_slv(L)) > unsigned(to_slv(R))) then
+      return true;
+    else
+      return false;
+    end if;
+  end;
+
+  function "<" (L : candidate_t; R : candidate_t) return boolean is
+  begin
+    if (unsigned(to_slv(L)) < unsigned(to_slv(R))) then
+      return true;
+    else
+      return false;
+    end if;
+  end;
+
+  function "<=" (L : candidate_t; R : candidate_t) return boolean is
+  begin
+    if (unsigned(to_slv(L)) <= unsigned(to_slv(R))) then
+      return true;
+    else
+      return false;
+    end if;
+  end;
+
+  function ">=" (L : candidate_t; R : candidate_t) return boolean is
+  begin
+    if (unsigned(to_slv(L)) >= unsigned(to_slv(R))) then
+      return true;
+    else
+      return false;
+    end if;
+  end;
 
 end package body pat_pkg;

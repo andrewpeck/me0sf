@@ -10,7 +10,7 @@ use work.patterns.all;
 entity partition is
   generic(
     WIDTH         : natural := PRT_WIDTH;
-    PARTITION_NUM : natural := 0        -- FIXME: append the partition number before sorting
+    PARTITION_NUM : natural := 0  -- FIXME: append the partition number before sorting
     );
   port(
 
@@ -34,15 +34,18 @@ architecture behavioral of partition is
 
   signal lyor : partition_t;
 
-  signal ly0_padded : std_logic_vector (3*64-1 + 2*padding_width downto 0);
-  signal ly1_padded : std_logic_vector (3*64-1 + 2*padding_width downto 0);
-  signal ly2_padded : std_logic_vector (3*64-1 + 2*padding_width downto 0);
-  signal ly3_padded : std_logic_vector (3*64-1 + 2*padding_width downto 0);
-  signal ly4_padded : std_logic_vector (3*64-1 + 2*padding_width downto 0);
-  signal ly5_padded : std_logic_vector (3*64-1 + 2*padding_width downto 0);
+  signal ly0_padded : std_logic_vector (WIDTH-1 + 2*padding_width downto 0);
+  signal ly1_padded : std_logic_vector (WIDTH-1 + 2*padding_width downto 0);
+  signal ly2_padded : std_logic_vector (WIDTH-1 + 2*padding_width downto 0);
+  signal ly3_padded : std_logic_vector (WIDTH-1 + 2*padding_width downto 0);
+  signal ly4_padded : std_logic_vector (WIDTH-1 + 2*padding_width downto 0);
+  signal ly5_padded : std_logic_vector (WIDTH-1 + 2*padding_width downto 0);
 
   signal pat_candidates     : candidate_list_t (WIDTH-1 downto 0);
   signal pat_candidates_gcl : candidate_list_t (WIDTH-1 downto 0);
+
+  attribute DONT_TOUCH             : string;
+  attribute DONT_TOUCH of gcl_inst : label is "true";
 
 begin
 
@@ -62,6 +65,7 @@ begin
     end if;
   end process;
 
+  -- pad the edges with zero for input to pat_units
   ly0_padded <= padding & lyor(0) & padding;
   ly1_padded <= padding & lyor(1) & padding;
   ly2_padded <= padding & lyor(2) & padding;

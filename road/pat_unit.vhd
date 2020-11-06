@@ -9,13 +9,13 @@ use work.patterns.all;
 
 entity pat_unit is
   generic(
-    PATLIST  : pat_list_t := pat_list;
-    LY0_SPAN : natural    := 11;        -- TODO: get span from patlist w/ function
-    LY1_SPAN : natural    := 11;        -- TODO: get span from patlist w/ function
-    LY2_SPAN : natural    := 11;        -- TODO: get span from patlist w/ function
-    LY3_SPAN : natural    := 11;        -- TODO: get span from patlist w/ function
-    LY4_SPAN : natural    := 11;        -- TODO: get span from patlist w/ function
-    LY5_SPAN : natural    := 11         -- TODO: get span from patlist w/ function
+    PATLIST   : pat_list_t := pat_list;
+    LY0_SPAN  : natural    := 11;       -- TODO: get span from patlist w/ function
+    LY1_SPAN  : natural    := 11;       -- TODO: get span from patlist w/ function
+    LY2_SPAN  : natural    := 11;       -- TODO: get span from patlist w/ function
+    LY3_SPAN  : natural    := 11;       -- TODO: get span from patlist w/ function
+    LY4_SPAN  : natural    := 11;       -- TODO: get span from patlist w/ function
+    LY5_SPAN  : natural    := 11        -- TODO: get span from patlist w/ function
     );
   port(
 
@@ -35,8 +35,7 @@ end pat_unit;
 
 architecture behavioral of pat_unit is
 
-
-  signal pat_candidates : candidate_list_t (patlist'range);
+  signal pat_candidates : candidate_list_t (patlist'length-1 downto 0);
 
   function count_ones(slv : std_logic_vector) return natural is
     variable n_ones : natural := 0;
@@ -58,7 +57,7 @@ begin
   assert (LY4_SPAN mod 2 = 1) report "Layer Span Must be Odd" severity error;
   assert (LY5_SPAN mod 2 = 1) report "Layer Span Must be Odd" severity error;
 
-  patgen : for I in patlist'range generate
+  patgen : for I in 0 to patlist'length-1  generate
 
     function get_ly_size (ly     : natural;
                           ly_pat : hi_lo_t)
@@ -136,6 +135,7 @@ begin
       best.cnt  := (others => '0');
       best.hash := (others => '0');
       best.id   := (others => '0');
+      best.dav  := '0';
 
       for I in pat_candidates'length-1 downto 0 loop
         if (pat_candidates(I).cnt & pat_candidates(I).hash) > (best.cnt & best.hash) then
@@ -145,7 +145,17 @@ begin
 
     end if;
 
-    pat_o <= best;
+    if (best.cnt > CNT_THRESH) then
+      pat_o     <= best;
+      pat_o.dav <= '1';
+    else
+      pat_o.cnt  <= (others => '0');
+      pat_o.hash <= (others => '0');
+      pat_o.id   <= (others => '0');
+      pat_o.dav  <= '0';
+    end if;
+
+
   end process;
 
 
