@@ -6,11 +6,9 @@ use ieee.numeric_std.all;
 package pat_pkg is
 
   constant PRT_WIDTH    : natural := 192;
-  constant NUM_SEGMENTS : natural := 16;
 
-
-  constant CNT_BITS  : natural := 3;
-  constant PID_BITS  : natural := 4;
+  constant CNT_BITS  : natural := 3; -- number of bits to count 6 layers, always 3
+  constant PID_BITS  : natural := 3; -- number of bits to cnt the pids
   constant HASH_BITS : natural := 12;
 
   subtype layer_t is std_logic_vector(3*64-1 downto 0);
@@ -47,7 +45,6 @@ package pat_pkg is
   type candidate_list_t is array (integer range <>) of candidate_t;
 
   type cand_array_t is array (integer range 0 to 7) of candidate_list_t (PRT_WIDTH-1 downto 0);
-  type seg_array_t is array (integer range 0 to 7) of candidate_list_t (NUM_SEGMENTS-1 downto 0);
 
   function mirror_pat_unit (pat : pat_unit_t; id : natural) return pat_unit_t;
 
