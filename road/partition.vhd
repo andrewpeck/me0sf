@@ -28,7 +28,7 @@ end partition;
 
 architecture behavioral of partition is
 
-  constant padding_width : integer := 5;  -- FIXME: please no constants
+  constant padding_width : integer := (get_max_span(0, pat_list)-1)/2; -- pad to half the width of the pattern
   constant padding       : std_logic_vector
     (padding_width -1 downto 0) := (others => '0');
 

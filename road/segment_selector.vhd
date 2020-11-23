@@ -57,6 +57,27 @@ begin
   --end generate;
 
   --sortnet_inst : entity PoC.sortnet_oddevenmergesort
+
+  -- Bitonic_Sorter_1: entity work.Bitonic_Sorter
+  --   generic map (
+  --     words     => SORTER_SIZE,
+  --     word_bits => CANDIDATE_LENGTH,
+  --     comp_high => CANDIDATE_LENGTH,
+  --     comp_low  => 0,
+  --     info_bits => 0)
+  --   port map (
+  --     clk    => clock,
+  --     rst    => '0',
+  --     clr    => '0',
+  --     i_sort => i_sort, -- dav?
+  --     i_up   => '1', -- what is this??
+  --     i_data => i_data,
+  --     i_info => (others => '0'),
+  --     o_sort => o_sort,
+  --     o_up   => o_up,
+  --     o_data => o_data,
+  --     o_info => o_info);
+
   sortnet_oddevenmergesort_1 : entity PoC.sortnet_BitonicSort
 
     generic map (

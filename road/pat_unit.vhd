@@ -10,13 +10,14 @@ use work.priority_encoder_pkg.all;
 
 entity pat_unit is
   generic(
-    PATLIST   : pat_list_t := pat_list;
-    LY0_SPAN  : natural    := 11;       -- TODO: get span from patlist w/ function
-    LY1_SPAN  : natural    := 11;       -- TODO: get span from patlist w/ function
-    LY2_SPAN  : natural    := 11;       -- TODO: get span from patlist w/ function
-    LY3_SPAN  : natural    := 11;       -- TODO: get span from patlist w/ function
-    LY4_SPAN  : natural    := 11;       -- TODO: get span from patlist w/ function
-    LY5_SPAN  : natural    := 11        -- TODO: get span from patlist w/ function
+    VERBOSE  : boolean    := false;
+    PATLIST  : pat_list_t := pat_list;
+    LY0_SPAN : natural    := get_max_span(0, pat_list);
+    LY1_SPAN : natural    := get_max_span(0, pat_list);  -- TODO: variably size the other layers instead of using the max
+    LY2_SPAN : natural    := get_max_span(0, pat_list);  -- TODO: variably size the other layers instead of using the max
+    LY3_SPAN : natural    := get_max_span(0, pat_list);  -- TODO: variably size the other layers instead of using the max
+    LY4_SPAN : natural    := get_max_span(0, pat_list);  -- TODO: variably size the other layers instead of using the max
+    LY5_SPAN : natural    := get_max_span(0, pat_list)   -- TODO: variably size the other layers instead of using the max
     );
   port(
 
