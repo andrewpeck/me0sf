@@ -3,4 +3,4 @@
 	url = https://github.com/VLSI-EDA/PoC
 [submodule "road/priority_encoder"]
 	path = road/priority_encoder
-	url = ./road/priority_encoder/
+	url = https://github.com/andrewpeck/priority_encoder
