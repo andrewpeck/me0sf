@@ -54,6 +54,8 @@ package pat_pkg is
 
   constant CANDIDATE_LENGTH : natural := CNT_BITS + PID_BITS + HASH_BITS + 1;
 
+  type candidate_list_slv_t is array (integer range <>) of std_logic_vector (CANDIDATE_LENGTH-1 downto 0);
+
   type candidate_list_t is array (integer range <>) of candidate_t;
 
   type cand_array_t is array (integer range 0 to 7) of candidate_list_t (PRT_WIDTH-1 downto 0);
@@ -95,18 +97,18 @@ package body pat_pkg is
     variable result : std_logic_vector (CANDIDATE_LENGTH-1 downto 0);
   begin
     result := std_logic_vector(candidate.hash) &
+              candidate.dav &
               std_logic_vector(candidate.cnt) &
-              std_logic_vector(candidate.id) &
-              candidate.dav;
+              std_logic_vector(candidate.id);
     return result;
   end;
 
   function to_candidate (slv : std_logic_vector) return candidate_t is
     variable candidate : candidate_t;
   begin
-    candidate.dav  := slv(0);
-    candidate.id   := unsigned(slv(1+PID_BITS-1 downto 1));
-    candidate.cnt  := unsigned(slv(1+CNT_BITS+PID_BITS-1 downto 1+PID_BITS));
+    candidate.id   := unsigned(slv(PID_BITS-1 downto 0));
+    candidate.cnt  := unsigned(slv(CNT_BITS+PID_BITS-1 downto PID_BITS));
+    candidate.dav  := slv(CNT_BITS+PID_BITS);
     candidate.hash := unsigned(slv(1+HASH_BITS+CNT_BITS+PID_BITS-1 downto 1+CNT_BITS+PID_BITS));
     return candidate;
   end;

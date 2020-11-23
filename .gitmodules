@@ -1,3 +1,6 @@
 [submodule "PoC"]
 	path = PoC
 	url = https://github.com/VLSI-EDA/PoC
+[submodule "road/priority_encoder"]
+	path = road/priority_encoder
+	url = ./road/priority_encoder/

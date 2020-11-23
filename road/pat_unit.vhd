@@ -6,6 +6,7 @@ use ieee.numeric_std.all;
 library work;
 use work.pat_pkg.all;
 use work.patterns.all;
+use work.priority_encoder_pkg.all;
 
 entity pat_unit is
   generic(
@@ -48,6 +49,10 @@ architecture behavioral of pat_unit is
     return n_ones;
   end function count_ones;
 
+  signal best_slv : std_logic_vector (CANDIDATE_LENGTH-1 downto 0);
+  signal best     : candidate_t;
+  signal cand_slv : bus_array (pat_candidates'length-1 downto 0) (CANDIDATE_LENGTH-1 downto 0);
+
 begin
 
   assert (LY0_SPAN mod 2 = 1) report "Layer Span Must be Odd" severity error;
@@ -57,7 +62,7 @@ begin
   assert (LY4_SPAN mod 2 = 1) report "Layer Span Must be Odd" severity error;
   assert (LY5_SPAN mod 2 = 1) report "Layer Span Must be Odd" severity error;
 
-  patgen : for I in 0 to patlist'length-1  generate
+  patgen : for I in 0 to patlist'length-1 generate
 
     function get_ly_size (ly     : natural;
                           ly_pat : hi_lo_t)
@@ -93,12 +98,14 @@ begin
 
   begin
 
-    assert false report "ly0_size=" & integer'image(ly0_size) severity note;
-    assert false report "ly1_size=" & integer'image(ly1_size) severity note;
-    assert false report "ly2_size=" & integer'image(ly2_size) severity note;
-    assert false report "ly3_size=" & integer'image(ly3_size) severity note;
-    assert false report "ly4_size=" & integer'image(ly4_size) severity note;
-    assert false report "ly5_size=" & integer'image(ly5_size) severity note;
+    lysize : if (VERBOSE) generate
+      assert false report "ly0_size=" & integer'image(ly0_size) severity note;
+      assert false report "ly1_size=" & integer'image(ly1_size) severity note;
+      assert false report "ly2_size=" & integer'image(ly2_size) severity note;
+      assert false report "ly3_size=" & integer'image(ly3_size) severity note;
+      assert false report "ly4_size=" & integer'image(ly4_size) severity note;
+      assert false report "ly5_size=" & integer'image(ly5_size) severity note;
+    end generate;
 
     ly0_mask <= get_ly_mask (ly0_size, ly0, patlist(I).ly0);
     ly1_mask <= get_ly_mask (ly1_size, ly1, patlist(I).ly1);
@@ -125,26 +132,28 @@ begin
   end generate;
 
 
-  -- dumb flexible N to 1 sorter...
-  -- TODO: optimize this....
-  process (clock) is
-    variable best : candidate_t;
+  cand_to_slv : for I in 0 to pat_candidates'length-1 generate
   begin
-    if (rising_edge(clock)) then
+    cand_slv(I) <= to_slv(pat_candidates(I));
+  end generate;
 
-      best.cnt  := (others => '0');
-      best.hash := (others => '0');
-      best.id   := (others => '0');
-      best.dav  := '0';
+  priority_encoder_inst : entity work.priority_encoder
+    generic map (
+      g_DAT_SIZE => CANDIDATE_LENGTH,
+      g_QLT_SIZE => 1+CNT_BITS+PID_BITS,
+      g_WIDTH    => pat_candidates'length
+      )
+    port map (
+      clock => clock,
+      dat_i => cand_slv,
+      dat_o => best_slv,
+      adr_o => open
+      );
 
-      for I in pat_candidates'length-1 downto 0 loop
-        if (pat_candidates(I).cnt & pat_candidates(I).hash) > (best.cnt & best.hash) then
-          best := pat_candidates(I);
-        end if;
-      end loop;
+  best <= to_candidate(best_slv);
 
-    end if;
-
+  process (all) is
+  begin
     if (best.cnt > CNT_THRESH) then
       pat_o     <= best;
       pat_o.dav <= '1';
@@ -154,8 +163,6 @@ begin
       pat_o.id   <= (others => '0');
       pat_o.dav  <= '0';
     end if;
-
-
   end process;
 
 
