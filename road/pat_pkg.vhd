@@ -5,10 +5,10 @@ use ieee.numeric_std.all;
 
 package pat_pkg is
 
-  constant S0_REGION_SIZE  : integer := 8;
-  constant CNT_THRESH      : integer := 4;
-  constant FREQ            : natural := 320;
-  constant PRT_WIDTH       : natural := 192;
+  constant S0_REGION_SIZE : integer := 8;
+  constant CNT_THRESH     : integer := 4;
+  constant FREQ           : natural := 320;
+  constant PRT_WIDTH      : natural := 192;
 
   constant CNT_BITS  : natural := 3;    -- number of bits to count 6 layers, always 3
   constant PID_BITS  : natural := 3;    -- number of bits to cnt the pids

@@ -12,12 +12,12 @@ entity pat_unit is
   generic(
     VERBOSE  : boolean    := false;
     PATLIST  : pat_list_t := pat_list;
-    LY0_SPAN : natural    := get_max_span(0, pat_list);
-    LY1_SPAN : natural    := get_max_span(0, pat_list);  -- TODO: variably size the other layers instead of using the max
-    LY2_SPAN : natural    := get_max_span(0, pat_list);  -- TODO: variably size the other layers instead of using the max
-    LY3_SPAN : natural    := get_max_span(0, pat_list);  -- TODO: variably size the other layers instead of using the max
-    LY4_SPAN : natural    := get_max_span(0, pat_list);  -- TODO: variably size the other layers instead of using the max
-    LY5_SPAN : natural    := get_max_span(0, pat_list)   -- TODO: variably size the other layers instead of using the max
+    LY0_SPAN : natural    := get_max_span(pat_list);
+    LY1_SPAN : natural    := get_max_span(pat_list);  -- TODO: variably size the other layers instead of using the max
+    LY2_SPAN : natural    := get_max_span(pat_list);  -- TODO: variably size the other layers instead of using the max
+    LY3_SPAN : natural    := get_max_span(pat_list);  -- TODO: variably size the other layers instead of using the max
+    LY4_SPAN : natural    := get_max_span(pat_list);  -- TODO: variably size the other layers instead of using the max
+    LY5_SPAN : natural    := get_max_span(pat_list)   -- TODO: variably size the other layers instead of using the max
     );
   port(
 
@@ -37,7 +37,7 @@ end pat_unit;
 
 architecture behavioral of pat_unit is
 
-  signal pat_candidates : candidate_list_t (patlist'length-1 downto 0);
+  signal pat_candidates : candidate_list_t (NUM_PATTERNS-1 downto 0);
 
   function count_ones(slv : std_logic_vector) return natural is
     variable n_ones : natural := 0;
@@ -52,16 +52,16 @@ architecture behavioral of pat_unit is
 
   signal best_slv : std_logic_vector (CANDIDATE_LENGTH-1 downto 0);
   signal best     : candidate_t;
-  signal cand_slv : bus_array (pat_candidates'length-1 downto 0) (CANDIDATE_LENGTH-1 downto 0);
+  signal cand_slv : bus_array (0 to NUM_PATTERNS-1) (CANDIDATE_LENGTH-1 downto 0);
 
 begin
 
-  assert (LY0_SPAN mod 2 = 1) report "Layer Span Must be Odd" severity error;
-  assert (LY1_SPAN mod 2 = 1) report "Layer Span Must be Odd" severity error;
-  assert (LY2_SPAN mod 2 = 1) report "Layer Span Must be Odd" severity error;
-  assert (LY3_SPAN mod 2 = 1) report "Layer Span Must be Odd" severity error;
-  assert (LY4_SPAN mod 2 = 1) report "Layer Span Must be Odd" severity error;
-  assert (LY5_SPAN mod 2 = 1) report "Layer Span Must be Odd" severity error;
+  assert (LY0_SPAN mod 2 = 1) report "Layer Span Must be Odd (span=" & integer'image(LY0_SPAN) & ")" severity error;
+  assert (LY1_SPAN mod 2 = 1) report "Layer Span Must be Odd (span=" & integer'image(LY1_SPAN) & ")" severity error;
+  assert (LY2_SPAN mod 2 = 1) report "Layer Span Must be Odd (span=" & integer'image(LY2_SPAN) & ")" severity error;
+  assert (LY3_SPAN mod 2 = 1) report "Layer Span Must be Odd (span=" & integer'image(LY3_SPAN) & ")" severity error;
+  assert (LY4_SPAN mod 2 = 1) report "Layer Span Must be Odd (span=" & integer'image(LY4_SPAN) & ")" severity error;
+  assert (LY5_SPAN mod 2 = 1) report "Layer Span Must be Odd (span=" & integer'image(LY5_SPAN) & ")" severity error;
 
   patgen : for I in 0 to patlist'length-1 generate
 
@@ -99,6 +99,8 @@ begin
 
   begin
 
+    print_pattern (patlist(I));
+
     lysize : if (VERBOSE) generate
       assert false report "ly0_size=" & integer'image(ly0_size) severity note;
       assert false report "ly1_size=" & integer'image(ly1_size) severity note;
@@ -118,22 +120,21 @@ begin
     process (clock) is
     begin
       if (rising_edge(clock)) then
+        pat_candidates(I) <= null_candidate;
         pat_candidates(I).cnt <= to_unsigned(count_ones(
           or_reduce(ly0_mask) &
           or_reduce(ly1_mask) &
           or_reduce(ly2_mask) &
           or_reduce(ly3_mask) &
           or_reduce(ly4_mask) &
-          or_reduce(ly5_mask)),
-                                             CNT_BITS);
-        pat_candidates(I).id   <= to_unsigned(patlist(I).id, PID_BITS);
-        pat_candidates(I).hash <= (others => '0');  --mask_to_code (ly0_mask, ly1_mask, ly2_mask, ly3_mask, ly4_mask, ly5_mask);
+          or_reduce(ly5_mask)), CNT_BITS);
+        pat_candidates(I).id <= to_unsigned(patlist(I).id, PID_BITS);
       end if;
     end process;
   end generate;
 
 
-  cand_to_slv : for I in 0 to pat_candidates'length-1 generate
+  cand_to_slv : for I in 0 to NUM_PATTERNS-1 generate
   begin
     cand_slv(I) <= to_slv(pat_candidates(I));
   end generate;
@@ -142,7 +143,7 @@ begin
     generic map (
       g_DAT_SIZE => CANDIDATE_LENGTH,
       g_QLT_SIZE => 1+CNT_BITS+PID_BITS,
-      g_WIDTH    => pat_candidates'length
+      g_WIDTH    => NUM_PATTERNS
       )
     port map (
       clock => clock,
@@ -153,16 +154,18 @@ begin
 
   best <= to_candidate(best_slv);
 
-  process (all) is
+  process (clock) is
   begin
-    if (best.cnt > CNT_THRESH) then
-      pat_o     <= best;
-      pat_o.dav <= '1';
-    else
-      pat_o.cnt  <= (others => '0');
-      pat_o.hash <= (others => '0');
-      pat_o.id   <= (others => '0');
-      pat_o.dav  <= '0';
+    if (rising_edge(clock)) then
+      if (best.cnt > CNT_THRESH) then
+        pat_o     <= best;
+        pat_o.dav <= '1';
+      else
+        pat_o.cnt  <= (others => '0');
+        pat_o.hash <= (others => '0');
+        pat_o.id   <= (others => '0');
+        pat_o.dav  <= '0';
+      end if;
     end if;
   end process;
 
