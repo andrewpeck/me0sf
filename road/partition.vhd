@@ -21,6 +21,10 @@ entity partition is
 
     pat_candidates_o : out candidate_list_t (WIDTH-1 downto 0);
 
+    pre_gcl_pat_candidates_o   : out candidate_list_t (WIDTH-1 downto 0);
+    pre_gcl_pat_candidates_i_p : in  candidate_list_t (WIDTH-1 downto 0);
+    pre_gcl_pat_candidates_i_n : in  candidate_list_t (WIDTH-1 downto 0);
+
     sump : out std_logic
 
     );
@@ -90,14 +94,18 @@ begin
         );
   end generate;
 
+  pre_gcl_pat_candidates_o <= pat_candidates;
+
   gcl_inst : entity work.ghost_cancellation
     generic map (
       WIDTH => WIDTH
       )
     port map (
-      clock            => clock,
-      pat_candidates_i => pat_candidates,
-      pat_candidates_o => pat_candidates_o
+      clock                      => clock,
+      pat_candidates_i           => pat_candidates,
+      pre_gcl_pat_candidates_i_p => pre_gcl_pat_candidates_i_p,
+      pre_gcl_pat_candidates_i_n => pre_gcl_pat_candidates_i_n,
+      pat_candidates_o           => pat_candidates_o
       );
 
 end behavioral;
