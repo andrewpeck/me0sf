@@ -1,16 +1,13 @@
 .PHONY : build poc road
 
-#all: run_tdc_decoder
-#
-#run_tdc_decoder: tdc_decoder_tb
-#	@./tdc_decoder_tb
-
-
-build: poc road
+#ANALYZE_CMD=vcom -2008 -check_synthesis
+ANALYZE=ghdl -a --std=08 --ieee=synopsys
+ELABORATE=ghdl -e --std=08 --ieee=synopsys
+build: poc road prbs
 
 poc:
 #@ghdl  -a --std=08 --work=PoC --ieee=synopsys
-	@ghdl  -a --std=08 --work=PoC --ieee=synopsys \
+	$(ANALYZE) --work=PoC \
 			poc/poc*.vhdl \
 			../PoC/src/common/utils.vhdl \
 			../PoC/src/common/config.vhdl \
@@ -26,16 +23,26 @@ poc:
 			../PoC/src/sort/sortnet/sortnet_BitonicSort.vhdl
 
 patterns:
-	@ghdl -a --std=08 --ieee=synopsys pat_pkg.vhd  patterns.vhd \
-														priority_encoder/priority_encoder_pkg.vhd priority_encoder/priority_encoder.vhd \
-														pat_unit.vhd
-	@ghdl -e --std=08 --ieee=synopsys pat_unit
+	$(ANALYZE) pat_pkg.vhd  patterns.vhd priority_encoder/priority_encoder_pkg.vhd priority_encoder/priority_encoder.vhd
+	$(ANALYZE) pat_unit.vhd
+	$(ELABORATE) pat_unit
 	./pat_unit
 
 road: patterns poc
-	@ghdl -a --std=08 --ieee=synopsys ghost_cancellation.vhd segment_selector.vhd partition.vhd chamber.vhd \
-	@ghdl -e --std=08 --ieee=synopsys partition
-	@ghdl -e --std=08 --ieee=synopsys chamber
+	$(ANALYZE) ghost_cancellation.vhd segment_selector.vhd partition.vhd chamber.vhd
+	$(ELABORATE) partition
+	$(ELABORATE) chamber
+
+prbs: road
+	$(ANALYZE) prbs31.vhd
+	$(ANALYZE) chamber_prbs.vhd
+	$(ELABORATE) chamber_prbs
+
+run: prbs
+	./chamber_prbs --ieee-asserts=disable
 
 clean:
 	rm -f *.o *.cf
+	rm -f partition
+	rm -f pat_unit
+	rm -f chamber
