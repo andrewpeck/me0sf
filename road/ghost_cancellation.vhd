@@ -52,6 +52,11 @@ architecture behavioral of ghost_cancellation is
     end loop;
     return is_ghost;
   end;
+
+  attribute DONT_TOUCH            : string;
+  attribute DONT_TOUCH of dead    : signal is "true";
+  attribute DONT_TOUCH of ghosted : signal is "true";
+
 begin
 
   slv : for I in 0 to WIDTH-1 generate

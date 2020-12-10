@@ -17,15 +17,12 @@ use PoC.components.all;
 
 entity segment_selector is
   generic(
-    WIDTH       : natural := 192;
+    WIDTH       : natural := 16;
     NUM_OUTPUTS : natural := 16
     );
   port(
 
     clock : in std_logic;
-
-    In_Valid : in std_logic;
-    In_IsKey : in std_logic;
 
     pat_candidates_i : in  candidate_list_t (WIDTH-1 downto 0);
     pat_candidates_o : out candidate_list_t (NUM_OUTPUTS-1 downto 0);
@@ -38,7 +35,7 @@ end segment_selector;
 architecture behavioral of segment_selector is
   signal candidate_sorted : candidate_list_t (WIDTH-1 downto 0);
 
-  constant SORTER_SIZE : natural := 2**integer(ceil(log2(real(width))));
+  constant SORTER_SIZE : natural := 2**integer(ceil(log2(real(WIDTH))));
 
   constant NUM_SORTERS : natural := WIDTH/SORTER_SIZE;
 
@@ -51,12 +48,6 @@ architecture behavioral of segment_selector is
   --attribute DONT_TOUCH of sortnet_inst : label is "true";
 
 begin
-
-  --sorter_gen : for I in 0 to NUM_SORTERS-1 generate
-  --begin
-  --end generate;
-
-  --sortnet_inst : entity PoC.sortnet_oddevenmergesort
 
   -- Bitonic_Sorter_1: entity work.Bitonic_Sorter
   --   generic map (
@@ -78,6 +69,7 @@ begin
   --     o_data => o_data,
   --     o_info => o_info);
 
+  --sortnet_inst : entity PoC.sortnet_oddevenmergesort
   sortnet_oddevenmergesort_1 : entity PoC.sortnet_BitonicSort
 
     generic map (
@@ -92,8 +84,8 @@ begin
       clock     => clock,
       reset     => '0',
       inverse   => '0',                          -- sl
-      in_valid  => in_valid,                     -- sl FIXME
-      in_iskey  => in_iskey,                     -- sl FIXME
+      in_valid  => '1',                     -- sl
+      in_iskey  => '1',                     -- sl
       in_data   => in_data,                      -- slm (inputs x databits)
       in_meta   => (others => '0'),              -- slv (meta bits)
       out_valid => open,                         -- sl

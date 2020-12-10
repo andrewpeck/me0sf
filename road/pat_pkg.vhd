@@ -53,6 +53,7 @@ package pat_pkg is
       );
 
   constant CANDIDATE_LENGTH : natural := CNT_BITS + PID_BITS + HASH_BITS + 1;
+  constant CANDIDATE_SORTB  : natural := CNT_BITS + PID_BITS + 1;
 
   type candidate_list_slv_t is array (integer range <>) of std_logic_vector (CANDIDATE_LENGTH-1 downto 0);
 
@@ -116,7 +117,8 @@ package body pat_pkg is
 
   function "=" (L : candidate_t; R : candidate_t) return boolean is
   begin
-    if (unsigned(to_slv(L)) = unsigned(to_slv(R))) then
+    if (unsigned(to_slv(L)(CANDIDATE_SORTB-1 downto 0)) =
+        unsigned(to_slv(R)(CANDIDATE_SORTB-1 downto 0))) then
       return true;
     else
       return false;
@@ -125,7 +127,8 @@ package body pat_pkg is
 
   function ">" (L : candidate_t; R : candidate_t) return boolean is
   begin
-    if (unsigned(to_slv(L)) > unsigned(to_slv(R))) then
+    if (unsigned(to_slv(L)(CANDIDATE_SORTB-1 downto 0)) >
+        unsigned(to_slv(R)(CANDIDATE_SORTB-1 downto 0))) then
       return true;
     else
       return false;
@@ -134,7 +137,8 @@ package body pat_pkg is
 
   function "<" (L : candidate_t; R : candidate_t) return boolean is
   begin
-    if (unsigned(to_slv(L)) < unsigned(to_slv(R))) then
+    if (unsigned(to_slv(L)(CANDIDATE_SORTB-1 downto 0)) <
+        unsigned(to_slv(R)(CANDIDATE_SORTB-1 downto 0))) then
       return true;
     else
       return false;
@@ -143,7 +147,8 @@ package body pat_pkg is
 
   function "<=" (L : candidate_t; R : candidate_t) return boolean is
   begin
-    if (unsigned(to_slv(L)) <= unsigned(to_slv(R))) then
+    if (unsigned(to_slv(L)(CANDIDATE_SORTB-1 downto 0)) <=
+        unsigned(to_slv(R)(CANDIDATE_SORTB-1 downto 0))) then
       return true;
     else
       return false;
@@ -152,7 +157,8 @@ package body pat_pkg is
 
   function ">=" (L : candidate_t; R : candidate_t) return boolean is
   begin
-    if (unsigned(to_slv(L)) >= unsigned(to_slv(R))) then
+    if (unsigned(to_slv(L)(CANDIDATE_SORTB-1 downto 0)) >=
+        unsigned(to_slv(R)(CANDIDATE_SORTB-1 downto 0))) then
       return true;
     else
       return false;

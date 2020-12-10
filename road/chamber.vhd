@@ -14,11 +14,9 @@ entity chamber is
     MUX_FACTOR   : integer := 1
     );
   port(
-    In_Valid : in std_logic;
-    In_IsKey : in std_logic;
 
     clock : in  std_logic;
-    phase : in  integer;
+    phase : in  integer range 0 to 7;
     sbits : in  chamber_t;
     segs  : out candidate_list_t (NUM_SEGMENTS-1 downto 0)
 
@@ -82,6 +80,7 @@ begin
       generic map (PARTITION_NUM => I)
 
       port map (
+
         clock => clock,
 
         -- primary layer
@@ -168,8 +167,6 @@ begin
                    WIDTH       => PRT_WIDTH/S0_REGION_SIZE)
       port map (
         clock            => clock,
-        In_Valid         => In_Valid,
-        In_IsKey         => In_IsKey,
         pat_candidates_i => pat_candidates_mux,
         pat_candidates_o => selector_s1_o,
         sump             => open
@@ -195,14 +192,13 @@ begin
   --------------------------------------------------------------------------------
   -- Sort from N segments per partition * 8 partitions downto N segments total
   --------------------------------------------------------------------------------
-
+  -- FIXME: append the partition number before sorting
+  --
   segment_selector_2nd : entity work.segment_selector
     generic map (NUM_OUTPUTS => NUM_SEGMENTS,
                  WIDTH       => NUM_SEGMENTS*8)
     port map (
       clock            => clock,
-      In_Valid         => In_Valid,
-      In_IsKey         => In_IsKey,
       pat_candidates_i => segs_cat,
       pat_candidates_o => segs,
       sump             => open

@@ -13,13 +13,9 @@ entity chamber_prbs is
     MUX_FACTOR   : integer := 1
     );
   port(
-    In_Valid : in std_logic;
-    In_IsKey : in std_logic;
-
     reset : in  std_logic;
     clock : in  std_logic;
     segs  : out candidate_list_t (NUM_SEGMENTS-1 downto 0)
-
     );
 end chamber_prbs;
 
@@ -32,9 +28,9 @@ begin
 
   prtgen : for partition in 0 to 7 generate
   begin
-    layer : for layer in 0 to 5 generate
+    layergen : for layer in 0 to 5 generate
     begin
-      halffat : for halffat in 0 to 5 generate
+      halffatgen : for halffat in 0 to 5 generate
       begin
 
         PRBS31_32BIT_GEN_1 : entity work.PRBS31_32BIT_GEN
@@ -68,8 +64,6 @@ begin
       NUM_SEGMENTS => NUM_SEGMENTS,
       MUX_FACTOR   => MUX_FACTOR)
     port map (
-      In_Valid => In_Valid,
-      In_IsKey => In_IsKey,
       clock    => clock,
       phase    => phase,
       sbits    => sbits,
