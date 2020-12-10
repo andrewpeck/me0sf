@@ -10,7 +10,7 @@ use work.patterns.all;
 entity partition is
   generic(
     WIDTH         : natural := PRT_WIDTH;
-    PARTITION_NUM : natural := 0        -- FIXME: append the partition number before sorting
+    MUX_FACTOR    : natural := FREQ/40
     );
   port(
 
@@ -45,13 +45,27 @@ architecture behavioral of partition is
   signal ly4_padded : std_logic_vector (WIDTH-1 + 2*padding_width downto 0);
   signal ly5_padded : std_logic_vector (WIDTH-1 + 2*padding_width downto 0);
 
+  signal pat_candidates_mux : candidate_list_t (WIDTH/MUX_FACTOR-1 downto 0);
   signal pat_candidates     : candidate_list_t (WIDTH-1 downto 0);
   signal pat_candidates_gcl : candidate_list_t (WIDTH-1 downto 0);
 
   attribute DONT_TOUCH             : string;
   attribute DONT_TOUCH of gcl_inst : label is "true";
 
+  signal phase : integer range 0 to 7 := 0;
+
 begin
+
+  process (clock) is
+  begin
+    if (rising_edge(clock)) then
+      if (phase < 8) then
+        phase <= phase + 1;
+      else
+        phase <= 0;
+      end if;
+    end if;
+  end process;
 
   process (clock) is
   begin
@@ -60,12 +74,12 @@ begin
       -- matters which layer and the orientation of chambers wrt the ip
       -- or something like that
       -- but this stupid approach is ok for now
-      lyor(0) <= partition(0) or neighbor(0);
-      lyor(1) <= partition(1) or neighbor(1);
+      lyor(5) <= partition(5);
+      lyor(4) <= partition(4);
+      lyor(3) <= partition(3);
       lyor(2) <= partition(2) or neighbor(2);
-      lyor(3) <= partition(3) or neighbor(3);
-      lyor(4) <= partition(4) or neighbor(4);
-      lyor(5) <= partition(5) or neighbor(5);
+      lyor(1) <= partition(1) or neighbor(1);
+      lyor(0) <= partition(0) or neighbor(0);
     end if;
   end process;
 
@@ -77,22 +91,32 @@ begin
   ly4_padded <= padding & lyor(4) & padding;
   ly5_padded <= padding & lyor(5) & padding;
 
-  patgen : for I in 0 to WIDTH-1 generate
+  patgen : for I in 0 to WIDTH/MUX_FACTOR-1 generate
     attribute DONT_TOUCH                  : string;
     attribute DONT_TOUCH of pat_unit_inst : label is "true";
   begin
     pat_unit_inst : entity work.pat_unit
       port map (
         clock => clock,
-        ly0   => ly0_padded (I+padding_width*2 downto I),
-        ly1   => ly1_padded (I+padding_width*2 downto I),
-        ly2   => ly2_padded (I+padding_width*2 downto I),
-        ly3   => ly3_padded (I+padding_width*2 downto I),
-        ly4   => ly4_padded (I+padding_width*2 downto I),
-        ly5   => ly5_padded (I+padding_width*2 downto I),
-        pat_o => pat_candidates(I)
+        ly0   => ly0_padded (phase+I*MUX_FACTOR+padding_width*2 downto phase+I*MUX_FACTOR),
+        ly1   => ly1_padded (phase+I*MUX_FACTOR+padding_width*2 downto phase+I*MUX_FACTOR),
+        ly2   => ly2_padded (phase+I*MUX_FACTOR+padding_width*2 downto phase+I*MUX_FACTOR),
+        ly3   => ly3_padded (phase+I*MUX_FACTOR+padding_width*2 downto phase+I*MUX_FACTOR),
+        ly4   => ly4_padded (phase+I*MUX_FACTOR+padding_width*2 downto phase+I*MUX_FACTOR),
+        ly5   => ly5_padded (phase+I*MUX_FACTOR+padding_width*2 downto phase+I*MUX_FACTOR),
+        pat_o => pat_candidates_mux(I)
         );
   end generate;
+
+  -- FIXME: the mux logic needs to be checked and correctly timed.... should pass dav flags around
+  process (clock) is
+  begin
+    if (rising_edge(clock)) then
+      for I in 0 to WIDTH/MUX_FACTOR-1 loop
+        pat_candidates(I*MUX_FACTOR+phase) <= pat_candidates_mux(I);
+      end loop;
+    end if;
+  end process;
 
   pre_gcl_pat_candidates_o <= pat_candidates;
 
