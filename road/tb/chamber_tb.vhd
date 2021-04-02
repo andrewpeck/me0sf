@@ -7,45 +7,35 @@ use ieee.std_logic_1164.all;
 use ieee.std_logic_misc.all;
 use ieee.numeric_std.all;
 
-entity chamber_prbs is
+entity chamber_tb is
   generic (
     NUM_SEGMENTS : integer := 16;
     MUX_FACTOR   : integer := 1
-    );
-  port(
-    reset : in  std_logic;
-    clock : in  std_logic;
-    segs  : out candidate_list_t (NUM_SEGMENTS-1 downto 0)
     );
 end chamber_prbs;
 
 architecture behavioral of chamber_prbs is
 
+  signal In_Valid : std_logic;
+  signal In_IsKey : std_logic;
+  signal clock    : std_logic;
+  signal reset    : std_logic;
   signal phase : integer := 0;
   signal sbits : chamber_t;
+  signal segs  : candidate_list_t (NUM_SEGMENTS-1 downto 0);
+
+  constant clk_period : time := 3 ns;
+  constant sim_period : time := 50 ms;
 
 begin
 
-  prtgen : for partition in 0 to 7 generate
+  clk : process
   begin
-    layergen : for layer in 0 to 5 generate
-    begin
-      halffatgen : for halffat in 0 to 5 generate
-      begin
-
-        PRBS31_32BIT_GEN_1 : entity work.PRBS31_32BIT_GEN
-          port map (
-            DATAIN        => std_logic_vector(to_unsigned(partition + layer + halffat, 32)),
-            PRBS_DATA_OUT => sbits(partition)(layer)(32*(halffat+1)-1 downto 32*halffat),
-            DATA_VALID_IN => '0',
-            comma_type    => "00",
-            CLK           => clock,
-            RESET         => reset
-            );
-
-      end generate;
-    end generate;
-  end generate;
+    wait for clk_period/2.0;
+    clock <= '0';
+    wait for clk_period/2.0;
+    clock <= '1';
+  end process;
 
   process (clock) is
   begin
@@ -64,6 +54,8 @@ begin
       NUM_SEGMENTS => NUM_SEGMENTS,
       MUX_FACTOR   => MUX_FACTOR)
     port map (
+      In_Valid => In_Valid,
+      In_IsKey => In_IsKey,
       clock    => clock,
       phase    => phase,
       sbits    => sbits,

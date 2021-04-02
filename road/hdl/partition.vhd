@@ -9,6 +9,8 @@ use work.patterns.all;
 
 entity partition is
   generic(
+    NUM_SEGMENTS  : integer := 0;
+    PARTITION_NUM : integer := 0;
     WIDTH         : natural := PRT_WIDTH;
     MUX_FACTOR    : natural := FREQ/40
     );

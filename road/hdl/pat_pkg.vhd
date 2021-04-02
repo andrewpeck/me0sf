@@ -5,7 +5,7 @@ use ieee.numeric_std.all;
 
 package pat_pkg is
 
-  constant S0_REGION_SIZE : integer := 8;
+  constant S0_REGION_SIZE : integer := 16;
   constant CNT_THRESH     : integer := 4;
   constant FREQ           : natural := 320;
   constant PRT_WIDTH      : natural := 192;

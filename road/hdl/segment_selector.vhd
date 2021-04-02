@@ -17,8 +17,8 @@ use PoC.components.all;
 
 entity segment_selector is
   generic(
-    WIDTH       : natural := 16;
-    NUM_OUTPUTS : natural := 16
+    WIDTH       : natural := 0;
+    NUM_OUTPUTS : natural := 0
     );
   port(
 
@@ -48,6 +48,9 @@ architecture behavioral of segment_selector is
   --attribute DONT_TOUCH of sortnet_inst : label is "true";
 
 begin
+
+    assert WIDTH >= NUM_OUTPUTS
+      report "Width of segment selector must be >= # of inputs" severity error;
 
   -- Bitonic_Sorter_1: entity work.Bitonic_Sorter
   --   generic map (

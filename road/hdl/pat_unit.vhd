@@ -2,6 +2,7 @@ library ieee;
 use ieee.std_logic_1164.all;
 use ieee.std_logic_misc.all;
 use ieee.numeric_std.all;
+use ieee.math_real.all;
 
 library work;
 use work.pat_pkg.all;
@@ -141,12 +142,18 @@ begin
 
   priority_encoder_inst : entity work.priority_encoder
     generic map (
-      g_DAT_SIZE => CANDIDATE_LENGTH,
-      g_QLT_SIZE => 1+CNT_BITS+PID_BITS,
-      g_WIDTH    => NUM_PATTERNS
+      WIDTH      => NUM_PATTERNS,
+      REG_INPUT  => true,
+      REG_OUTPUT => true,
+      REG_STAGES => 0,
+      DAT_BITS   => CANDIDATE_LENGTH,
+      QLT_BITS   => 1+CNT_BITS+PID_BITS,
+      ADR_BITS_o => integer(ceil(log2(real(NUM_PATTERNS))))
       )
     port map (
       clock => clock,
+      dav_i => '1',
+      dav_o => open,
       dat_i => cand_slv,
       dat_o => best_slv,
       adr_o => open

@@ -10,8 +10,9 @@ use ieee.numeric_std.all;
 
 entity chamber is
   generic (
-    NUM_SEGMENTS : integer := 16;
-    MUX_FACTOR   : integer := 1
+    NUM_SEGMENTS  : integer := 4;
+    PARTITION_NUM : integer := 0;
+    MUX_FACTOR    : integer := FREQ/40
     );
   port(
 
@@ -32,9 +33,9 @@ architecture behavioral of chamber is
 
   signal segs_cat : candidate_list_t (NUM_SEGMENTS*8-1 downto 0);
 
-  signal pre_gcl_pat_candidates : candidate_list_t (PRT_WIDTH-1 downto 0);
+  signal pre_gcl_pat_candidates     : candidate_list_t (PRT_WIDTH-1 downto 0);
   type pre_gcl_array_t is array (integer range 0 to 7) of candidate_list_t (PRT_WIDTH-1 downto 0);
-  signal pre_gcl_pat_candidates_o : pre_gcl_array_t;
+  signal pre_gcl_pat_candidates_o   : pre_gcl_array_t;
   signal pre_gcl_pat_candidates_i_p : pre_gcl_array_t;
   signal pre_gcl_pat_candidates_i_n : pre_gcl_array_t;
 
@@ -51,21 +52,21 @@ begin
   --------------------------------------------------------------------------------
 
   pre_gcl_pat_candidates_i_n (0) <= (others => null_candidate);
-  pre_gcl_pat_candidates_i_n (1) <= pre_gcl_pat_candidates_o (0) ;
-  pre_gcl_pat_candidates_i_n (2) <= pre_gcl_pat_candidates_o (1) ;
-  pre_gcl_pat_candidates_i_n (3) <= pre_gcl_pat_candidates_o (2) ;
-  pre_gcl_pat_candidates_i_n (4) <= pre_gcl_pat_candidates_o (3) ;
-  pre_gcl_pat_candidates_i_n (5) <= pre_gcl_pat_candidates_o (4) ;
-  pre_gcl_pat_candidates_i_n (6) <= pre_gcl_pat_candidates_o (5) ;
-  pre_gcl_pat_candidates_i_n (7) <= pre_gcl_pat_candidates_o (6) ;
+  pre_gcl_pat_candidates_i_n (1) <= pre_gcl_pat_candidates_o (0);
+  pre_gcl_pat_candidates_i_n (2) <= pre_gcl_pat_candidates_o (1);
+  pre_gcl_pat_candidates_i_n (3) <= pre_gcl_pat_candidates_o (2);
+  pre_gcl_pat_candidates_i_n (4) <= pre_gcl_pat_candidates_o (3);
+  pre_gcl_pat_candidates_i_n (5) <= pre_gcl_pat_candidates_o (4);
+  pre_gcl_pat_candidates_i_n (6) <= pre_gcl_pat_candidates_o (5);
+  pre_gcl_pat_candidates_i_n (7) <= pre_gcl_pat_candidates_o (6);
 
-  pre_gcl_pat_candidates_i_p (0) <= pre_gcl_pat_candidates_o (1) ;
-  pre_gcl_pat_candidates_i_p (1) <= pre_gcl_pat_candidates_o (2) ;
-  pre_gcl_pat_candidates_i_p (2) <= pre_gcl_pat_candidates_o (3) ;
-  pre_gcl_pat_candidates_i_p (3) <= pre_gcl_pat_candidates_o (4) ;
-  pre_gcl_pat_candidates_i_p (4) <= pre_gcl_pat_candidates_o (5) ;
-  pre_gcl_pat_candidates_i_p (5) <= pre_gcl_pat_candidates_o (6) ;
-  pre_gcl_pat_candidates_i_p (6) <= pre_gcl_pat_candidates_o (7) ;
+  pre_gcl_pat_candidates_i_p (0) <= pre_gcl_pat_candidates_o (1);
+  pre_gcl_pat_candidates_i_p (1) <= pre_gcl_pat_candidates_o (2);
+  pre_gcl_pat_candidates_i_p (2) <= pre_gcl_pat_candidates_o (3);
+  pre_gcl_pat_candidates_i_p (3) <= pre_gcl_pat_candidates_o (4);
+  pre_gcl_pat_candidates_i_p (4) <= pre_gcl_pat_candidates_o (5);
+  pre_gcl_pat_candidates_i_p (5) <= pre_gcl_pat_candidates_o (6);
+  pre_gcl_pat_candidates_i_p (6) <= pre_gcl_pat_candidates_o (7);
   pre_gcl_pat_candidates_i_n (7) <= (others => null_candidate);
 
   partition_gen : for I in 0 to 7 generate
@@ -77,7 +78,10 @@ begin
     end generate;
 
     partition_inst : entity work.partition
-      generic map (PARTITION_NUM => I)
+      generic map (
+        NUM_SEGMENTS => NUM_SEGMENTS,
+        PARTITION_NUM => I
+        )
 
       port map (
 
@@ -93,9 +97,9 @@ begin
         pat_candidates_o => pat_candidates(I),
 
         -- x-partition ghost cancellation
-        pre_gcl_pat_candidates_o =>pre_gcl_pat_candidates_o(I),
-        pre_gcl_pat_candidates_i_p =>pre_gcl_pat_candidates_i_p(I),
-        pre_gcl_pat_candidates_i_n =>pre_gcl_pat_candidates_i_n(I),
+        pre_gcl_pat_candidates_o   => pre_gcl_pat_candidates_o(I),
+        pre_gcl_pat_candidates_i_p => pre_gcl_pat_candidates_i_p(I),
+        pre_gcl_pat_candidates_i_n => pre_gcl_pat_candidates_i_n(I),
 
         sump => open
 
@@ -161,6 +165,7 @@ begin
 
   mux : for I in 0 to MUX_FACTOR-1 generate
   begin
+
 
     segment_selector_1st : entity work.segment_selector
       generic map (NUM_OUTPUTS => NUM_SEGMENTS,
