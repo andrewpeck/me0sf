@@ -15,11 +15,11 @@ entity ghost_cancellation is
 
     clock : in std_logic;
 
-    pat_candidates_i           : in candidate_list_t (WIDTH-1 downto 0);
-    pre_gcl_pat_candidates_i_p : in candidate_list_t (WIDTH-1 downto 0);
-    pre_gcl_pat_candidates_i_n : in candidate_list_t (WIDTH-1 downto 0);
+    pats_i           : in candidate_list_t (WIDTH-1 downto 0);
+    pre_gcl_pats_i_p : in candidate_list_t (WIDTH-1 downto 0);
+    pre_gcl_pats_i_n : in candidate_list_t (WIDTH-1 downto 0);
 
-    pat_candidates_o : out candidate_list_t (WIDTH-1 downto 0)
+    pats_o : out candidate_list_t (WIDTH-1 downto 0)
 
     );
 end ghost_cancellation;
@@ -35,9 +35,9 @@ architecture behavioral of ghost_cancellation is
   signal ghosted : std_logic_vector (WIDTH-1 downto 0) := (others => '0');
   signal deadcnt : deadcnt_array_t (WIDTH-1 downto 0)  := (others => (others => '0'));
 
-  signal pat_candidates_padded,
-    pat_candidates_padded_p,
-    pat_candidates_padded_n
+  signal pats_padded,
+    pats_padded_p,
+    pats_padded_n
     : candidate_list_t
     (GHOST_REGION*2+WIDTH-1 downto 0) := (others => null_candidate);
 
@@ -61,21 +61,21 @@ begin
   slv : for I in 0 to WIDTH-1 generate
   begin
 
-    pat_candidates_padded(I+GHOST_REGION)   <= pat_candidates_i(I);
-    pat_candidates_padded_p(I+GHOST_REGION) <= pre_gcl_pat_candidates_i_p(I);
-    pat_candidates_padded_n(I+GHOST_REGION) <= pre_gcl_pat_candidates_i_n(I);
+    pats_padded(I+GHOST_REGION)   <= pats_i(I);
+    pats_padded_p(I+GHOST_REGION) <= pre_gcl_pats_i_p(I);
+    pats_padded_n(I+GHOST_REGION) <= pre_gcl_pats_i_n(I);
 
     dead (I) <= '0' when (deadcnt(I) = to_unsigned(0, DEADCNTB)) else '1';
 
-    ghosted(I) <= '1' when (is_ghosted (I+GHOST_REGION, pat_candidates_padded)
-                            or pat_candidates_padded_p(I+GHOST_REGION) >= pat_candidates_padded(GHOST_REGION+I)  -- dead if Partition+1 is better or equal
-                            or pat_candidates_padded_n(I+GHOST_REGION) > pat_candidates_padded(GHOST_REGION+I)   -- dead if Partition-1 is better
+    ghosted(I) <= '1' when (is_ghosted (I+GHOST_REGION, pats_padded)
+                            or pats_padded_p(I+GHOST_REGION) >= pats_padded(GHOST_REGION+I)  -- dead if Partition+1 is better or equal
+                            or pats_padded_n(I+GHOST_REGION) > pats_padded(GHOST_REGION+I)   -- dead if Partition-1 is better
                             ) else '0';
 
     p_deadtime : process (clock) is
     begin
       if (rising_edge(clock)) then
-        if (pat_candidates_i(I).dav and not dead(I)) then
+        if (pats_i(I).dav and not dead(I)) then
           deadcnt(I) <= to_unsigned(DEADTIME, DEADCNTB);
         else
           if (deadcnt(I) > 0) then
@@ -89,9 +89,9 @@ begin
     begin
       if (rising_edge(clock)) then
         if ('1'=dead(I) or '1'=ghosted(I)) then
-          pat_candidates_o(I) <= null_candidate;
+          pats_o(I) <= null_candidate;
         else
-          pat_candidates_o(I) <= pat_candidates_padded(I+GHOST_REGION);
+          pats_o(I) <= pats_padded(I+GHOST_REGION);
         end if;
       end if;
     end process;

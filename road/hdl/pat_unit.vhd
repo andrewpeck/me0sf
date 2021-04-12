@@ -23,7 +23,7 @@ entity pat_unit is
 
     clock : in std_logic;
 
-    dav_i : in std_logic;
+    dav_i : in  std_logic;
     dav_o : out std_logic;
 
     ly0 : in std_logic_vector (LY0_SPAN-1 downto 0);
@@ -40,7 +40,7 @@ end pat_unit;
 
 architecture behavioral of pat_unit is
 
-  signal pat_candidates : candidate_list_t (NUM_PATTERNS-1 downto 0);
+  signal pats : candidate_list_t (NUM_PATTERNS-1 downto 0);
 
   function count_ones(slv : std_logic_vector) return natural is
     variable n_ones : natural := 0;
@@ -59,6 +59,15 @@ architecture behavioral of pat_unit is
 
 begin
 
+  assert check_candidate_conversion("101" & x"A9CD")
+    report "Failed to convert candidate slv" severity error;
+  assert check_candidate_conversion("111" & x"FFFF")
+    report "Failed to convert candidate slv" severity error;
+  assert check_candidate_conversion("101" & x"5555")
+    report "Failed to convert candidate slv" severity error;
+  assert check_candidate_conversion("010" & x"AAAA")
+    report "Failed to convert candidate slv" severity error;
+
   process (clock) is
   begin
     if (rising_edge(clock)) then
@@ -67,12 +76,18 @@ begin
     end if;
   end process;
 
-  assert (LY0_SPAN mod 2 = 1) report "Layer Span Must be Odd (span=" & integer'image(LY0_SPAN) & ")" severity error;
-  assert (LY1_SPAN mod 2 = 1) report "Layer Span Must be Odd (span=" & integer'image(LY1_SPAN) & ")" severity error;
-  assert (LY2_SPAN mod 2 = 1) report "Layer Span Must be Odd (span=" & integer'image(LY2_SPAN) & ")" severity error;
-  assert (LY3_SPAN mod 2 = 1) report "Layer Span Must be Odd (span=" & integer'image(LY3_SPAN) & ")" severity error;
-  assert (LY4_SPAN mod 2 = 1) report "Layer Span Must be Odd (span=" & integer'image(LY4_SPAN) & ")" severity error;
-  assert (LY5_SPAN mod 2 = 1) report "Layer Span Must be Odd (span=" & integer'image(LY5_SPAN) & ")" severity error;
+  assert (LY0_SPAN mod 2 = 1)
+    report "Layer Span Must be Odd (span=" & integer'image(LY0_SPAN) & ")" severity error;
+  assert (LY1_SPAN mod 2 = 1)
+    report "Layer Span Must be Odd (span=" & integer'image(LY1_SPAN) & ")" severity error;
+  assert (LY2_SPAN mod 2 = 1)
+    report "Layer Span Must be Odd (span=" & integer'image(LY2_SPAN) & ")" severity error;
+  assert (LY3_SPAN mod 2 = 1)
+    report "Layer Span Must be Odd (span=" & integer'image(LY3_SPAN) & ")" severity error;
+  assert (LY4_SPAN mod 2 = 1)
+    report "Layer Span Must be Odd (span=" & integer'image(LY4_SPAN) & ")" severity error;
+  assert (LY5_SPAN mod 2 = 1)
+    report "Layer Span Must be Odd (span=" & integer'image(LY5_SPAN) & ")" severity error;
 
   patgen : for I in 0 to patlist'length-1 generate
 
@@ -133,15 +148,15 @@ begin
     process (clock) is
     begin
       if (rising_edge(clock)) then
-        pat_candidates(I) <= null_candidate;
-        pat_candidates(I).cnt <= to_unsigned(count_ones(
+        pats(I) <= null_candidate;
+        pats(I).cnt <= to_unsigned(count_ones(
           or_reduce(ly0_mask) &
           or_reduce(ly1_mask) &
           or_reduce(ly2_mask) &
           or_reduce(ly3_mask) &
           or_reduce(ly4_mask) &
           or_reduce(ly5_mask)), CNT_BITS);
-        pat_candidates(I).id <= to_unsigned(patlist(I).id, PID_BITS);
+        pats(I).id <= to_unsigned(patlist(I).id, PID_BITS);
       end if;
     end process;
   end generate;
@@ -149,7 +164,7 @@ begin
 
   cand_to_slv : for I in 0 to NUM_PATTERNS-1 generate
   begin
-    cand_slv(I) <= to_slv(pat_candidates(I));
+    cand_slv(I) <= to_slv(pats(I));
   end generate;
 
   priority_encoder_inst : entity work.priority_encoder

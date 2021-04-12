@@ -2,3 +2,6 @@
 road/hdl/*.vhd
 road/hdl/bitonic_sort/*.vhd
 road/hdl/priority_encoder/hdl/*.vhd
+
+road/tb/chamber_prbs.vhd top=chamber_prbs
+road/tb/prbs31.vhd

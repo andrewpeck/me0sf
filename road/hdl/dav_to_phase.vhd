@@ -10,16 +10,18 @@ entity dav_to_phase is
     );
   port(
 
-    clock : in  std_logic;
-    dav   : in  std_logic;
-    phase : out natural range 0 to MAX-1
+    clock   : in  std_logic;
+    dav     : in  std_logic;
+    phase_o : out natural range 0 to MAX-1
 
     );
 end dav_to_phase;
 
 architecture behavioral of dav_to_phase is
-
+  signal phase : natural range 0 to MAX-1;
 begin
+
+  phase_o <= phase;
 
   process (clock) is
   begin

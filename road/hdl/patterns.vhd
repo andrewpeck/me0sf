@@ -174,15 +174,14 @@ package body patterns is
 
     end loop;
 
-    report "--pat=" & integer'image(pat.id) &
-"  span=" & integer'image(span)
-      severity note;
-    report "ly0 " & ly0 severity note;
-    report "ly1 " & ly1 severity note;
-    report "ly2 " & ly2 severity note;
-    report "ly3 " & ly3 severity note;
-    report "ly4 " & ly4 severity note;
-    report "ly5 " & ly5 severity note;
+    report "--pat=" & integer'image(pat.id) & "  span=" & integer'image(span);
+
+    report "ly0 " & ly0;
+    report "ly1 " & ly1;
+    report "ly2 " & ly2;
+    report "ly3 " & ly3;
+    report "ly4 " & ly4;
+    report "ly5 " & ly5;
 
   end;
 
@@ -192,6 +191,7 @@ package body patterns is
   begin
     for I in list'range loop
       tmp := get_pat_span(list(I));
+      assert false report "span=" & integer'image(tmp) severity note;
       if (tmp > max) then
         max := tmp;
       end if;
