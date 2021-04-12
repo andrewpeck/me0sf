@@ -5,3 +5,6 @@ tmp/
 *.o
 *.cf
 tags
+road/work
+road/transcript
+road/vsim.wlf
