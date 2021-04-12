@@ -37,3 +37,6 @@ clean:
 	rm -f partition
 	rm -f pat_unit
 	rm -f chamber
+
+rust_hdl:
+	vhdl_lang  -c ../vhdl_ls.toml

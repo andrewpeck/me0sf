@@ -1,0 +1,23 @@
+[libraries]
+road.files = [
+  'road/hdl/chamber.vhd',
+  'road/hdl/pat_unit.vhd',
+  'road/hdl/segment_selector.vhd',
+  'road/hdl/partition.vhd',
+  'road/hdl/pat_pkg.vhd',
+  'road/hdl/patterns.vhd',
+  'road/hdl/ghost_cancellation.vhd',
+  'road/hdl/bitonic_sort/poc_bitonic_sort_pkg.vhd',
+  'road/hdl/bitonic_sort/bitonic_sort.vhd',
+  'road/hdl/bitonic_sort/poc_bitonic_sort.vhd',
+  'road/hdl/priority_encoder/hdl/priority_encoder.vhd'
+]
+
+#ieee.files = [
+#  '/usr/local/lib/ghdl/src/synopsys/*.vhdl',
+#  '/usr/local/lib/ghdl/src/std/v08/*.vhdl',
+#  '/usr/local/lib/ghdl/src/ieee2008/*.vhdl',
+#  '/usr/lib/ghdl/src/synopsys/*.vhdl',
+#  '/usr/lib/ghdl/src/std/v08/*.vhdl',
+#  '/usr/lib/ghdl/src/ieee2008/*.vhdl'
+#]
