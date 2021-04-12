@@ -33,10 +33,10 @@ architecture behavioral of segment_selector is
 
   signal local_sump : std_logic_vector (WIDTH-1 downto 0);
 
-  type cand_i_array_t is array (integer range 0 to WIDTH-1)
-    of std_logic_vector(CANDIDATE_LENGTH-1 downto 0);
-  type cand_o_array_t is array (integer range 0 to NUM_OUTPUTS-1)
-    of std_logic_vector(CANDIDATE_LENGTH-1 downto 0);
+  subtype cand_i_array_t is
+    std_logic_vector(WIDTH*CANDIDATE_LENGTH-1 downto 0);
+  subtype cand_o_array_t is
+    std_logic_vector(NUM_OUTPUTS*CANDIDATE_LENGTH-1 downto 0);
 
   signal pat_candidates_i_slv : cand_i_array_t;
   signal pat_candidates_o_slv : cand_o_array_t;
@@ -50,11 +50,13 @@ begin
   begin
 
     in_assign : if (I < WIDTH) generate
-      pat_candidates_i_slv(I) <= pat_candidates_i(I);
+      pat_candidates_i_slv((I+1)*CANDIDATE_LENGTH-1 downto I*CANDIDATE_LENGTH)
+        <= to_slv(pat_candidates_i(I));
     end generate;
 
     null_assign : if (I >= WIDTH) generate
-      pat_candidates_i_slv(I) <= null_candidate;
+      pat_candidates_i_slv((I+1)*CANDIDATE_LENGTH-1 downto I*CANDIDATE_LENGTH)
+        <= to_slv(null_candidate);
     end generate;
 
   end generate;
@@ -62,7 +64,9 @@ begin
   -- Select a subset of outputs from the sorter
   outloop : for I in 0 to NUM_OUTPUTS-1 generate
   begin
-    pat_candidates_o(I) <= to_candidate(pat_candidates_o_slv(I));
+    pat_candidates_o(I) <=
+      to_candidate(
+        pat_candidates_o_slv((I+1)*CANDIDATE_LENGTH-1 downto I*CANDIDATE_LENGTH));
   end generate;
 
   bitonic_sort_1 : entity work.bitonic_sort
