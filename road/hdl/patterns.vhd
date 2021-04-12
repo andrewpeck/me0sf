@@ -196,7 +196,8 @@ package body patterns is
         max := tmp;
       end if;
     end loop;
-    return 2*max+1;
+
+    return max;
   end;
 
   function get_pat_span (pat : pat_unit_t) return integer is
