@@ -1,3 +1,6 @@
+__pycache__
+sim_build
+Projects
 .DS_Store
 .idea
 *.log
