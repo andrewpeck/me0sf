@@ -23,6 +23,9 @@ entity pat_unit is
 
     clock : in std_logic;
 
+    dav_i : in std_logic;
+    dav_o : out std_logic;
+
     ly0 : in std_logic_vector (LY0_SPAN-1 downto 0);
     ly1 : in std_logic_vector (LY1_SPAN-1 downto 0);
     ly2 : in std_logic_vector (LY2_SPAN-1 downto 0);
@@ -55,6 +58,14 @@ architecture behavioral of pat_unit is
   signal cand_slv : bus_array (0 to NUM_PATTERNS-1) (CANDIDATE_LENGTH-1 downto 0);
 
 begin
+
+  process (clock) is
+  begin
+    if (rising_edge(clock)) then
+      -- FIXME: we need to time this in
+      dav_o <= dav_i;
+    end if;
+  end process;
 
   assert (LY0_SPAN mod 2 = 1) report "Layer Span Must be Odd (span=" & integer'image(LY0_SPAN) & ")" severity error;
   assert (LY1_SPAN mod 2 = 1) report "Layer Span Must be Odd (span=" & integer'image(LY1_SPAN) & ")" severity error;
@@ -99,9 +110,11 @@ begin
 
   begin
 
-    print_pattern (patlist(I));
 
     lysize : if (VERBOSE) generate
+
+      print_pattern (patlist(I));
+
       assert false report "ly0_size=" & integer'image(ly0_size) severity note;
       assert false report "ly1_size=" & integer'image(ly1_size) severity note;
       assert false report "ly2_size=" & integer'image(ly2_size) severity note;

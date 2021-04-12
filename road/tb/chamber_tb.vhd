@@ -57,8 +57,7 @@ begin
       In_Valid => In_Valid,
       In_IsKey => In_IsKey,
       clock    => clock,
-      phase    => phase,
-      sbits    => sbits,
-      segs     => segs);
+      sbits_i    => sbits,
+      segs_o     => segs);
 
 end behavioral;

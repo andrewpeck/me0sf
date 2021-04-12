@@ -11,9 +11,9 @@ entity chamber_prbs is
     NUM_SEGMENTS : integer := 4
     );
   port(
-    reset : in  std_logic;
-    clock : in  std_logic;
-    segs  : out candidate_list_t (NUM_SEGMENTS-1 downto 0)
+    reset : in std_logic;
+    clock : in std_logic;
+    segs : out candidate_list_t (NUM_SEGMENTS-1 downto 0)
     );
 end chamber_prbs;
 
@@ -22,6 +22,8 @@ architecture behavioral of chamber_prbs is
   signal phase : integer := 0;
   signal sbits : chamber_t;
 
+  signal dav_i : std_logic := '0';
+  signal dav_o : std_logic := '0';
 begin
 
   prtgen : for partition in 0 to 7 generate
@@ -33,12 +35,12 @@ begin
 
         PRBS31_32BIT_GEN_1 : entity work.PRBS31_32BIT_GEN
           port map (
-            DATAIN        => std_logic_vector(to_unsigned(partition + layer + halffat, 32)),
+            DATAIN => std_logic_vector(to_unsigned(partition + layer + halffat, 32)),
             PRBS_DATA_OUT => sbits(partition)(layer)(32*(halffat+1)-1 downto 32*halffat),
             DATA_VALID_IN => '0',
-            comma_type    => "00",
-            CLK           => clock,
-            RESET         => reset
+            comma_type => "00",
+            CLK => clock,
+            RESET => reset
             );
 
       end generate;
@@ -56,15 +58,17 @@ begin
     end if;
   end process;
 
+  dav_i <= '1' when phase = 0 else '0';
 
   chamber_inst : entity work.chamber
     generic map (
       NUM_SEGMENTS => NUM_SEGMENTS
       )
     port map (
-      clock    => clock,
-      phase    => phase,
-      sbits    => sbits,
-      segs     => segs);
+      clock => clock,
+      dav_i => dav_i,
+      dav_o => dav_o,
+      sbits_i => sbits,
+      segs_o => segs);
 
 end behavioral;

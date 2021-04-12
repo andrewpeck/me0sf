@@ -1,3 +1,16 @@
+-------------------------------------------------------------------------------
+-- Title      : Chamber
+-------------------------------------------------------------------------------
+-- File       : chamber.vhd
+-- Last update: 2021-04-12
+-- Standard   : VHDL'2008
+-------------------------------------------------------------------------------
+-- Description:
+--
+--   Segment finding for a single ME0 chamber
+--
+-------------------------------------------------------------------------------
+
 use work.pat_pkg.all;
 use work.patterns.all;
 use work.priority_encoder_pkg.all;
@@ -14,12 +27,11 @@ entity chamber is
     MUX_FACTOR    : integer := FREQ/40
     );
   port(
-
-    clock : in  std_logic;
-    phase : in  integer range 0 to 7;
-    sbits : in  chamber_t;
-    segs  : out candidate_list_t (NUM_SEGMENTS-1 downto 0)
-
+    clock   : in  std_logic;             -- 320 MHz clock
+    dav_i   : in  std_logic;
+    dav_o   : out std_logic;
+    sbits_i : in  chamber_t;
+    segs_o  : out candidate_list_t (NUM_SEGMENTS-1 downto 0)
     );
 end chamber;
 
@@ -44,10 +56,21 @@ architecture behavioral of chamber is
   type seg_array_t is array (integer range 0 to 7) of candidate_list_t (NUM_SEGMENTS-1 downto 0);
   signal segs_r, segs_rr : seg_array_t;
 
+  signal phase_candidate_mux : natural;
+  signal phase_selector : natural;
+
 begin
 
+  dav_to_phase_mux_inst : entity work.dav_to_phase
+    generic map (MAX => MUX_FACTOR)
+    port map (clock  => clock, dav => dav_i, phase => phase_candidate_mux);
+
+  dav_to_phase_selector_inst : entity work.dav_to_phase
+    generic map (MAX => MUX_FACTOR)
+    port map (clock  => clock, dav => dav_i, phase => phase_selector);
+
   --------------------------------------------------------------------------------
-  -- Get 192 pattern unit candidates for each partition
+  -- Get pattern unit candidates for each partition, one for each strip
   --------------------------------------------------------------------------------
 
   pre_gcl_pat_candidates_i_n (0) <= (others => null_candidate);
@@ -73,24 +96,24 @@ begin
   begin
 
     p0 : if (I > 0) generate
-      neighbor <= sbits(I-1);
+      neighbor <= sbits_i(I-1);
     end generate;
 
     partition_inst : entity work.partition
       generic map (
-        NUM_SEGMENTS => NUM_SEGMENTS,
-        PARTITION_NUM => I
-        )
-
+        NUM_SEGMENTS  => NUM_SEGMENTS,
+        PARTITION_NUM => I)
       port map (
 
         clock => clock,
+        dav_i => dav_i,
+        dav_o => dav_o,
 
         -- primary layer
-        partition => sbits(I),
+        partition_i => sbits_i(I),
 
         -- neighbor layer
-        neighbor => neighbor,
+        neighbor_i => neighbor,
 
         -- output candidates
         pat_candidates_o => pat_candidates(I),
@@ -129,11 +152,14 @@ begin
         cand_slv(I) <= to_slv(pat_candidates_r(partition)(S0_REGION_SIZE*region + I));
       end generate;
 
-      priority_encoder_1 : entity work.priority_encoder
+      priority_encoder_inst : entity work.priority_encoder
         generic map (
-          g_DAT_SIZE => CANDIDATE_LENGTH,
-          g_QLT_SIZE => CANDIDATE_LENGTH - null_candidate.hash'length,
-          g_WIDTH    => S0_REGION_SIZE
+          DAT_BITS   => CANDIDATE_LENGTH,
+          QLT_BITS   => CANDIDATE_LENGTH - null_candidate.hash'length,
+          WIDTH      => S0_REGION_SIZE,
+          REG_INPUT  => true,
+          REG_OUTPUT => true,
+          REG_STAGES => 2
           )
         port map (
           clock => clock,
@@ -154,7 +180,7 @@ begin
   process (clock) is
   begin
     if (rising_edge(clock)) then
-      pat_candidates_mux <= pat_candidates_s0(phase);
+      pat_candidates_mux <= pat_candidates_s0(phase_candidate_mux);
     end if;
   end process;
 
@@ -164,7 +190,6 @@ begin
 
   mux : for I in 0 to MUX_FACTOR-1 generate
   begin
-
 
     segment_selector_1st : entity work.segment_selector
       generic map (NUM_OUTPUTS => NUM_SEGMENTS,
@@ -179,9 +204,9 @@ begin
     process (clock) is
     begin
       if (rising_edge(clock)) then
-        segs_r(phase) <= selector_s1_o;
+        segs_r(phase_selector) <= selector_s1_o;
 
-        if (phase = 0) then
+        if (phase_selector = 0) then
           segs_rr <= segs_r;
         end if;
 
@@ -204,7 +229,7 @@ begin
     port map (
       clock            => clock,
       pat_candidates_i => segs_cat,
-      pat_candidates_o => segs,
+      pat_candidates_o => segs_o,
       sump             => open
       );
 
