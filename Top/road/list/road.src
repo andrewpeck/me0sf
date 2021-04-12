@@ -1,0 +1,4 @@
+# -*- mode: TCL;-*-
+road/hdl/*.vhd
+road/hdl/bitonic_sort/*.vhd
+road/hdl/priority_encoder/hdl/*.vhd
