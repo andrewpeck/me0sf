@@ -4,9 +4,7 @@ use ieee.std_logic_1164.all;
 use ieee.std_logic_misc.all;
 use ieee.numeric_std.all;
 
-library work;
 use work.bitonic_sort_pkg.all;
-
 
 entity sortnet_bitonicsort is
   generic (

@@ -1,4 +1,3 @@
-library work;
 use work.pat_pkg.all;
 use work.patterns.all;
 

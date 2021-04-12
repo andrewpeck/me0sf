@@ -2,7 +2,6 @@
 -- bitonic sort
 --------------------------------------------------------------------------------
 
-library work;
 use work.bitonic_sort_pkg.all;
 
 library ieee;

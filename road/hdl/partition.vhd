@@ -3,7 +3,6 @@ use ieee.std_logic_1164.all;
 use ieee.std_logic_misc.all;
 use ieee.numeric_std.all;
 
-library work;
 use work.pat_pkg.all;
 use work.patterns.all;
 
