@@ -12,19 +12,18 @@ entity chamber_tb is
     NUM_SEGMENTS : integer := 16;
     MUX_FACTOR   : integer := 1
     );
-end chamber_prbs;
+end chamber_tb;
 
-architecture behavioral of chamber_prbs is
+architecture behavioral of chamber_tb is
 
-  signal In_Valid : std_logic;
-  signal In_IsKey : std_logic;
   signal clock    : std_logic;
-  signal reset    : std_logic;
-  signal phase : integer := 0;
-  signal sbits : chamber_t;
-  signal segs  : candidate_list_t (NUM_SEGMENTS-1 downto 0);
+  signal phase    : integer := 0;
+  signal sbits    : chamber_t := (others => (others => (others => '0')));
+  signal segs     : candidate_list_t (NUM_SEGMENTS-1 downto 0);
 
-  constant clk_period : time := 3 ns;
+  signal dav_i : std_logic := '0';
+
+  constant clk_period : time := 50 ns;
   constant sim_period : time := 50 ms;
 
 begin
@@ -40,7 +39,7 @@ begin
   process (clock) is
   begin
     if (rising_edge(clock)) then
-      if (phase < 8) then
+      if (phase < 7) then
         phase <= phase + 1;
       else
         phase <= 0;
@@ -49,15 +48,24 @@ begin
   end process;
 
 
+  dav_i <= '1' when phase = 0 else '0';
+
+  sbits(0)(0)(1) <= '1';
+  sbits(0)(1)(1) <= '1';
+  sbits(0)(2)(1) <= '1';
+  sbits(0)(3)(1) <= '1';
+  sbits(0)(4)(1) <= '1';
+  sbits(0)(5)(1) <= '1';
+
   chamber_inst : entity work.chamber
     generic map (
-      NUM_SEGMENTS => NUM_SEGMENTS,
-      MUX_FACTOR   => MUX_FACTOR)
+      NUM_SEGMENTS => NUM_SEGMENTS
+      )
     port map (
-      In_Valid => In_Valid,
-      In_IsKey => In_IsKey,
-      clock    => clock,
-      sbits_i    => sbits,
-      segs_o     => segs);
+      clock   => clock,
+      dav_i   => dav_i,
+      dav_o   => open,
+      sbits_i => sbits,
+      segs_o  => segs);
 
 end behavioral;
