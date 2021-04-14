@@ -15,11 +15,11 @@ entity ghost_cancellation is
 
     clock : in std_logic;
 
-    pats_i           : in candidate_list_t (WIDTH-1 downto 0);
-    pre_gcl_pats_i_p : in candidate_list_t (WIDTH-1 downto 0);
-    pre_gcl_pats_i_n : in candidate_list_t (WIDTH-1 downto 0);
+    pats_i           : in pat_list_t (WIDTH-1 downto 0);
+    pre_gcl_pats_i_p : in pat_list_t (WIDTH-1 downto 0);
+    pre_gcl_pats_i_n : in pat_list_t (WIDTH-1 downto 0);
 
-    pats_o : out candidate_list_t (WIDTH-1 downto 0)
+    pats_o : out pat_list_t (WIDTH-1 downto 0)
 
     );
 end ghost_cancellation;
@@ -38,10 +38,10 @@ architecture behavioral of ghost_cancellation is
   signal pats_padded,
     pats_padded_p,
     pats_padded_n
-    : candidate_list_t
-    (GHOST_REGION*2+WIDTH-1 downto 0) := (others => null_candidate);
+    : pat_list_t
+    (GHOST_REGION*2+WIDTH-1 downto 0) := (others => null_pattern);
 
-  function is_ghosted (strip : integer; hits : candidate_list_t) return boolean is
+  function is_ghosted (strip : integer; hits : pat_list_t) return boolean is
     variable is_ghost : boolean := false;
   begin
     is_ghost := false;
@@ -89,7 +89,7 @@ begin
     begin
       if (rising_edge(clock)) then
         if ('1'=dead(I) or '1'=ghosted(I)) then
-          pats_o(I) <= null_candidate;
+          pats_o(I) <= null_pattern;
         else
           pats_o(I) <= pats_padded(I+GHOST_REGION);
         end if;

@@ -34,7 +34,7 @@ entity chamber is
     dav_i   : in  std_logic;
     dav_o   : out std_logic;
     sbits_i : in  chamber_t;
-    segs_o  : out candidate_list_t (NUM_SEGMENTS-1 downto 0)
+    segs_o  : out pat_list_t (NUM_SEGMENTS-1 downto 0)
     );
 end chamber;
 
@@ -44,43 +44,43 @@ architecture behavioral of chamber is
   constant CHAMBER_WIDTH_S1 : natural := PRT_WIDTH/S0_WIDTH/S1_WIDTH/2;
 
   type pats_s0_array_t is array
-    (integer range 0 to NUM_PARTITIONS-1) of candidate_list_t (CHAMBER_WIDTH_S0-1 downto 0);
+    (integer range 0 to NUM_PARTITIONS-1) of pat_list_t (CHAMBER_WIDTH_S0-1 downto 0);
 
   type pats_s1_array_t is array
-    (integer range 0 to NUM_PARTITIONS/2-1) of candidate_list_t (CHAMBER_WIDTH_S0-1 downto 0);
+    (integer range 0 to NUM_PARTITIONS/2-1) of pat_list_t (CHAMBER_WIDTH_S0-1 downto 0);
 
   signal pats_s0 : pats_s0_array_t;
   signal pats_s1 : pats_s1_array_t;
 
-  -- signal pats_mux : candidate_list_t (PRT_WIDTH/S0_REGION_SIZE-1 downto 0);
+  -- signal pats_mux : pat_list_t (PRT_WIDTH/S0_REGION_SIZE-1 downto 0);
 
-  -- signal pre_gcl_pats     : candidate_list_t (PRT_WIDTH-1 downto 0);
-  -- type pre_gcl_array_t is array (integer range 0 to 7) of candidate_list_t (PRT_WIDTH-1 downto 0);
+  -- signal pre_gcl_pats     : pat_list_t (PRT_WIDTH-1 downto 0);
+  -- type pre_gcl_array_t is array (integer range 0 to 7) of pat_list_t (PRT_WIDTH-1 downto 0);
   -- signal pre_gcl_pats_o   : pre_gcl_array_t;
   -- signal pre_gcl_pats_i_p : pre_gcl_array_t;
   -- signal pre_gcl_pats_i_n : pre_gcl_array_t;
 
-  -- signal selector_s1_o : candidate_list_t (NUM_SEGMENTS-1 downto 0);
-  -- signal selector_s2_o : candidate_list_t (NUM_SEGMENTS-1 downto 0);
+  -- signal selector_s1_o : pat_list_t (NUM_SEGMENTS-1 downto 0);
+  -- signal selector_s2_o : pat_list_t (NUM_SEGMENTS-1 downto 0);
 
-  signal phase_candidate_mux : natural;
+  signal phase_pattern_mux : natural;
   signal phase_selector      : natural;
 
 begin
 
   dav_to_phase_mux_inst : entity work.dav_to_phase
     generic map (MAX => MUX_FACTOR)
-    port map (clock  => clock, dav => dav_i, phase_o => phase_candidate_mux);
+    port map (clock  => clock, dav => dav_i, phase_o => phase_pattern_mux);
 
   dav_to_phase_selector_inst : entity work.dav_to_phase
     generic map (MAX => MUX_FACTOR)
     port map (clock  => clock, dav => dav_i, phase_o => phase_selector);
 
   --------------------------------------------------------------------------------
-  -- Get pattern unit candidates for each partition, one for each strip
+  -- Get pattern unit patterns for each partition, one for each strip
   --------------------------------------------------------------------------------
 
-  -- pre_gcl_pats_i_n (0) <= (others => null_candidate);
+  -- pre_gcl_pats_i_n (0) <= (others => null_pattern);
   -- pre_gcl_pats_i_n (1) <= pre_gcl_pats_o (0);
   -- pre_gcl_pats_i_n (2) <= pre_gcl_pats_o (1);
   -- pre_gcl_pats_i_n (3) <= pre_gcl_pats_o (2);
@@ -96,7 +96,7 @@ begin
   -- pre_gcl_pats_i_p (4) <= pre_gcl_pats_o (5);
   -- pre_gcl_pats_i_p (5) <= pre_gcl_pats_o (6);
   -- pre_gcl_pats_i_p (6) <= pre_gcl_pats_o (7);
-  -- pre_gcl_pats_i_n (7) <= (others => null_candidate);
+  -- pre_gcl_pats_i_n (7) <= (others => null_pattern);
 
   partition_gen : for I in 0 to NUM_PARTITIONS-1 generate
     signal neighbor : partition_t := (others => (others => '0'));
@@ -125,7 +125,7 @@ begin
         -- neighbor layer
         neighbor_i => neighbor,
 
-        -- output candidates
+        -- output patterns
         pats_o => pats_s0(I)
 
         -- x-partition ghost cancellation
@@ -139,7 +139,7 @@ begin
   --------------------------------------------------------------------------------
   -- Sort neighbors together
   --
-  -- sort from 12*8 candidates down to 12*4
+  -- sort from 12*8 patterns down to 12*4
   --------------------------------------------------------------------------------
 
   -- FIXME: append the partition number before sorting
@@ -166,7 +166,7 @@ begin
   --------------------------------------------------------------------------------
   -- Final canidate sorting
   --
-  -- sort from 12*4 candidates down to NUM_SEGMENTS
+  -- sort from 12*4 patterns down to NUM_SEGMENTS
   --------------------------------------------------------------------------------
 
   -- FIXME: replace with priority encoder... the # of outputs is so darn small...

@@ -19,7 +19,7 @@ architecture behavioral of chamber_tb is
   signal clock    : std_logic;
   signal phase    : integer := 0;
   signal sbits    : chamber_t := (others => (others => (others => '0')));
-  signal segs     : candidate_list_t (NUM_SEGMENTS-1 downto 0);
+  signal segs     : pat_list_t (NUM_SEGMENTS-1 downto 0);
 
   signal dav_i : std_logic := '0';
 

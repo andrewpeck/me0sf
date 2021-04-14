@@ -18,8 +18,8 @@ entity segment_selector is
 
     clock : in std_logic;
 
-    pats_i : in  candidate_list_t (NUM_INPUTS-1 downto 0);
-    pats_o : out candidate_list_t (NUM_OUTPUTS-1 downto 0);
+    pats_i : in  pat_list_t (NUM_INPUTS-1 downto 0);
+    pats_o : out pat_list_t (NUM_OUTPUTS-1 downto 0);
 
     sump : out std_logic
 
@@ -36,9 +36,9 @@ architecture behavioral of segment_selector is
   constant CLOG_WIDTH : natural := next_power_of_two(NUM_INPUTS);
 
   subtype cand_i_array_t is
-    std_logic_vector(CLOG_WIDTH*CANDIDATE_LENGTH-1 downto 0);
+    std_logic_vector(CLOG_WIDTH*PATTERN_LENGTH-1 downto 0);
   subtype cand_o_array_t is
-    std_logic_vector(NUM_OUTPUTS*CANDIDATE_LENGTH-1 downto 0);
+    std_logic_vector(NUM_OUTPUTS*PATTERN_LENGTH-1 downto 0);
 
   signal pats_i_slv : cand_i_array_t;
   signal pats_o_slv : cand_o_array_t;
@@ -57,13 +57,13 @@ begin
     begin
 
       in_assign : if (I < NUM_INPUTS) generate
-        pats_i_slv((I+1)*CANDIDATE_LENGTH-1 downto I*CANDIDATE_LENGTH)
+        pats_i_slv((I+1)*PATTERN_LENGTH-1 downto I*PATTERN_LENGTH)
           <= to_slv(pats_i(I));
       end generate;
 
       null_assign : if (I >= NUM_INPUTS) generate
-        pats_i_slv((I+1)*CANDIDATE_LENGTH-1 downto I*CANDIDATE_LENGTH)
-          <= to_slv(null_candidate);
+        pats_i_slv((I+1)*PATTERN_LENGTH-1 downto I*PATTERN_LENGTH)
+          <= to_slv(null_pattern);
       end generate;
 
     end generate;
@@ -72,15 +72,15 @@ begin
     outloop : for I in 0 to NUM_OUTPUTS-1 generate
     begin
       pats_o(I) <=
-        to_candidate(pats_o_slv((I+1)*CANDIDATE_LENGTH-1 downto I*CANDIDATE_LENGTH));
+        to_pattern(pats_o_slv((I+1)*PATTERN_LENGTH-1 downto I*PATTERN_LENGTH));
     end generate;
 
     bitonic_sort_inst : entity work.bitonic_sort
       generic map (
         INPUTS               => CLOG_WIDTH,
         OUTPUTS              => NUM_OUTPUTS,
-        DATA_BITS            => CANDIDATE_LENGTH,
-        KEY_BITS             => CANDIDATE_LENGTH,  -- FIXME: only sort on some bits
+        DATA_BITS            => PATTERN_LENGTH,
+        KEY_BITS             => PATTERN_LENGTH,  -- FIXME: only sort on some bits
         META_BITS            => 0,
         PIPELINE_STAGE_AFTER => 2,
         ADD_INPUT_REGISTERS  => false,

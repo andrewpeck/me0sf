@@ -11,13 +11,13 @@ use work.priority_encoder_pkg.all;
 entity pat_unit is
   generic(
     VERBOSE  : boolean    := true;
-    PATLIST  : pat_list_t := pat_list;
-    LY0_SPAN : natural    := get_max_span(pat_list);
-    LY1_SPAN : natural    := get_max_span(pat_list);  -- TODO: variably size the other layers instead of using the max
-    LY2_SPAN : natural    := get_max_span(pat_list);  -- TODO: variably size the other layers instead of using the max
-    LY3_SPAN : natural    := get_max_span(pat_list);  -- TODO: variably size the other layers instead of using the max
-    LY4_SPAN : natural    := get_max_span(pat_list);  -- TODO: variably size the other layers instead of using the max
-    LY5_SPAN : natural    := get_max_span(pat_list)   -- TODO: variably size the other layers instead of using the max
+    PATLIST  : pat_unit_list_t := pat_unit_list;
+    LY0_SPAN : natural    := get_max_span(pat_unit_list);
+    LY1_SPAN : natural    := get_max_span(pat_unit_list);  -- TODO: variably size the other layers instead of using the max
+    LY2_SPAN : natural    := get_max_span(pat_unit_list);  -- TODO: variably size the other layers instead of using the max
+    LY3_SPAN : natural    := get_max_span(pat_unit_list);  -- TODO: variably size the other layers instead of using the max
+    LY4_SPAN : natural    := get_max_span(pat_unit_list);  -- TODO: variably size the other layers instead of using the max
+    LY5_SPAN : natural    := get_max_span(pat_unit_list)   -- TODO: variably size the other layers instead of using the max
     );
   port(
 
@@ -33,14 +33,14 @@ entity pat_unit is
     ly4 : in std_logic_vector (LY4_SPAN-1 downto 0);
     ly5 : in std_logic_vector (LY5_SPAN-1 downto 0);
 
-    pat_o : out candidate_t
+    pat_o : out pattern_t
 
     );
 end pat_unit;
 
 architecture behavioral of pat_unit is
 
-  signal pats : candidate_list_t (NUM_PATTERNS-1 downto 0);
+  signal pats : pat_list_t (NUM_PATTERNS-1 downto 0);
 
   function count_ones(slv : std_logic_vector) return natural is
     variable n_ones : natural := 0;
@@ -53,20 +53,20 @@ architecture behavioral of pat_unit is
     return n_ones;
   end function count_ones;
 
-  signal best_slv : std_logic_vector (CANDIDATE_LENGTH-1 downto 0);
-  signal best     : candidate_t;
-  signal cand_slv : bus_array (0 to NUM_PATTERNS-1) (CANDIDATE_LENGTH-1 downto 0);
+  signal best_slv : std_logic_vector (PATTERN_LENGTH-1 downto 0);
+  signal best     : pattern_t;
+  signal cand_slv : bus_array (0 to NUM_PATTERNS-1) (PATTERN_LENGTH-1 downto 0);
 
 begin
 
-  assert check_candidate_conversion("1101" & x"A9CD")
-    report "Failed to convert candidate slv" severity error;
-  assert check_candidate_conversion("1111" & x"FFFF")
-    report "Failed to convert candidate slv" severity error;
-  assert check_candidate_conversion("0101" & x"5555")
-    report "Failed to convert candidate slv" severity error;
-  assert check_candidate_conversion("1010" & x"AAAA")
-    report "Failed to convert candidate slv" severity error;
+  assert check_pattern_conversion("1101" & x"A9CD")
+    report "Failed to convert pattern slv" severity error;
+  assert check_pattern_conversion("1111" & x"FFFF")
+    report "Failed to convert pattern slv" severity error;
+  assert check_pattern_conversion("0101" & x"5555")
+    report "Failed to convert pattern slv" severity error;
+  assert check_pattern_conversion("1010" & x"AAAA")
+    report "Failed to convert pattern slv" severity error;
 
   assert (LY0_SPAN mod 2 = 1)
     report "Layer Span Must be Odd (span=" & integer'image(LY0_SPAN) & ")" severity error;
@@ -148,7 +148,7 @@ begin
     process (clock) is
     begin
       if (rising_edge(clock)) then
-        pats(I) <= null_candidate;
+        pats(I) <= null_pattern;
         pats(I).cnt <= to_unsigned(count_ones(
           or_reduce(ly0_mask) &
           or_reduce(ly1_mask) &
@@ -173,7 +173,7 @@ begin
       REG_INPUT  => true,
       REG_OUTPUT => true,
       REG_STAGES => 0,
-      DAT_BITS   => CANDIDATE_LENGTH,
+      DAT_BITS   => PATTERN_LENGTH,
       QLT_BITS   => 1+CNT_BITS+PID_BITS,
       ADR_BITS_o => integer(ceil(log2(real(NUM_PATTERNS))))
       )
@@ -186,7 +186,7 @@ begin
       adr_o => open
       );
 
-  best <= to_candidate(best_slv);
+  best <= to_pattern(best_slv);
 
   --------------------------------------------------------------------------------
   -- Put a threshold, make sure the pattern is above some minimum layer cnt

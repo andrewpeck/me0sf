@@ -12,8 +12,10 @@ entity pat_unit_mux is
   generic(
     VERBOSE          : boolean := false;
     WIDTH            : natural := 192;
-    PADDING          : natural := 8;
-    PAT_UNIT_LATENCY : natural := 4;    -- FIXME: time this in
+    -- Need padding for half the width of the pattern this is to handle the edges
+    -- of the chamber where some virtual chamber of all zeroes exists... to be
+    -- trimmed away by the compiler during optimization
+    PADDING          : natural := (get_max_span(pat_unit_list)-1)/2;
     MUX_FACTOR       : natural := 8
     );
   port(
@@ -29,7 +31,7 @@ entity pat_unit_mux is
     ly4 : in std_logic_vector (WIDTH-1 downto 0);
     ly5 : in std_logic_vector (WIDTH-1 downto 0);
 
-    patterns_o : out candidate_list_t (WIDTH-1 downto 0)
+    patterns_o : out pat_list_t (WIDTH-1 downto 0)
 
     );
 end pat_unit_mux;
@@ -46,12 +48,12 @@ architecture behavioral of pat_unit_mux is
 
   constant NUM_SECTORS : positive := WIDTH/MUX_FACTOR;
 
-  constant LY0_SPAN : natural := get_max_span(pat_list);
-  constant LY1_SPAN : natural := get_max_span(pat_list);
-  constant LY2_SPAN : natural := get_max_span(pat_list);
-  constant LY3_SPAN : natural := get_max_span(pat_list);
-  constant LY4_SPAN : natural := get_max_span(pat_list);
-  constant LY5_SPAN : natural := get_max_span(pat_list);
+  constant LY0_SPAN : natural := get_max_span(pat_unit_list);
+  constant LY1_SPAN : natural := get_max_span(pat_unit_list);
+  constant LY2_SPAN : natural := get_max_span(pat_unit_list);
+  constant LY3_SPAN : natural := get_max_span(pat_unit_list);
+  constant LY4_SPAN : natural := get_max_span(pat_unit_list);
+  constant LY5_SPAN : natural := get_max_span(pat_unit_list);
 
   signal ly0_padded : std_logic_vector (WIDTH-1 + 2*PADDING downto 0);
   signal ly1_padded : std_logic_vector (WIDTH-1 + 2*PADDING downto 0);
@@ -60,11 +62,11 @@ architecture behavioral of pat_unit_mux is
   signal ly4_padded : std_logic_vector (WIDTH-1 + 2*PADDING downto 0);
   signal ly5_padded : std_logic_vector (WIDTH-1 + 2*PADDING downto 0);
 
-  signal patterns_mux : candidate_list_t (NUM_SECTORS-1 downto 0);
+  signal patterns_mux : pat_list_t (NUM_SECTORS-1 downto 0);
 
-  signal patterns_reg : candidate_list_t (WIDTH-1 downto 0);
+  signal patterns_reg : pat_list_t (WIDTH-1 downto 0);
 
-  signal phase_i, phase_pat_o : natural range 0 to MUX_FACTOR;
+  signal phase_i, phase_pat_o : natural range 0 to MUX_FACTOR-1;
 
   signal dav_pat_i : std_logic := '0';
   signal dav_pat_o : std_logic_vector (NUM_SECTORS-1 downto 0);

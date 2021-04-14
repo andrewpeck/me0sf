@@ -1,3 +1,8 @@
+--------------------------------------------------------------------------------
+-- This is just a dumb wrapper around the segment finder to allow standalone
+-- implementation in hardware
+--------------------------------------------------------------------------------
+
 use work.pat_pkg.all;
 use work.patterns.all;
 
@@ -11,9 +16,10 @@ entity chamber_prbs is
     NUM_SEGMENTS : integer := 4
     );
   port(
-    reset : in std_logic;
-    clock : in std_logic;
-    segs : out candidate_list_t (NUM_SEGMENTS-1 downto 0)
+    reset : in  std_logic;
+    clock : in  std_logic;
+    dav_i : in  std_logic;
+    segs  : out pat_list_t (NUM_SEGMENTS-1 downto 0)
     );
 end chamber_prbs;
 
@@ -22,7 +28,6 @@ architecture behavioral of chamber_prbs is
   signal phase : integer := 0;
   signal sbits : chamber_t;
 
-  signal dav_i : std_logic := '0';
   signal dav_o : std_logic := '0';
 begin
 
@@ -35,40 +40,28 @@ begin
 
         PRBS31_32BIT_GEN_1 : entity work.PRBS31_32BIT_GEN
           port map (
-            DATAIN => std_logic_vector(to_unsigned(partition + layer + halffat, 32)),
+            -- seed it with something different in each case
+            DATAIN        => std_logic_vector(to_unsigned(partition + layer + halffat+999, 32)),
             PRBS_DATA_OUT => sbits(partition)(layer)(32*(halffat+1)-1 downto 32*halffat),
             DATA_VALID_IN => '0',
-            comma_type => "00",
-            CLK => clock,
-            RESET => reset
+            comma_type    => "00",
+            CLK           => clock,
+            RESET         => reset
             );
 
       end generate;
     end generate;
   end generate;
 
-  process (clock) is
-  begin
-    if (rising_edge(clock)) then
-      if (phase < 8) then
-        phase <= phase + 1;
-      else
-        phase <= 0;
-      end if;
-    end if;
-  end process;
-
-  dav_i <= '1' when phase = 0 else '0';
-
   chamber_inst : entity work.chamber
     generic map (
       NUM_SEGMENTS => NUM_SEGMENTS
       )
     port map (
-      clock => clock,
-      dav_i => dav_i,
-      dav_o => dav_o,
+      clock   => clock,
+      dav_i   => dav_i,
+      dav_o   => open,
       sbits_i => sbits,
-      segs_o => segs);
+      segs_o  => segs);
 
 end behavioral;

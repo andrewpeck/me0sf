@@ -40,40 +40,35 @@ entity partition is
     --------------------------------------------------------------------------------
 
     -- -- send patterns out to partition n+1 and n-1
-    -- pre_gcl_pats_o : out candidate_list_t (PRT_WIDTH-1 downto 0);
+    -- pre_gcl_pats_o : out pat_list_t (PRT_WIDTH-1 downto 0);
 
     -- -- bring patterns in from partition n+1
-    -- pre_gcl_pats_i_p : in candidate_list_t (PRT_WIDTH-1 downto 0);
+    -- pre_gcl_pats_i_p : in pat_list_t (PRT_WIDTH-1 downto 0);
 
     -- -- bring patterns in from partition n-1
-    -- pre_gcl_pats_i_n : in candidate_list_t (PRT_WIDTH-1 downto 0);
+    -- pre_gcl_pats_i_n : in pat_list_t (PRT_WIDTH-1 downto 0);
 
     --------------------------------------------------------------------------------
     -- outputs
     --------------------------------------------------------------------------------
 
-    pats_o : out candidate_list_t (PRT_WIDTH/S0_WIDTH/S1_WIDTH-1 downto 0)
+    pats_o : out pat_list_t (PRT_WIDTH/S0_WIDTH/S1_WIDTH-1 downto 0)
 
     );
 end partition;
 
 architecture behavioral of partition is
 
-  -- Need padding for half the width of the pattern this is to handle the edges
-  -- of the chamber where some virtual chamber of all zeroes exists... to be
-  -- trimmed away by the compiler during optimization
-  constant PADDING : integer := (get_max_span(pat_list)-1)/2;
-
   -- (partially) or together this partition and its minus neighbor only need the
   -- minus neighbor since we are only interested in things pointing from the IP
   signal lyor : partition_t;
 
   -- pre-and post ghost-cancellation patterns, 1 per strip
-  signal pats    : candidate_list_t (PRT_WIDTH-1 downto 0);
-  signal pats_s0 : candidate_list_t (PRT_WIDTH/S0_WIDTH-1 downto 0);
-  signal pats_s1 : candidate_list_t (PRT_WIDTH/S0_WIDTH/S1_WIDTH-1 downto 0);
+  signal pats    : pat_list_t (PRT_WIDTH-1 downto 0);
+  signal pats_s0 : pat_list_t (PRT_WIDTH/S0_WIDTH-1 downto 0);
+  signal pats_s1 : pat_list_t (PRT_WIDTH/S0_WIDTH/S1_WIDTH-1 downto 0);
 
-  -- signal pats_gcl : candidate_list_t (PRT_WIDTH-1 downto 0);
+  -- signal pats_gcl : pat_list_t (PRT_WIDTH-1 downto 0);
 
 begin
 
@@ -110,7 +105,6 @@ begin
   pat_unit_mux_inst : entity work.pat_unit_mux
     generic map (
       WIDTH      => PRT_WIDTH,
-      PADDING    => PADDING,
       MUX_FACTOR => MUX_FACTOR
       )
     port map (
@@ -132,12 +126,12 @@ begin
   --pre_gcl_pats_o <= pats;
 
   -- --------------------------------------------------------------------------------
-  -- -- s0 Pre-filter the candidates to limit to 1 segment in every N strips
+  -- -- s0 Pre-filter the patterns to limit to 1 segment in every N strips
   -- --------------------------------------------------------------------------------
 
   s0_gen : for region in 0 to PRT_WIDTH/S0_WIDTH-1 generate
-    signal best     : std_logic_vector (CANDIDATE_LENGTH-1 downto 0);
-    signal cand_slv : bus_array (0 to S0_WIDTH-1) (CANDIDATE_LENGTH-1 downto 0);
+    signal best     : std_logic_vector (PATTERN_LENGTH-1 downto 0);
+    signal cand_slv : bus_array (0 to S0_WIDTH-1) (PATTERN_LENGTH-1 downto 0);
   begin
 
     cand_to_slv : for I in 0 to S0_WIDTH-1 generate
@@ -147,8 +141,8 @@ begin
 
     priority_encoder_inst : entity work.priority_encoder
       generic map (
-        DAT_BITS   => CANDIDATE_LENGTH,
-        QLT_BITS   => CANDIDATE_LENGTH - null_candidate.hash'length,
+        DAT_BITS   => PATTERN_LENGTH,
+        QLT_BITS   => PATTERN_LENGTH - null_pattern.hash'length,
         WIDTH      => S0_WIDTH,
         REG_INPUT  => false,
         REG_OUTPUT => true,
@@ -161,7 +155,7 @@ begin
         adr_o => open
         );
 
-    pats_s0(region) <= to_candidate(best);
+    pats_s0(region) <= to_pattern(best);
 
   end generate;
 
