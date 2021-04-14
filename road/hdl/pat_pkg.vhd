@@ -5,14 +5,30 @@ use ieee.numeric_std.all;
 
 package pat_pkg is
 
+  --------------------------------------------------------------------------------
+  -- Build Parameters
+  --------------------------------------------------------------------------------
+
   constant S0_REGION_SIZE : integer := 16;
   constant CNT_THRESH     : integer := 4;
   constant FREQ           : natural := 320;
   constant PRT_WIDTH      : natural := 192;
 
+  --------------------------------------------------------------------------------
+  -- Constants for Patterns
+  --------------------------------------------------------------------------------
+
   constant CNT_BITS  : natural := 3;    -- number of bits to count 6 layers, always 3
-  constant PID_BITS  : natural := 3;    -- number of bits to cnt the pids
+  constant PID_BITS  : natural := 4;    -- number of bits to cnt the pids
   constant HASH_BITS : natural := 12;
+  constant VALID_BIT : natural := 1;
+
+  constant CANDIDATE_LENGTH : natural := CNT_BITS + PID_BITS + HASH_BITS + VALID_BIT;
+  constant CANDIDATE_SORTB  : natural := CNT_BITS + PID_BITS + VALID_BIT;
+
+  --------------------------------------------------------------------------------
+  -- Types for patterns
+  --------------------------------------------------------------------------------
 
   subtype layer_t is std_logic_vector(3*64-1 downto 0);
   type partition_t is array(integer range 0 to 5) of layer_t;
@@ -52,9 +68,6 @@ package pat_pkg is
       hash => (others => '0')
       );
 
-  constant CANDIDATE_LENGTH : natural := CNT_BITS + PID_BITS + HASH_BITS + 1;
-  constant CANDIDATE_SORTB  : natural := CNT_BITS + PID_BITS + 1;
-
   type candidate_list_slv_t is array (integer range <>) of std_logic_vector (CANDIDATE_LENGTH-1 downto 0);
 
   type candidate_list_t is array (integer range <>) of candidate_t;
@@ -62,6 +75,10 @@ package pat_pkg is
   type cand_array_t is array (integer range 0 to 7) of candidate_list_t (PRT_WIDTH-1 downto 0);
 
   type cand_array_s0_t is array (integer range 0 to 7) of candidate_list_t (PRT_WIDTH/S0_REGION_SIZE-1 downto 0);
+
+  --------------------------------------------------------------------------------
+  -- Pattern Helper Functions
+  --------------------------------------------------------------------------------
 
   -- mirror a pattern unit (left/right symmetry)
   function mirror_pat_unit (pat : pat_unit_t; id : natural) return pat_unit_t;
@@ -117,14 +134,11 @@ package body pat_pkg is
 
     slv_rerange := slv;
 
-    assert slv_rerange'length = 19 report "slv_rerange length = " & integer'image(slv_rerange'length) severity error;
-    assert slv_rerange'left = 18 report "slv_rerange left = " & integer'image(slv_rerange'left) severity error;
-    assert slv_rerange'right = 0 report "slv_rerange right = " & integer'image(slv_rerange'right) severity error;
-
-    --candidate.id   := unsigned(slv_rerange(PID_BITS-1 downto 0));
+    candidate.id   := unsigned(slv_rerange(PID_BITS-1 downto 0));
     candidate.cnt  := unsigned(slv_rerange(CNT_BITS+PID_BITS-1 downto PID_BITS));
     candidate.dav  := slv_rerange(CNT_BITS+PID_BITS);
-    candidate.hash := unsigned(slv_rerange(1+HASH_BITS+CNT_BITS+PID_BITS-1 downto 1+CNT_BITS+PID_BITS));
+    candidate.hash := unsigned(slv_rerange(VALID_BIT+HASH_BITS+CNT_BITS+PID_BITS-1
+                                           downto VALID_BIT+CNT_BITS+PID_BITS));
     return candidate;
   end;
 
@@ -132,8 +146,16 @@ package body pat_pkg is
   -- to be used in asserts to make sure the conversion always works
   function check_candidate_conversion (slv : std_logic_vector)
     return boolean is
+    variable slv_o : std_logic_vector(CANDIDATE_LENGTH-1 downto 0);
   begin
-    return to_slv(to_candidate(slv)) = slv;
+    slv_o := to_slv(to_candidate(slv));
+
+    if (slv_o /= slv) then
+      assert false report "conv_in="  & to_hstring(slv)   severity note;
+      assert false report "conv_out=" & to_hstring(slv_o) severity note;
+    end if;
+
+    return slv_o=slv;
   end;
 
   function "=" (L : candidate_t; R : candidate_t) return boolean is

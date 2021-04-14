@@ -2,7 +2,7 @@
 -- Title      : Chamber
 -------------------------------------------------------------------------------
 -- File       : chamber.vhd
--- Last update: 2021-04-12
+-- Last update: 2021-04-14
 -- Standard   : VHDL'2008
 -------------------------------------------------------------------------------
 -- Description:
@@ -60,8 +60,8 @@ architecture behavioral of chamber is
   -- signal pre_gcl_pats_i_p : pre_gcl_array_t;
   -- signal pre_gcl_pats_i_n : pre_gcl_array_t;
 
-  signal selector_s1_o : candidate_list_t (NUM_SEGMENTS-1 downto 0);
-  signal selector_s2_o : candidate_list_t (NUM_SEGMENTS-1 downto 0);
+  -- signal selector_s1_o : candidate_list_t (NUM_SEGMENTS-1 downto 0);
+  -- signal selector_s2_o : candidate_list_t (NUM_SEGMENTS-1 downto 0);
 
   signal phase_candidate_mux : natural;
   signal phase_selector      : natural;
@@ -126,14 +126,12 @@ begin
         neighbor_i => neighbor,
 
         -- output candidates
-        pats_o => pats_s0(I),
+        pats_o => pats_s0(I)
 
         -- x-partition ghost cancellation
         -- pre_gcl_pats_o   => pre_gcl_pats_o(I),
         -- pre_gcl_pats_i_p => pre_gcl_pats_i_p(I),
         -- pre_gcl_pats_i_n => pre_gcl_pats_i_n(I),
-
-        sump => open
 
         );
   end generate;
@@ -148,6 +146,7 @@ begin
 
   s1_sort : for I in 0 to NUM_PARTITIONS/2-1 generate
   begin
+
     segment_selector_neighbor : entity work.segment_selector
       generic map (
         MODE        => "BITONIC",
@@ -156,6 +155,7 @@ begin
         )
       port map (
         clock  => clock,
+        -- take partition I and partition I+1 and choose the best patterns
         pats_i => pats_s0 (I*2+1) & pats_s0 (I*2),
         pats_o => pats_s1 (I),
         sump   => open

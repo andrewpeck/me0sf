@@ -22,12 +22,12 @@ entity pat_unit_mux is
     dav_i : in  std_logic;
     dav_o : out std_logic;
 
-    ly0_padded : in std_logic_vector (WIDTH-1 + 2*PADDING downto 0);
-    ly1_padded : in std_logic_vector (WIDTH-1 + 2*PADDING downto 0);
-    ly2_padded : in std_logic_vector (WIDTH-1 + 2*PADDING downto 0);
-    ly3_padded : in std_logic_vector (WIDTH-1 + 2*PADDING downto 0);
-    ly4_padded : in std_logic_vector (WIDTH-1 + 2*PADDING downto 0);
-    ly5_padded : in std_logic_vector (WIDTH-1 + 2*PADDING downto 0);
+    ly0 : in std_logic_vector (WIDTH-1 downto 0);
+    ly1 : in std_logic_vector (WIDTH-1 downto 0);
+    ly2 : in std_logic_vector (WIDTH-1 downto 0);
+    ly3 : in std_logic_vector (WIDTH-1 downto 0);
+    ly4 : in std_logic_vector (WIDTH-1 downto 0);
+    ly5 : in std_logic_vector (WIDTH-1 downto 0);
 
     patterns_o : out candidate_list_t (WIDTH-1 downto 0)
 
@@ -35,6 +35,14 @@ entity pat_unit_mux is
 end pat_unit_mux;
 
 architecture behavioral of pat_unit_mux is
+
+  function pad_layer (pad : natural; data : std_logic_vector)
+    -- function to take slv + padding and pad both the left and right sides
+    return std_logic_vector is
+    variable pad_slv : std_logic_vector (pad-1 downto 0) := (others => '0');
+  begin
+    return pad_slv & data & pad_slv;
+  end;
 
   constant NUM_SECTORS : positive := WIDTH/MUX_FACTOR;
 
@@ -45,15 +53,30 @@ architecture behavioral of pat_unit_mux is
   constant LY4_SPAN : natural := get_max_span(pat_list);
   constant LY5_SPAN : natural := get_max_span(pat_list);
 
+  signal ly0_padded : std_logic_vector (WIDTH-1 + 2*PADDING downto 0);
+  signal ly1_padded : std_logic_vector (WIDTH-1 + 2*PADDING downto 0);
+  signal ly2_padded : std_logic_vector (WIDTH-1 + 2*PADDING downto 0);
+  signal ly3_padded : std_logic_vector (WIDTH-1 + 2*PADDING downto 0);
+  signal ly4_padded : std_logic_vector (WIDTH-1 + 2*PADDING downto 0);
+  signal ly5_padded : std_logic_vector (WIDTH-1 + 2*PADDING downto 0);
+
   signal patterns_mux : candidate_list_t (NUM_SECTORS-1 downto 0);
 
   signal patterns_reg : candidate_list_t (WIDTH-1 downto 0);
 
   signal phase_i, phase_pat_o : natural range 0 to MUX_FACTOR;
 
-  signal dav_pat_i, dav_pat_o : std_logic := '0';
+  signal dav_pat_i : std_logic := '0';
+  signal dav_pat_o : std_logic_vector (NUM_SECTORS-1 downto 0);
 
 begin
+
+  ly0_padded <= pad_layer(PADDING, ly0);
+  ly1_padded <= pad_layer(PADDING, ly1);
+  ly2_padded <= pad_layer(PADDING, ly2);
+  ly3_padded <= pad_layer(PADDING, ly3);
+  ly4_padded <= pad_layer(PADDING, ly4);
+  ly5_padded <= pad_layer(PADDING, ly5);
 
   assert WIDTH mod MUX_FACTOR = 0
     report "pat_unit_mux WIDTH must be divisible by MUX_FACTOR"
@@ -70,6 +93,7 @@ begin
   -- we loop over those 24 sectors and mux together the inputs / outputs
   --------------------------------------------------------------------------------
 
+  dav_o <= dav_i; -- FIXME
 
   dav_to_phase_i_inst : entity work.dav_to_phase
     generic map (MAX => MUX_FACTOR)
@@ -77,7 +101,7 @@ begin
 
   dav_to_phase_o_inst : entity work.dav_to_phase
     generic map (MAX => MUX_FACTOR)
-    port map (clock  => clock, dav => dav_pat_o, phase_o => phase_pat_o);
+    port map (clock  => clock, dav => dav_pat_o(0), phase_o => phase_pat_o);
 
   patgen : for I in 0 to NUM_SECTORS-1 generate
 
@@ -107,12 +131,15 @@ begin
     end process;
 
     pat_unit_inst : entity work.pat_unit
+      generic map (
+        VERBOSE => false
+        )
       port map (
 
         clock => clock,
 
         dav_i => dav_pat_i,
-        dav_o => dav_pat_o,
+        dav_o => dav_pat_o(I),
 
         ly0 => ly0_in,
         ly1 => ly1_in,

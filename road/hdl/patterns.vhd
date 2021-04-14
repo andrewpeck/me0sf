@@ -191,7 +191,7 @@ package body patterns is
   begin
     for I in list'range loop
       tmp := get_pat_span(list(I));
-      assert false report "span=" & integer'image(tmp) severity note;
+      --assert false report "span=" & integer'image(tmp) severity note;
       if (tmp > max) then
         max := tmp;
       end if;

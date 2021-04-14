@@ -1,53 +1,75 @@
 .PHONY : build poc road
 
-GHDL = true
+QUESTA =
 
-ifdef $(GHDL)
-ANALYZE=ghdl -a --std=08 --ieee=synopsys
-ELABORATE=ghdl -e --std=08 --ieee=synopsys
-RUN=ghdl -r --std=08 --ieee=synopsys
-endif
-
-#ifdef $(QUESTA)
+ifdef QUESTA
 ANALYZE=vcom -2008 -check_synthesis
 ELABORATE=echo
-RUN=vsim
-TAIL=log -r * run 100000000 quit -f
-#endif
+RUN=vsim -batch -do "set NumericStdNoWarnings 1; run 10000; quit -f"
+ifdef GUI
+RUN_GUI = vsim -debugDB
+else
+RUN_GUI = $(RUN)
+endif
+#TAIL=
+else
+ANALYZE=ghdl -a --std=08 --ieee=synopsys -Wunused --warn-runtime-error --warn-body --warn-parenthesis --warn-reserved
+ELABORATE=ghdl -e --std=08 --ieee=synopsys
+RUN=ghdl -r --std=08 --ieee=synopsys
+RUNTAIL=--ieee-asserts=disable
+endif
 
-build: poc road prbs
+build: chamber_tb
 
 BITONIC_SRCS = 	hdl/bitonic_sort/poc_bitonic_sort_pkg.vhd \
 		 						hdl/bitonic_sort/poc_bitonic_sort.vhd \
 	  						hdl/bitonic_sort/bitonic_sort.vhd
 
-poc: $(BITONIC_SRCS)
-	$(ANALYZE) $(BITONIC_SRCS)
+sorter: $(BITONIC_SRCS)
+	@$(ANALYZE) $(BITONIC_SRCS)
+	$(RUN) bitonic_sort $(RUNTAIL)
 
-patterns:
-	$(ANALYZE)   hdl/pat_pkg.vhd  hdl/patterns.vhd hdl/priority_encoder/hdl/priority_encoder.vhd
-	$(ANALYZE)   hdl/pat_unit.vhd
-	$(ELABORATE) pat_unit
-	$(RUN)       pat_unit $(TAIL)
+priority:
+	@$(ANALYZE) hdl/priority_encoder/hdl/priority_encoder.vhd
 
-road: patterns poc
-	$(ANALYZE)   hdl/dav_to_phase.vhd hdl/pat_unit_mux.vhd hdl/ghost_cancellation.vhd hdl/segment_selector.vhd hdl/partition.vhd hdl/chamber.vhd
-	$(ELABORATE) partition
-	$(ELABORATE) chamber
+patterns: priority
+	@$(ANALYZE)   hdl/pat_pkg.vhd  hdl/patterns.vhd
+	@$(ANALYZE)   hdl/pat_unit.vhd
 
-prbs: road
-	$(ANALYZE)   tb/prbs31.vhd
-	$(ANALYZE)   tb/chamber_prbs.vhd
-	$(ELABORATE) chamber_prbs
+	$(RUN)       pat_unit $(RUNTAIL)
 
-run: prbs
-	./chamber_prbs --ieee-asserts=disable
+partition: patterns sorter
+	@$(ANALYZE) hdl/dav_to_phase.vhd hdl/pat_unit_mux.vhd hdl/ghost_cancellation.vhd hdl/segment_selector.vhd hdl/partition.vhd
+
+	$(RUN) segment_selector $(RUNTAIL)
+	$(RUN) pat_unit_mux $(RUNTAIL)
+	$(RUN) partition $(RUNTAIL)
+
+chamber: patterns sorter partition
+	@$(ANALYZE) hdl/chamber.vhd
+	$(RUN) chamber $(RUNTAIL)
+
+chamber_tb: chamber
+	@$(ANALYZE)   tb/chamber_tb.vhd
+	$(RUN_GUI)    chamber_tb $(RUNTAIL)
+
+run:
+	@$(ANALYZE)   tb/chamber_tb.vhd
+	$(RUN_GUI)    chamber_tb $(RUNTAIL)
+
+
+vivado:
+	vivado -mode batch -notrace -source build.tcl | ccze -A
+
+#run: prbs
+#	./chamber_prbs --ieee-asserts=disable
 
 clean:
 	rm -f *.o *.cf
 	rm -f partition
 	rm -f pat_unit
 	rm -f chamber
+	rm -rf work
 
 rust_hdl:
 	vhdl_lang  -c ../vhdl_ls.toml

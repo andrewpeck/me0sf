@@ -53,7 +53,6 @@ architecture rtl of sortnet_bitonicsort is
   end function;
 
   function triangularNumber(N : natural) return natural is
-    variable T : natural;
   begin
     return (N * (N + 1) / 2);
   end function;
@@ -69,9 +68,9 @@ architecture rtl of sortnet_bitonicsort is
     end if;
   end function;
 
-  function registered(signal clock : std_logic; constant isregistered : boolean) return boolean is
+  function registered(signal clk : std_logic; constant isregistered : boolean) return boolean is
   begin
-    return ite(isregistered, rising_edge(clock), true);
+    return ite(isregistered, rising_edge(clk), true);
   end function;
 
   function ite(cond : boolean; value1 : std_logic; value2 : std_logic) return std_logic is

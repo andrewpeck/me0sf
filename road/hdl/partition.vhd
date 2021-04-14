@@ -9,7 +9,7 @@ use work.priority_encoder_pkg.all;
 
 entity partition is
   generic(
-    NUM_SEGMENTS  : integer := 0;
+    NUM_SEGMENTS  : integer := 4;
     PARTITION_NUM : integer := 0;
     PRT_WIDTH     : natural := PRT_WIDTH;
     MUX_FACTOR    : natural := FREQ/40;
@@ -30,9 +30,8 @@ entity partition is
     -- Inputs
     --------------------------------------------------------------------------------
     --
-    -- take in all hits from the partition and from its neighbor
-    -- data from partition n and n+1 is combined to do cross-partition
-    -- pattern finding
+    -- take in all hits from the partition and from its neighbor data from
+    -- partition n and n+1 is combined to do cross-partition pattern finding
     partition_i : in partition_t;
     neighbor_i  : in partition_t;
 
@@ -53,32 +52,20 @@ entity partition is
     -- outputs
     --------------------------------------------------------------------------------
 
-    pats_o : out candidate_list_t (PRT_WIDTH/S0_WIDTH/S1_WIDTH-1 downto 0);
-
-    sump : out std_logic
+    pats_o : out candidate_list_t (PRT_WIDTH/S0_WIDTH/S1_WIDTH-1 downto 0)
 
     );
 end partition;
 
 architecture behavioral of partition is
 
-  -- Need padding for half the width of the pattern
-  -- this is to handle the edges of the chamber where some
-  -- virtual chamber of all zeroes exists... to be trimmed away
-  -- by the compiler during optimization
+  -- Need padding for half the width of the pattern this is to handle the edges
+  -- of the chamber where some virtual chamber of all zeroes exists... to be
+  -- trimmed away by the compiler during optimization
   constant PADDING : integer := (get_max_span(pat_list)-1)/2;
 
-  function pad_layer (pad : natural; data : std_logic_vector)
-    -- function to take slv + padding and pad both the left and right sides
-    return std_logic_vector is
-    variable pad_slv : std_logic_vector (pad-1 downto 0) := (others => '0');
-  begin
-    return pad_slv & data & pad_slv;
-  end;
-
-  -- (partially) or together this partition and its minus neighbor only
-  -- need the minus neighbor since we are only interested in
-  -- things pointing from the IP
+  -- (partially) or together this partition and its minus neighbor only need the
+  -- minus neighbor since we are only interested in things pointing from the IP
   signal lyor : partition_t;
 
   -- pre-and post ghost-cancellation patterns, 1 per strip
@@ -132,23 +119,23 @@ begin
       dav_i => dav_i,
       dav_o => dav_o,
 
-      ly0_padded => pad_layer(PADDING, lyor(0)),
-      ly1_padded => pad_layer(PADDING, lyor(1)),
-      ly2_padded => pad_layer(PADDING, lyor(2)),
-      ly3_padded => pad_layer(PADDING, lyor(3)),
-      ly4_padded => pad_layer(PADDING, lyor(4)),
-      ly5_padded => pad_layer(PADDING, lyor(5)),
+      ly0 => lyor(0),
+      ly1 => lyor(1),
+      ly2 => lyor(2),
+      ly3 => lyor(3),
+      ly4 => lyor(4),
+      ly5 => lyor(5),
 
       patterns_o => pats
       );
 
   --pre_gcl_pats_o <= pats;
 
-  --------------------------------------------------------------------------------
-  -- s0 Pre-filter the candidates to limit to 1 segment in every N strips
-  --------------------------------------------------------------------------------
+  -- --------------------------------------------------------------------------------
+  -- -- s0 Pre-filter the candidates to limit to 1 segment in every N strips
+  -- --------------------------------------------------------------------------------
 
-  region : for region in 0 to PRT_WIDTH/S0_WIDTH-1 generate
+  s0_gen : for region in 0 to PRT_WIDTH/S0_WIDTH-1 generate
     signal best     : std_logic_vector (CANDIDATE_LENGTH-1 downto 0);
     signal cand_slv : bus_array (0 to S0_WIDTH-1) (CANDIDATE_LENGTH-1 downto 0);
   begin
@@ -178,11 +165,11 @@ begin
 
   end generate;
 
-  --------------------------------------------------------------------------------
-  -- S1 Filter
-  --------------------------------------------------------------------------------
+  -- --------------------------------------------------------------------------------
+  -- -- S1 Filter
+  -- --------------------------------------------------------------------------------
 
-  assert S1_WIDTH = 2 report "S1_WIDTH must be 2 for now..." severity note;
+  assert S1_WIDTH = 2 report "S1_WIDTH must be 2 for now..." severity error;
 
   -- FIXME: replace with priority encoder.. should be okay even for size 2
   -- it should infer the correct thing
@@ -206,26 +193,26 @@ begin
 
   pats_o <= pats_s1;
 
-  --------------------------------------------------------------------------------
-  -- Ghost Cancellation
-  --
-  -- Look at adjacent strips to cancel off duplicated hits
-  --
-  --------------------------------------------------------------------------------
-  --
-  -- FIXME: the mux logic needs to be checked and correctly timed....
-  -- should pass dav flags around
+  -- --------------------------------------------------------------------------------
+  -- -- Ghost Cancellation
+  -- --
+  -- -- Look at adjacent strips to cancel off duplicated hits
+  -- --
+  -- --------------------------------------------------------------------------------
+  -- --
+  -- -- FIXME: the mux logic needs to be checked and correctly timed....
+  -- -- should pass dav flags around
 
-  -- gcl_inst : entity work.ghost_cancellation
-  --   generic map (
-  --     WIDTH => PRT_WIDTH
-  --     )
-  --   port map (
-  --     clock                      => clock,
-  --     pats_i           => pats,
-  --     pre_gcl_pats_i_p => pre_gcl_pats_i_p,
-  --     pre_gcl_pats_i_n => pre_gcl_pats_i_n,
-  --     pats_o           => pats_o
-  --     );
+  -- -- gcl_inst : entity work.ghost_cancellation
+  -- --   generic map (
+  -- --     WIDTH => PRT_WIDTH
+  -- --     )
+  -- --   port map (
+  -- --     clock                      => clock,
+  -- --     pats_i           => pats,
+  -- --     pre_gcl_pats_i_p => pre_gcl_pats_i_p,
+  -- --     pre_gcl_pats_i_n => pre_gcl_pats_i_n,
+  -- --     pats_o           => pats_o
+  -- --     );
 
 end behavioral;

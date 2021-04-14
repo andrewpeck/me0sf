@@ -10,7 +10,7 @@ use work.priority_encoder_pkg.all;
 
 entity pat_unit is
   generic(
-    VERBOSE  : boolean    := false;
+    VERBOSE  : boolean    := true;
     PATLIST  : pat_list_t := pat_list;
     LY0_SPAN : natural    := get_max_span(pat_list);
     LY1_SPAN : natural    := get_max_span(pat_list);  -- TODO: variably size the other layers instead of using the max
@@ -59,22 +59,14 @@ architecture behavioral of pat_unit is
 
 begin
 
-  assert check_candidate_conversion("101" & x"A9CD")
+  assert check_candidate_conversion("1101" & x"A9CD")
     report "Failed to convert candidate slv" severity error;
-  assert check_candidate_conversion("111" & x"FFFF")
+  assert check_candidate_conversion("1111" & x"FFFF")
     report "Failed to convert candidate slv" severity error;
-  assert check_candidate_conversion("101" & x"5555")
+  assert check_candidate_conversion("0101" & x"5555")
     report "Failed to convert candidate slv" severity error;
-  assert check_candidate_conversion("010" & x"AAAA")
+  assert check_candidate_conversion("1010" & x"AAAA")
     report "Failed to convert candidate slv" severity error;
-
-  process (clock) is
-  begin
-    if (rising_edge(clock)) then
-      -- FIXME: we need to time this in
-      dav_o <= dav_i;
-    end if;
-  end process;
 
   assert (LY0_SPAN mod 2 = 1)
     report "Layer Span Must be Odd (span=" & integer'image(LY0_SPAN) & ")" severity error;
@@ -88,6 +80,14 @@ begin
     report "Layer Span Must be Odd (span=" & integer'image(LY4_SPAN) & ")" severity error;
   assert (LY5_SPAN mod 2 = 1)
     report "Layer Span Must be Odd (span=" & integer'image(LY5_SPAN) & ")" severity error;
+
+  process (clock) is
+  begin
+    if (rising_edge(clock)) then
+      -- FIXME: we need to time this in
+      dav_o <= dav_i;
+    end if;
+  end process;
 
   patgen : for I in 0 to patlist'length-1 generate
 
@@ -188,6 +188,10 @@ begin
 
   best <= to_candidate(best_slv);
 
+  --------------------------------------------------------------------------------
+  -- Put a threshold, make sure the pattern is above some minimum layer cnt
+  -- TODO: make it programmable from the outside
+  --------------------------------------------------------------------------------
   process (clock) is
   begin
     if (rising_edge(clock)) then

@@ -1,5 +1,11 @@
 --------------------------------------------------------------------------------
 -- bitonic sort
+--
+-- Lightweight wrapper around PoC bitonic sort core..
+-- converts from their custom 'slm' type to a std_logic_vector for ease of use
+--
+-- Also handles zero padding the input since the sorter only accepts powers of two
+--
 --------------------------------------------------------------------------------
 
 use work.bitonic_sort_pkg.all;
@@ -38,25 +44,22 @@ architecture behavioral of bitonic_sort is
 
   -- in case the # of inputs is not a power of two, round it up and zero pad...
   -- Xilinx should trim away the logic
-  constant SORTER_SIZE : natural                                               := 2**integer(ceil(log2(real(INPUTS))));
-  signal in_data_slm   : t_slm(SORTER_SIZE-1 downto 0, DATA_BITS - 1 downto 0) := (others => (others => '0'));
-  signal out_data_slm  : t_slm(SORTER_SIZE-1 downto 0, DATA_BITS - 1 downto 0);
+  constant SORTER_SIZE : natural := 2**integer(ceil(log2(real(INPUTS))));
 
+  -- types required by the sorter code...
+  signal in_data_slm  : t_slm(SORTER_SIZE-1 downto 0, DATA_BITS - 1 downto 0) := (others => (others => '0'));
+  signal out_data_slm : t_slm(SORTER_SIZE-1 downto 0, DATA_BITS - 1 downto 0);
+  signal out_data_slv : std_logic_vector (INPUTS *DATA_BITS-1 downto 0);
 begin
 
-  in_assign : for input in 0 to INPUTS-1 generate
-  begin
-    -- slv to Matrix Map
-    in_bitmap : for bit in 0 to DATA_BITS-1 generate
-      in_data_slm(input, bit) <= data_i(input*DATA_BITS+bit);
-    end generate;
-  end generate;
+  in_data_slm <= to_slm(data_i, INPUTS, DATA_BITS);
+  out_data_slv <= to_slv(out_data_slm);
 
-  out_assign : for output in 0 to OUTPUTS-1 generate
-    -- from sorter Matrix Map
-    out_bitmap : for bit in 0 to DATA_BITS-1 generate
-      data_o(output*DATA_BITS+bit) <= out_data_slm(output, bit);
-    end generate;
+  out_reverse : for I in 0 to OUTPUTS-1 generate
+    constant J : natural := INPUTS-I-1;
+  begin
+    data_o((I+1)*DATA_BITS-1 downto (I)*DATA_BITS)
+      <= out_data_slv((J+1)*DATA_BITS-1 downto (J)*DATA_BITS);
   end generate;
 
   sortnet_inst : entity work.sortnet_bitonicsort
@@ -76,11 +79,11 @@ begin
       in_valid  => '1',                 -- sl
       in_iskey  => '1',                 -- sl
       in_data   => in_data_slm,         -- slm (inputs x databits)
-      in_meta   => meta_i,             -- slv (meta bits)
+      in_meta   => meta_i,              -- slv (meta bits)
       out_valid => open,                -- sl
       out_iskey => open,                -- sl
       out_data  => out_data_slm,        -- slm (inputs x databits)
-      out_meta  => meta_o             -- slv (meta bits)
+      out_meta  => meta_o               -- slv (meta bits)
       );
 
 end behavioral;
