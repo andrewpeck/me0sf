@@ -11,8 +11,8 @@ use work.priority_encoder_pkg.all;
 entity segment_selector is
   generic(
     MODE        : string  := "BITONIC";
-    NUM_INPUTS  : natural := 0;
-    NUM_OUTPUTS : natural := 0
+    NUM_INPUTS  : natural := 32;
+    NUM_OUTPUTS : natural := 32
     );
   port(
 
@@ -28,11 +28,12 @@ end segment_selector;
 
 architecture behavioral of segment_selector is
 
-  signal candidate_sorted : candidate_list_t (NUM_INPUTS-1 downto 0);
+  function next_power_of_two (size : natural) return natural is
+  begin
+    return 2**integer(ceil(log2(real(size))));
+  end;
 
-  constant CLOG_WIDTH : natural := 2**integer(ceil(log2(real(NUM_INPUTS))));
-
-  signal local_sump : std_logic_vector (NUM_INPUTS-1 downto 0);
+  constant CLOG_WIDTH : natural := next_power_of_two(NUM_INPUTS);
 
   subtype cand_i_array_t is
     std_logic_vector(CLOG_WIDTH*CANDIDATE_LENGTH-1 downto 0);
