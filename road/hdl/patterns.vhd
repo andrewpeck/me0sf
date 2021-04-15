@@ -6,7 +6,7 @@ use work.pat_pkg.all;
 
 package patterns is
 
-  constant pat_straight : pat_unit_t := (
+  constant pat_straight : patdef_t := (
     id  => 15,
     ly0 => (lo => -1, hi => 1),
     ly1 => (lo => -1, hi => 1),
@@ -18,7 +18,7 @@ package patterns is
 
   --------------------------------------------------------------------------------
 
-  constant pat_l : pat_unit_t := (
+  constant pat_l : patdef_t := (
     id  => 14,
     ly0 => (lo => -4, hi => -1),
     ly1 => (lo => -3, hi => 0),
@@ -28,11 +28,11 @@ package patterns is
     ly5 => (lo => 1, hi => 4)
     );
 
-  constant pat_r : pat_unit_t := mirror_pat_unit (pat_l, pat_l.id-1);
+  constant pat_r : patdef_t := mirror_patdef (pat_l, pat_l.id-1);
 
   --------------------------------------------------------------------------------
 
-  constant pat_l2 : pat_unit_t := (
+  constant pat_l2 : patdef_t := (
     id  => 12,
     ly0 => (lo => -5, hi => -2),
     ly1 => (lo => -4, hi => 1),
@@ -42,11 +42,11 @@ package patterns is
     ly5 => (lo => 2, hi => 5)
     );
 
-  constant pat_r2 : pat_unit_t := mirror_pat_unit (pat_l2, pat_l2.id-1);
+  constant pat_r2 : patdef_t := mirror_patdef (pat_l2, pat_l2.id-1);
 
   --------------------------------------------------------------------------------
 
-  constant pat_l3 : pat_unit_t := (
+  constant pat_l3 : patdef_t := (
     id  => 10,
     ly0 => (lo => -8, hi => -5),
     ly1 => (lo => -7, hi => -4),
@@ -56,11 +56,11 @@ package patterns is
     ly5 => (lo => 5, hi => 8)
     );
 
-  constant pat_r3 : pat_unit_t := mirror_pat_unit (pat_l3, pat_l3.id-1);
+  constant pat_r3 : patdef_t := mirror_patdef (pat_l3, pat_l3.id-1);
 
   --------------------------------------------------------------------------------
 
-  constant pat_l4 : pat_unit_t := (
+  constant pat_l4 : patdef_t := (
     id  => 8,
     ly0 => (lo => -8, hi => -5),
     ly1 => (lo => -7, hi => -4),
@@ -70,11 +70,11 @@ package patterns is
     ly5 => (lo => 5, hi => 8)
     );
 
-  constant pat_r4 : pat_unit_t := mirror_pat_unit (pat_l4, pat_l4.id-1);
+  constant pat_r4 : patdef_t := mirror_patdef (pat_l4, pat_l4.id-1);
 
   --------------------------------------------------------------------------------
 
-  constant pat_l5 : pat_unit_t := (
+  constant pat_l5 : patdef_t := (
     id  => 6,
     ly0 => (lo => -11, hi => -8),
     ly1 => (lo => -9, hi => -5),
@@ -84,11 +84,11 @@ package patterns is
     ly5 => (lo => 8, hi => 11)
     );
 
-  constant pat_r5 : pat_unit_t := mirror_pat_unit (pat_l5, pat_l5.id-1);
+  constant pat_r5 : patdef_t := mirror_patdef (pat_l5, pat_l5.id-1);
 
   --------------------------------------------------------------------------------
 
-  constant pat_l6 : pat_unit_t := (
+  constant pat_l6 : patdef_t := (
     id  => 4,
     ly0 => (lo => -15, hi => -11),
     ly1 => (lo => -11, hi => -9),
@@ -98,11 +98,11 @@ package patterns is
     ly5 => (lo => 11, hi => 15)
     );
 
-  constant pat_r6 : pat_unit_t := mirror_pat_unit (pat_l6, pat_l6.id-1);
+  constant pat_r6 : patdef_t := mirror_patdef (pat_l6, pat_l6.id-1);
 
   --------------------------------------------------------------------------------
 
-  constant pat_l7 : pat_unit_t := (
+  constant pat_l7 : patdef_t := (
     id  => 2,
     ly0 => (lo => -18, hi => -10),
     ly1 => (lo => -14, hi => -6),
@@ -112,30 +112,34 @@ package patterns is
     ly5 => (lo => 10, hi => 18)
     );
 
-  constant pat_r7 : pat_unit_t := mirror_pat_unit (pat_l7, pat_l7.id-1);
+  constant pat_r7 : patdef_t := mirror_patdef (pat_l7, pat_l7.id-1);
 
   --------------------------------------------------------------------------------
 
   constant NUM_PATTERNS : integer := 15;
-  constant pat_unit_list : pat_unit_list_t (NUM_PATTERNS-1 downto 0) := (pat_straight,
-                                                                         pat_l, pat_r,
-                                                                         pat_l2, pat_r2,
-                                                                         pat_l3, pat_r3,
-                                                                         pat_l4, pat_r4,
-                                                                         pat_l5, pat_r5,
-                                                                         pat_l6, pat_r6,
-                                                                         pat_l7, pat_r7
-                                                                         );
 
-  procedure print_pattern (pat : pat_unit_t);
-  function get_max_span (list  : pat_unit_list_t) return integer;
-  function get_pat_span (pat   : pat_unit_t) return integer;
+  constant patdef_array : patdef_array_t
+    (NUM_PATTERNS-1 downto 0) := (pat_straight,
+                                  pat_l, pat_r,
+                                  pat_l2, pat_r2,
+                                  pat_l3, pat_r3,
+                                  pat_l4, pat_r4,
+                                  pat_l5, pat_r5,
+                                  pat_l6, pat_r6,
+                                  pat_l7, pat_r7
+                                  );
+
+  procedure print_pattern (pat : patdef_t);
+
+  function get_max_span (list : patdef_array_t) return integer;
+
+  function get_pat_span (pat : patdef_t) return integer;
 
 end package patterns;
 
 package body patterns is
 
-  procedure print_pattern (pat : pat_unit_t) is
+  procedure print_pattern (pat : patdef_t) is
     variable span : integer := get_pat_span(pat);
     variable ly0  : string (1 to span);
     variable ly1  : string (1 to span);
@@ -185,7 +189,7 @@ package body patterns is
 
   end;
 
-  function get_max_span (list : pat_unit_list_t) return integer is
+  function get_max_span (list : patdef_array_t) return integer is
     variable max : integer := 0;
     variable tmp : integer := 0;
   begin
@@ -200,7 +204,7 @@ package body patterns is
     return max;
   end;
 
-  function get_pat_span (pat : pat_unit_t) return integer is
+  function get_pat_span (pat : patdef_t) return integer is
     variable min_l : integer := 99;
     variable max_r : integer := -99;
     variable ly    : hi_lo_t;
