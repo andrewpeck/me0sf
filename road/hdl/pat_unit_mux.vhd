@@ -10,13 +10,13 @@ use work.priority_encoder_pkg.all;
 
 entity pat_unit_mux is
   generic(
-    VERBOSE          : boolean := false;
-    WIDTH            : natural := 192;
+    VERBOSE    : boolean := false;
+    WIDTH      : natural := 192;
     -- Need padding for half the width of the pattern this is to handle the edges
     -- of the chamber where some virtual chamber of all zeroes exists... to be
     -- trimmed away by the compiler during optimization
-    PADDING          : natural := (get_max_span(patdef_array)-1)/2;
-    MUX_FACTOR       : natural := 1
+    PADDING    : natural := (get_max_span(patdef_array)-1)/2;
+    MUX_FACTOR : natural := 1
     );
   port(
 
@@ -31,7 +31,7 @@ entity pat_unit_mux is
     ly4 : in std_logic_vector (WIDTH-1 downto 0);
     ly5 : in std_logic_vector (WIDTH-1 downto 0);
 
-    patterns_o : out pat_list_t (WIDTH-1 downto 0)
+    strips_o : out strip_list_t (WIDTH-1 downto 0)
 
     );
 end pat_unit_mux;
@@ -64,7 +64,8 @@ architecture behavioral of pat_unit_mux is
 
   signal patterns_mux : pat_list_t (NUM_SECTORS-1 downto 0);
 
-  signal patterns_reg : pat_list_t (WIDTH-1 downto 0);
+  -- convert to strip type, appends the strip # to the format
+  signal strips_reg : strip_list_t (WIDTH-1 downto 0);
 
   signal phase_i, phase_pat_o : natural range 0 to MUX_FACTOR-1;
 
@@ -95,7 +96,7 @@ begin
   -- we loop over those 24 sectors and mux together the inputs / outputs
   --------------------------------------------------------------------------------
 
-  dav_o <= dav_i; -- FIXME
+  dav_o <= dav_i;                       -- FIXME
 
   dav_to_phase_i_inst : entity work.dav_to_phase
     generic map (MAX => MUX_FACTOR)
@@ -165,11 +166,12 @@ begin
   begin
     if (rising_edge(clock)) then
       for I in 0 to NUM_SECTORS-1 loop
-        patterns_reg(I*MUX_FACTOR+phase_pat_o) <= patterns_mux(I);
+        strips_reg(I*MUX_FACTOR+phase_pat_o).pattern <= patterns_mux(I);
+        strips_reg(I*MUX_FACTOR+phase_pat_o).strip   <= I*MUX_FACTOR+phase_pat_o;
       end loop;
     end if;
   end process;
 
-  patterns_o <= patterns_reg;
+  strips_o <= strips_reg;
 
 end behavioral;

@@ -12,7 +12,7 @@ package pat_pkg is
   constant S0_REGION_SIZE : positive              := 16;
   constant CNT_THRESH     : positive              := 4;
   constant PRT_WIDTH      : positive              := 192;
-  constant PAT_UNIT_MUX   : positive range 1 to 8 := 8;
+  constant PAT_UNIT_MUX   : positive range 1 to 8 := 1;
 
   --------------------------------------------------------------------------------
   -- Constants for Patterns
@@ -25,6 +25,8 @@ package pat_pkg is
 
   constant PATTERN_LENGTH : positive := CNT_BITS + PID_BITS + HASH_BITS + VALID_BIT;
   constant PATTERN_SORTB  : positive := CNT_BITS + PID_BITS + VALID_BIT;
+  constant STRIP_BITS     : positive := 8;  -- 8 bits to count 0-191
+  constant PARTITION_BITS : positive := 3;  -- 3 bits to count 0-7
 
   --------------------------------------------------------------------------------
   -- Types for patterns
@@ -60,6 +62,16 @@ package pat_pkg is
     hash : unsigned(HASH_BITS -1 downto 0);
   end record;
 
+  type strip_t is record
+    pattern : pattern_t;
+    strip   : natural range 0 to 191;
+  end record;
+
+  type segment_t is record
+    strip     : strip_t;
+    partition : natural range 0 to 7;
+  end record;
+
   constant null_pattern : pattern_t :=
     (
       dav  => '0',
@@ -71,6 +83,8 @@ package pat_pkg is
   type pattern_list_slv_t is array (integer range <>) of std_logic_vector (PATTERN_LENGTH-1 downto 0);
 
   type pat_list_t is array (integer range <>) of pattern_t;
+  type strip_list_t is array (integer range <>) of strip_t;
+  type segment_list_t is array (integer range <>) of segment_t;
 
   type cand_array_t is array (integer range 0 to 7) of pat_list_t (PRT_WIDTH-1 downto 0);
 
@@ -91,9 +105,13 @@ package pat_pkg is
   function "<="(L : pattern_t; R : pattern_t) return boolean;
 
   -- to from segment pattern
+  function to_slv (segment : segment_t) return std_logic_vector;
   function to_slv (pattern : pattern_t) return std_logic_vector;
+  function to_slv (strip   : strip_t) return std_logic_vector;
 
   function to_pattern (slv : std_logic_vector) return pattern_t;
+  function to_strip (slv   : std_logic_vector (STRIP_BITS+PATTERN_LENGTH-1 downto 0)) return strip_t;
+  function to_segment (slv : std_logic_vector) return segment_t;
 
   function check_pattern_conversion (slv : std_logic_vector) return boolean;
 
@@ -130,6 +148,21 @@ package body pat_pkg is
     return result;
   end;
 
+  function to_slv (strip : strip_t) return std_logic_vector is
+    variable result : std_logic_vector (STRIP_BITS + PATTERN_LENGTH-1 downto 0);
+  begin
+    result := std_logic_vector(to_unsigned(strip.strip, STRIP_BITS)) & to_slv(strip.pattern);
+    return result;
+  end;
+
+  function to_slv (segment : segment_t) return std_logic_vector is
+    variable result : std_logic_vector (PARTITION_BITS + STRIP_BITS + PATTERN_LENGTH - 1 downto 0);
+  begin
+    result := std_logic_vector(to_unsigned(segment.partition, PARTITION_BITS)) &
+              to_slv(segment.strip);
+    return result;
+  end;
+
   function to_pattern (slv : std_logic_vector)
     return pattern_t is
     variable slv_rerange : std_logic_vector (slv'length-1 downto 0);
@@ -144,6 +177,40 @@ package body pat_pkg is
     pattern.hash := unsigned(slv_rerange(VALID_BIT+HASH_BITS+CNT_BITS+PID_BITS-1
                                          downto VALID_BIT+CNT_BITS+PID_BITS));
     return pattern;
+  end;
+
+  function to_strip (slv : std_logic_vector (STRIP_BITS+PATTERN_LENGTH-1 downto 0))
+    return strip_t is
+    variable strip       : strip_t;
+    variable slv_rerange : std_logic_vector (slv'length-1 downto 0);
+  begin
+
+    slv_rerange := slv;
+
+    strip.strip :=
+      to_integer(unsigned(
+        slv_rerange(STRIP_BITS + PATTERN_LENGTH - 1 downto PATTERN_LENGTH)));
+
+    strip.pattern := to_pattern (slv_rerange(PATTERN_LENGTH -1 downto 0));
+    return strip;
+  end;
+
+  function to_segment (slv : std_logic_vector)
+    return segment_t is
+    variable segment     : segment_t;
+    variable slv_rerange : std_logic_vector (slv'length-1 downto 0);
+  begin
+
+    slv_rerange := slv;
+
+    segment.partition :=
+      to_integer(unsigned(slv_rerange(
+        PARTITION_BITS + STRIP_BITS + PATTERN_LENGTH - 1 downto
+        STRIP_BITS + PATTERN_LENGTH)));
+
+    segment.strip := to_strip (slv_rerange(STRIP_BITS+PATTERN_LENGTH-1 downto 0));
+    return segment;
+
   end;
 
   -- helper function converts from slv to pattern and back..

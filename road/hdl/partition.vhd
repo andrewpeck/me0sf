@@ -37,8 +37,7 @@ entity partition is
     -- outputs
     --------------------------------------------------------------------------------
 
-    --pats_o : out pat_list_t (192-1 downto 0)
-    pats_o : out pat_list_t (PRT_WIDTH/S0_WIDTH-1 downto 0)
+    segments_o : out segment_list_t (PRT_WIDTH/S0_WIDTH-1 downto 0)
 
     );
 end partition;
@@ -49,12 +48,12 @@ architecture behavioral of partition is
   -- minus neighbor since we are only interested in things pointing from the IP
   signal lyor : partition_t;
 
-  -- pre-and post ghost-cancellation patterns, 1 per strip
-  signal pats : pat_list_t (PRT_WIDTH-1 downto 0);
+  --
+  signal strips : strip_list_t (PRT_WIDTH-1 downto 0);
 
   --type pat_list_array_t is array (integer range 0 to FILTER_STAGES) of pat_list_t;
   -- FIXME put these in an array somehow...
-  signal pats_s0 : pat_list_t (PRT_WIDTH/S0_WIDTH-1 downto 0);
+  signal strips_s0 : strip_list_t (PRT_WIDTH/S0_WIDTH-1 downto 0);
 
   -- signal pats_gcl : pat_list_t (PRT_WIDTH-1 downto 0);
 
@@ -108,7 +107,7 @@ begin
       ly4 => lyor(4),
       ly5 => lyor(5),
 
-      patterns_o => pats
+      strips_o => strips
       );
 
   -------------------------------------------------------------------------------
@@ -116,19 +115,21 @@ begin
   -- priority encoded sorting tree...
 
   s0_gen : for region in 0 to PRT_WIDTH/S0_WIDTH-1 generate
-    signal best     : std_logic_vector (PATTERN_LENGTH-1 downto 0);
-    signal cand_slv : bus_array (0 to S0_WIDTH-1) (PATTERN_LENGTH-1 downto 0);
+    constant BITS : natural := STRIP_BITS + PATTERN_LENGTH;
+
+    signal best     : std_logic_vector (BITS-1 downto 0);
+    signal cand_slv : bus_array (0 to S0_WIDTH-1) (BITS-1 downto 0);
   begin
 
     cand_to_slv : for I in 0 to S0_WIDTH-1 generate
     begin
-      cand_slv(I) <= to_slv(pats(REGION*S0_WIDTH+I));
+      cand_slv(I) <= to_slv(strips(REGION*S0_WIDTH+I));
     end generate;
 
     priority_encoder_inst : entity work.priority_encoder
       generic map (
-        DAT_BITS   => PATTERN_LENGTH,
-        QLT_BITS   => PATTERN_LENGTH - null_pattern.hash'length,
+        DAT_BITS   => BITS,
+        QLT_BITS   => BITS - STRIP_BITS - null_pattern.hash'length,
         WIDTH      => S0_WIDTH,
         REG_INPUT  => false,
         REG_OUTPUT => true,
@@ -141,7 +142,7 @@ begin
         adr_o => open
         );
 
-    pats_s0(region) <= to_pattern(best);
+    strips_s0(region) <= to_strip(best);
 
   end generate;
 
@@ -149,6 +150,10 @@ begin
   -- Outputs
   --------------------------------------------------------------------------------
 
-  pats_o <= pats_s0;
+  outputs : for I in 0 to PRT_WIDTH/S0_WIDTH-1 generate
+  begin
+    segments_o(I).strip     <= strips_s0(I);
+    segments_o(I).partition <= PARTITION_NUM;
+  end generate;
 
 end behavioral;

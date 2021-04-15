@@ -2,7 +2,6 @@
 -- Title      : Chamber
 -------------------------------------------------------------------------------
 -- File       : chamber.vhd
--- Last update: 2021-04-14
 -- Standard   : VHDL'2008
 -------------------------------------------------------------------------------
 -- Description:
@@ -33,7 +32,7 @@ entity chamber is
     dav_i   : in  std_logic;
     dav_o   : out std_logic;
     sbits_i : in  chamber_t;
-    segs_o  : out pat_list_t (NUM_SEGMENTS-1 downto 0)
+    segs_o  : out segment_list_t (NUM_SEGMENTS-1 downto 0)
     );
 end chamber;
 
@@ -42,14 +41,20 @@ architecture behavioral of chamber is
   constant CHAMBER_WIDTH_S0 : natural := PRT_WIDTH/S0_WIDTH;
   constant CHAMBER_WIDTH_S1 : natural := PRT_WIDTH/S0_WIDTH/2;
 
-  type pats_s0_array_t is array
-    (integer range 0 to NUM_PARTITIONS-1) of pat_list_t (CHAMBER_WIDTH_S0-1 downto 0);
+  type segs_s0_array_t is array
+    (integer range 0 to NUM_PARTITIONS-1) of segment_list_t (CHAMBER_WIDTH_S0-1 downto 0);
 
-  type pats_s1_array_t is array
-    (integer range 0 to NUM_PARTITIONS/2-1) of pat_list_t (CHAMBER_WIDTH_S0-1 downto 0);
+  type segs_s0_reshaped_t is array
+    (integer range 0 to NUM_PARTITIONS/2-1) of segment_list_t (2*CHAMBER_WIDTH_S0-1 downto 0);
 
-  signal pats_s0 : pats_s0_array_t;
-  signal pats_s1 : pats_s1_array_t;
+  type segs_s1_array_t is array
+    (integer range 0 to NUM_PARTITIONS/2-1) of segment_list_t (CHAMBER_WIDTH_S0-1 downto 0);
+
+  signal segs_s0 : segs_s0_array_t;
+  signal segs_s0_reshaped : segs_s0_reshaped_t;
+  signal segs_s1 : segs_s1_array_t;
+
+  signal segs_s1_flat : segment_list_t (NUM_PARTITIONS/2*CHAMBER_WIDTH_S0-1 downto 0);
 
   -- signal pats_mux : pat_list_t (PRT_WIDTH/S0_REGION_SIZE-1 downto 0);
 
@@ -124,7 +129,7 @@ begin
         neighbor_i => neighbor,
 
         -- output patterns
-        pats_o => pats_s0(I)
+        segments_o => segs_s0(I)
 
         -- x-partition ghost cancellation
         -- pre_gcl_pats_o   => pre_gcl_pats_o(I),
@@ -142,9 +147,12 @@ begin
 
   -- FIXME: append the partition number before sorting
   -- need to create a new type for this (call it a segment or something)
-
   s1_sort : for I in 0 to NUM_PARTITIONS/2-1 generate
   begin
+
+    -- GHDL doesn't allow concatenating these in the port decl
+    -- Questa doesn't allow concatenating these outside
+    segs_s0_reshaped (I) <= segs_s0 (I*2+1) & segs_s0 (I*2);
 
     segment_selector_neighbor : entity work.segment_selector
       generic map (
@@ -155,8 +163,8 @@ begin
       port map (
         clock  => clock,
         -- take partition I and partition I+1 and choose the best patterns
-        pats_i => pats_s0 (I*2+1) & pats_s0 (I*2),
-        pats_o => pats_s1 (I),
+        segs_i => segs_s0_reshaped(I),
+        segs_o => segs_s1 (I),
         sump   => open
         );
 
@@ -171,6 +179,8 @@ begin
   -- FIXME: replace with priority encoder... the # of outputs is so darn small...
   -- keep it under 8 and it only takes 1 clock and 1 encoder
 
+  segs_s1_flat <= segs_s1 (3) & segs_s1 (2) & segs_s1 (1) & segs_s1 (0);
+
   segment_selector_final : entity work.segment_selector
     generic map (
       MODE        => "BITONIC",
@@ -179,10 +189,9 @@ begin
       )
     port map (
       clock  => clock,
-      pats_i => pats_s1 (3) & pats_s1 (2) & pats_s1 (1) & pats_s1 (0),
-      pats_o => segs_o,
+      segs_i => segs_s1_flat,
+      segs_o => segs_o,
       sump   => open
       );
-
 
 end behavioral;

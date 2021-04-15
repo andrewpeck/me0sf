@@ -1,3 +1,5 @@
+use std.textio.all;
+
 library work;
 use work.pat_pkg.all;
 use work.patterns.all;
@@ -10,23 +12,35 @@ use ieee.numeric_std.all;
 entity chamber_tb is
   generic (
     NUM_SEGMENTS : integer := 16;
-    MUX_FACTOR   : integer := 1
+    MUX_FACTOR : integer := 1
     );
 end chamber_tb;
 
 architecture behavioral of chamber_tb is
 
-  signal clock    : std_logic;
-  signal phase    : integer := 0;
-  signal sbits    : chamber_t := (others => (others => (others => '0')));
-  signal segs     : pat_list_t (NUM_SEGMENTS-1 downto 0);
+  signal clk40 : std_logic;
+  signal clock : std_logic;
+  signal phase : integer := 0;
+  signal sbits : chamber_t := (others => (others => (others => '0')));
+  signal segs : segment_list_t (NUM_SEGMENTS-1 downto 0);
 
   signal dav_i : std_logic := '0';
 
-  constant clk_period : time := 50 ns;
+  constant clk_period : time := 10 ns;
   constant sim_period : time := 50 ms;
 
+  signal ch : natural range 0 to 191 := 0;
+  signal prt : natural range 0 to 7 := 0;
+
 begin
+
+  slowclk : process
+  begin
+    wait for 8*clk_period/2.0;
+    clk40 <= '0';
+    wait for 8*clk_period/2.0;
+    clk40 <= '1';
+  end process;
 
   clk : process
   begin
@@ -50,22 +64,65 @@ begin
 
   dav_i <= '1' when phase = 0 else '0';
 
-  sbits(0)(0)(1) <= '1';
-  sbits(0)(1)(1) <= '1';
-  sbits(0)(2)(1) <= '1';
-  sbits(0)(3)(1) <= '1';
-  sbits(0)(4)(1) <= '1';
-  sbits(0)(5)(1) <= '1';
+  stim : process
+  begin
+
+    wait for clk_period * 8;
+
+    if (ch = 191 and prt = 7) then
+      std.env.finish;
+    end if;
+
+    wait until rising_edge(clk40);
+    sbits(prt)(0)(ch) <= '1';
+    sbits(prt)(1)(ch) <= '1';
+    sbits(prt)(2)(ch) <= '1';
+    sbits(prt)(3)(ch) <= '1';
+    sbits(prt)(4)(ch) <= '1';
+    sbits(prt)(5)(ch) <= '1';
+    wait until rising_edge(clk40);
+    sbits(prt)(0)(ch) <= '0';
+    sbits(prt)(1)(ch) <= '0';
+    sbits(prt)(2)(ch) <= '0';
+    sbits(prt)(3)(ch) <= '0';
+    sbits(prt)(4)(ch) <= '0';
+    sbits(prt)(5)(ch) <= '0';
+
+    if (ch = 191) then
+      if (prt = 7) then
+        std.env.finish;
+      end if;
+      prt <= prt + 1;
+      ch <= 0;
+    else
+      ch <= ch + 1;
+    end if;
+
+
+  end process;
+
+  rep : process
+  begin
+    wait until rising_edge (clk40);
+    if ('1' = segs(0).strip.pattern.dav) then
+    --if (segs(0).strip.pattern.cnt > 0) then
+    write(output, "output : prt=" & integer'image(segs(0).partition) &
+          " strip = " & integer'image(segs(0).strip.strip) &
+          " cnt = " & to_hstring(segs(0).strip.pattern.cnt) &
+          " pid = " & to_hstring(segs(0).strip.pattern.id) & LF);
+    end if;
+  end process;
 
   chamber_inst : entity work.chamber
     generic map (
       NUM_SEGMENTS => NUM_SEGMENTS
       )
     port map (
-      clock   => clock,
-      dav_i   => dav_i,
-      dav_o   => open,
+      clock => clock,
+      dav_i => dav_i,
+      dav_o => open,
       sbits_i => sbits,
-      segs_o  => segs);
+      segs_o => segs
+      );
 
 end behavioral;
