@@ -24,11 +24,11 @@ entity chamber is
     FINAL_BITONIC  : boolean := true;
     NUM_PARTITIONS : integer := 8;
     NUM_SEGMENTS   : integer := 4;
-    S0_WIDTH       : natural := 8;
-    S1_WIDTH       : natural := 2
+    S0_WIDTH       : natural := 16;
+    S1_REUSE       : natural := 4       -- 1, 2, or 4
     );
   port(
-    clock   : in  std_logic;
+    clock   : in  std_logic;            -- MUST BE 320MHZ
     dav_i   : in  std_logic;
     dav_o   : out std_logic;
     sbits_i : in  chamber_t;
@@ -41,44 +41,47 @@ architecture behavioral of chamber is
   constant CHAMBER_WIDTH_S0 : natural := PRT_WIDTH/S0_WIDTH;
   constant CHAMBER_WIDTH_S1 : natural := PRT_WIDTH/S0_WIDTH/2;
 
-  type segs_s0_array_t is array
-    (integer range 0 to NUM_PARTITIONS-1) of segment_list_t (CHAMBER_WIDTH_S0-1 downto 0);
+  constant NUM_SELECTORS_S0 : natural := NUM_PARTITIONS/S1_REUSE/2;
 
-  type segs_s0_reshaped_t is array
-    (integer range 0 to NUM_PARTITIONS/2-1) of segment_list_t (2*CHAMBER_WIDTH_S0-1 downto 0);
+  type segs_t is array
+    (integer range 0 to NUM_PARTITIONS-1) of
+    segment_list_t (CHAMBER_WIDTH_S0-1 downto 0);
 
-  type segs_s1_array_t is array
-    (integer range 0 to NUM_PARTITIONS/2-1) of segment_list_t (CHAMBER_WIDTH_S0-1 downto 0);
+  type segs_muxin_t is array
+    (integer range 0 to NUM_PARTITIONS/2-1) of
+    segment_list_t (2*CHAMBER_WIDTH_S0-1 downto 0);
 
-  signal segs_s0 : segs_s0_array_t;
-  signal segs_s0_reshaped : segs_s0_reshaped_t;
-  signal segs_s1 : segs_s1_array_t;
+  type segs_muxout_t is array
+    (integer range 0 to NUM_PARTITIONS/2/S1_REUSE-1) of
+    segment_list_t (CHAMBER_WIDTH_S0-1 downto 0);
 
-  signal segs_s1_flat : segment_list_t (NUM_PARTITIONS/2*CHAMBER_WIDTH_S0-1 downto 0);
+  type segs_demux_t is array
+    (integer range 0 to NUM_PARTITIONS/2-1) of
+    segment_list_t (CHAMBER_WIDTH_S0-1 downto 0);
 
-  -- signal pats_mux : pat_list_t (PRT_WIDTH/S0_REGION_SIZE-1 downto 0);
+  signal segs        : segs_t;
+  signal segs_muxin  : segs_muxin_t;
+  signal segs_muxout : segs_muxout_t;
+  signal segs_demux  : segs_demux_t;
+
+  signal segs_dav, segs_mux_dav    : std_logic := '0';
+  signal muxin_phase, muxout_phase : natural range 0 to S1_REUSE-1;
+
+  signal segs_s1_flat : segment_list_t
+    (NUM_PARTITIONS/2*CHAMBER_WIDTH_S0-1 downto 0);
 
   -- signal pre_gcl_pats     : pat_list_t (PRT_WIDTH-1 downto 0);
-  -- type pre_gcl_array_t is array (integer range 0 to 7) of pat_list_t (PRT_WIDTH-1 downto 0);
+  -- type pre_gcl_array_t is array (integer range 0 to 7) of
+  --    pat_list_t (PRT_WIDTH-1 downto 0);
   -- signal pre_gcl_pats_o   : pre_gcl_array_t;
   -- signal pre_gcl_pats_i_p : pre_gcl_array_t;
   -- signal pre_gcl_pats_i_n : pre_gcl_array_t;
 
-  -- signal selector_s1_o : pat_list_t (NUM_SEGMENTS-1 downto 0);
-  -- signal selector_s2_o : pat_list_t (NUM_SEGMENTS-1 downto 0);
-
-  -- signal phase_pattern_mux : natural;
-  -- signal phase_selector    : natural;
-
 begin
 
-  -- dav_to_phase_mux_inst : entity work.dav_to_phase
-  --   generic map (MAX => MUX_FACTOR)
-  --   port map (clock  => clock, dav => dav_i, phase_o => phase_pattern_mux);
-
-  -- dav_to_phase_selector_inst : entity work.dav_to_phase
-  --   generic map (MAX => MUX_FACTOR)
-  --   port map (clock  => clock, dav => dav_i, phase_o => phase_selector);
+  assert S1_REUSE = 1 or S1_REUSE = 2 or S1_REUSE = 4
+    report "Only allowed values for s1 reuse are 1,2, and 4"
+    severity error;
 
   --------------------------------------------------------------------------------
   -- Get pattern unit patterns for each partition, one for each strip
@@ -120,7 +123,6 @@ begin
 
         clock => clock,
         dav_i => dav_i,
-        dav_o => dav_o,
 
         -- primary layer
         partition_i => sbits_i(I),
@@ -129,7 +131,8 @@ begin
         neighbor_i => neighbor,
 
         -- output patterns
-        segments_o => segs_s0(I)
+        dav_o      => segs_dav,
+        segments_o => segs(I)
 
         -- x-partition ghost cancellation
         -- pre_gcl_pats_o   => pre_gcl_pats_o(I),
@@ -143,32 +146,98 @@ begin
   -- Sort neighbors together
   --
   -- sort from 12*8 patterns down to 12*4
+  --
+  -- Multiplex together different partition pairs into a single register
+  --
   --------------------------------------------------------------------------------
 
-  -- FIXME: append the partition number before sorting
-  -- need to create a new type for this (call it a segment or something)
-  s1_sort : for I in 0 to NUM_PARTITIONS/2-1 generate
+  dav_to_phase_muxin_inst : entity work.dav_to_phase
+    generic map (MAX => 8, DIV => 8/S1_REUSE)
+    port map (clock  => clock, dav => segs_dav, phase_o => muxin_phase);
+  dav_to_phase_muxout_inst : entity work.dav_to_phase
+    generic map (MAX => 8, DIV => 8/S1_REUSE)
+    port map (clock  => clock, dav => segs_dav, phase_o => muxout_phase);  -- FIXME: this input is wrong
+
+  s1_sort : for I in 0 to NUM_SELECTORS_S0 - 1 generate
   begin
 
-    -- GHDL doesn't allow concatenating these in the port decl
-    -- Questa doesn't allow concatenating these outside
-    segs_s0_reshaped (I) <= segs_s0 (I*2+1) & segs_s0 (I*2);
+    --------------------------------------------------------------------------------
+    -- MUX
+    --------------------------------------------------------------------------------
 
+    process (clock) is
+    begin
+      if (rising_edge(clock)) then
+        segs_mux_dav  <= segs_dav;
+        segs_muxin(I) <= segs ((S1_REUSE*I+muxin_phase)*2+1)
+                         & segs ((S1_REUSE*I+muxin_phase)*2);
+      end if;
+    end process;
+
+    --------------------------------------------------------------------------------
+    -- Sort
+    --------------------------------------------------------------------------------
+
+    -- segs (2*S1_REUSE * I + 2*muxin_phase + 1) &
+    -- segs (2*S1_REUSE * I + 2*muxin_phase);
     segment_selector_neighbor : entity work.segment_selector
       generic map (
-        MODE        => "BITONIC",
-        NUM_INPUTS  => CHAMBER_WIDTH_S0*2,  -- put in two partitions worth...
-        NUM_OUTPUTS => CHAMBER_WIDTH_S0     -- put out half that number
+        MODE       => "BITONIC",
+        NUM_INPUTS => CHAMBER_WIDTH_S0*2,  -- put in two partitions worth...
+
+        -- FIXME: !!! only need to put out a max of NUM_SEGMENTS...
+        -- any more are useless
+        NUM_OUTPUTS => CHAMBER_WIDTH_S0  -- put out half that number
         )
       port map (
         clock  => clock,
         -- take partition I and partition I+1 and choose the best patterns
-        segs_i => segs_s0_reshaped(I),
-        segs_o => segs_s1 (I),
-        sump   => open
+        segs_i => segs_muxin(I),
+
+        -- FIXME: !!! this phase needs to be segment_selector dav_o
+        segs_o => segs_muxout(I)
         );
 
+    PH : for SEL in 0 to S1_REUSE-1 generate  -- number of phases
+    begin
+      process (clock) is
+      begin
+        if (rising_edge(clock)) then
+          if (muxout_phase = SEL) then
+            segs_demux (I*S1_REUSE+SEL) <= segs_muxout(I);
+          end if;
+        end if;
+      end process;
+    end generate;
+
   end generate;
+
+
+  --------------------------------------------------------------------------------
+  -- Demux
+  --------------------------------------------------------------------------------
+
+  -- segs_demux (I*S1_REUSE+segs_s0_phase) <= segs_s1_muxout;
+
+  -- process (clock) is
+  -- begin
+  --   if (rising_edge(clock)) then
+  --     if (muxout_phase = 0) then
+  --       segs_demux (0) <= segs_muxout(0);
+  --       segs_demux (2) <= segs_muxout(1);
+  --       -- segs_demux (2) <= segs_muxout(1);
+  --       -- segs_demux (4) <= segs_muxout(2);
+  --       -- segs_demux (6) <= segs_muxout(3);
+  --     else
+  --       segs_demux (1) <= segs_muxout(0);
+  --       segs_demux (3) <= segs_muxout(1);
+  --       -- segs_demux (3) <= segs_muxout(1);
+  --       -- segs_demux (5) <= segs_muxout(2);
+  --       -- segs_demux (7) <= segs_muxout(3);
+  --   end if;
+  --   end if;
+  -- end process;
+
 
   --------------------------------------------------------------------------------
   -- Final canidate sorting
@@ -176,10 +245,9 @@ begin
   -- sort from 12*4 patterns down to NUM_SEGMENTS
   --------------------------------------------------------------------------------
 
-  -- FIXME: replace with priority encoder... the # of outputs is so darn small...
-  -- keep it under 8 and it only takes 1 clock and 1 encoder
+  -- FIXME: replace with priority encoder... ? the # of outputs is very small...
 
-  segs_s1_flat <= segs_s1 (3) & segs_s1 (2) & segs_s1 (1) & segs_s1 (0);
+  segs_s1_flat <= segs_demux(3) & segs_demux(2) & segs_demux(1) & segs_demux(0);
 
   segment_selector_final : entity work.segment_selector
     generic map (
@@ -190,8 +258,7 @@ begin
     port map (
       clock  => clock,
       segs_i => segs_s1_flat,
-      segs_o => segs_o,
-      sump   => open
+      segs_o => segs_o
       );
 
 end behavioral;
