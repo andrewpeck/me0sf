@@ -34,19 +34,6 @@ entity partition is
     neighbor_i  : in partition_t;
 
     --------------------------------------------------------------------------------
-    -- cross partition pattern sharing, for cancellation
-    --------------------------------------------------------------------------------
-
-    -- -- send patterns out to partition n+1 and n-1
-    -- pre_gcl_pats_o : out pat_list_t (PRT_WIDTH-1 downto 0);
-
-    -- -- bring patterns in from partition n+1
-    -- pre_gcl_pats_i_p : in pat_list_t (PRT_WIDTH-1 downto 0);
-
-    -- -- bring patterns in from partition n-1
-    -- pre_gcl_pats_i_n : in pat_list_t (PRT_WIDTH-1 downto 0);
-
-    --------------------------------------------------------------------------------
     -- outputs
     --------------------------------------------------------------------------------
 
@@ -124,8 +111,6 @@ begin
       patterns_o => pats
       );
 
-  --pre_gcl_pats_o <= pats;
-
   -------------------------------------------------------------------------------
   -- Pre-filter the patterns to limit to 1 segment in every N strips using a
   -- priority encoded sorting tree...
@@ -164,28 +149,6 @@ begin
   -- Outputs
   --------------------------------------------------------------------------------
 
-  pats_o <= pats_s1;
-
-  -- --------------------------------------------------------------------------------
-  -- -- Ghost Cancellation
-  -- --
-  -- -- Look at adjacent strips to cancel off duplicated hits
-  -- --
-  -- --------------------------------------------------------------------------------
-  -- --
-  -- -- FIXME: the mux logic needs to be checked and correctly timed....
-  -- -- should pass dav flags around
-
-  -- -- gcl_inst : entity work.ghost_cancellation
-  -- --   generic map (
-  -- --     WIDTH => PRT_WIDTH
-  -- --     )
-  -- --   port map (
-  -- --     clock                      => clock,
-  -- --     pats_i           => pats,
-  -- --     pre_gcl_pats_i_p => pre_gcl_pats_i_p,
-  -- --     pre_gcl_pats_i_n => pre_gcl_pats_i_n,
-  -- --     pats_o           => pats_o
-  -- --     );
+  pats_o <= pats_s0;
 
 end behavioral;

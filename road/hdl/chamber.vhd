@@ -25,7 +25,6 @@ entity chamber is
     FINAL_BITONIC  : boolean := true;
     NUM_PARTITIONS : integer := 8;
     NUM_SEGMENTS   : integer := 4;
-    MUX_FACTOR     : integer := FREQ/40;
     S0_WIDTH       : natural := 8;
     S1_WIDTH       : natural := 2
     );
@@ -63,18 +62,18 @@ architecture behavioral of chamber is
   -- signal selector_s1_o : pat_list_t (NUM_SEGMENTS-1 downto 0);
   -- signal selector_s2_o : pat_list_t (NUM_SEGMENTS-1 downto 0);
 
-  signal phase_pattern_mux : natural;
-  signal phase_selector      : natural;
+  -- signal phase_pattern_mux : natural;
+  -- signal phase_selector    : natural;
 
 begin
 
-  dav_to_phase_mux_inst : entity work.dav_to_phase
-    generic map (MAX => MUX_FACTOR)
-    port map (clock  => clock, dav => dav_i, phase_o => phase_pattern_mux);
+  -- dav_to_phase_mux_inst : entity work.dav_to_phase
+  --   generic map (MAX => MUX_FACTOR)
+  --   port map (clock  => clock, dav => dav_i, phase_o => phase_pattern_mux);
 
-  dav_to_phase_selector_inst : entity work.dav_to_phase
-    generic map (MAX => MUX_FACTOR)
-    port map (clock  => clock, dav => dav_i, phase_o => phase_selector);
+  -- dav_to_phase_selector_inst : entity work.dav_to_phase
+  --   generic map (MAX => MUX_FACTOR)
+  --   port map (clock  => clock, dav => dav_i, phase_o => phase_selector);
 
   --------------------------------------------------------------------------------
   -- Get pattern unit patterns for each partition, one for each strip
@@ -142,6 +141,7 @@ begin
   --------------------------------------------------------------------------------
 
   -- FIXME: append the partition number before sorting
+  -- need to create a new type for this (call it a segment or something)
 
   s1_sort : for I in 0 to NUM_PARTITIONS/2-1 generate
   begin
