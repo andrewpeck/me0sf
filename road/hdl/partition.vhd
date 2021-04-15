@@ -12,9 +12,7 @@ entity partition is
     NUM_SEGMENTS  : integer := 4;
     PARTITION_NUM : integer := 0;
     PRT_WIDTH     : natural := PRT_WIDTH;
-    MUX_FACTOR    : natural := FREQ/40;
-    S0_WIDTH      : natural := 8;
-    S1_WIDTH      : natural := 2
+    S0_WIDTH      : natural := 1
     );
   port(
 
@@ -52,7 +50,8 @@ entity partition is
     -- outputs
     --------------------------------------------------------------------------------
 
-    pats_o : out pat_list_t (PRT_WIDTH/S0_WIDTH/S1_WIDTH-1 downto 0)
+    --pats_o : out pat_list_t (192-1 downto 0)
+    pats_o : out pat_list_t (PRT_WIDTH/S0_WIDTH-1 downto 0)
 
     );
 end partition;
@@ -64,9 +63,11 @@ architecture behavioral of partition is
   signal lyor : partition_t;
 
   -- pre-and post ghost-cancellation patterns, 1 per strip
-  signal pats    : pat_list_t (PRT_WIDTH-1 downto 0);
+  signal pats : pat_list_t (PRT_WIDTH-1 downto 0);
+
+  --type pat_list_array_t is array (integer range 0 to FILTER_STAGES) of pat_list_t;
+  -- FIXME put these in an array somehow...
   signal pats_s0 : pat_list_t (PRT_WIDTH/S0_WIDTH-1 downto 0);
-  signal pats_s1 : pat_list_t (PRT_WIDTH/S0_WIDTH/S1_WIDTH-1 downto 0);
 
   -- signal pats_gcl : pat_list_t (PRT_WIDTH-1 downto 0);
 
@@ -125,9 +126,9 @@ begin
 
   --pre_gcl_pats_o <= pats;
 
-  -- --------------------------------------------------------------------------------
-  -- -- s0 Pre-filter the patterns to limit to 1 segment in every N strips
-  -- --------------------------------------------------------------------------------
+  -------------------------------------------------------------------------------
+  -- Pre-filter the patterns to limit to 1 segment in every N strips using a
+  -- priority encoded sorting tree...
 
   s0_gen : for region in 0 to PRT_WIDTH/S0_WIDTH-1 generate
     signal best     : std_logic_vector (PATTERN_LENGTH-1 downto 0);
@@ -157,28 +158,6 @@ begin
 
     pats_s0(region) <= to_pattern(best);
 
-  end generate;
-
-  -- --------------------------------------------------------------------------------
-  -- -- S1 Filter
-  -- --------------------------------------------------------------------------------
-
-  assert S1_WIDTH = 2 report "S1_WIDTH must be 2 for now..." severity error;
-
-  -- FIXME: replace with priority encoder.. should be okay even for size 2
-  -- it should infer the correct thing
-  s1gen : for I in 0 to PRT_WIDTH/S0_WIDTH/S1_WIDTH-1 generate
-  begin
-    process (clock) is
-    begin
-      if (rising_edge(clock)) then
-        if (pats_s0(I*2+1) > pats_s0(I*2)) then
-          pats_s1(I) <= pats_s0(I*2+1);
-        else
-          pats_s1(I) <= pats_s0(I*2);
-        end if;
-      end if;
-    end process;
   end generate;
 
   --------------------------------------------------------------------------------

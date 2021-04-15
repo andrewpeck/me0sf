@@ -40,8 +40,8 @@ end chamber;
 
 architecture behavioral of chamber is
 
-  constant CHAMBER_WIDTH_S0 : natural := PRT_WIDTH/S0_WIDTH/S1_WIDTH;
-  constant CHAMBER_WIDTH_S1 : natural := PRT_WIDTH/S0_WIDTH/S1_WIDTH/2;
+  constant CHAMBER_WIDTH_S0 : natural := PRT_WIDTH/S0_WIDTH;
+  constant CHAMBER_WIDTH_S1 : natural := PRT_WIDTH/S0_WIDTH/2;
 
   type pats_s0_array_t is array
     (integer range 0 to NUM_PARTITIONS-1) of pat_list_t (CHAMBER_WIDTH_S0-1 downto 0);
@@ -110,8 +110,7 @@ begin
       generic map (
         NUM_SEGMENTS  => NUM_SEGMENTS,
         PARTITION_NUM => I,
-        S0_WIDTH      => S0_WIDTH,
-        S1_WIDTH      => S1_WIDTH
+        S0_WIDTH      => S0_WIDTH
         )
       port map (
 
