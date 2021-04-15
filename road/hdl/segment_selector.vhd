@@ -80,7 +80,7 @@ begin
         INPUTS               => CLOG_WIDTH,
         OUTPUTS              => NUM_OUTPUTS,
         DATA_BITS            => PATTERN_LENGTH,
-        KEY_BITS             => PATTERN_LENGTH,  -- FIXME: only sort on some bits
+        KEY_BITS             => PATTERN_LENGTH - null_pattern.hash'length,
         META_BITS            => 0,
         PIPELINE_STAGE_AFTER => 2,
         ADD_INPUT_REGISTERS  => false,
