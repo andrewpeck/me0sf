@@ -93,7 +93,7 @@ begin
   pat_unit_mux_inst : entity work.pat_unit_mux
     generic map (
       WIDTH      => PRT_WIDTH,
-      MUX_FACTOR => MUX_FACTOR
+      MUX_FACTOR => PAT_UNIT_MUX
       )
     port map (
       clock => clock,

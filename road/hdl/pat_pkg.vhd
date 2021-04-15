@@ -9,10 +9,10 @@ package pat_pkg is
   -- Build Parameters
   --------------------------------------------------------------------------------
 
-  constant S0_REGION_SIZE : integer := 16;
-  constant CNT_THRESH     : integer := 4;
-  constant FREQ           : natural := 320;
-  constant PRT_WIDTH      : natural := 192;
+  constant S0_REGION_SIZE : positive              := 16;
+  constant CNT_THRESH     : positive              := 4;
+  constant PRT_WIDTH      : positive              := 192;
+  constant PAT_UNIT_MUX   : positive range 1 to 8 := 8;
 
   --------------------------------------------------------------------------------
   -- Constants for Patterns
