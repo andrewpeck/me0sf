@@ -59,6 +59,8 @@ architecture behavioral of pat_unit is
 
 begin
 
+  check_pattern_operators(true);
+
   assert check_pattern_conversion("1101" & x"A9CD")
     report "Failed to convert pattern slv" severity error;
   assert check_pattern_conversion("1111" & x"FFFF")
@@ -124,7 +126,6 @@ begin
     signal ly5_mask : std_logic_vector (ly5_size-1 downto 0);
 
   begin
-
 
     lysize : if (VERBOSE) generate
 

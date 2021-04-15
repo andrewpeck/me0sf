@@ -92,8 +92,12 @@ package pat_pkg is
 
   -- to from segment pattern
   function to_slv (pattern : pattern_t) return std_logic_vector;
+
   function to_pattern (slv : std_logic_vector) return pattern_t;
+
   function check_pattern_conversion (slv : std_logic_vector) return boolean;
+
+  procedure check_pattern_operators (nil : boolean);
 
 end package pat_pkg;
 
@@ -129,16 +133,16 @@ package body pat_pkg is
   function to_pattern (slv : std_logic_vector)
     return pattern_t is
     variable slv_rerange : std_logic_vector (slv'length-1 downto 0);
-    variable pattern : pattern_t;
+    variable pattern     : pattern_t;
   begin
 
     slv_rerange := slv;
 
-    pattern.id   := unsigned(slv_rerange(PID_BITS-1 downto 0));
-    pattern.cnt  := unsigned(slv_rerange(CNT_BITS+PID_BITS-1 downto PID_BITS));
-    pattern.dav  := slv_rerange(CNT_BITS+PID_BITS);
+    pattern.id  := unsigned(slv_rerange(PID_BITS-1 downto 0));
+    pattern.cnt := unsigned(slv_rerange(CNT_BITS+PID_BITS-1 downto PID_BITS));
+    pattern.dav := slv_rerange(CNT_BITS+PID_BITS);
     pattern.hash := unsigned(slv_rerange(VALID_BIT+HASH_BITS+CNT_BITS+PID_BITS-1
-                                           downto VALID_BIT+CNT_BITS+PID_BITS));
+                                         downto VALID_BIT+CNT_BITS+PID_BITS));
     return pattern;
   end;
 
@@ -151,11 +155,11 @@ package body pat_pkg is
     slv_o := to_slv(to_pattern(slv));
 
     if (slv_o /= slv) then
-      assert false report "conv_in="  & to_hstring(slv)   severity note;
+      assert false report "conv_in=" & to_hstring(slv) severity note;
       assert false report "conv_out=" & to_hstring(slv_o) severity note;
     end if;
 
-    return slv_o=slv;
+    return slv_o = slv;
   end;
 
   function "=" (L : pattern_t; R : pattern_t) return boolean is
@@ -206,6 +210,49 @@ package body pat_pkg is
     else
       return false;
     end if;
+  end;
+
+  -- unit test function to check that the sorting operators are working correctly
+  procedure check_pattern_operators (nil : boolean) is
+    variable ply0 : pattern_t := (dav => '1', cnt => to_unsigned(0, CNT_BITS), id => x"A", hash => (others => '0'));
+    variable ply1 : pattern_t := (dav => '1', cnt => to_unsigned(1, CNT_BITS), id => x"A", hash => (others => '0'));
+    variable ply2 : pattern_t := (dav => '1', cnt => to_unsigned(2, CNT_BITS), id => x"A", hash => (others => '0'));
+
+    variable pat0 : pattern_t := (dav => '1', cnt => to_unsigned(1, CNT_BITS), id => x"0", hash => (others => '0'));
+    variable pat1 : pattern_t := (dav => '1', cnt => to_unsigned(1, CNT_BITS), id => x"1", hash => (others => '0'));
+    variable pat2 : pattern_t := (dav => '1', cnt => to_unsigned(1, CNT_BITS), id => x"2", hash => (others => '0'));
+  begin
+
+    -- > testing
+    assert ply2 > ply1 report "pattern > failure" severity error;
+    assert ply1 > ply0 report "pattern > failure" severity error;
+    assert pat2 > pat1 report "pattern > failure" severity error;
+    assert pat1 > pat0 report "pattern > failure" severity error;
+
+    -- < testing
+    assert ply0 < ply1 report "pattern < failure" severity error;
+    assert ply0 < ply2 report "pattern < failure" severity error;
+    assert ply1 < ply2 report "pattern < failure" severity error;
+    assert pat0 < pat1 report "pattern < failure" severity error;
+    assert pat0 < pat2 report "pattern < failure" severity error;
+    assert pat1 < pat2 report "pattern < failure" severity error;
+
+    -- <= testing
+    assert ply0 <= ply0 report "pattern <= failure" severity error;
+    assert ply0 <= ply1 report "pattern <= failure" severity error;
+    assert pat0 <= pat0 report "pattern <= failure" severity error;
+    assert pat0 <= pat1 report "pattern <= failure" severity error;
+
+    -- >= testing
+    assert ply0 >= ply0 report "pattern >= failure" severity error;
+    assert ply1 >= ply0 report "pattern >= failure" severity error;
+    assert pat0 >= pat0 report "pattern >= failure" severity error;
+    assert pat1 >= pat0 report "pattern >= failure" severity error;
+
+    -- = testing
+    assert ply0 = ply0 report "pattern = failure" severity error;
+    assert ply1 = ply1 report "pattern = failure" severity error;
+
   end;
 
 end package body pat_pkg;
