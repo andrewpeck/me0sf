@@ -47,6 +47,7 @@ architecture behavioral of partition is
   -- (partially) or together this partition and its minus neighbor only need the
   -- minus neighbor since we are only interested in things pointing from the IP
   signal lyor : partition_t;
+  signal lyor_dav : std_logic := '0';
 
   --
   signal strips : strip_list_t (PRT_WIDTH-1 downto 0);
@@ -71,6 +72,9 @@ begin
       -- FIXME: this should be parameterized, and depend on the station matters
       -- which layer and the orientation of chambers wrt the ip or something
       -- like that but this stupid approach is ok for now
+
+      lyor_dav <= dav_i;
+
       lyor(5) <= partition_i(5);
       lyor(4) <= partition_i(4);
       lyor(3) <= partition_i(3);
@@ -97,9 +101,7 @@ begin
     port map (
       clock => clock,
 
-      dav_i => dav_i,
-      dav_o => dav_o,
-
+      dav_i => lyor_dav,
       ly0 => lyor(0),
       ly1 => lyor(1),
       ly2 => lyor(2),
@@ -107,12 +109,22 @@ begin
       ly4 => lyor(4),
       ly5 => lyor(5),
 
+      dav_o => dav_o,
       strips_o => strips
       );
 
   -------------------------------------------------------------------------------
   -- Pre-filter the patterns to limit to 1 segment in every N strips using a
   -- priority encoded sorting tree...
+  --
+  -- FIXME: this will make ghosts at the sorting boundaries... need to add in some
+  -- ghost cancellation
+  --
+  -- 0   1   2   3   4   5   6   7   8   9   A   B   C   D   E   F
+  -- └───┴─┬─┴───┘   └───┴─┬─┴───┘   └───┴─┬─┴───┘   └───┴─┬─┴───┘
+  --       └───────┬───────┘               └───────┬───────┘
+  --              OUT                             OUT
+  -------------------------------------------------------------------------------
 
   s0_gen : for region in 0 to PRT_WIDTH/S0_WIDTH-1 generate
     constant BITS : natural := STRIP_BITS + PATTERN_LENGTH;

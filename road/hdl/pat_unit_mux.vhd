@@ -62,15 +62,15 @@ architecture behavioral of pat_unit_mux is
   signal ly4_padded : std_logic_vector (WIDTH-1 + 2*PADDING downto 0);
   signal ly5_padded : std_logic_vector (WIDTH-1 + 2*PADDING downto 0);
 
-  signal patterns_mux : pat_list_t (NUM_SECTORS-1 downto 0);
+  signal patterns_mux_dav : std_logic := '0';
+  signal patterns_mux     : pat_list_t (NUM_SECTORS-1 downto 0);
 
   -- convert to strip type, appends the strip # to the format
   signal strips_reg : strip_list_t (WIDTH-1 downto 0);
 
-  signal phase_i, phase_pat_o : natural range 0 to MUX_FACTOR-1;
+  signal phase_i, patterns_mux_phase : natural range 0 to MUX_FACTOR-1;
 
-  signal dav_pat_i : std_logic := '0';
-  signal dav_pat_o : std_logic_vector (NUM_SECTORS-1 downto 0);
+  signal lyX_in_dav : std_logic := '0';
 
 begin
 
@@ -96,15 +96,13 @@ begin
   -- we loop over those 24 sectors and mux together the inputs / outputs
   --------------------------------------------------------------------------------
 
-  dav_o <= dav_i;                       -- FIXME
-
   dav_to_phase_i_inst : entity work.dav_to_phase
     generic map (MAX => MUX_FACTOR)
     port map (clock  => clock, dav => dav_i, phase_o => phase_i);
 
   dav_to_phase_o_inst : entity work.dav_to_phase
     generic map (MAX => MUX_FACTOR)
-    port map (clock  => clock, dav => dav_pat_o(0), phase_o => phase_pat_o);
+    port map (clock  => clock, dav => patterns_mux_dav, phase_o => patterns_mux_phase);
 
   patgen : for I in 0 to NUM_SECTORS-1 generate
 
@@ -114,6 +112,8 @@ begin
     signal ly3_in : std_logic_vector (LY3_SPAN - 1 downto 0) := (others => '0');
     signal ly4_in : std_logic_vector (LY4_SPAN - 1 downto 0) := (others => '0');
     signal ly5_in : std_logic_vector (LY5_SPAN - 1 downto 0) := (others => '0');
+
+    signal dav : std_logic := '0';
 
   begin
 
@@ -128,7 +128,7 @@ begin
         ly4_in <= ly4_padded (phase_i+I*MUX_FACTOR+PADDING*2 downto phase_i+I*MUX_FACTOR);
         ly5_in <= ly5_padded (phase_i+I*MUX_FACTOR+PADDING*2 downto phase_i+I*MUX_FACTOR);
 
-        dav_pat_i <= dav_i;
+        lyX_in_dav <= dav_i;
 
       end if;
     end process;
@@ -141,19 +141,21 @@ begin
 
         clock => clock,
 
-        dav_i => dav_pat_i,
-        dav_o => dav_pat_o(I),
+        dav_i => lyX_in_dav,
+        ly0   => ly0_in,
+        ly1   => ly1_in,
+        ly2   => ly2_in,
+        ly3   => ly3_in,
+        ly4   => ly4_in,
+        ly5   => ly5_in,
 
-        ly0 => ly0_in,
-        ly1 => ly1_in,
-        ly2 => ly2_in,
-        ly3 => ly3_in,
-        ly4 => ly4_in,
-        ly5 => ly5_in,
-
+        dav_o => dav,
         pat_o => patterns_mux(I)
         );
 
+    muxzero : if (I = 0) generate
+      patterns_mux_dav <= dav;
+    end generate;
   end generate;
 
   --------------------------------------------------------------------------------
@@ -165,10 +167,14 @@ begin
   process (clock) is
   begin
     if (rising_edge(clock)) then
+
+      dav_o <= patterns_mux_dav;
+
       for I in 0 to NUM_SECTORS-1 loop
-        strips_reg(I*MUX_FACTOR+phase_pat_o).pattern <= patterns_mux(I);
-        strips_reg(I*MUX_FACTOR+phase_pat_o).strip   <= I*MUX_FACTOR+phase_pat_o;
+        strips_reg(I*MUX_FACTOR+patterns_mux_phase).pattern <= patterns_mux(I);
+        strips_reg(I*MUX_FACTOR+patterns_mux_phase).strip   <= I*MUX_FACTOR+patterns_mux_phase;
       end loop;
+
     end if;
   end process;
 

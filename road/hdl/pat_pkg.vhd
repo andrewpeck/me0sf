@@ -14,7 +14,7 @@ package pat_pkg is
   constant S0_REGION_SIZE : positive              := 16;
   constant CNT_THRESH     : positive              := 4;
   constant PRT_WIDTH      : positive              := 192;
-  constant PAT_UNIT_MUX   : positive range 1 to 8 := 1;
+  constant PAT_UNIT_MUX   : positive range 1 to 8 := 8; -- 1, 2, 4, or 8
 
   --------------------------------------------------------------------------------
   -- Constants for Patterns
@@ -121,6 +121,9 @@ package pat_pkg is
 
   procedure print_layer (layer : layer_t);
   procedure print_partition (partition : partition_t);
+
+  function centroid (ly : std_logic_vector; length : natural) return natural;
+
 
 end package pat_pkg;
 
@@ -343,5 +346,57 @@ package body pat_pkg is
     print_layer(partition(4));
     print_layer(partition(5));
   end procedure;
+
+  function centroid (ly : std_logic_vector; length : natural) return natural is
+    variable index : natural;
+  begin
+
+    if (length = 1) then
+      index := 0 when ly = "0" else
+               1 when ly = "1";
+    end if;
+
+    if (length = 2) then
+      index := 0 when ly = "00" else
+               1 when ly = "01" else
+               2 when ly = "10" else
+               3 when ly = "11" else 0;
+    end if;
+
+    if (length = 3) then
+      index := 0 when ly = "000" else
+               1 when ly = "001" else
+               1 when ly = "011" else
+               2 when ly = "010" else
+               2 when ly = "111" else
+               2 when ly = "101" else
+               3 when ly = "100" else
+               3 when ly = "110" else 0;
+    end if;
+
+    if (length = 4) then
+      index :=
+        0 when ly = "0000" else
+        1 when ly = "0001" else
+        2 when ly = "0010" else
+        1 when ly = "0011" else
+        2 when ly = "0111" else
+        4 when ly = "1000" else
+        1 when ly = "1001" else
+        2 when ly = "0101" else
+        3 when ly = "0100" else
+        1 when ly = "0110" else
+        3 when ly = "1011" else
+        3 when ly = "1010" else
+        2 when ly = "1111" else
+        3 when ly = "1101" else
+        3 when ly = "1100" else
+        3 when ly = "1110" else
+        0;
+    end if;
+
+
+    return index;
+  end;
 
 end package body pat_pkg;
