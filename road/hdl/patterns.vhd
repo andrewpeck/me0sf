@@ -11,7 +11,7 @@ package patterns is
     ly0 => (lo => -1, hi => 1),
     ly1 => (lo => -1, hi => 1),
     ly2 => (lo => -1, hi => 1),
-    ly3 => (lo => -1, hi => 1),
+    ly3 => (lo =>  0, hi => 0),
     ly4 => (lo => -1, hi => 1),
     ly5 => (lo => -1, hi => 1)
     );
