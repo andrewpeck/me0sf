@@ -9,6 +9,7 @@ use work.patterns.all;
 
 entity ghost_cancellation is
   generic(
+    FREQ  : natural := 320;
     WIDTH : natural := 128
     );
   port(
@@ -46,7 +47,7 @@ architecture behavioral of ghost_cancellation is
   begin
     is_ghost := false;
     for I in 1 to GHOST_REGION loop
-      is_ghost := is_ghost or hits(strip+I) >  hits(strip);  -- dead if neighbor+N is better
+      is_ghost := is_ghost or hits(strip+I) > hits(strip);   -- dead if neighbor+N is better
       is_ghost := is_ghost or hits(strip-I) >= hits(strip);  -- dead if a neighbor-N is better or equal
     end loop;
     return is_ghost;
