@@ -19,7 +19,7 @@ entity chamber_prbs is
     reset : in  std_logic;
     clock : in  std_logic;
     dav_i : in  std_logic;
-    segs  : out pat_list_t (NUM_SEGMENTS-1 downto 0)
+    segs  : out segment_list_t (NUM_SEGMENTS-1 downto 0)
     );
 end chamber_prbs;
 
