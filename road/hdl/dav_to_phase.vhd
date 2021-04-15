@@ -27,13 +27,13 @@ begin
   begin
 
     if (rising_edge(clock)) then
-      if (phase = 7) then
+      if (phase = MAX-1) then
         phase <= 0;
       else
         phase <= phase + 1;
       end if;
 
-      if (dav = '1') then
+      if (MAX > 1 and dav = '1') then
         phase <= 1;
       end if;
 
