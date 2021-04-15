@@ -18,13 +18,13 @@ package pat_pkg is
   -- Constants for Patterns
   --------------------------------------------------------------------------------
 
-  constant CNT_BITS  : natural := 3;    -- number of bits to count 6 layers, always 3
-  constant PID_BITS  : natural := 4;    -- number of bits to cnt the pids
-  constant HASH_BITS : natural := 12;
-  constant VALID_BIT : natural := 1;
+  constant CNT_BITS  : positive := 3;   -- number of bits to count 6 layers, always 3
+  constant PID_BITS  : positive := 4;   -- number of bits to cnt the pids
+  constant HASH_BITS : positive := 12;
+  constant VALID_BIT : positive := 1;
 
-  constant PATTERN_LENGTH : natural := CNT_BITS + PID_BITS + HASH_BITS + VALID_BIT;
-  constant PATTERN_SORTB  : natural := CNT_BITS + PID_BITS + VALID_BIT;
+  constant PATTERN_LENGTH : positive := CNT_BITS + PID_BITS + HASH_BITS + VALID_BIT;
+  constant PATTERN_SORTB  : positive := CNT_BITS + PID_BITS + VALID_BIT;
 
   --------------------------------------------------------------------------------
   -- Types for patterns
