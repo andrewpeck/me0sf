@@ -15,8 +15,8 @@ entity pat_unit_mux is
     -- Need padding for half the width of the pattern this is to handle the edges
     -- of the chamber where some virtual chamber of all zeroes exists... to be
     -- trimmed away by the compiler during optimization
-    PADDING          : natural := (get_max_span(pat_unit_list)-1)/2;
-    MUX_FACTOR       : natural := 8
+    PADDING          : natural := (get_max_span(patdef_array)-1)/2;
+    MUX_FACTOR       : natural := 1
     );
   port(
 
@@ -48,12 +48,12 @@ architecture behavioral of pat_unit_mux is
 
   constant NUM_SECTORS : positive := WIDTH/MUX_FACTOR;
 
-  constant LY0_SPAN : natural := get_max_span(pat_unit_list);
-  constant LY1_SPAN : natural := get_max_span(pat_unit_list);
-  constant LY2_SPAN : natural := get_max_span(pat_unit_list);
-  constant LY3_SPAN : natural := get_max_span(pat_unit_list);
-  constant LY4_SPAN : natural := get_max_span(pat_unit_list);
-  constant LY5_SPAN : natural := get_max_span(pat_unit_list);
+  constant LY0_SPAN : natural := get_max_span(patdef_array);
+  constant LY1_SPAN : natural := get_max_span(patdef_array);
+  constant LY2_SPAN : natural := get_max_span(patdef_array);
+  constant LY3_SPAN : natural := get_max_span(patdef_array);
+  constant LY4_SPAN : natural := get_max_span(patdef_array);
+  constant LY5_SPAN : natural := get_max_span(patdef_array);
 
   signal ly0_padded : std_logic_vector (WIDTH-1 + 2*PADDING downto 0);
   signal ly1_padded : std_logic_vector (WIDTH-1 + 2*PADDING downto 0);

@@ -41,7 +41,7 @@ package pat_pkg is
     lo : integer;
   end record;
 
-  type pat_unit_t is record
+  type patdef_t is record
     id  : natural;
     ly0 : hi_lo_t;
     ly1 : hi_lo_t;
@@ -51,7 +51,7 @@ package pat_pkg is
     ly5 : hi_lo_t;
   end record;
 
-  type pat_unit_list_t is array (integer range <>) of pat_unit_t;
+  type patdef_array_t is array (integer range <>) of patdef_t;
 
   type pattern_t is record
     dav  : std_logic;
@@ -81,7 +81,7 @@ package pat_pkg is
   --------------------------------------------------------------------------------
 
   -- mirror a pattern unit (left/right symmetry)
-  function mirror_pat_unit (pat : pat_unit_t; id : natural) return pat_unit_t;
+  function mirror_patdef (pat : patdef_t; id : natural) return patdef_t;
 
   -- comparisons
   function "<"(L  : pattern_t; R : pattern_t) return boolean;
@@ -99,8 +99,8 @@ end package pat_pkg;
 
 package body pat_pkg is
 
-  function mirror_pat_unit (pat : pat_unit_t; id : natural) return pat_unit_t is
-    variable result : pat_unit_t;
+  function mirror_patdef (pat : patdef_t; id : natural) return patdef_t is
+    variable result : patdef_t;
   begin
     result.id  := id;
     result.ly0 := (hi => pat.ly0.lo * (-1), lo => pat.ly0.hi * (-1));

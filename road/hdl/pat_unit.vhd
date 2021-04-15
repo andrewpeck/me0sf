@@ -10,14 +10,14 @@ use work.priority_encoder_pkg.all;
 
 entity pat_unit is
   generic(
-    VERBOSE  : boolean    := true;
-    PATLIST  : pat_unit_list_t := pat_unit_list;
-    LY0_SPAN : natural    := get_max_span(pat_unit_list);
-    LY1_SPAN : natural    := get_max_span(pat_unit_list);  -- TODO: variably size the other layers instead of using the max
-    LY2_SPAN : natural    := get_max_span(pat_unit_list);  -- TODO: variably size the other layers instead of using the max
-    LY3_SPAN : natural    := get_max_span(pat_unit_list);  -- TODO: variably size the other layers instead of using the max
-    LY4_SPAN : natural    := get_max_span(pat_unit_list);  -- TODO: variably size the other layers instead of using the max
-    LY5_SPAN : natural    := get_max_span(pat_unit_list)   -- TODO: variably size the other layers instead of using the max
+    VERBOSE  : boolean    := false;
+    PATLIST  : patdef_array_t := patdef_array;
+    LY0_SPAN : natural    := get_max_span(patdef_array);
+    LY1_SPAN : natural    := get_max_span(patdef_array);  -- TODO: variably size the other layers instead of using the max
+    LY2_SPAN : natural    := get_max_span(patdef_array);  -- TODO: variably size the other layers instead of using the max
+    LY3_SPAN : natural    := get_max_span(patdef_array);  -- TODO: variably size the other layers instead of using the max
+    LY4_SPAN : natural    := get_max_span(patdef_array);  -- TODO: variably size the other layers instead of using the max
+    LY5_SPAN : natural    := get_max_span(patdef_array)   -- TODO: variably size the other layers instead of using the max
     );
   port(
 
