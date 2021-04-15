@@ -29,9 +29,6 @@ architecture behavioral of chamber_tb is
   constant clk_period : time := 10 ns;
   constant sim_period : time := 50 ms;
 
-  signal ch : natural range 0 to 191 := 0;
-  signal prt : natural range 0 to 7 := 0;
-
 begin
 
   slowclk : process
@@ -67,46 +64,52 @@ begin
   stim : process
   begin
 
-    wait for clk_period * 8;
+-- FIXME: for some reason 191 gets "stuck"
+    for prt in 0 to 7 loop
+      for ch in 0 to 190 loop
 
-    if (ch = 191 and prt = 7) then
-      std.env.finish;
-    end if;
+        sbits(prt)(0)(ch) <= '1';
+        sbits(prt)(1)(ch) <= '1';
+        sbits(prt)(2)(ch) <= '1';
+        sbits(prt)(3)(ch) <= '1';
+        sbits(prt)(4)(ch) <= '1';
+        sbits(prt)(5)(ch) <= '1';
 
-    wait until rising_edge(clk40);
-    sbits(prt)(0)(ch) <= '1';
-    sbits(prt)(1)(ch) <= '1';
-    sbits(prt)(2)(ch) <= '1';
-    sbits(prt)(3)(ch) <= '1';
-    sbits(prt)(4)(ch) <= '1';
-    sbits(prt)(5)(ch) <= '1';
-    wait until rising_edge(clk40);
-    sbits(prt)(0)(ch) <= '0';
-    sbits(prt)(1)(ch) <= '0';
-    sbits(prt)(2)(ch) <= '0';
-    sbits(prt)(3)(ch) <= '0';
-    sbits(prt)(4)(ch) <= '0';
-    sbits(prt)(5)(ch) <= '0';
+        wait until rising_edge(clock);
+        wait until rising_edge(clock);
+        wait until rising_edge(clock);
+        wait until rising_edge(clock);
+        wait until rising_edge(clock);
+        wait until rising_edge(clock);
+        wait until rising_edge(clock);
+        wait until rising_edge(clock);
 
-    if (ch = 191) then
-      if (prt = 7) then
-        std.env.finish;
-      end if;
-      prt <= prt + 1;
-      ch <= 0;
-    else
-      ch <= ch + 1;
-    end if;
+        -- print_partition(sbits(0));
+        sbits(prt)(0)(ch) <= '0';
+        sbits(prt)(1)(ch) <= '0';
+        sbits(prt)(2)(ch) <= '0';
+        sbits(prt)(3)(ch) <= '0';
+        sbits(prt)(4)(ch) <= '0';
+        sbits(prt)(5)(ch) <= '0';
 
+        -- write(output, "pulsing " &
+        --       " strip = " & integer'image(ch) &
+        --       " prt   = " & integer'image(prt) & LF);
+
+      end loop;
+    end loop;
+
+    std.env.finish;
 
   end process;
 
   rep : process
   begin
-    wait until rising_edge (clk40);
-    if ('1' = segs(0).strip.pattern.dav) then
+    --if ('1' = segs(0).strip.pattern.dav) then
     --if (segs(0).strip.pattern.cnt > 0) then
-    write(output, "output : prt=" & integer'image(segs(0).partition) &
+    wait until rising_edge(clock);
+    if (phase = 0 and '1' = segs(0).strip.pattern.dav) then
+    write(output, "  > output : prt=" & integer'image(segs(0).partition) &
           " strip = " & integer'image(segs(0).strip.strip) &
           " cnt = " & to_hstring(segs(0).strip.pattern.cnt) &
           " pid = " & to_hstring(segs(0).strip.pattern.id) & LF);
