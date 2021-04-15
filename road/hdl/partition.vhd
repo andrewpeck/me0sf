@@ -122,7 +122,7 @@ begin
 
     cand_to_slv : for I in 0 to S0_WIDTH-1 generate
     begin
-      cand_slv(I) <= to_slv(pats(I));
+      cand_slv(I) <= to_slv(pats(REGION*S0_WIDTH+I));
     end generate;
 
     priority_encoder_inst : entity work.priority_encoder
