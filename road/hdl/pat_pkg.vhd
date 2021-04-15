@@ -1,3 +1,5 @@
+use std.textio.all;
+
 library ieee;
 use ieee.std_logic_1164.all;
 use ieee.std_logic_misc.all;
@@ -116,6 +118,9 @@ package pat_pkg is
   function check_pattern_conversion (slv : std_logic_vector) return boolean;
 
   procedure check_pattern_operators (nil : boolean);
+
+  procedure print_layer (layer : layer_t);
+  procedure print_partition (partition : partition_t);
 
 end package pat_pkg;
 
@@ -321,5 +326,22 @@ package body pat_pkg is
     assert ply1 = ply1 report "pattern = failure" severity error;
 
   end;
+
+  procedure print_layer (layer : layer_t) is
+    variable lyline : line;
+  begin
+    write (lyline, layer);
+    writeline(output, lyline);
+  end procedure;
+
+  procedure print_partition (partition : partition_t) is
+  begin
+    print_layer(partition(0));
+    print_layer(partition(1));
+    print_layer(partition(2));
+    print_layer(partition(3));
+    print_layer(partition(4));
+    print_layer(partition(5));
+  end procedure;
 
 end package body pat_pkg;
