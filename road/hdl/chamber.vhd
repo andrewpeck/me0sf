@@ -39,9 +39,8 @@ end chamber;
 architecture behavioral of chamber is
 
   constant CHAMBER_WIDTH_S0 : natural := PRT_WIDTH/S0_WIDTH;
-  constant CHAMBER_WIDTH_S1 : natural := PRT_WIDTH/S0_WIDTH/2;
-
   constant NUM_SELECTORS_S0 : natural := NUM_PARTITIONS/S1_REUSE/2;
+  constant CHAMBER_WIDTH_S1 : natural := NUM_PARTITIONS/S1_REUSE*NUM_SEGMENTS*2;
 
   type segs_t is array
     (integer range 0 to NUM_PARTITIONS-1) of
@@ -53,11 +52,14 @@ architecture behavioral of chamber is
 
   type segs_muxout_t is array
     (integer range 0 to NUM_PARTITIONS/2/S1_REUSE-1) of
-    segment_list_t (CHAMBER_WIDTH_S0-1 downto 0);
+    segment_list_t (NUM_SEGMENTS-1 downto 0);
 
   type segs_demux_t is array
     (integer range 0 to NUM_PARTITIONS/2-1) of
-    segment_list_t (CHAMBER_WIDTH_S0-1 downto 0);
+    segment_list_t (NUM_SEGMENTS-1 downto 0);
+
+  signal segs_s1_flat : segment_list_t
+    (NUM_PARTITIONS/2*NUM_SEGMENTS-1 downto 0);
 
   signal segs        : segs_t;
   signal segs_muxin  : segs_muxin_t;
@@ -66,9 +68,6 @@ architecture behavioral of chamber is
 
   signal segs_dav, segs_mux_dav    : std_logic := '0';
   signal muxin_phase, muxout_phase : natural range 0 to S1_REUSE-1;
-
-  signal segs_s1_flat : segment_list_t
-    (NUM_PARTITIONS/2*CHAMBER_WIDTH_S0-1 downto 0);
 
   -- signal pre_gcl_pats     : pat_list_t (PRT_WIDTH-1 downto 0);
   -- type pre_gcl_array_t is array (integer range 0 to 7) of
@@ -181,16 +180,20 @@ begin
     -- segs (2*S1_REUSE * I + 2*muxin_phase + 1) &
     -- segs (2*S1_REUSE * I + 2*muxin_phase);
     segment_selector_neighbor : entity work.segment_selector
+
       generic map (
         MODE       => "BITONIC",
         NUM_INPUTS => CHAMBER_WIDTH_S0*2,  -- put in two partitions worth...
 
         -- FIXME: !!! only need to put out a max of NUM_SEGMENTS...
         -- any more are useless
-        NUM_OUTPUTS => CHAMBER_WIDTH_S0  -- put out half that number
+        NUM_OUTPUTS => NUM_SEGMENTS  -- put out half that number
         )
+
       port map (
+
         clock  => clock,
+
         -- take partition I and partition I+1 and choose the best patterns
         segs_i => segs_muxin(I),
 
@@ -253,7 +256,7 @@ begin
     generic map (
       MODE        => "BITONIC",
       NUM_OUTPUTS => NUM_SEGMENTS,
-      NUM_INPUTS  => NUM_PARTITIONS*CHAMBER_WIDTH_S1
+      NUM_INPUTS  => CHAMBER_WIDTH_S1
       )
     port map (
       clock  => clock,
