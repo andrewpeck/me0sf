@@ -1,8 +1,10 @@
 #+TITLE: ME0 Segment Finder
 
-* Code Structure
+The ME0 segment finder is based on a simple "road based" pattern finding scheme optimized for low latency and low resource usage.
+
+*** Code Structure
 [[file:doc/chamber.svg]]
-* Directory Structure
+*** Directory Structure
 #+begin_src
 ├── doc                      ; documentation, images
 ├── Hog                      ; Hog (submodule)
