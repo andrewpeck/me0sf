@@ -124,6 +124,8 @@ def datadev(MAX_SPAN=37,nhit_lo=3,nhit_hi=10):
                 if (ones_arr[m,n]==1):
                     indices[x]=[m,n]
                     x=x+1
+        y=x-1
+        indices=indices[0:y]
         return indices
 
     n_eliminate=round(count_ones(data)*.1)
