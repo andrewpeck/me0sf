@@ -5,7 +5,6 @@ import numpy as np
 import math
 import random
 
-from numpy.lib.function_base import _extract_dispatcher
 
 
 
@@ -117,22 +116,19 @@ def datadev(MAX_SPAN=37,nhit_lo=3,nhit_hi=10):
         return n_ones;
 
     def return_indices(ones_arr):
-        indices=np.zeros(1000)
-        x=0
+        indices=[]
         for m in range(N_LAYERS):
             for n in range(len(ones_arr[m])):
                 if (ones_arr[m,n]==1):
-                    indices[x]=[m,n]
-                    x=x+1
-        y=x-1
-        indices=indices[0:y]
+                    indices.append([m,n])
         return indices
 
+
     n_eliminate=round(count_ones(data)*.1)
+    b=return_indices(data)
 
     for k in range(n_eliminate):
-        a=return_indices(data)
-        el_rc=random.choice(a)
+        el_rc=random.choice(b)
         el_rc1=el_rc[0]
         el_rc2=el_rc[1]
         data[el_rc1,el_rc2]=0
