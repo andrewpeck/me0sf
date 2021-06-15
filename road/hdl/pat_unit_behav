@@ -1,0 +1,233 @@
+#python implementation of the pat_unit.vhd behavior
+
+
+# def process_pat(ly0,ly1,ly2,ly3,ly4,ly5):
+#     "this function will act like the pat_unit architecture and return us pat_id and ly_c"
+
+#     return pat_id,ly_c
+
+import numpy as np
+import random
+import math
+import csv
+
+class hi_lo_t:
+    def __init__(self,hi,lo):
+        self.hi=hi
+        self.lo=lo
+
+    class patdef_t:
+    def __init__(self, id, ly0_x, ly1_x, ly2_x, ly3_x, ly4_x, ly5_x):
+        self.id=id
+        self.ly0=ly0
+        self.ly1=ly1
+        self.ly2=ly2
+        self.ly3=ly3
+        self.ly4=ly4
+        self.ly5=ly5
+
+def mirror_patdef(pat,id):
+    result=patdef_t()
+    result.id=id
+    result.ly0=hi_lo_t(pat.ly0.lo*(-1),pat.ly0.hi*(-1))
+    result.ly1=hi_lo_t(pat.ly1.lo*(-1),pat.ly1.hi*(-1))
+    result.ly2=hi_lo_t(pat.ly2.lo*(-1),pat.ly2.hi*(-1))
+    result.ly3=hi_lo_t(pat.ly3.lo*(-1),pat.ly3.hi*(-1))
+    result.ly4=hi_lo_t(pat.ly4.lo*(-1),pat.ly4.hi*(-1))
+    result.ly5=hi_lo_t(pat.ly5.lo*(-1),pat.ly5.hi*(-1))
+    return result;
+
+
+    #define all the patterns; make subject to change
+    pat_straight=patdef_t(15,hi_lo_t(1,-1),hi_lo_t(1,-1),hi_lo_t(1,-1),hi_lo_t(0,0),hi_lo_t(1,-1),hi_lo_t(1,-1))
+    pat_l=patdef_t(14,hi_lo_t(-1,-4),hi_lo_t(0,-3),hi_lo_t(1,-1),hi_lo_t(1,-1),hi_lo_t(3,0),hi_lo_t(4,1))
+    pat_r=mirror_patdef(pat_l,pat_l.id-1)
+    pat_l2=patdef_t(12,hi_lo_t(-2,-5),hi_lo_t(1,-4),hi_lo_t(1,-1),hi_lo_t(1,-1),hi_lo_t(4,1),hi_lo_t(5,2))
+    pat_r2=mirror_patdef(pat_l2,pat_l2.id-1)
+    pat_l3=patdef_t(10,hi_lo_t(-5,-8),hi_lo_t(-4,-7),hi_lo_t(0,-3),hi_lo_t(2,-2),hi_lo_t(7,4),hi_lo_t(8,5))
+    pat_r3=mirror_patdef(pat_l3,pat_l3.id-1)
+    pat_l4=patdef_t(8,hi_lo_t(-5,-8),hi_lo_t(-4,-7),hi_lo_t(0,-3),hi_lo_t(2,-2),hi_lo_t(7,4),hi_lo_t(8,5))
+    pat_r4=mirror_patdef(pat_l4,pat_l4.id-1)
+    pat_l5=patdef_t(6,hi_lo_t(-8,-11),hi_lo_t(-5,-9),hi_lo_t(0,-3),hi_lo_t(3,0),hi_lo_t(9,5),hi_lo_t(11,8))
+    pat_r5=mirror_patdef(pat_l5,pat_l5.id-1)
+    pat_l6=patdef_t(4,hi_lo_t(-11,-15),hi_lo_t(-9,-11),hi_lo_t(4,-9),hi_lo_t(9,4),hi_lo_t(11,9),hi_lo_t(15,11))
+    pat_r6=mirror_patdef(pat_l6,pat_l6.id-1)
+    pat_l7=patdef_t(2,hi_lo_t(-10,-18),hi_lo_t(-6,-14),hi_lo_t(2,-9),hi_lo_t(9,2),hi_lo_t(14,6),hi_lo_t(18,10))
+    pat_r7=mirror_patdef(pat_l7,pat_l7.id-1)
+
+    patlist=[pat_straight,pat_l,pat_r,pat_l2,pat_r2,pat_l3,pat_r3,pat_l4,pat_r4,pat_l5,pat_r5,pat_l6,pat_r6,pat_l7,pat_r7]
+
+
+def process_pat(patlist,ly0,ly1,ly2,ly3,ly4,ly5):
+
+    MAX_SPAN=37
+    N_LAYERS=6
+
+    def count_ones(ones_vec):
+    n_ones=0
+    for i in range(len(ones_vec)):
+        if ones_vec[i]==1:
+            n_ones=n_ones+1
+    return n_ones;
+
+
+    class hi_lo_t:
+    def __init__(self,hi,lo):
+        self.hi=hi
+        self.lo=lo
+
+    class patdef_t:
+    def __init__(self, id, ly0, ly1, ly2, ly3, ly4, ly5):
+        self.id=id
+        self.ly0=ly0
+        self.ly1=ly1
+        self.ly2=ly2
+        self.ly3=ly3
+        self.ly4=ly4
+        self.ly5=ly5
+    def mirror_patdef(pat,id):
+    result=patdef_t()
+    result.id=id
+    result.ly0=hi_lo_t(pat.ly0.lo*(-1),pat.ly0.hi*(-1))
+    result.ly1=hi_lo_t(pat.ly1.lo*(-1),pat.ly1.hi*(-1))
+    result.ly2=hi_lo_t(pat.ly2.lo*(-1),pat.ly2.hi*(-1))
+    result.ly3=hi_lo_t(pat.ly3.lo*(-1),pat.ly3.hi*(-1))
+    result.ly4=hi_lo_t(pat.ly4.lo*(-1),pat.ly4.hi*(-1))
+    result.ly5=hi_lo_t(pat.ly5.lo*(-1),pat.ly5.hi*(-1))
+    return result;
+
+    def get_ly_mask(ly_pat):
+    m_ly0=np.zeros(MAX_SPAN)
+    m_ly1=np.zeros(MAX_SPAN)
+    m_ly2=np.zeros(MAX_SPAN)
+    m_ly3=np.zeros(MAX_SPAN)
+    m_ly4=np.zeros(MAX_SPAN)
+    m_ly5=np.zeros(MAX_SPAN)
+    center=math.ceil(MAX_SPAN/2)
+    for a in (ly_pat.ly0.lo+center,(ly_pat.ly0.hi+center+1)):
+        m_ly0[a]=1
+    for b in (ly_pat.ly1.lo+center,(ly_pat.ly1.hi+center+1)):
+        m_ly1[b]=1
+    for c in (ly_pat.ly2.lo+center,(ly_pat.ly2.hi+center+1)):
+        m_ly2[c]=1
+    for d in (ly_pat.ly3.lo+center,(ly_pat.ly3.hi+center+1)):
+        m_ly3[d]=1
+    for e in (ly_pat.ly4.lo+center,(ly_pat.ly4.hi+center+1)):
+        m_ly4[e]=1
+    for f in (ly_pat.ly5.lo+center,(ly_pat.ly5.hi+center+1)):
+        m_ly5[f]=1
+    m_vec=[m_ly0,m_ly1,m_ly2,m_ly3,m_ly4,m_ly5]
+    return m_vec
+
+    for r in range(len(patlist)):
+        m_vec_1=[]
+        m_vec_1=get_ly_mask(patlist[r])
+
+
+    def get_lc_id(patlist,m_vec,ly0_x,ly1_x,ly2_x,ly3_x,ly4_x,ly5_x):
+    pats_m=[]
+    ly0_vec=[]
+    ly1_vec=[]
+    ly2_vec=[]
+    ly3_vec=[]
+    ly4_vec=[]
+    ly5_vec=[]
+    ly0_ones=[]
+    ly1_ones=[]
+    ly2_ones=[]
+    ly3_ones=[]
+    ly4_ones=[]
+    ly5_ones=[]
+    l0_h=[]
+    l1_h=[]
+    l2_h=[]
+    l3_h=[]
+    l4_h=[]
+    l5_h=[]
+    ly_ct_vec=[]
+    corr_pat_id=np.zeros(len(patlist))
+    lc_id_vec=[]
+    for w in range(len(patlist)):
+        pats_m[w]=get_ly_mask(patlist[w])
+    for v in range(len(pats_m)):
+        for h in range(MAX_SPAN):
+            ly0_vec[v][h]=ly0_x[h]*pats_m[v][0][h] #represents all the ly0 vectors from all patterns and data anded together
+            ly1_vec[v][h]=ly1_x[h]*pats_m[v][1][h]
+            ly2_vec[v][h]=ly2_x[h]*pats_m[v][2][h]
+            ly3_vec[v][h]=ly3_x[h]*pats_m[v][3][h]
+            ly4_vec[v][h]=ly4_x[h]*pats_m[v][4][h]
+            ly5_vec[v][h]=ly5_x[h]*pats_m[v][5][h]
+    for t in range(len(ly0_vec)):
+        ly0_ones[t]=count_ones(ly0_vec[t]) #number of worthy hits within each pattern type for ly0
+        ly1_ones[t]=count_ones(ly1_vec[t])
+        ly2_ones[t]=count_ones(ly2_vec[t])
+        ly3_ones[t]=count_ones(ly3_vec[t])
+        ly4_ones[t]=count_ones(ly4_vec[t])
+        ly5_ones[t]=count_ones(ly5_vec[t])
+    for d in range(len(ly0_ones)):
+        if (ly0_ones[d]>=1):
+            l0_h[d]=1
+        else:
+            l0_h[d]=0
+        if (ly1_ones[d]>=1):
+            l1_h[d]=1
+        else:
+            l1_h[d]=0
+        if (ly2_ones>=1):
+            l2_h[d]=1
+        else:
+            l2_h[d]=0
+        if (ly3_ones[d]>=1):
+            l3_h[d]=1
+        else:
+            l3_h[d]=0
+        if (ly4_ones[d]>=1):
+            l4_h[d]=1
+        else:
+            l4_h[d]=0
+        if (ly5_ones[d]>=1):
+            l5_h[d]=1
+        else:
+            l5_h[d]=0
+    for n in range(len(l0_h)):
+        ly_ct_vec[n]=l0_h[n]+l1_h[n]+l2_h[n]+l3_h[n]+l4_h[n]+l5_h[n]
+    for o in range(len(corr_pat_id)):
+        corr_pat_id[o]=patlist[o].id
+    for p in range(len(ly_ct_vec)):
+        lc_id_vec.append([ly_ct_vec[p],corr_pat_id[p]])
+    return lc_id_vec
+
+
+    lc_id_vec=get_lc_id(patlist,m_vec_1,ly0_x,ly1_x,ly2_x,ly3_x,ly4_x,ly5_x)
+
+    def priority_encoder(lc_id_vec):
+    max_lc=-1
+    index=0
+    store_id=0
+    s_list=[]
+    p_id=0
+    for q in range(len(lc_id_vec)):
+        if (lc_id_vec[q][0]>=max_lc):
+            max_lc=lc_id_vec[q][0]
+            index=q
+    s_list[0]=index
+    for r in range(len(lc_id_vec)):
+        if (max_lc==lc_id_vec[r][0]):
+            s_list.append(r)
+    for s in range(len(s_list)):
+        if (lc_id_vec[s][1]>=p_id):
+            p_id=lc_id_vec[s][1]
+            b_index=s
+    best_pat=lc_id_vec[s]
+    return best_pat
+
+    [pat_id,ly_c]=priority_encoder(lc_id_vec)
+return pat_id,ly_c
+
+
+
+
+
+
+
+
