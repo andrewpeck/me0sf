@@ -1,6 +1,4 @@
 #Test cases for pat_unit tb
-
-
 import numpy as np
 import math
 import random
@@ -136,7 +134,6 @@ def datadev(MAX_SPAN=37,nhit_lo=3,nhit_hi=10):
 
 
     return data
-
 
 
 
