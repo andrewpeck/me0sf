@@ -1,8 +1,8 @@
 #Testcases for pat_unit testbench
-from datadev_b import datadev
+from datadev_b import datadev_b
 
 def datadev_t(MAX_SPAN=37):
-    a=datadev(MAX_SPAN)
+    a=datadev_b(MAX_SPAN)
     print(a)
     ly0=a[0]
     ly1=a[1]
