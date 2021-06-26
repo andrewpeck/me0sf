@@ -1,6 +1,8 @@
-#Subfunctions helpful for testbench 
+#Subfunctions helpful for pat_unit testbench
 import numpy as np
 import math
+
+
 
 class hi_lo_t:
     def __init__(self,hi,lo):
@@ -88,76 +90,62 @@ def get_ly_mask(ly_pat,MAX_SPAN=37):
 
 
 def get_lc_id(patlist,ly0_x,ly1_x,ly2_x,ly3_x,ly4_x,ly5_x,MAX_SPAN=37):
-    len_patlist=len(patlist)
-    pats_m=[]
-    ly0_ones=np.zeros(len_patlist)
-    ly1_ones=np.zeros(len_patlist)
-    ly2_ones=np.zeros(len_patlist)
-    ly3_ones=np.zeros(len_patlist)
-    ly4_ones=np.zeros(len_patlist)
-    ly5_ones=np.zeros(len_patlist)
-    l0_h=np.zeros(len_patlist)
-    l1_h=np.zeros(len_patlist)
-    l2_h=np.zeros(len_patlist)
-    l3_h=np.zeros(len_patlist)
-    l4_h=np.zeros(len_patlist)
-    l5_h=np.zeros(len(patlist))
-    ly_ct_vec=np.zeros(len_patlist)
-    lc_id_vec=[]
-    corr_pat_id=np.zeros(len(patlist))
-    for w in range(len_patlist):
-        pats_m.append(get_ly_mask(patlist[w]))
-    ly0_vec=[[],[],[],[],[],[],[],[],[],[],[],[],[],[],[]] #See if there's a way to do this with np.zeros (didn't do it before because of type error, and [] is not iterable)
-    ly1_vec=[[],[],[],[],[],[],[],[],[],[],[],[],[],[],[]]
-    ly2_vec=[[],[],[],[],[],[],[],[],[],[],[],[],[],[],[]]
-    ly3_vec=[[],[],[],[],[],[],[],[],[],[],[],[],[],[],[]]
-    ly4_vec=[[],[],[],[],[],[],[],[],[],[],[],[],[],[],[]]
-    ly5_vec=[[],[],[],[],[],[],[],[],[],[],[],[],[],[],[]]
+        len_patlist=len(patlist)
+        corr_pat_id=np.zeros(len_patlist)
+        pats_m=[]
+        for w in range(len_patlist):
+            pats_m.append(get_ly_mask(patlist[w]))
+        ly0_a=np.zeros(MAX_SPAN)
+        ly1_a=np.zeros(MAX_SPAN)
+        ly2_a=np.zeros(MAX_SPAN)
+        ly3_a=np.zeros(MAX_SPAN)
+        ly4_a=np.zeros(MAX_SPAN)
+        ly5_a=np.zeros(MAX_SPAN)
+        lc_vec_x=np.zeros(len_patlist)
+        lc_id_vec=[]
+        for v in range(len_patlist):
+            for h in range(MAX_SPAN):
+                ly0_a[h]=pats_m[v][0][h]*ly0_x[h]
+                ly1_a[h]=pats_m[v][1][h]*ly1_x[h]
+                ly2_a[h]=pats_m[v][2][h]*ly2_x[h]
+                ly3_a[h]=pats_m[v][3][h]*ly3_x[h]
+                ly4_a[h]=pats_m[v][4][h]*ly4_x[h]
+                ly5_a[h]=pats_m[v][5][h]*ly5_x[h]
+            ly0_ones=count_ones(ly0_a)
+            ly1_ones=count_ones(ly1_a)
+            ly2_ones=count_ones(ly2_a)
+            ly3_ones=count_ones(ly3_a)
+            ly4_ones=count_ones(ly4_a)
+            ly5_ones=count_ones(ly5_a)
+            if (ly0_ones>=1):
+                ly0_h=1
+            else:
+                ly0_h=0
+            if (ly1_ones>=1):
+                ly1_h=1
+            else:
+                ly1_h=0
+            if (ly2_ones>=1):
+                ly2_h=1
+            else:
+                ly2_h=0
+            if (ly3_ones>=1):
+                ly3_h=1
+            else:
+                ly3_h=0
+            if (ly4_ones>=1):
+                ly4_h=1
+            else:
+                ly4_h=0
+            if (ly5_ones>=1):
+                ly5_h=1
+            else:
+                ly5_h=0
+            lc_vec_x[v]=ly0_h+ly1_h+ly2_h+ly3_h+ly4_h+ly5_h
 
-    for v in range(len_patlist):
-        for h in range(MAX_SPAN):
-            ly0_vec[v].append(ly0_x[h]*pats_m[v][0][h])
-            ly1_vec[v].append(ly1_x[h]*pats_m[v][1][h])
-            ly2_vec[v].append(ly2_x[h]*pats_m[v][2][h])
-            ly3_vec[v].append(ly3_x[h]*pats_m[v][3][h])
-            ly4_vec[v].append(ly4_x[h]*pats_m[v][4][h])
-            ly5_vec[v].append(ly5_x[h]*pats_m[v][5][h])
-    for t in range(len_patlist):
-        ly0_ones[t]=count_ones(ly0_vec[t])
-        ly1_ones[t]=count_ones(ly1_vec[t])
-        ly2_ones[t]=count_ones(ly2_vec[t])
-        ly3_ones[t]=count_ones(ly3_vec[t])
-        ly4_ones[t]=count_ones(ly4_vec[t])
-        ly5_ones[t]=count_ones(ly5_vec[t])
-    for d in range(len_patlist):
-            if (ly0_ones[d]>=1):
-                l0_h[d]=1
-            else:
-                l0_h[d]=0
-            if (ly1_ones[d]>=1):
-                l1_h[d]=1
-            else:
-                l1_h[d]=0
-            if (ly2_ones[d]>=1):
-                l2_h[d]=1
-            else:
-                l2_h[d]=0
-            if (ly3_ones[d]>=1):
-                l3_h[d]=1
-            else:
-                l3_h[d]=0
-            if (ly4_ones[d]>=1):
-                l4_h[d]=1
-            else:
-                l4_h[d]=0
-            if (ly5_ones[d]>=1):
-                l5_h[d]=1
-            else:
-                l5_h[d]=0
-    for n in range(len_patlist):
-        ly_ct_vec[n]=l0_h[n]+l1_h[n]+l2_h[n]+l3_h[n]+l4_h[n]+l5_h[n]
-    for i in range(len(patlist)):
-        corr_pat_id[i]=patlist[i].id
-    for p in range(len_patlist):
-        lc_id_vec.append([ly_ct_vec[p],corr_pat_id[p]])
-    return lc_id_vec
+        for i in range(len(patlist)):
+                    corr_pat_id[i]=patlist[i].id
+        for p in range(len_patlist):
+                    lc_id_vec.append([lc_vec_x[p],corr_pat_id[p]])
+
+        return lc_id_vec
