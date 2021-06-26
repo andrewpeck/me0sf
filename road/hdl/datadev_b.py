@@ -8,7 +8,7 @@ import random
 
 
 
-def datadev(MAX_SPAN=37,nhit_lo=3,nhit_hi=10):
+def datadev_b(MAX_SPAN=37,nhit_lo=3,nhit_hi=10):
 
     N_LAYERS=6
     #nhits corresponds to the hits from noise
