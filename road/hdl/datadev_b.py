@@ -1,4 +1,6 @@
-#Test cases for pat_unit tb
+#Test cases for pat_unit_beh
+
+
 import numpy as np
 import math
 import random
