@@ -200,7 +200,7 @@ begin
 
       dav_o <= best_dav;
 
-      if (best.cnt > CNT_THRESH) then
+      if (best.cnt >= CNT_THRESH) then
         pat_o     <= best;
         pat_o.dav <= '1';
       else
