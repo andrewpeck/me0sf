@@ -1,7 +1,4 @@
 #Test cases for pat_unit.vhd
-
-
-
 import math
 import random
 from printly_dat import printly_dat
