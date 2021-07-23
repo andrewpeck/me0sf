@@ -68,38 +68,29 @@ def ones_bit_mask(num):
     return o_mask
 
 def get_ly_mask(ly_pat,MAX_SPAN=37):
-        m_ly0=np.zeros(MAX_SPAN)
-        m_ly1=np.zeros(MAX_SPAN)
-        m_ly2=np.zeros(MAX_SPAN)
-        m_ly3=np.zeros(MAX_SPAN)
-        m_ly4=np.zeros(MAX_SPAN)
-        m_ly5=np.zeros(MAX_SPAN)
+        m_vec=[]
         center=round(MAX_SPAN/2)
         a_lo=ly_pat.ly0.lo+center
-        a_hi=ly_pat.ly0.hi+center+1
+        a_hi=ly_pat.ly0.hi+center
         b_lo=ly_pat.ly1.lo+center
-        b_hi=ly_pat.ly1.hi+center+1
+        b_hi=ly_pat.ly1.hi+center
         c_lo=ly_pat.ly2.lo+center
-        c_hi=ly_pat.ly2.hi+center+1
+        c_hi=ly_pat.ly2.hi+center
         d_lo=ly_pat.ly3.lo+center
-        d_hi=ly_pat.ly3.hi+center+1
+        d_hi=ly_pat.ly3.hi+center
         e_lo=ly_pat.ly4.lo+center
-        e_hi=ly_pat.ly4.hi+center+1
+        e_hi=ly_pat.ly4.hi+center
         f_lo=ly_pat.ly5.lo+center
-        f_hi=ly_pat.ly5.hi+center+1
-        for a in range(a_lo,a_hi):
-            m_ly0[a]=1
-        for b in range(b_lo,b_hi):
-            m_ly1[b]=1
-        for c in range(c_lo,c_hi):
-            m_ly2[c]=1
-        for d in range(d_lo,d_hi):
-            m_ly3[d]=1
-        for e in range(e_lo,e_hi):
-            m_ly4[e]=1
-        for f in range(f_lo,f_hi):
-            m_ly5[f]=1
-        m_vec=[m_ly0,m_ly1,m_ly2,m_ly3,m_ly4,m_ly5]
+        f_hi=ly_pat.ly5.hi+center
+        m_vals=[[a_lo,a_hi],[b_lo,b_hi],[c_lo,c_hi],[d_lo,d_hi],[e_lo,e_hi],[f_lo,f_hi]]
+        for i in range(len(m_vals)):
+            index=MAX_SPAN-m_vals[i][0]-1
+            holder=0
+            while (index!=MAX_SPAN-m_vals[i][1]-2):
+                val=1<<index
+                holder=holder|val
+                index-=1
+            m_vec.append(holder)
         return m_vec
 
 
