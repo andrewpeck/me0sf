@@ -1,4 +1,4 @@
-#Functions used in multiple modules
+#Functions used in multiple files
 import numpy as np
 import math
 
