@@ -7,7 +7,7 @@ from subfunc import count_ones
 from subfunc import ones_bit_mask
 from subfunc import clear_bit
 
-def datadev_b(ly_t=6,MAX_SPAN=37,nhit_lo=3,nhit_hi=10):
+def datadev(ly_t=6,MAX_SPAN=37,nhit_lo=3,nhit_hi=10):
 
     N_LAYERS=6
 
