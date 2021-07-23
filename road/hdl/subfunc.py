@@ -1,7 +1,6 @@
-#Subfunctions helpful for pat_unit testbench
+#Subfunctions helpful for the pat_unit testbench
 import numpy as np
 import math
-
 
 
 class hi_lo_t:
@@ -41,12 +40,32 @@ def mirror_patdef(pat,id):
     result=patdef_t(id,ly0,ly1,ly2,ly3,ly4,ly5)
     return result
 
-def count_ones(ones_vec):
+def count_ones(int_ones):
         n_ones=0
-        for i in range(len(ones_vec)):
-            if ones_vec[i]==1:
+        iterable=bin(int_ones)[2:]
+        for i in range(len(iterable)):
+            if iterable[i]=='1':
                 n_ones=n_ones+1
         return n_ones;
+
+def set_bit(index,num1=0,MAX_SPAN=37):
+    r_index=(MAX_SPAN-index)-1
+    num2=1<<r_index
+    final_v=num1|num2
+    return final_v
+
+def clear_bit(num,index,MAX_SPAN=37):
+    index=MAX_SPAN-index-1
+    bit = 1 & (num>>index)
+    return (num ^ (bit << index))
+
+def ones_bit_mask(num):
+    o_mask=0
+    iterable_data=bin(num)[2:]
+    for m in range(len(iterable_data)):
+        mask_1=1<<m
+        o_mask=o_mask|mask_1
+    return o_mask
 
 def get_ly_mask(ly_pat,MAX_SPAN=37):
         m_ly0=np.zeros(MAX_SPAN)
