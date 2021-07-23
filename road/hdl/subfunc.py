@@ -1,4 +1,4 @@
-#Subfunctions helpful for the pat_unit testbench
+#Functions used in multiple modules
 import numpy as np
 import math
 
