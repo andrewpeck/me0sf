@@ -1,4 +1,4 @@
-#Mask Visuals Generator
+#Generates visual representations of masks
 from printly_dat import printly_dat
 from subfunc import*
 
