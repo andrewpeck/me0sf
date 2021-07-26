@@ -1,5 +1,4 @@
 #Takes in data and/or a mask and returns a visual representation of the info
-
 def printly_dat(mask=None,data=None,MAX_SPAN=37):
     if (mask is not None):
         iterable_mask=[]
