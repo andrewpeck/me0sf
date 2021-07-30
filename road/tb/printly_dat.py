@@ -1,5 +1,8 @@
 #Takes in data and/or a mask and returns a visual representation of the info
+
 def printly_dat(mask=None,data=None,MAX_SPAN=37):
+    """takes in a list of mask values and/or data values for each layer and the max layer span to generate a visual representation of the masks and/or data on the strips"""
+    #create an iterable mask string
     if (mask is not None):
         iterable_mask=[]
         for m in range(len(mask)):
@@ -7,6 +10,7 @@ def printly_dat(mask=None,data=None,MAX_SPAN=37):
             val_m=bin(mask_v)[2:]
             val_m=val_m.zfill(MAX_SPAN)
             iterable_mask.append(val_m)
+    #create an iterable data string
     if (data is not None):
         iterable_data=[]
         for n in range(len(data)):
