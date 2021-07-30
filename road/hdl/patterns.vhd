@@ -1,3 +1,5 @@
+use std.textio.all;
+
 library ieee;
 use ieee.std_logic_1164.all;
 use ieee.std_logic_misc.all;
@@ -178,14 +180,14 @@ package body patterns is
 
     end loop;
 
-    report "--pat=" & integer'image(pat.id) & "  span=" & integer'image(span);
+    write(output, "--pat=" & integer'image(pat.id) & "  span=" & integer'image(span) & LF);
 
-    report "ly0 " & ly0;
-    report "ly1 " & ly1;
-    report "ly2 " & ly2;
-    report "ly3 " & ly3;
-    report "ly4 " & ly4;
-    report "ly5 " & ly5;
+    write(output, "ly0 " & ly0 & LF);
+    write(output, "ly1 " & ly1 & LF);
+    write(output, "ly2 " & ly2 & LF);
+    write(output, "ly3 " & ly3 & LF);
+    write(output, "ly4 " & ly4 & LF);
+    write(output, "ly5 " & ly5 & LF);
 
   end;
 

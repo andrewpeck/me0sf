@@ -46,10 +46,12 @@ architecture behavioral of partition is
 
   -- (partially) or together this partition and its minus neighbor only need the
   -- minus neighbor since we are only interested in things pointing from the IP
-  signal lyor : partition_t;
+  signal lyor     : partition_t;
+  signal lyor_dav : std_logic := '0';
 
   --
-  signal strips : strip_list_t (PRT_WIDTH-1 downto 0);
+  signal strips     : strip_list_t (PRT_WIDTH-1 downto 0);
+  signal strips_dav : std_logic := '0';
 
   --type pat_list_array_t is array (integer range 0 to FILTER_STAGES) of pat_list_t;
   -- FIXME put these in an array somehow...
@@ -71,6 +73,9 @@ begin
       -- FIXME: this should be parameterized, and depend on the station matters
       -- which layer and the orientation of chambers wrt the ip or something
       -- like that but this stupid approach is ok for now
+
+      lyor_dav <= dav_i;
+
       lyor(5) <= partition_i(5);
       lyor(4) <= partition_i(4);
       lyor(3) <= partition_i(3);
@@ -97,26 +102,35 @@ begin
     port map (
       clock => clock,
 
-      dav_i => dav_i,
-      dav_o => dav_o,
+      dav_i => lyor_dav,
+      ly0   => lyor(0),
+      ly1   => lyor(1),
+      ly2   => lyor(2),
+      ly3   => lyor(3),
+      ly4   => lyor(4),
+      ly5   => lyor(5),
 
-      ly0 => lyor(0),
-      ly1 => lyor(1),
-      ly2 => lyor(2),
-      ly3 => lyor(3),
-      ly4 => lyor(4),
-      ly5 => lyor(5),
-
+      dav_o    => strips_dav,
       strips_o => strips
       );
 
   -------------------------------------------------------------------------------
   -- Pre-filter the patterns to limit to 1 segment in every N strips using a
   -- priority encoded sorting tree...
+  --
+  -- FIXME: this will make ghosts at the sorting boundaries... need to add in
+  -- some ghost cancellation (also need to cancel ghosts in time)
+  --
+  -- 0   1   2   3   4   5   6   7   8   9   A   B   C   D   E   F
+  -- └───┴─┬─┴───┘   └───┴─┬─┴───┘   └───┴─┬─┴───┘   └───┴─┬─┴───┘
+  --       └───────┬───────┘               └───────┬───────┘
+  --              OUT                             OUT
+  -------------------------------------------------------------------------------
 
   s0_gen : for region in 0 to PRT_WIDTH/S0_WIDTH-1 generate
     constant BITS : natural := STRIP_BITS + PATTERN_LENGTH;
 
+    signal dav      : std_logic := '0';
     signal best     : std_logic_vector (BITS-1 downto 0);
     signal cand_slv : bus_array (0 to S0_WIDTH-1) (BITS-1 downto 0);
   begin
@@ -137,12 +151,18 @@ begin
         )
       port map (
         clock => clock,
+        dav_i => strips_dav,
+        dav_o => dav,
         dat_i => cand_slv,
         dat_o => best,
         adr_o => open
         );
 
     strips_s0(region) <= to_strip(best);
+
+    davassign : if (region = 0) generate
+      dav_o <= dav;
+    end generate;
 
   end generate;
 

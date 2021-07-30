@@ -1,0 +1,19 @@
+#+TITLE: ME0 Segment Finder
+
+The ME0 segment finder is based on a simple "road based" pattern finding scheme optimized for low latency and low resource usage.
+
+*** Code Structure
+[[file:doc/chamber.svg]]
+*** Directory Structure
+#+begin_src
+├── doc                      ; documentation, images
+├── Hog                      ; Hog (submodule)
+├── Projects                 ; Hog project dir
+└── road                     ; Road Based Pattern Finder
+    ├── Makefile             ; Makefile
+    ├── constraints          ; xdc constraints files
+    ├── hdl                  ;
+    │   ├── priority_encoder ; priority encoder (submodule)
+    │   └── *.vhd            ; vhdl source code
+    └── tb                   ; test bench files
+#+end_src

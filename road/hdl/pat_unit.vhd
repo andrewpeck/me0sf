@@ -1,3 +1,5 @@
+use std.textio.all;
+
 library ieee;
 use ieee.std_logic_1164.all;
 use ieee.std_logic_misc.all;
@@ -41,6 +43,7 @@ end pat_unit;
 architecture behavioral of pat_unit is
 
   signal pats : pat_list_t (NUM_PATTERNS-1 downto 0);
+  signal pats_dav : std_logic := '0';
 
   function count_ones(slv : std_logic_vector) return natural is
     variable n_ones : natural := 0;
@@ -55,7 +58,9 @@ architecture behavioral of pat_unit is
 
   signal best_slv : std_logic_vector (PATTERN_LENGTH-1 downto 0);
   signal best     : pattern_t;
+  signal best_dav : std_logic := '0';
   signal cand_slv : bus_array (0 to NUM_PATTERNS-1) (PATTERN_LENGTH-1 downto 0);
+  signal cand_dav : std_logic := '0';
 
 begin
 
@@ -82,14 +87,6 @@ begin
     report "Layer Span Must be Odd (span=" & integer'image(LY4_SPAN) & ")" severity error;
   assert (LY5_SPAN mod 2 = 1)
     report "Layer Span Must be Odd (span=" & integer'image(LY5_SPAN) & ")" severity error;
-
-  process (clock) is
-  begin
-    if (rising_edge(clock)) then
-      -- FIXME: we need to time this in
-      dav_o <= dav_i;
-    end if;
-  end process;
 
   patgen : for I in 0 to patlist'length-1 generate
 
@@ -149,6 +146,7 @@ begin
     process (clock) is
     begin
       if (rising_edge(clock)) then
+        pats_dav <= dav_i;
         pats(I) <= null_pattern;
         pats(I).cnt <= to_unsigned(count_ones(
           or_reduce(ly0_mask) &
@@ -162,6 +160,8 @@ begin
     end process;
   end generate;
 
+
+  cand_dav <= pats_dav;
 
   cand_to_slv : for I in 0 to NUM_PATTERNS-1 generate
   begin
@@ -180,14 +180,15 @@ begin
       )
     port map (
       clock => clock,
-      dav_i => '1',
-      dav_o => open,
+      dav_i => cand_dav,
       dat_i => cand_slv,
+      dav_o => best_dav,
       dat_o => best_slv,
       adr_o => open
       );
 
-  best <= to_pattern(best_slv);
+  best     <= to_pattern(best_slv);
+  best.dav <= best_dav;
 
   --------------------------------------------------------------------------------
   -- Put a threshold, make sure the pattern is above some minimum layer cnt
@@ -196,7 +197,10 @@ begin
   process (clock) is
   begin
     if (rising_edge(clock)) then
-      if (best.cnt > CNT_THRESH) then
+
+      dav_o <= best_dav;
+
+      if (best.cnt >= CNT_THRESH) then
         pat_o     <= best;
         pat_o.dav <= '1';
       else
