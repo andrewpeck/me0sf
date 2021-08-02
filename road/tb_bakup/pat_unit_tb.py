@@ -12,14 +12,10 @@ from subfunc import*
 @cocotb.test()
 async def pat_unit_test(dut):
     random.seed(56)
-    #set the amount of layers the muon traveled through
-    ly_t=6
-    #set layer count threshold from firmware
     cnt_thresh=dut.THRESHOLD.value
-    #set MAX_SPAN from firmware
+    ly_t=6
     ly_spans=[dut.LY0_SPAN.value,dut.LY1_SPAN.value,dut.LY2_SPAN.value,dut.LY3_SPAN.value,dut.LY4_SPAN.value,dut.LY5_SPAN.value]
     MAX_SPAN=max(ly_spans)
-    #set patlist from firmware
     patlist=[]
     for i in range(len(dut.PATLIST)):
         id=dut.PATLIST[i].id.value
@@ -41,8 +37,12 @@ async def pat_unit_test(dut):
     i=0
     id_disagreement=0
     lc_disagreement=0
+    # lc_disagreement_cnt_t=0
+    # id_disagreement_cnt_t=0
     disagreement_vec_id=[]
     disagreement_vec_lc=[]
+    # cnt_thresh_idd=[]
+    # cnt_thresh_lcd=[]
     [ly0_x,ly1_x,ly2_x,ly3_x,ly4_x,ly5_x]=datadev(ly_t,MAX_SPAN)
     print('Testcase %d Original Data:' %i)
     printly_dat(data=[ly0_x,ly1_x,ly2_x,ly3_x,ly4_x,ly5_x],MAX_SPAN=MAX_SPAN)
@@ -62,7 +62,7 @@ async def pat_unit_test(dut):
     dut.ly5<=0
     for j in range(10):
         await RisingEdge(dut.clock)
-    for k in range(100000):
+    for k in range(100001):
         await RisingEdge(dut.clock)
         dut.dav_i<=1
         dut.ly0<=ly0_x
@@ -78,7 +78,6 @@ async def pat_unit_test(dut):
                 print('Emulator Pattern Assignment:')
                 printly_dat(data=[ly0_x,ly1_x,ly2_x,ly3_x,ly4_x,ly5_x],mask=mask_v,MAX_SPAN=MAX_SPAN)
                 print('\n')
-        #apply count threshold conditions to emulator pattern assignment
         if (ly_c<cnt_thresh):
             pat_id=0
             ly_c=0
@@ -101,9 +100,20 @@ async def pat_unit_test(dut):
         if (ly_c!=dut.pat_o.cnt.value):
             lc_disagreement+=1
             disagreement_vec_lc.append(i)
-        #keep a count for how many testcases pass the layer count threshold
+        # if (ly_c<cnt_thresh and dut.pat_o.id.value!=pat_id):
+        #     id_disagreement_cnt_t+=1
+        #     cnt_thresh_idd.append(i)
+        # if (ly_c<cnt_thresh and dut.pat_o.cnt.value!=ly_c):
+        #     lc_disagreement_cnt_t+=1
+        #     cnt_thresh_lcd.append(i)
         if (ly_c>cnt_thresh and dut.pat_o.cnt.value==ly_c and dut.pat_o.id.value==pat_id):
             agreement_ct+=1
+        # id_dis=set(disagreement_vec_id)
+        # ct_dis=set(disagreement_vec_lc)
+        # id_dis_cntt=set(cnt_thresh_idd)
+        # ct_dis_cntt=set(cnt_thresh_lcd)
+        # true_id_dset=id_dis.difference(id_dis_cntt)
+        # true_lc_dset=ct_dis.difference(ct_dis_cntt)
         dut.dav_i<=0
         dut.ly0<=0
         dut.ly1<=0
@@ -111,13 +121,22 @@ async def pat_unit_test(dut):
         dut.ly3<=0
         dut.ly4<=0
         dut.ly5<=0
-        print("In %d Testcases...\n" %(i+1))
+        # true_dis_id=id_disagreement-id_disagreement_cnt_t
+        # true_dis_lc=lc_disagreement-lc_disagreement_cnt_t
+        print("In %d Testcases...\n" %i)
         print('%d Disagreements in ID' %id_disagreement)
         print('Indexes of ID disagreements: ' + str(disagreement_vec_id))
         print('\n\n')
         print('%d Disagreements in Layer Count' %lc_disagreement)
         print('Indexes of Layer Count disagreements: ' + str(disagreement_vec_lc))
         print('\n\n')
+        # print('%d ID disagreements from CNT_THRESH' %id_disagreement_cnt_t)
+        # print('%d Layer Count disagreements from CNT_THRESH' %lc_disagreement_cnt_t)
+        # print('\n\n')
+        # print(str(true_dis_id) + ' true disagreements in ID\n' + str(true_dis_lc) + ' true disagreements in Layer Count')
+        # print('Indexes of ID disagreements not caused by CNT_THRESH: '+str(true_id_dset))
+        # print('Indexes of Layer Count Disagreement not caused by CNT_THRESH: '+str(true_lc_dset))
+        # print('\n')
         print('The amount of agreements above the layer count is: %d' %agreement_ct)
         print('\n')
         i+=1

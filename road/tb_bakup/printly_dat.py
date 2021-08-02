@@ -1,7 +1,5 @@
 #Takes in data and/or a mask and returns a visual representation of the info
 
-from subfunc import*
-
 def printly_dat(mask=None,data=None,MAX_SPAN=37):
     """takes in a list of mask values and/or data values for each layer and the max layer span to generate a visual representation of the masks and/or data on the strips"""
     #create an iterable mask string

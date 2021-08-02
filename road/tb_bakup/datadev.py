@@ -126,7 +126,7 @@ def datadev(ly_t=6,MAX_SPAN=37,nhit_lo=3,nhit_hi=10):
             #create iterable binary version of the mask and data integers; set the dimensions of each to be the number of strips on the me0
                 iterable_mask=bin(mask)[2:]
                 iterable_mask=iterable_mask.zfill(MAX_SPAN)
-                #and the iterable data and iterable mask to find the high bits; return the layer n and strip o where the high bit occurs
+                #and the iterbale data and iterable mask to find the high bits; return the layer n and strip o where the high bit occurs
                 for o in range(len(iterable_data[n])):
                     if (int(iterable_data[n][o])&int(iterable_mask[o])==1):
                         indices.append([n,o])
@@ -144,5 +144,3 @@ def datadev(ly_t=6,MAX_SPAN=37,nhit_lo=3,nhit_hi=10):
 
     return data
 
-# data=datadev()
-# printly_dat(mask=get_ly_mask(patlist[0]),data=data)
