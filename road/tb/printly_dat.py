@@ -1,46 +1,41 @@
-#Takes in data and/or a mask and returns a visual representation of the info
-
-from subfunc import*
-
-def printly_dat(mask=None,data=None,MAX_SPAN=37):
-    """takes in a list of mask values and/or data values for each layer and the max layer span to generate a visual representation of the masks and/or data on the strips"""
-    #create an iterable mask string
-    if (mask is not None):
-        iterable_mask=[]
+def printly_dat(mask=None, data=None, MAX_SPAN=37):
+    """takes in data and/or a mask and returns a visual representation of the info"""
+    # create an iterable mask string
+    if mask is not None:
+        iterable_mask = []
         for m in range(len(mask)):
-            mask_v=mask[m]
-            val_m=bin(mask_v)[2:]
-            val_m=val_m.zfill(MAX_SPAN)
+            mask_v = mask[m]
+            val_m = bin(mask_v)[2:]
+            val_m = val_m.zfill(MAX_SPAN)
             iterable_mask.append(val_m)
-    #create an iterable data string
-    if (data is not None):
-        iterable_data=[]
+    # create an iterable data string
+    if data is not None:
+        iterable_data = []
         for n in range(len(data)):
-            data_v=data[n]
-            val_d=bin(data_v)[2:]
-            val_d=val_d.zfill(MAX_SPAN)
+            data_v = data[n]
+            val_d = bin(data_v)[2:]
+            val_d = val_d.zfill(MAX_SPAN)
             iterable_data.append(val_d)
     for i in range(6):
-        print('ly%d '%i,end='')
+        print("ly%d " % i, end="")
         for j in range(MAX_SPAN):
-            if (data is not None and mask is not None):
-                if (iterable_data[i][j]=='1'):
-                    print('1',end='')
-                elif (iterable_mask[i][j]=='1'):
-                    print('X',end='')
+            if data is not None and mask is not None:
+                if iterable_data[i][j] == "1":
+                    print("1", end="")
+                elif iterable_mask[i][j] == "1":
+                    print("X", end="")
                 else:
-                    print('-',end='')
-            elif (data is not None):
-                if (iterable_data[i][j]=='1'):
-                    print('1',end='')
+                    print("-", end="")
+            elif data is not None:
+                if iterable_data[i][j] == "1":
+                    print("1", end="")
                 else:
-                    print('-',end='')
-            elif (mask is not None):
-                if (iterable_mask[i][j]=='1'):
-                    print('X',end='')
+                    print("-", end="")
+            elif mask is not None:
+                if iterable_mask[i][j] == "1":
+                    print("X", end="")
                 else:
-                    print('-',end='')
+                    print("-", end="")
             else:
-                 print('-',end='')
-        print('\n')
-
+                print("-", end="")
+        print("\n")
