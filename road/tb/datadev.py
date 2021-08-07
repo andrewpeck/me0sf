@@ -12,7 +12,7 @@ def datadev(ly_t=6, MAX_SPAN=37, nhit_lo=3, nhit_hi=10):
     nhits = random.randint(nhit_lo, nhit_hi)
     slope = random.uniform(-1 * (MAX_SPAN / (N_LAYERS - 1)), MAX_SPAN / (N_LAYERS - 1))
     center_lo=MAX_SPAN//2-1
-    center_hi=MAX_SPAN//2-1
+    center_hi=MAX_SPAN//2+1
     hit1 = round(random.randint(center_lo, center_hi) - slope * 2.5)
     data = []
 
