@@ -11,11 +11,20 @@ def datadev(ly_t=6, MAX_SPAN=37, nhit_lo=3, nhit_hi=10):
     # nhits corresponds to the number of hits from noise; slope and hit1 determine the muon track to generate hits from
     nhits = random.randint(nhit_lo, nhit_hi)
     slope = random.uniform(-1 * (MAX_SPAN / (N_LAYERS - 1)), MAX_SPAN / (N_LAYERS - 1))
-    hit1 = round(random.randint(17, 19) - slope * 2.5)
+    center_lo=MAX_SPAN//2-1
+    center_hi=MAX_SPAN//2-1
+    hit1 = round(random.randint(center_lo, center_hi) - slope * 2.5)
     data = []
 
     # generate the different hits for each layer based on how many layers the muon traveled through
-    if ly_t == 2:
+    if ly_t == 1:
+        ly0_h = hit1
+        ly1_h = 0
+        ly2_h = 0
+        ly3_h = 0
+        ly4_h = 0
+        ly5_h = 0
+    elif ly_t == 2:
         ly0_h = hit1
         ly1_h = round((slope * 1) + hit1)
         ly2_h = 0
@@ -72,6 +81,8 @@ def datadev(ly_t=6, MAX_SPAN=37, nhit_lo=3, nhit_hi=10):
             data.append(set_bit(lyx_h[1]))
         else:
             data.append(0)
+    else:
+        data.append(0)
 
     # layer 2 data without noise
     if ly_t == 3 or ly_t == 4 or ly_t == 5 or ly_t == 6:
@@ -79,6 +90,8 @@ def datadev(ly_t=6, MAX_SPAN=37, nhit_lo=3, nhit_hi=10):
             data.append(set_bit(lyx_h[2]))
         else:
             data.append(0)
+    else:
+        data.append(0)
 
     # layer 3 data without noise
     if ly_t == 4 or ly_t == 5 or ly_t == 6:
@@ -86,6 +99,8 @@ def datadev(ly_t=6, MAX_SPAN=37, nhit_lo=3, nhit_hi=10):
             data.append(set_bit(lyx_h[3]))
         else:
             data.append(0)
+    else:
+        data.append(0)
 
     # layer 4 data without noise
     if ly_t == 5 or ly_t == 6:
@@ -93,6 +108,8 @@ def datadev(ly_t=6, MAX_SPAN=37, nhit_lo=3, nhit_hi=10):
             data.append(set_bit(lyx_h[4]))
         else:
             data.append(0)
+    else:
+        data.append(0)
 
     # layer 5 data without noise
     if ly_t == 6:
@@ -100,6 +117,8 @@ def datadev(ly_t=6, MAX_SPAN=37, nhit_lo=3, nhit_hi=10):
             data.append(set_bit(lyx_h[5]))
         else:
             data.append(0)
+    else:
+        data.append(0)
 
     # noise for all 6 layers
     for ihit in range(nhits):
@@ -134,7 +153,7 @@ def datadev(ly_t=6, MAX_SPAN=37, nhit_lo=3, nhit_hi=10):
         return indices
 
     n_eliminate = round(ones_ct * 0.1)
-    el_indices = return_indices(data, iterable_data)
+    el_indices = return_indices(data, iterable_data, MAX_SPAN=MAX_SPAN)
 
     # clear 10% of the data on random strips and layers
     for k in range(n_eliminate):
