@@ -79,9 +79,9 @@ architecture behavioral of fit is
 
   -- n * x
   type n_y_array_t is array (integer range 0 to N_LAYERS-1) of
-    signed (4+STRIP_BITS-1 downto 0);
+    signed (cnt(0)'length+ly(0)'length-1 downto 0);
   type n_x_array_t is array (integer range 0 to N_LAYERS-1) of
-    signed (7 downto 0);
+    signed (cnt(0)'length+NUM_EXTRA_SUM_BITS downto 0);
   signal n_y : n_y_array_t := (others => (others => '0'));
   signal n_x : n_x_array_t := (others => (others => '1'));
 
@@ -90,9 +90,9 @@ architecture behavioral of fit is
   --------------------------------------------------------------------------------
 
   type x_diff_array_t is array (integer range 0 to N_LAYERS-1) of
-    signed (4+LY_BITS-1 downto 0);
+    signed (NUM_EXTRA_SUM_BITS+1+LY_BITS-1 downto 0);
   type y_diff_array_t is array (integer range 0 to N_LAYERS-1) of
-    signed (4+STRIP_BITS-1 downto 0);
+    signed (cnt(0)'length+ly(0)'length-1 downto 0);
   signal y_diff : y_diff_array_t := (others => (others => '0'));  -- (y - mean(y))
   signal x_diff : x_diff_array_t := (others => (others => '1'));  -- (x - mean(x))
 
@@ -113,21 +113,21 @@ architecture behavioral of fit is
   --------------------------------------------------------------------------------
 
   -- sum ( (x - mean(x)) * (y - mean(y)) )
-  signal product_sum : signed (17 downto 0)                   := (others => '0');
+  signal product_sum : signed (11 downto 0)                   := (others => '0');
   -- sum ((x - mean(x)) ** 2)
-  signal square_sum  : signed (3+square(0)'length-1 downto 0) := (others => '1');
+  signal square_sum  : signed (11 downto 0) := (others => '1');
 
   --------------------------------------------------------------------------------
   -- s5
   --------------------------------------------------------------------------------
 
-  signal slope, slope_r : sfixed (19 downto -19) := (others => '0');
+  signal slope, slope_r : sfixed (13 downto -12) := (others => '0');
 
   --------------------------------------------------------------------------------
   -- s6
   --------------------------------------------------------------------------------
 
-  signal intercept : sfixed (29 downto -23) := (others => '0');
+  signal intercept : sfixed (23 downto -16) := (others => '0');
 
   --------------------------------------------------------------------------------
   -- functions
@@ -268,11 +268,11 @@ begin
       --------------------------------------------------------------------------------
 
       -- Σ (n*xi - Σx)*(n*yi - Σy)
-      product_sum <= sum6(product(0), product(1), product(2), product(3),
-                          product(4), product(5), valid_dly(3), product_sum'length);
+      product_sum <= resize(sum6(product(0), product(1), product(2), product(3),
+                          product(4), product(5), valid_dly(3), 18),12);
       -- Σ (n*xi - Σx)^2
-      square_sum <= sum6(square(0), square(1), square(2), square(3),
-                         square(4), square(5), valid_dly(3), square_sum'length);
+      square_sum <= resize(sum6(square(0), square(1), square(2), square(3),
+                         square(4), square(5), valid_dly(3), 16),12);
 
       --------------------------------------------------------------------------------
       -- s5
