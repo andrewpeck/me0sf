@@ -2,6 +2,10 @@ test:
 	TOPLEVEL_LANG=vhdl SIM=questa pytest -n 4 -v
 
 fit:
+	cp sim_build/wave.do test_fit_wave.do
+	make clean
+	mkdir sim_build
+	cp test_fit_wave.do sim_build/wave.do
 	SIM=questa python test_fit.py 2>&1  | ccze -A
 
 clean:
