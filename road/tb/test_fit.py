@@ -51,8 +51,13 @@ def rand_y():
     return [random.randint(-15, 15), random.randint(-15, 15),
             random.randint(-15, 15), random.randint(-15, 15),
             random.randint(-15, 15), random.randint(-15, 15)]
-    # return [0, 1, 2, 3, 4, 5]
+    #return [1, 2, 3, 4, 5, 6]
 
+
+def print_slope(slope, intercept, m, b):
+    print("found y=%.1f x + %f" % (slope, intercept))
+    print("expec y=%.1f x + %f" % (m, b))
+    print("\n")
 
 @cocotb.test()
 async def fit_tb(dut):
@@ -65,15 +70,15 @@ async def fit_tb(dut):
 
     x = range(6)  # layers 0-5, always the same
 
-    dut.valid = 0x3f
+    dut.valid_i = 0x3f
 
     # flush the pipeline
     dut.ly0 = 1
-    dut.ly1 = 1
-    dut.ly2 = 1
-    dut.ly3 = 1
-    dut.ly4 = 1
-    dut.ly5 = 1
+    dut.ly1 = 2
+    dut.ly2 = 3
+    dut.ly3 = 4
+    dut.ly4 = 5
+    dut.ly5 = 6
 
     LATENCY = 7
 
@@ -123,18 +128,21 @@ async def fit_tb(dut):
         intercept = dut.intercept_o.value.signed_integer / \
             (2**intercept_fracb-1)
 
+        max_error_strips_per_layer = 0.15
+        max_error_strips = 0.1
 
-        max_error_strips_per_layer = 0.2
-        max_error_strips = 0.5
+        # slope = round(slope, 1)
+        # intercept = round(intercept, 1)
+        # m = round(m, 1)
+        # b = round(b, 1)
 
-        # print("found y=%f x + %f" % (slope, intercept))
-        # print("expec y=%f x + %f" % (m, b))
+        #if (round(slope, 1) != round(m, 1) or round(intercept, 2) != round(b, 1)):
 
-        if (m > 0 and slope > 0):
-            if (abs(m-slope) > max_error_strips_per_layer):
-                assert True,  "Slope error"
-        if (b > 0 and intercept > 0):
-            assert (abs(b-intercept) < max_error_strips), "Intercept error"
+        # if (slope != m or intercept != b):
+        # print_slope(slope, intercept, m, b)
+
+        assert (abs(m-slope) < max_error_strips_per_layer), print_slope(slope, intercept, m, b)
+        assert (abs(b-intercept) < max_error_strips), "Intercept error"
 
         itests += 1
 
