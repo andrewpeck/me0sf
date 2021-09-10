@@ -154,6 +154,16 @@ architecture behavioral of fit is
     return n_ones;
   end function count_ones;
 
+  -- round zero up to one to prevent division by 0
+  function zero_to_one(n : natural) return natural is
+  begin
+      if n = 0 then
+        return 1;
+      else
+        return n;
+      end if;
+  end function zero_to_one;
+
 begin
 
   process (clock) is
@@ -198,6 +208,7 @@ begin
       ly3_s1 <= ly3;
       ly4_s1 <= ly4;
       ly5_s1 <= ly5;
+      cnt(0) <= to_signed(zero_to_one(count_ones(valid_dly(0))), LY_BITS);
 
       -- Σx, Σy
       y_sum <= resize(sum6(ly0, ly1, ly2, ly3, ly4, ly5, valid, y_sum'length), y_sum'length);
