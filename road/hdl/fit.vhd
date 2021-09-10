@@ -5,6 +5,7 @@ library ieee;
 use ieee.std_logic_1164.all;
 use ieee.std_logic_misc.all;
 use ieee.numeric_std.all;
+use ieee.math_real.all;
 
 library ieee;
 use ieee.fixed_pkg.all;
@@ -14,7 +15,6 @@ entity fit is
     N_LAYERS : natural := 6;
 
     STRIP_BITS : natural := 6;
-    LY_BITS    : natural := 4;
 
     -- slope
     M_INT_BITS  : natural := 4;
@@ -44,31 +44,44 @@ end fit;
 architecture behavioral of fit is
 
   -- Array (0 to N_LAYERS-1) of layer hits
-  type ly_array_t is array (integer range 0 to N_LAYERS-1) of signed (STRIP_BITS-1 downto 0);
+  type ly_array_t is array (integer range 0 to N_LAYERS-1) of
+    signed (STRIP_BITS-1 downto 0);
   signal ly : ly_array_t := (others => (others => '0'));
 
   --------------------------------------------------------------------------------
   -- delays
   --------------------------------------------------------------------------------
 
-  type valid_array_t is array (integer range 0 to 3) of std_logic_vector(N_LAYERS-1 downto 0);
+  type valid_array_t is array (integer range 0 to 3) of
+    std_logic_vector(N_LAYERS-1 downto 0);
   signal valid_dly : valid_array_t := (others => (others => '1'));
 
   --------------------------------------------------------------------------------
   -- s1
   --------------------------------------------------------------------------------
 
-  type cnt_array_t is array (integer range 0 to 6) of signed(LY_BITS-1 downto 0);  -- number of layers hit
+  -- add 1 just to make everything signed...
+  constant LY_BITS : natural := 1 + integer(ceil(log2(real(N_LAYERS))));
+
+  type cnt_array_t is array (integer range 0 to 6) of
+    signed(LY_BITS-1 downto 0);           -- number of layers hit
   signal cnt : cnt_array_t := (others => (others => '1'));
 
-  type x_sum_array_t is array (integer range 1 to 5) of signed (3+LY_BITS-1 downto 0);
-  type y_sum_array_t is array (integer range 1 to 5) of signed (3+STRIP_BITS-1 downto 0);
+  constant NUM_EXTRA_SUM_BITS : natural
+    := integer(ceil(log2(real(N_LAYERS))));
+
+  type x_sum_array_t is array (integer range 1 to 5) of
+    signed (NUM_EXTRA_SUM_BITS+LY_BITS-1 downto 0);
+  type y_sum_array_t is array (integer range 1 to 5) of
+    signed (NUM_EXTRA_SUM_BITS+STRIP_BITS-1 downto 0);
   signal x_sum : x_sum_array_t := (others => (others => '0'));  -- sum (x_i); need extra 3 bits for sum
   signal y_sum : y_sum_array_t := (others => (others => '0'));  -- sum (y_i); need extra 3 bits for sum
 
   -- n * x
-  type n_y_array_t is array (integer range 0 to N_LAYERS-1) of signed (4+STRIP_BITS-1 downto 0);
-  type n_x_array_t is array (integer range 0 to N_LAYERS-1) of signed (7 downto 0);
+  type n_y_array_t is array (integer range 0 to N_LAYERS-1) of
+    signed (4+STRIP_BITS-1 downto 0);
+  type n_x_array_t is array (integer range 0 to N_LAYERS-1) of
+    signed (7 downto 0);
   signal n_y : n_y_array_t := (others => (others => '0'));
   signal n_x : n_x_array_t := (others => (others => '1'));
 
@@ -76,8 +89,10 @@ architecture behavioral of fit is
   -- s2
   --------------------------------------------------------------------------------
 
-  type x_diff_array_t is array (integer range 0 to N_LAYERS-1) of signed (4+LY_BITS-1 downto 0);
-  type y_diff_array_t is array (integer range 0 to N_LAYERS-1) of signed (4+STRIP_BITS-1 downto 0);
+  type x_diff_array_t is array (integer range 0 to N_LAYERS-1) of
+    signed (4+LY_BITS-1 downto 0);
+  type y_diff_array_t is array (integer range 0 to N_LAYERS-1) of
+    signed (4+STRIP_BITS-1 downto 0);
   signal y_diff : y_diff_array_t := (others => (others => '0'));  -- (y - mean(y))
   signal x_diff : x_diff_array_t := (others => (others => '1'));  -- (x - mean(x))
 
@@ -85,8 +100,10 @@ architecture behavioral of fit is
   -- s3
   --------------------------------------------------------------------------------
 
-  type product_array_t is array (integer range 0 to N_LAYERS-1) of signed (x_diff(0)'length + y_diff(0)'length-1 downto 0);
-  type square_array_t is array (integer range 0 to N_LAYERS-1) of signed (2*x_diff(0)'length-1 downto 0);
+  type product_array_t is array (integer range 0 to N_LAYERS-1) of
+    signed (x_diff(0)'length + y_diff(0)'length-1 downto 0);
+  type square_array_t is array (integer range 0 to N_LAYERS-1) of
+    signed (2*x_diff(0)'length-1 downto 0);
 
   signal product : product_array_t := (others => (others => '0'));  -- (x - mean(x)) * (y - mean(y))
   signal square  : square_array_t  := (others => (others => '1'));  -- (x - mean(x)) ** 2
@@ -96,7 +113,7 @@ architecture behavioral of fit is
   --------------------------------------------------------------------------------
 
   -- sum ( (x - mean(x)) * (y - mean(y)) )
-  signal product_sum : signed (17 downto 0)                 := (others => '0');
+  signal product_sum : signed (17 downto 0)                   := (others => '0');
   -- sum ((x - mean(x)) ** 2)
   signal square_sum  : signed (3+square(0)'length-1 downto 0) := (others => '1');
 
