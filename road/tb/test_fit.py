@@ -8,8 +8,10 @@ import cocotb
 from cocotb.clock import Clock
 from cocotb.triggers import RisingEdge
 import random
+import math
 
-# import math
+import matplotlib.pyplot as plt
+
 # import pytest
 # from cocotb.triggers import Timer
 # from cocotb.triggers import Event
@@ -48,15 +50,32 @@ def fit_modified(x, y):
 
 
 def rand_y():
-    return [random.randint(-15, 15), random.randint(-15, 15),
-            random.randint(-15, 15), random.randint(-15, 15),
-            random.randint(-15, 15), random.randint(-15, 15)]
+
+    rand_m = random.randint(math.floor(-37/6), math.floor(37/6))
+    rand_b = random.randint(-5, 5)
+
+    return [
+        math.floor(rand_m * (0 - 2.5) + rand_b + random.randint(-2, 2)),
+        math.floor(rand_m * (1 - 2.5) + rand_b + random.randint(-2, 2)),
+        math.floor(rand_m * (2 - 2.5) + rand_b + random.randint(-2, 2)),
+        math.floor(rand_m * (3 - 2.5) + rand_b + random.randint(-2, 2)),
+        math.floor(rand_m * (4 - 2.5) + rand_b + random.randint(-2, 2)),
+        math.floor(rand_m * (5 - 2.5) + rand_b + random.randint(-2, 2))]
+
+    # return [random.randint(-15, 15),
+    #         random.randint(-15, 15),
+    #         random.randint(-15, 15),
+    #         random.randint(-15, 15),
+    #         random.randint(-15, 15),
+    #         random.randint(-15, 15)]
     #return [1, 2, 3, 4, 5, 6]
 
 
 def print_slope(slope, intercept, m, b):
-    print("found y=%.1f x + %f" % (slope, intercept))
-    print("expec y=%.1f x + %f" % (m, b))
+    key_s = -b / m
+    key_strip = -intercept / slope
+    print("found y=%.1f x + %f (s=%f)" % (slope, intercept, key_strip))
+    print("expec y=%.1f x + %f (s=%f)" % (m, b, key_s))
     print("\n")
 
 @cocotb.test()
@@ -80,7 +99,7 @@ async def fit_tb(dut):
     dut.ly4 = 5
     dut.ly5 = 6
 
-    LATENCY = dut.N_STAGES+1
+    LATENCY = dut.N_STAGES.value+1
 
     for i in range(LATENCY):
         await RisingEdge(dut.clock)
@@ -89,9 +108,14 @@ async def fit_tb(dut):
 
     itests = 0
 
+
     for i in range(LATENCY-1):
 
         y = rand_y()
+
+        # plot line
+        # plt.plot(x, y)
+        # plt.show()
 
         data.append(y)
 
@@ -139,7 +163,7 @@ async def fit_tb(dut):
         #if (round(slope, 1) != round(m, 1) or round(intercept, 2) != round(b, 1)):
 
         # if (slope != m or intercept != b):
-        # print_slope(slope, intercept, m, b)
+        print_slope(slope, intercept, m, b)
 
         assert (abs(m-slope) < max_error_strips_per_layer), print_slope(slope, intercept, m, b)
         assert (abs(b-intercept) < max_error_strips), "Intercept error"
