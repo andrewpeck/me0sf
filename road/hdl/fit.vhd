@@ -50,8 +50,6 @@ architecture behavioral of fit is
   signal valid_s1 : std_logic_vector (N_LAYERS-1 downto 0) := (others => '0');
   signal valid_s2 : std_logic_vector (N_LAYERS-1 downto 0) := (others => '0');
   signal valid_s3 : std_logic_vector (N_LAYERS-1 downto 0) := (others => '0');
-  signal valid_s4 : std_logic_vector (N_LAYERS-1 downto 0) := (others => '0');
-  signal valid_s5 : std_logic_vector (N_LAYERS-1 downto 0) := (others => '0');
 
   signal ly0_s1, ly1_s1, ly2_s1, ly3_s1, ly4_s1, ly5_s1 : signed (STRIP_BITS-1 downto 0);
   signal ly0_s2, ly1_s2, ly2_s2, ly3_s2, ly4_s2, ly5_s2 : signed (STRIP_BITS-1 downto 0);
@@ -62,8 +60,8 @@ architecture behavioral of fit is
 
   signal cnt, cnt_s1, cnt_s2, cnt_s3, cnt_s4, cnt_s5, cnt_s6 : signed (LY_BITS-1 downto 0);  -- number of layers hit
 
-  signal x_sum, x_sum_s2, x_sum_s3, x_sum_s4, x_sum_s5, x_sum_s6, x_sum_s7 : signed (3+LY_BITS-1 downto 0);     -- sum (x_i); need extra 3 bits for sum
-  signal y_sum, y_sum_s2, y_sum_s3, y_sum_s4, y_sum_s5, y_sum_s6, y_sum_s7 : signed (3+STRIP_BITS-1 downto 0);  -- sum (y_i); need extra 3 bits for sum
+  signal x_sum, x_sum_s2, x_sum_s3, x_sum_s4, x_sum_s5 : signed (3+LY_BITS-1 downto 0);     -- sum (x_i); need extra 3 bits for sum
+  signal y_sum, y_sum_s2, y_sum_s3, y_sum_s4, y_sum_s5 : signed (3+STRIP_BITS-1 downto 0);  -- sum (y_i); need extra 3 bits for sum
 
   signal n_y0, n_y1, n_y2, n_y3, n_y4, n_y5 : signed (4+STRIP_BITS-1 downto 0);
   signal n_x0, n_x1, n_x2, n_x3, n_x4, n_x5 : signed (7 downto 0);
@@ -169,8 +167,6 @@ begin
       valid_s1 <= valid;
       valid_s2 <= valid_s1;
       valid_s3 <= valid_s2;
-      valid_s4 <= valid_s3;
-      valid_s5 <= valid_s4;
 
 
       ly0_s2 <= ly0_s1;
@@ -179,13 +175,6 @@ begin
       ly3_s2 <= ly3_s1;
       ly4_s2 <= ly4_s1;
       ly5_s2 <= ly5_s1;
-
-      -- ly0_s3 <= ly0_s2;
-      -- ly1_s3 <= ly1_s2;
-      -- ly2_s3 <= ly2_s2;
-      -- ly3_s3 <= ly3_s2;
-      -- ly4_s3 <= ly4_s2;
-      -- ly5_s3 <= ly5_s2;
 
       --------------------------------------------------------------------------------
       -- s1
@@ -235,15 +224,11 @@ begin
       x_sum_s3 <= x_sum_s2;
       x_sum_s4 <= x_sum_s3;
       x_sum_s5 <= x_sum_s4;
-      x_sum_s6 <= x_sum_s5;
-      x_sum_s7 <= x_sum_s6;
 
       y_sum_s2 <= y_sum;
       y_sum_s3 <= y_sum_s2;
       y_sum_s4 <= y_sum_s3;
       y_sum_s5 <= y_sum_s4;
-      y_sum_s6 <= y_sum_s5;
-      y_sum_s7 <= y_sum_s6;
 
       --------------------------------------------------------------------------------
       -- s2
