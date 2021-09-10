@@ -70,28 +70,26 @@ architecture behavioral of fit is
   type n_y_array_t is array (integer range 0 to N_LAYERS-1) of signed (4+STRIP_BITS-1 downto 0);
   type n_x_array_t is array (integer range 0 to N_LAYERS-1) of signed (7 downto 0);
   signal n_y : n_y_array_t := (others => (others => '0'));
-  signal n_x : n_x_array_t := (others => (others => '0'));
+  signal n_x : n_x_array_t := (others => (others => '1'));
 
   --------------------------------------------------------------------------------
   -- s2
   --------------------------------------------------------------------------------
 
-  -- (x - mean(x))
-  signal x_diff0, x_diff1, x_diff2, x_diff3, x_diff4, x_diff5 :
-    signed (4+LY_BITS-1 downto 0) := (others => '0');  -- layer 0-5
-  signal y_diff0, y_diff1, y_diff2, y_diff3, y_diff4, y_diff5 :
-    signed (4+STRIP_BITS-1 downto 0) := (others => '0');
+  type x_diff_array_t is array (integer range 0 to N_LAYERS-1) of signed (4+LY_BITS-1 downto 0);
+  type y_diff_array_t is array (integer range 0 to N_LAYERS-1) of signed (4+STRIP_BITS-1 downto 0);
+  signal y_diff : y_diff_array_t := (others => (others => '0'));  -- (y - mean(y))
+  signal x_diff : x_diff_array_t := (others => (others => '1'));  -- (x - mean(x))
 
   --------------------------------------------------------------------------------
   -- s3
   --------------------------------------------------------------------------------
 
-  -- (x - mean(x)) * (y - mean(y))
-  signal product0, product1, product2, product3, product4, product5 :
-    signed (x_diff0'length + y_diff0'length-1 downto 0) := (others => '0');
-  -- (x - mean(x)) ** 2
-  signal square0, square1, square2, square3, square4, square5 :
-    signed (2*x_diff0'length-1 downto 0) := (others => '0');
+  type product_array_t is array (integer range 0 to N_LAYERS-1) of signed (x_diff(0)'length + y_diff(0)'length-1 downto 0);
+  type square_array_t is array (integer range 0 to N_LAYERS-1) of signed (2*x_diff(0)'length-1 downto 0);
+
+  signal product : product_array_t := (others => (others => '0'));  -- (x - mean(x)) * (y - mean(y))
+  signal square  : square_array_t  := (others => (others => '1'));  -- (x - mean(x)) ** 2
 
   --------------------------------------------------------------------------------
   -- s4
@@ -100,7 +98,7 @@ architecture behavioral of fit is
   -- sum ( (x - mean(x)) * (y - mean(y)) )
   signal product_sum : signed (17 downto 0)                 := (others => '0');
   -- sum ((x - mean(x)) ** 2)
-  signal square_sum  : signed (3+square0'length-1 downto 0) := (others => '0');
+  signal square_sum  : signed (3+square(0)'length-1 downto 0) := (others => '1');
 
   --------------------------------------------------------------------------------
   -- s5
@@ -231,51 +229,33 @@ begin
       --------------------------------------------------------------------------------
 
       -- (n * x_i - Σx)
-      x_diff0 <= n_x(0) - x_sum(1);
-      x_diff1 <= n_x(1) - x_sum(1);
-      x_diff2 <= n_x(2) - x_sum(1);
-      x_diff3 <= n_x(3) - x_sum(1);
-      x_diff4 <= n_x(4) - x_sum(1);
-      x_diff5 <= n_x(5) - x_sum(1);
-
       -- (n * y_i - Σy)
-      y_diff0 <= n_y(0) - y_sum(1);
-      y_diff1 <= n_y(1) - y_sum(1);
-      y_diff2 <= n_y(2) - y_sum(1);
-      y_diff3 <= n_y(3) - y_sum(1);
-      y_diff4 <= n_y(4) - y_sum(1);
-      y_diff5 <= n_y(5) - y_sum(1);
+      diff_loop : for I in 0 to N_LAYERS-1 loop
+        x_diff(I) <= n_x(I) - x_sum(1);
+        y_diff(I) <= n_y(I) - y_sum(1);
+      end loop;
 
       --------------------------------------------------------------------------------
       -- s3
       --------------------------------------------------------------------------------
 
       -- (n*xi - Σx)(n*yi - Σy)
-      product0 <= x_diff0 * y_diff0;
-      product1 <= x_diff1 * y_diff1;
-      product2 <= x_diff2 * y_diff2;
-      product3 <= x_diff3 * y_diff3;
-      product4 <= x_diff4 * y_diff4;
-      product5 <= x_diff5 * y_diff5;
-
       -- (n*xi - Σx)^2
-      square0 <= x_diff0 * x_diff0;
-      square1 <= x_diff1 * x_diff1;
-      square2 <= x_diff2 * x_diff2;
-      square3 <= x_diff3 * x_diff3;
-      square4 <= x_diff4 * x_diff4;
-      square5 <= x_diff5 * x_diff5;
+      s3_loop : for I in 0 to N_LAYERS-1 loop
+        product(I) <= x_diff(I) * y_diff(I);
+        square(I)  <= x_diff(I) * x_diff(I);
+      end loop;
 
       --------------------------------------------------------------------------------
       -- s4
       --------------------------------------------------------------------------------
 
       -- Σ (n*xi - Σx)*(n*yi - Σy)
-      product_sum <= sum6(product0, product1, product2, product3,
-                          product4, product5, valid_dly(3), product_sum'length);
+      product_sum <= sum6(product(0), product(1), product(2), product(3),
+                          product(4), product(5), valid_dly(3), product_sum'length);
       -- Σ (n*xi - Σx)^2
-      square_sum <= sum6(square0, square1, square2, square3,
-                         square4, square5, valid_dly(3), square_sum'length);
+      square_sum <= sum6(square(0), square(1), square(2), square(3),
+                         square(4), square(5), valid_dly(3), square_sum'length);
 
       --------------------------------------------------------------------------------
       -- s5
