@@ -14,6 +14,8 @@ entity fit is
   generic(
     N_LAYERS : natural := 6;
 
+    N_STAGES : natural := 8;
+
     STRIP_BITS : natural := 6;
 
     -- slope
@@ -63,7 +65,7 @@ architecture behavioral of fit is
   -- add 1 just to make everything signed...
   constant LY_BITS : natural := 4; -- 1 + integer(ceil(log2(real(N_LAYERS))));
 
-  type cnt_array_t is array (integer range 0 to 5) of
+  type cnt_array_t is array (integer range 0 to 7) of
     signed(LY_BITS-1 downto 0);         -- number of layers hit
   signal cnt : cnt_array_t := (others => to_signed(6,LY_BITS));
 
@@ -72,7 +74,7 @@ architecture behavioral of fit is
 
   type x_sum_array_t is array (integer range 1 to 5) of
     signed (NUM_EXTRA_SUM_BITS+LY_BITS-1 downto 0);
-  type y_sum_array_t is array (integer range 1 to 5) of
+  type y_sum_array_t is array (integer range 1 to 6) of
     signed (NUM_EXTRA_SUM_BITS+STRIP_BITS-1 downto 0);
   signal x_sum : x_sum_array_t := (others => (others => '0'));  -- sum (x_i); need extra 3 bits for sum
   signal y_sum : y_sum_array_t := (others => (others => '0'));  -- sum (y_i); need extra 3 bits for sum
@@ -121,11 +123,25 @@ architecture behavioral of fit is
   -- s5
   --------------------------------------------------------------------------------
 
-  signal slope, slope_r : sfixed
+  signal slope, slope_s6, slope_s7, slope_s8 : sfixed
     (product_sum'length+1 downto -square_sum'length) := (others => '0');
 
   --------------------------------------------------------------------------------
   -- s6
+  --------------------------------------------------------------------------------
+
+  signal slope_times_x : sfixed
+    (27 downto -16) := (others => '0');
+
+  --------------------------------------------------------------------------------
+  -- s7
+  --------------------------------------------------------------------------------
+
+  signal y_minus_mb : sfixed
+    (28 downto -16) := (others => '0');
+
+  --------------------------------------------------------------------------------
+  -- s8
   --------------------------------------------------------------------------------
 
   signal intercept : sfixed
@@ -248,12 +264,15 @@ begin
 
       -- delays
 
-      cnt_dly : for idly in 1 to cnt'length-1 loop
+      cnt_dly : for idly in cnt'low+1 to cnt'high loop
         cnt(idly) <= cnt(idly-1);
       end loop;
 
-      sum_dly : for I in 2 to x_sum'length loop
+      x_sum_dly : for I in x_sum'low+1 to x_sum'high loop
         x_sum(I) <= x_sum(I-1);
+      end loop;
+
+      y_sum_dly : for I in y_sum'low+1 to y_sum'high loop
         y_sum(I) <= y_sum(I-1);
       end loop;
 
@@ -307,20 +326,25 @@ begin
                to_sfixed(square_sum, square_sum'length);
 
       --------------------------------------------------------------------------------
-      -- s6 y= (mean(x) - slope*sum(y)) / n
+      -- s6 slope*sum(x)
       --------------------------------------------------------------------------------
 
-      -- TODO: pipeline into 2 stages?
-
-      intercept <= (to_sfixed(y_sum(5), y_sum(5)'length) - slope *
-                    to_sfixed(x_sum(5), x_sum(5)'length)) /
-                   to_sfixed(cnt(5), cnt(5)'length);
-
-      slope_r <= slope;
+      slope_times_x <= slope * to_sfixed(x_sum(5), x_sum(5)'length);
+      slope_s6 <= slope;
 
       --------------------------------------------------------------------------------
-      -- s7
+      -- s7 y = (mean(y) - slope*sum(x))
       --------------------------------------------------------------------------------
+
+      y_minus_mb <= (to_sfixed(y_sum(6), y_sum(6)'length) - slope_times_x);
+      slope_s7 <= slope_s6;
+
+      --------------------------------------------------------------------------------
+      -- s8 y= (mean(y) - slope*sum(x)) / n
+      --------------------------------------------------------------------------------
+
+      intercept <=  y_minus_mb / to_sfixed(cnt(7), cnt(7)'length);
+      slope_s8 <= slope_s7;
 
 
     end if;
@@ -328,6 +352,6 @@ begin
 
   -- truncation, don't need to register
   intercept_o <= intercept(B_INT_BITS-1 downto -B_FRAC_BITS);
-  slope_o     <= slope_r(M_INT_BITS-1 downto -M_FRAC_BITS);
+  slope_o     <= slope_s8(M_INT_BITS-1 downto -M_FRAC_BITS);
 
 end behavioral;

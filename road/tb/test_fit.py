@@ -80,7 +80,7 @@ async def fit_tb(dut):
     dut.ly4 = 5
     dut.ly5 = 6
 
-    LATENCY = 7
+    LATENCY = dut.N_STAGES+1
 
     for i in range(LATENCY):
         await RisingEdge(dut.clock)
