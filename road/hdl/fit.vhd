@@ -21,8 +21,8 @@ entity fit is
     M_FRAC_BITS : natural := 6;
 
     -- intercept
-    B_INT_BITS  : natural := 9;
-    B_FRAC_BITS : natural := 13
+    B_INT_BITS  : natural := 6;
+    B_FRAC_BITS : natural := 8
 
     );
   port(
