@@ -28,13 +28,13 @@ entity fit is
   port(
 
     clock : in std_logic;
-    ly0   : in signed (STRIP_BITS-1 downto 0);
-    ly1   : in signed (STRIP_BITS-1 downto 0);
-    ly2   : in signed (STRIP_BITS-1 downto 0);
-    ly3   : in signed (STRIP_BITS-1 downto 0);
-    ly4   : in signed (STRIP_BITS-1 downto 0);
-    ly5   : in signed (STRIP_BITS-1 downto 0);
-    valid : in std_logic_vector(5 downto 0);
+    ly0   : in signed (STRIP_BITS-1 downto 0) := (others => '0');
+    ly1   : in signed (STRIP_BITS-1 downto 0) := (others => '0');
+    ly2   : in signed (STRIP_BITS-1 downto 0) := (others => '0');
+    ly3   : in signed (STRIP_BITS-1 downto 0) := (others => '0');
+    ly4   : in signed (STRIP_BITS-1 downto 0) := (others => '0');
+    ly5   : in signed (STRIP_BITS-1 downto 0) := (others => '0');
+    valid : in std_logic_vector(5 downto 0)   := (others => '1');
 
     intercept_o : out sfixed (B_INT_BITS-1 downto -B_FRAC_BITS);
     slope_o     : out sfixed (M_INT_BITS-1 downto -M_FRAC_BITS)
@@ -47,62 +47,59 @@ architecture behavioral of fit is
   -- delays
   --------------------------------------------------------------------------------
 
-  signal valid_s1 : std_logic_vector (N_LAYERS-1 downto 0) := (others => '0');
-  signal valid_s2 : std_logic_vector (N_LAYERS-1 downto 0) := (others => '0');
-  signal valid_s3 : std_logic_vector (N_LAYERS-1 downto 0) := (others => '0');
-
-  signal ly0_s1, ly1_s1, ly2_s1, ly3_s1, ly4_s1, ly5_s1 : signed (STRIP_BITS-1 downto 0);
-  signal ly0_s2, ly1_s2, ly2_s2, ly3_s2, ly4_s2, ly5_s2 : signed (STRIP_BITS-1 downto 0);
+  type valid_array_t is array (integer range 0 to 3) of std_logic_vector(N_LAYERS-1 downto 0);
+  signal valid_dly : valid_array_t := (others => (others => '1'));
 
   --------------------------------------------------------------------------------
   -- s1
   --------------------------------------------------------------------------------
 
-  signal cnt, cnt_s1, cnt_s2, cnt_s3, cnt_s4, cnt_s5, cnt_s6 : signed (LY_BITS-1 downto 0);  -- number of layers hit
+  type cnt_array_t is array (integer range 0 to 6) of signed(LY_BITS-1 downto 0);  -- number of layers hit
+  signal cnt : cnt_array_t := (others => (others => '1'));
 
-  signal x_sum, x_sum_s2, x_sum_s3, x_sum_s4, x_sum_s5 : signed (3+LY_BITS-1 downto 0);     -- sum (x_i); need extra 3 bits for sum
-  signal y_sum, y_sum_s2, y_sum_s3, y_sum_s4, y_sum_s5 : signed (3+STRIP_BITS-1 downto 0);  -- sum (y_i); need extra 3 bits for sum
+  signal x_sum, x_sum_s2, x_sum_s3, x_sum_s4, x_sum_s5 : signed (3+LY_BITS-1 downto 0) := (others => '0');     -- sum (x_i); need extra 3 bits for sum
+  signal y_sum, y_sum_s2, y_sum_s3, y_sum_s4, y_sum_s5 : signed (3+STRIP_BITS-1 downto 0) := (others => '0');  -- sum (y_i); need extra 3 bits for sum
 
-  signal n_y0, n_y1, n_y2, n_y3, n_y4, n_y5 : signed (4+STRIP_BITS-1 downto 0);
-  signal n_x0, n_x1, n_x2, n_x3, n_x4, n_x5 : signed (7 downto 0);
+  signal n_y0, n_y1, n_y2, n_y3, n_y4, n_y5 : signed (4+STRIP_BITS-1 downto 0) := (others => '0');
+  signal n_x0, n_x1, n_x2, n_x3, n_x4, n_x5 : signed (7 downto 0) := (others => '0');
 
   --------------------------------------------------------------------------------
   -- s2
   --------------------------------------------------------------------------------
 
   -- (x - mean(x))
-  signal x_diff0, x_diff1, x_diff2, x_diff3, x_diff4, x_diff5 : signed (4+LY_BITS-1 downto 0);  -- layer 0-5
-  signal y_diff0, y_diff1, y_diff2, y_diff3, y_diff4, y_diff5 : signed (4+STRIP_BITS-1 downto 0);
+  signal x_diff0, x_diff1, x_diff2, x_diff3, x_diff4, x_diff5 : signed (4+LY_BITS-1 downto 0) := (others => '0');  -- layer 0-5
+  signal y_diff0, y_diff1, y_diff2, y_diff3, y_diff4, y_diff5 : signed (4+STRIP_BITS-1 downto 0) := (others => '0');
 
   --------------------------------------------------------------------------------
   -- s3
   --------------------------------------------------------------------------------
 
   -- (x - mean(x)) * (y - mean(y))
-  signal product0, product1, product2, product3, product4, product5 : signed (x_diff0'length + y_diff0'length-1 downto 0);
+  signal product0, product1, product2, product3, product4, product5 : signed (x_diff0'length + y_diff0'length-1 downto 0) := (others => '0');
   -- (x - mean(x)) ** 2
-  signal square0, square1, square2, square3, square4, square5       : signed (2*x_diff0'length-1 downto 0);
+  signal square0, square1, square2, square3, square4, square5       : signed (2*x_diff0'length-1 downto 0) := (others => '0');
 
   --------------------------------------------------------------------------------
   -- s4
   --------------------------------------------------------------------------------
 
   -- sum ( (x - mean(x)) * (y - mean(y)) )
-  signal product_sum : signed (17 downto 0);
+  signal product_sum : signed (17 downto 0) := (others => '0');
   -- sum ((x - mean(x)) ** 2)
-  signal square_sum  : signed (3+square0'length-1 downto 0);
+  signal square_sum  : signed (3+square0'length-1 downto 0) := (others => '0');
 
   --------------------------------------------------------------------------------
   -- s5
   --------------------------------------------------------------------------------
 
-  signal slope, slope_r : sfixed (19 downto -19);
+  signal slope, slope_r : sfixed (19 downto -19) := (others => '0');
 
   --------------------------------------------------------------------------------
   -- s6
   --------------------------------------------------------------------------------
 
-  signal intercept : sfixed (29 downto -23);
+  signal intercept : sfixed (29 downto -23) := (others => '0');
 
   --------------------------------------------------------------------------------
   -- functions
@@ -166,25 +163,19 @@ architecture behavioral of fit is
 
 begin
 
+  valid_dly(0) <= valid;
+
   process (clock) is
   begin
     if (rising_edge(clock)) then
 
       --------------------------------------------------------------------------------
-      --
+      -- delays
       --------------------------------------------------------------------------------
 
-      valid_s1 <= valid;
-      valid_s2 <= valid_s1;
-      valid_s3 <= valid_s2;
-
-
-      ly0_s2 <= ly0_s1;
-      ly1_s2 <= ly1_s1;
-      ly2_s2 <= ly2_s1;
-      ly3_s2 <= ly3_s1;
-      ly4_s2 <= ly4_s1;
-      ly5_s2 <= ly5_s1;
+      dly_map : for idly in 1 to valid_dly'length-1 loop
+        valid_dly(idly) <= valid_dly(idly-1);
+      end loop;
 
       --------------------------------------------------------------------------------
       -- s1
@@ -194,41 +185,31 @@ begin
       -- + ff stage for registering the inputs
       --------------------------------------------------------------------------------
 
-      cnt    <= to_signed(count_ones(valid), LY_BITS);
-      cnt_s1 <= cnt;
-      cnt_s2 <= cnt_s1;
-      cnt_s3 <= cnt_s2;
-      cnt_s4 <= cnt_s3;
-      cnt_s5 <= cnt_s4;
-      cnt_s6 <= cnt_s5;
-
-      ly0_s1 <= ly0;
-      ly1_s1 <= ly1;
-      ly2_s1 <= ly2;
-      ly3_s1 <= ly3;
-      ly4_s1 <= ly4;
-      ly5_s1 <= ly5;
       cnt(0) <= to_signed(zero_to_one(count_ones(valid_dly(0))), LY_BITS);
+
+      cnt_map : for idly in 1 to cnt'length-1 loop
+        cnt(idly) <= cnt(idly-1);
+      end loop;
 
       -- Σx, Σy
       y_sum <= resize(sum6(ly0, ly1, ly2, ly3, ly4, ly5, valid, y_sum'length), y_sum'length);
       x_sum <= resize(sum6(x"0", x"1", x"2", x"3", x"4", x"5", valid, x_sum'length), x_sum'length);
 
       -- n * y_i
-      n_y0 <= cnt * ly0;
-      n_y1 <= cnt * ly1;
-      n_y2 <= cnt * ly2;
-      n_y3 <= cnt * ly3;
-      n_y4 <= cnt * ly4;
-      n_y5 <= cnt * ly5;
+      n_y0 <= cnt(0) * ly0;
+      n_y1 <= cnt(0) * ly1;
+      n_y2 <= cnt(0) * ly2;
+      n_y3 <= cnt(0) * ly3;
+      n_y4 <= cnt(0) * ly4;
+      n_y5 <= cnt(0) * ly5;
 
       -- n * x_i
-      n_x0 <= cnt * 0;
-      n_x1 <= cnt * 1;
-      n_x2 <= cnt * 2;
-      n_x3 <= cnt * 3;
-      n_x4 <= cnt * 4;
-      n_x5 <= cnt * 5;
+      n_x0 <= cnt(0) * 0;
+      n_x1 <= cnt(0) * 1;
+      n_x2 <= cnt(0) * 2;
+      n_x3 <= cnt(0) * 3;
+      n_x4 <= cnt(0) * 4;
+      n_x5 <= cnt(0) * 5;
 
       -- delays
       x_sum_s2 <= x_sum;
@@ -287,10 +268,10 @@ begin
 
       -- Σ (n*xi - Σx)*(n*yi - Σy)
       product_sum <= sum6(product0, product1, product2, product3,
-                          product4, product5, valid_s3, product_sum'length);
+                          product4, product5, valid_dly(3), product_sum'length);
       -- Σ (n*xi - Σx)^2
       square_sum <= sum6(square0, square1, square2, square3,
-                         square4, square5, valid_s3, square_sum'length);
+                         square4, square5, valid_dly(3), square_sum'length);
 
       --------------------------------------------------------------------------------
       -- s5
@@ -307,7 +288,7 @@ begin
 
       intercept <= (to_sfixed(y_sum_s5, y_sum_s5'length) - slope *
                     to_sfixed(x_sum_s5, x_sum_s5'length)) /
-                   to_sfixed(cnt_s5, cnt_s5'length);
+                   to_sfixed(cnt(5), cnt(5)'length);
 
       slope_r <= slope;
 
