@@ -116,8 +116,19 @@ architecture behavioral of fit is
 
   -- sum ( (x - mean(x)) * (y - mean(y)) )
   signal product_sum : signed (17 downto 0) := (others => '0');
+
   -- sum ((x - mean(x)) ** 2)
-  signal square_sum  : signed (15 downto 0) := (others => '1');
+  --
+  -- since x is just a set of numbers from 0-5, this number can't possibly be
+  -- bigger than +630 so only 11 bits are needed to represent it (it could be a
+  -- 10 bit unsigned, just just put the extra bit here to keep everything
+  -- signed)
+  --
+  -- 630 = 6^2 * [ (0 - 2.5)^2 + (1 - 2.5)^2 + (2 - 2.5)^2 + (3 - 2.5)^2 + (4 - 2.5)^2 + (5 - 2.5)^2 ]
+  --
+  -- initialize to 1 to prevent a divide by zero in simulation
+  --
+  signal square_sum  : signed (10 downto 0) := (others => '1');
 
   --------------------------------------------------------------------------------
   -- s5
@@ -311,12 +322,12 @@ begin
                      --, product_sum'length);
 
       -- Σ (n*xi - Σx)^2
-      square_sum <= -- resize(
+      square_sum <= resize(
         sum6(square(0), square(1),
              square(2), square(3),
              square(4), square(5),
-             valid(3), 16);
-        --square_sum'length);
+             valid(3), 16),
+        square_sum'length);
 
       --------------------------------------------------------------------------------
       -- s5
@@ -329,8 +340,8 @@ begin
       -- s6 slope*sum(x)
       --------------------------------------------------------------------------------
 
-      slope_times_x <= slope * to_sfixed(x_sum(5), x_sum(5)'length);
-      slope_s6 <= slope;
+      slope_times_x <= resize(slope * to_sfixed(x_sum(5), x_sum(5)'length), slope_times_x);
+      slope_s6      <= slope;
 
       --------------------------------------------------------------------------------
       -- s7 y = (mean(y) - slope*sum(x))
@@ -343,12 +354,76 @@ begin
       -- s8 y= (mean(y) - slope*sum(x)) / n
       --------------------------------------------------------------------------------
 
-      intercept <=  y_minus_mb / to_sfixed(cnt(7), cnt(7)'length);
-      slope_s8 <= slope_s7;
+      intercept <= resize(y_minus_mb / to_sfixed(cnt(7), cnt(7)'length), intercept);
+      slope_s8  <= slope_s7;
 
 
     end if;
   end process;
+
+  -- div_gen : if (DIVIDER="IP") generate
+  --   -- https://www.xilinx.com/html_docs/ip_docs/pru_files/div-gen.html
+  --   U0 : div_gen_v5_1_17
+  --     generic map (
+
+  --       -- General Options
+  --       C_XDEVICEFAMILY => "virtexuplus",
+  --       C_HAS_ARESETN   => 0,
+  --       C_HAS_ACLKEN    => 0,
+  --       C_LATENCY       => 4,
+  --       ALGORITHM_TYPE  => 3,             -- 3=High Radix
+
+  --       -- Widths
+  --       DIVISOR_WIDTH    => square_sum'length,
+  --       DIVIDEND_WIDTH   => product_sum'length,
+  --       FRACTIONAL_B     => 1,
+  --       FRACTIONAL_WIDTH => 10,
+
+  --       -- Signed vs. Unsigned
+  --       SIGNED_B => 1,
+
+  --       DIVCLK_SEL        => 1,           --
+  --       C_HAS_DIV_BY_ZERO => 0,
+  --       C_THROTTLE_SCHEME => 3,
+
+  --       -- Misc AXIS Settings
+  --       C_TLAST_RESOLUTION            => 0,
+  --       C_HAS_S_AXIS_DIVISOR_TUSER    => 0,
+  --       C_HAS_S_AXIS_DIVISOR_TLAST    => 0,
+  --       C_S_AXIS_DIVISOR_TUSER_WIDTH  => 1,
+  --       C_HAS_S_AXIS_DIVIDEND_TUSER   => 0,
+  --       C_HAS_S_AXIS_DIVIDEND_TLAST   => 0,
+  --       C_S_AXIS_DIVIDEND_TUSER_WIDTH => 1,
+  --       C_M_AXIS_DOUT_TUSER_WIDTH     => 1,
+
+  --       -- Data widths
+  --       C_S_AXIS_DIVISOR_TDATA_WIDTH  => 16,
+  --       C_S_AXIS_DIVIDEND_TDATA_WIDTH => 16,
+  --       C_M_AXIS_DOUT_TDATA_WIDTH     => 32
+  --       )
+  --     port map (
+  --       aclk                   => aclk,
+  --       aclken                 => '1',
+  --       aresetn                => '1',
+
+  --       -- unused axis settings
+  --       s_axis_divisor_tvalid  => '1',
+  --       s_axis_dividend_tvalid => '1',
+  --       s_axis_divisor_tready  => open,
+  --       s_axis_dividend_tready => open,
+  --       s_axis_divisor_tuser   => std_logic_vector(to_unsigned(0, 1)),
+  --       s_axis_divisor_tlast   => '0',
+  --       s_axis_dividend_tuser  => std_logic_vector(to_unsigned(0, 1)),
+  --       s_axis_dividend_tlast  => '0',
+  --       m_axis_dout_tready     => '0',
+  --       m_axis_dout_tvalid     => open,
+
+  --       -- unused axis settings
+  --       s_axis_divisor_tdata   => square_sum,
+  --       s_axis_dividend_tdata  => product_sum,
+  --       m_axis_dout_tdata      => slope
+  --       );
+  -- end generate;
 
   -- truncation, don't need to register
   intercept_o <= intercept(B_INT_BITS-1 downto -B_FRAC_BITS);
