@@ -29,7 +29,7 @@ entity fit is
     --intercepts are by construction centered around 0 with just some wander of
     -- a few strips around the center
     B_INT_BITS  : natural := 6;
-    B_FRAC_BITS : natural := 8
+    B_FRAC_BITS : natural := 7
 
     );
   port(
@@ -142,28 +142,28 @@ architecture behavioral of fit is
   --------------------------------------------------------------------------------
 
   signal slope, slope_s6, slope_s7, slope_s8 : sfixed
-    (M_INT_BITS-1 downto - square_sum'length) := (others => '0');
+    (M_INT_BITS-1 downto - 8) := (others => '0');
 
   --------------------------------------------------------------------------------
   -- s6
   --------------------------------------------------------------------------------
 
   signal slope_times_x : sfixed
-    (M_INT_BITS + x_sum(1)'length-1 downto -16) := (others => '0');
+    (M_INT_BITS + x_sum(1)'length-1 downto - 8) := (others => '0');
 
   --------------------------------------------------------------------------------
   -- s7
   --------------------------------------------------------------------------------
 
   signal y_minus_mb : sfixed
-    (11 downto -16) := (others => '0');
+    (B_INT_BITS+3-1 downto - 7) := (others => '0');
 
   --------------------------------------------------------------------------------
   -- s8
   --------------------------------------------------------------------------------
 
   signal intercept : sfixed
-    (B_INT_BITS-1 downto -20) := (others => '0');
+    (B_INT_BITS-1 downto - 8) := (others => '0');
 
   --------------------------------------------------------------------------------
   -- functions
@@ -352,7 +352,7 @@ begin
       -- s7 y = (sum(y) - slope*sum(x))
       --------------------------------------------------------------------------------
 
-      y_minus_mb <= (to_sfixed(y_sum(6), y_sum(6)'length) - slope_times_x);
+      y_minus_mb <= resize((to_sfixed(y_sum(6), y_sum(6)'length) - slope_times_x),y_minus_mb);
       slope_s7   <= slope_s6;
 
       --------------------------------------------------------------------------------
