@@ -19,10 +19,15 @@ entity fit is
     STRIP_BITS : natural := 6;
 
     -- slope
+    --
+    -- max slope is ~40 strips / 6 layers = ~7 so give it 4 bits
     M_INT_BITS  : natural := 4;
     M_FRAC_BITS : natural := 6;
 
     -- intercept
+    --
+    --intercepts are by construction centered around 0 with just some wander of
+    -- a few strips around the center
     B_INT_BITS  : natural := 6;
     B_FRAC_BITS : natural := 8
 
@@ -115,6 +120,8 @@ architecture behavioral of fit is
   --------------------------------------------------------------------------------
 
   -- Σ (n*xi - Σx)*(n*yi - Σy)
+  --
+  -- experimentally derived # of bits... should do something more comprehensive
   signal product_sum : signed (13 downto 0) := (others => '0');
 
   -- Σ (n*xi - Σx)^2
@@ -135,28 +142,28 @@ architecture behavioral of fit is
   --------------------------------------------------------------------------------
 
   signal slope, slope_s6, slope_s7, slope_s8 : sfixed
-    (product_sum'length+1 downto -square_sum'length) := (others => '0');
+    (M_INT_BITS-1 downto - square_sum'length) := (others => '0');
 
   --------------------------------------------------------------------------------
   -- s6
   --------------------------------------------------------------------------------
 
   signal slope_times_x : sfixed
-    (27 downto -16) := (others => '0');
+    (M_INT_BITS + x_sum(1)'length-1 downto -16) := (others => '0');
 
   --------------------------------------------------------------------------------
   -- s7
   --------------------------------------------------------------------------------
 
   signal y_minus_mb : sfixed
-    (28 downto -16) := (others => '0');
+    (11 downto -16) := (others => '0');
 
   --------------------------------------------------------------------------------
   -- s8
   --------------------------------------------------------------------------------
 
   signal intercept : sfixed
-    (product_sum'length+square_sum'length -5 downto -20) := (others => '0');
+    (B_INT_BITS-1 downto -20) := (others => '0');
 
   --------------------------------------------------------------------------------
   -- functions
@@ -330,8 +337,9 @@ begin
       -- s5
       --------------------------------------------------------------------------------
 
-      slope <= to_sfixed(product_sum, product_sum'length) /
-               to_sfixed(square_sum, square_sum'length);
+      slope <= resize (
+        to_sfixed(product_sum, product_sum'length) /
+        to_sfixed(square_sum, square_sum'length), slope);
 
       --------------------------------------------------------------------------------
       -- s6 slope*sum(x)
