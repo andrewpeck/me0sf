@@ -22,14 +22,18 @@ entity fit is
     --
     -- max slope is ~40 strips / 6 layers = ~7 so give it 4 bits
     M_INT_BITS  : natural := 4;
-    M_FRAC_BITS : natural := 6;
+    M_FRAC_BITS : natural := 5;
 
     -- intercept
     --
     --intercepts are by construction centered around 0 with just some wander of
     -- a few strips around the center
-    B_INT_BITS  : natural := 6;
-    B_FRAC_BITS : natural := 7
+    --
+    -- it is too large right now because the fit is not being correctly
+    -- constrained to the center
+    --
+    B_INT_BITS  : natural := 5;
+    B_FRAC_BITS : natural := 6
 
     );
   port(
