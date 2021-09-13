@@ -12,6 +12,9 @@ use ieee.fixed_pkg.all;
 
 entity fit is
   generic(
+
+    DIVIDER : string := "FP";
+
     N_LAYERS : natural := 6;
 
     N_STAGES : natural := 8;
@@ -146,28 +149,28 @@ architecture behavioral of fit is
   --------------------------------------------------------------------------------
 
   signal slope, slope_s6, slope_s7, slope_s8 : sfixed
-    (M_INT_BITS-1 downto - 8) := (others => '0');
+    (M_INT_BITS-1 downto - M_FRAC_BITS) := (others => '0');
 
   --------------------------------------------------------------------------------
   -- s6
   --------------------------------------------------------------------------------
 
   signal slope_times_x : sfixed
-    (M_INT_BITS + x_sum(1)'length-1 downto - 8) := (others => '0');
+    (M_INT_BITS + x_sum(1)'length-1 downto - M_FRAC_BITS+1) := (others => '0');
 
   --------------------------------------------------------------------------------
   -- s7
   --------------------------------------------------------------------------------
 
   signal y_minus_mb : sfixed
-    (B_INT_BITS+3-1 downto - 7) := (others => '0');
+    (B_INT_BITS+3-1 downto - M_FRAC_BITS+1) := (others => '0');
 
   --------------------------------------------------------------------------------
   -- s8
   --------------------------------------------------------------------------------
 
   signal intercept : sfixed
-    (B_INT_BITS-1 downto - 8) := (others => '0');
+    (B_INT_BITS-1 downto - B_FRAC_BITS) := (others => '0');
 
   --------------------------------------------------------------------------------
   -- functions
@@ -365,7 +368,6 @@ begin
 
       intercept <= resize(y_minus_mb / to_sfixed(cnt(7), cnt(7)'length), intercept);
       slope_s8  <= slope_s7;
-
 
     end if;
   end process;
