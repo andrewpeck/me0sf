@@ -55,12 +55,12 @@ def rand_y():
     rand_b = random.randint(-5, 5)
 
     return [
-        math.floor(rand_m * (0 - 2.5) + rand_b + random.randint(-2, 2)),
-        math.floor(rand_m * (1 - 2.5) + rand_b + random.randint(-2, 2)),
-        math.floor(rand_m * (2 - 2.5) + rand_b + random.randint(-2, 2)),
-        math.floor(rand_m * (3 - 2.5) + rand_b + random.randint(-2, 2)),
-        math.floor(rand_m * (4 - 2.5) + rand_b + random.randint(-2, 2)),
-        math.floor(rand_m * (5 - 2.5) + rand_b + random.randint(-2, 2))]
+        math.floor(rand_m * (0 - 2.5) + rand_b + random.randint(-1, 1)),
+        math.floor(rand_m * (1 - 2.5) + rand_b + random.randint(-1, 1)),
+        math.floor(rand_m * (2 - 2.5) + rand_b + random.randint(-1, 1)),
+        math.floor(rand_m * (3 - 2.5) + rand_b + random.randint(-1, 1)),
+        math.floor(rand_m * (4 - 2.5) + rand_b + random.randint(-1, 1)),
+        math.floor(rand_m * (5 - 2.5) + rand_b + random.randint(-1, 1))]
 
     # return [random.randint(-15, 15),
     #         random.randint(-15, 15),
@@ -72,10 +72,10 @@ def rand_y():
 
 
 def print_slope(slope, intercept, m, b):
-    key_s = -b / m
-    key_strip = -intercept / slope
-    print("found y=%.1f x + %f (s=%f)" % (slope, intercept, key_strip))
-    print("expec y=%.1f x + %f (s=%f)" % (m, b, key_s))
+    key_s = m*2.5 + b
+    key_strip = slope*2.5 + b
+    print("found y=%.3f x + %f (s=%f)" % (slope, intercept, key_strip))
+    print("expec y=%.3f x + %f (s=%f)" % (m, b, key_s))
     print("\n")
 
 @cocotb.test()
@@ -143,7 +143,8 @@ async def fit_tb(dut):
 
         await RisingEdge(dut.clock)  # Synchronize with the clock
 
-        m, b = fit_modified(x, data.pop(0))
+        this_data = data.pop(0)
+        m, b = fit_modified(x, this_data)
 
         # sfixed --> float
         slope = dut.slope_o.value.signed_integer / \
@@ -152,8 +153,8 @@ async def fit_tb(dut):
         intercept = dut.intercept_o.value.signed_integer / \
             (2**intercept_fracb-1)
 
-        max_error_strips_per_layer = 0.25
-        max_error_strips = 0.25
+        max_error_strips_per_layer = 0.5
+        max_error_strips = 0.75
 
         # slope = round(slope, 1)
         # intercept = round(intercept, 1)
@@ -165,8 +166,14 @@ async def fit_tb(dut):
         # if (slope != m or intercept != b):
         #print_slope(slope, intercept, m, b)
 
+        key_s = m*2.5 + b
+        key_strip = slope*2.5 + b
+
+        # print(this_data)
+
         assert (abs(m-slope) < max_error_strips_per_layer), print_slope(slope, intercept, m, b)
-        assert (abs(b-intercept) < max_error_strips), "Intercept error"
+        assert (abs(key_s - key_strip) < max_error_strips), print_slope(slope, intercept, m, b)
+        #assert (abs(b-intercept) < max_error_strips), print_slope(slope, intercept, m, b)
 
         itests += 1
 
