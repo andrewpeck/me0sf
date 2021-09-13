@@ -63,11 +63,11 @@ architecture behavioral of fit is
   --------------------------------------------------------------------------------
 
   -- add 1 just to make everything signed...
-  constant LY_BITS : natural := 4; -- 1 + integer(ceil(log2(real(N_LAYERS))));
+  constant LY_BITS : natural := 4;      -- 1 + integer(ceil(log2(real(N_LAYERS))));
 
   type cnt_array_t is array (integer range 0 to 7) of
     signed(LY_BITS-1 downto 0);         -- number of layers hit
-  signal cnt : cnt_array_t := (others => to_signed(6,LY_BITS));
+  signal cnt : cnt_array_t := (others => to_signed(6, LY_BITS));
 
   constant NUM_EXTRA_SUM_BITS : natural
     := integer(ceil(log2(real(N_LAYERS))));
@@ -114,10 +114,10 @@ architecture behavioral of fit is
   -- s4
   --------------------------------------------------------------------------------
 
-  -- sum ( (x - mean(x)) * (y - mean(y)) )
-  signal product_sum : signed (17 downto 0) := (others => '0');
+  -- Σ (n*xi - Σx)*(n*yi - Σy)
+  signal product_sum : signed (13 downto 0) := (others => '0');
 
-  -- sum ((x - mean(x)) ** 2)
+  -- Σ (n*xi - Σx)^2
   --
   -- since x is just a set of numbers from 0-5, this number can't possibly be
   -- bigger than +630 so only 11 bits are needed to represent it (it could be a
@@ -270,7 +270,7 @@ begin
       -- n * x_i
       n_xy_loop : for I in 0 to N_LAYERS-1 loop
         n_y(I) <= cnt(0) * ly(I);
-        n_x(I) <= cnt(0) * to_signed(I,LY_BITS);
+        n_x(I) <= cnt(0) * to_signed(I, LY_BITS);
       end loop;
 
       -- delays
@@ -314,20 +314,17 @@ begin
       --------------------------------------------------------------------------------
 
       -- Σ (n*xi - Σx)*(n*yi - Σy)
-      product_sum <= --resize(
+      product_sum <= resize(
         sum6(product(0), product(1),
              product(2), product(3),
              product(4), product(5),
-             valid(3), 18); --
-                     --, product_sum'length);
+             valid(3), 18), product_sum'length);
 
       -- Σ (n*xi - Σx)^2
-      square_sum <= resize(
-        sum6(square(0), square(1),
+      square_sum <= resize(sum6(square(0), square(1),
              square(2), square(3),
              square(4), square(5),
-             valid(3), 16),
-        square_sum'length);
+             valid(3), 16), square_sum'length);
 
       --------------------------------------------------------------------------------
       -- s5
@@ -344,14 +341,14 @@ begin
       slope_s6      <= slope;
 
       --------------------------------------------------------------------------------
-      -- s7 y = (mean(y) - slope*sum(x))
+      -- s7 y = (sum(y) - slope*sum(x))
       --------------------------------------------------------------------------------
 
       y_minus_mb <= (to_sfixed(y_sum(6), y_sum(6)'length) - slope_times_x);
-      slope_s7 <= slope_s6;
+      slope_s7   <= slope_s6;
 
       --------------------------------------------------------------------------------
-      -- s8 y= (mean(y) - slope*sum(x)) / n
+      -- s8 y= (sum(y) - slope*sum(x)) / n
       --------------------------------------------------------------------------------
 
       intercept <= resize(y_minus_mb / to_sfixed(cnt(7), cnt(7)'length), intercept);
