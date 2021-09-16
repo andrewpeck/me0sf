@@ -1,0 +1,1067 @@
+#+TITLE: ME0 Segment Finding
+#+author: Andrew Peck
+#+HTML_HEAD: <link href="theme.css" rel="stylesheet">
+#+OPTIONS: tex:t
+#+STARTUP: latexpreview
+#+STARTUP: fninline
+#+STARTUP: fnadjust
+
+
+* Segment Finding Algorithm
+
+Each ME0 chamber is composed of 6 layers of GEMs.
+
+Each layer is composed of 8 partitions in eta, each of which is split into 384 strips in phi.
+
+[ put an image of the chamber here ]
+
+
+The trigger output of a GEM chamber is a binary readout called an "S-bit", which
+is the OR of two adjacent strips. The resolution of a ME0 chamber in the trigger
+path is therefore 1/2 of the fundamental resolution, or 8x192 strips per layer.
+
+In summary, and ME0 Chamber has:
+ - 6 layers
+ - each layer has 8 eta partitions
+ - each eta partition has 384 strips (192 s-bits)
+ - 1536 sbits / layer / bx  * 6 layers = 9216 sbits / bx
+
+The basic goal of segment finding in ME0 is that we want to:
+1. Identify multi-layer segments
+2. Do some refined angular/position calculation using multi-layer hit data
+
+In a somewhat abstract sense, the mechanism to do this segment identification is along the lines of:
+
+1) Need to identify segments locally
+   + Create "segment candidates" with some sortable key field
+   + Done in parallel, many times
+2) Need to sort segment candidates into a smaller number of output candidates
+   + Development of sorting machinery can be somewhat decoupled from the exact
+     segment identification mechanism
+3) Perform some post-processing on the segment candidates to produce a refined
+   measurement (some kind of fit)
+
+#+begin_src dot :file dataflow.svg :results value
+digraph {
+  node [shape=box]
+  rankdir=LR
+  "Input\nSbits" -> "Segment\nIdentification" -> "Sorting" -> "Fitting" -> "Output"
+}
+#+end_src
+
+#+RESULTS:
+[[file:dataflow.svg]]
+
+** Input Hits Processing
+
+This segment finder is designed to find multi-layer segments in ME0.
+
+The pattern finder works by looking at the chamber in two dimensional slices,
+where bending in the eta direction can be observed. Each slice corresponds to 6
+layers of the ME0 chamber for a given eta partition.
+
+For example, a cross-sectional view of a muon track may look something like this
+(chamber is truncated between ~///~ marks).
+
+#+begin_example
+    0                                          --->                                              191
+ly0 -------------+-----------------------------------------///--------------------------------------
+ly1 --------------+----------------------------------------///--------------------------------------
+ly2 ---------------+---------------------------------------///--------------------------------------
+ly3 ----------------+--------------------------------------///--------------------------------------
+ly4 -----------------+-------------------------------------///--------------------------------------
+ly5 ------------------+------------------------------------///--------------------------------------
+
+                   ^ track
+#+end_example
+
+Our goal in segment finding is to:
+ 1. Identify segments
+ 2. Measure the position of the segment
+ 3. Measure the bending angle of the segment
+
+
+*** Cross-partition data sharing
+How to look at eta ??
+*** Chamber staggering
+Are the chambers staggered? if so we need de-staggering
+*** Alignment ??
+Are alignment corrections required?
+** Segment Candidate Identification
+
+Centered around each strip is a pattern identification block called a "pattern unit".
+
+A pattern unit looks at a subset of the partition's data, and identifies segment
+candidates which are roughly centered around a given strip.
+
+To minimize latency, each bunch crossing a number of independent pattern unit
+modules operate in parallel to find pattern candidates for each of the strips in the chamber.
+
+For example, in the following diagram we show the "window" that a pattern unit
+centered on strip #20 might look at:
+
+
+#+begin_example
+    0                   20                     --->                                              191
+      ┌────────────────────────────────────┐
+ly0 --│--------------+---------------------│-------------------///--------------------------------------
+ly1 --│---------------+--------------------│-------------------///--------------------------------------
+ly2 --│----------------+-------------------│-------------------///--------------------------------------
+ly3 --│-----------------+------------------│-------------------///--------------------------------------
+ly4 --│------------------+-----------------│-------------------///--------------------------------------
+ly5 --│-------------------+----------------│-------------------///--------------------------------------
+      └────────────────────────────────────┘
+                       ^ track
+#+end_example
+
+Within a pattern unit we look only at the boxed area, and can consider looking
+at a slice of data ranging within +- some range (the range is determined from
+the width of the maximally wide pattern). Here we use +- 18 as an example.
+
+#+begin_example
+┌────────────────────────────────────┐
+│--------------+---------------------│
+│---------------+--------------------│
+│----------------+-------------------│
+│-----------------+------------------│
+│------------------+-----------------│
+│-------------------+----------------│
+└────────────────────────────────────┘
+-18     <--       0      -->       18
+#+end_example
+
+Each pattern unit looks for patterns (or roads) which are centered around a given
+strip, at different bending angles.
+
+For example, two patterns with different bending angles might look something
+like:
+
+- Pattern #14
+#+begin_example
+ly0 xxxx-----
+ly1 -xxxx----
+ly2 ---xxx---
+ly3 ---xxx---
+ly4 ----xxxx-
+ly5 -----xxxx
+#+end_example
+
+
+- Pattern #1
+#+begin_example
+ly0 ----------------------------xxxxxxxxx
+ly1 ------------------------xxxxxxxxx----
+ly2 ----------------xxxxxxxxxxxx---------
+ly3 ---------xxxxxxxx--------------------
+ly4 ----xxxxxxxxx------------------------
+ly5 xxxxxxxxx----------------------------
+#+end_example
+
+If we were to overlay the above pattern #14 onto the data shown above, we would
+see this:
+
+#+begin_example
+┌─────────────────────────────────────┐
+│-------------xx+x--------------------│
+│--------------xx+x-------------------│
+│----------------x+x------------------│
+│----------------xx+------------------│
+│------------------x+xxx--------------│
+│-------------------x+xxx-------------│
+└─────────────────────────────────────┘
+-18     <--       0       -->       18
+#+end_example
+
+In this case, we can see that 6 hits (designated by ~+~) fall within the pattern
+mask (designated by ~x~), so we say that for this pattern the layer count is 6.
+
+The high layer count (6) is because this pattern is a good match for the actual data.
+
+If instead we overlay pattern #1 on this data we see
+
+#+begin_example
+┌─────────────────────────────────────┐
+│---------------+------------xxxxxxxxx│
+│----------------+-------xxxxxxxxx----│
+│----------------x+xxxxxxxxxx---------│
+│---------xxxxxxxx-+------------------│
+│----xxxxxxxxx------+-----------------│
+│xxxxxxxxx-----------+----------------│
+└─────────────────────────────────────┘
+-18     <--       0       -->       18
+#+end_example
+
+In this case only one of the hits falls within the pattern mask, so the layer
+count is only 1. Following this example, we can use the layer count for each
+pattern as a metric for the quality of the pattern.
+
+For the entire collection of patterns in a pattern unit, a sorting tree looks
+through this collection of data and returns a single pattern which is determined
+to have the highest "quality".
+
+The sorting metric is:
+1. Choose the pattern with the highest layer count
+2. If multiple patterns have the same layer count, choose the one with the
+   highest pattern id (higher pattern IDs correspond to straighter patterns, or
+   higher momentum particles).
+
+The single pattern that is chosen for each pattern unit
+1. Layer count (the number of layers hit in the pattern)
+2. Pattern ID (a unique number representing the pattern; higher pattern IDs are
+   straighter)
+3. Collection of 6 centroids (describes the position of a hit within the pattern
+   mask)
+
+*** Centroid finding
+
+To minimize resource usage and keep acceptance high, the patterns are defined to
+be fairly wide. To avoid losing resolution in this wide patterns, however, along
+with each layer of a pattern a centroid is found and saved for later stages of
+processing.
+
+#+begin_example
+┌─────────────────────────────────────┐
+│-------------xx+x--------------------│
+│--------------xx+x-------------------│
+│----------------x+x------------------│
+│----------------xx+------------------│
+│------------------x+xxx--------------│
+│-------------------x+xxx-------------│
+└─────────────────────────────────────┘
+ -18    <--       0       -->       18
+#+end_example
+
+For example, in the pattern above we have six layers composed of:
+
+#+begin_src
+   01234
+1. xx+x   centroid = 2
+2. xx+x   centroid = 2
+3. x+x    centroid = 1
+4. xx+    centroid = 3
+5. x+xxx  centroid = 1
+6. x+xxx  centroid = 1
+#+end_src
+
+The centroid simply describes the location of the charge cluster within the
+pattern mask.
+
+This is used during a later stage of the firmware to convert the location within
+the centroid into a location relative to the center of the pattern unit.
+
+In many/most cases more than 1 adjacent strip will be fired. In this case the
+centroid finder produces some estimate of the center of the charge cluster.
+
+e.g. This example will produce a centroid of 3, since it is the center of the 3
+active strips.
+
+#+begin_src
+0123456
+xx+++xx
+   ^ centroid = 3
+#+end_src
+
+The implementation of the centroid finder is a lookup-table generated by a
+python script, so the firmware is flexible to accomodate different algorithms
+for centroid finding.
+
+*** Edge Padding
+** Ghost Cancellation
+** Partition Pre-Sorting
+
+For each partition, every bunch crossing a collection of 192 segments is
+produced in the pattern units.
+
+This will be later sent into "true" bitonic sorters, but to reduce the
+computational difficulty of the bitonic sorting stage, the segments are first
+passed through a crude sorting tree.
+
+This takes advantage of the fact that generally we are less interested in
+multiple segments appearing in neighboring partitions, since they will often
+simply be ghosts of one another.
+
+Thus, we restrict the chamber to only accept one segment for every N strips,
+reducing the # of segments that need to be sorted by a factor of N.
+
+** Chamber Segment Selection
+** Centroid Coordinate Transformation
+** Fitting
+
+A standard linear fit follows a formula:
+
+\[
+  \overline{X}=\frac{\sum{}{}x_i}{n}
+\]
+
+\[
+  \overline{Y}=\frac{\sum{}{}y_i}{n}
+\]
+
+\[
+  m = \frac {\sum{}{}(x_i - \overline{X})(y_i-\overline{Y})}{\sum{}{} (x_i-\overline{X})^2}
+\]
+
+\[
+  b = \overline{Y} - m\overline{X}
+\]
+
+To reduce the computational difficulty in an FPGA, we modify this formula in a few ways.
+
+To defer a division by n and continue more of the calculation in signed
+arithmetic (rather than fixed point), we instead calculate:
+
+\begin{align}
+  m =& \frac {\sum{}{}(x_i - \overline{X})(y_i-\overline{Y})}{\sum{}{} (x_i-\overline{X})^2} \\
+    =& \frac {\sum{}{}(x - \frac{\sum{}{}x_i}{n})(y-\frac{\sum{}{}x_i}{n})}{\sum{}{} (x-\frac{\sum{}{}x_i}{n})^2} \\
+    =& \frac{n}{n} \frac {\sum{}{}(x - \frac{\sum{}{}x_i}{n})(y-\frac{\sum{}{}x_i}{n})}{\sum{}{} (x-\frac{\sum{}{}x_i}{n})^2} \\
+    =& \frac {\sum{}{}(nx - \sum{}{}{x_{i}})(ny_i-\sum{}{}{y_i})} {\sum{}{} (nx_{i}-\sum{}{}x_{i})^2}
+\end{align}
+
+To make this even simpler, we take advantage of the fact that the range of the
+divisor in the above equation is limited to a maximum value of 630.
+
+This is because the ~x~ values represent the layer count, which is simply the set
+of layers hit (0, 1, 2, 3, 4, 5) where not all layers are necessarily hit.
+
+The upper bound on this number then is just:
+
+\[
+630 = 6^2 \times ( (0 - 2.5)^2 + (1 - 2.5)^2 + (2 - 2.5)^2 + (3 - 2.5)^2 + (4 - 2.5)^2 + (5 - 2.5)^2 )
+\]
+
+This was found by brute force exhausting the entire possibility of combinations.
+
+Since the divisor only has a small range of values possible, the division is
+re-written as a multiplication by the reciprocal of the number. All possible
+values of this are encoded in a lookup table as a fixed point value. This
+transforms a division into a fixed point multiplication, which is
+computationally much simpler.
+
+
+\[
+  m =
+  \sum{}{}(nx - \sum{}{}{x_{i}})(ny_i-\sum{}{}{y_i})
+  \times reciprocal(\sum{}{} (nx_{i}-\sum{}{}x_{i})^2)
+\]
+
+
+With this, the slope is still expressed by the same formula as above.
+
+\[
+  b = \overline{Y} - m\overline{X}
+\]
+
+
+The lookup table for the reciprocal LUT is calculated through a simple python script:
+
+#+begin_src  python :results output
+
+decb = 10
+print("".join([
+    "  function reciprocal (x : integer) return sfixed is\n",
+    "  begin\n",
+    "    if (x<1 or x> 630) then \n",
+    "      assert false report \"invalid reciprocal lookup x=\" & integer\'image(x) severity error;\n",
+    "      return to_sfixed(0, 11, %d);\n" % decb,
+    "".join(list(map(lambda i :
+                     "    elsif (x=%d) then return to_sfixed(%f, 11, %d);\n"
+                     % (i, round(630/i, decb), decb), range(1, 631)))),
+    "    end if;\n",
+    "  end;\n"]))
+#+end_src
+
+#+RESULTS:
+#+begin_example
+  function reciprocal (x : integer) return sfixed is
+  begin
+    if (x<1 or x> 630) then
+      assert false report "invalid reciprocal lookup x=" & integer'image(x) severity error;
+      return to_sfixed(0, 11, 10);
+    elsif (x=1) then return to_sfixed(630.000000, 11, 10);
+    elsif (x=2) then return to_sfixed(315.000000, 11, 10);
+    elsif (x=3) then return to_sfixed(210.000000, 11, 10);
+    elsif (x=4) then return to_sfixed(157.500000, 11, 10);
+    elsif (x=5) then return to_sfixed(126.000000, 11, 10);
+    elsif (x=6) then return to_sfixed(105.000000, 11, 10);
+    elsif (x=7) then return to_sfixed(90.000000, 11, 10);
+    elsif (x=8) then return to_sfixed(78.750000, 11, 10);
+    elsif (x=9) then return to_sfixed(70.000000, 11, 10);
+    elsif (x=10) then return to_sfixed(63.000000, 11, 10);
+    elsif (x=11) then return to_sfixed(57.272727, 11, 10);
+    elsif (x=12) then return to_sfixed(52.500000, 11, 10);
+    elsif (x=13) then return to_sfixed(48.461538, 11, 10);
+    elsif (x=14) then return to_sfixed(45.000000, 11, 10);
+    elsif (x=15) then return to_sfixed(42.000000, 11, 10);
+    elsif (x=16) then return to_sfixed(39.375000, 11, 10);
+    elsif (x=17) then return to_sfixed(37.058824, 11, 10);
+    elsif (x=18) then return to_sfixed(35.000000, 11, 10);
+    elsif (x=19) then return to_sfixed(33.157895, 11, 10);
+    elsif (x=20) then return to_sfixed(31.500000, 11, 10);
+    elsif (x=21) then return to_sfixed(30.000000, 11, 10);
+    elsif (x=22) then return to_sfixed(28.636364, 11, 10);
+    elsif (x=23) then return to_sfixed(27.391304, 11, 10);
+    elsif (x=24) then return to_sfixed(26.250000, 11, 10);
+    elsif (x=25) then return to_sfixed(25.200000, 11, 10);
+    elsif (x=26) then return to_sfixed(24.230769, 11, 10);
+    elsif (x=27) then return to_sfixed(23.333333, 11, 10);
+    elsif (x=28) then return to_sfixed(22.500000, 11, 10);
+    elsif (x=29) then return to_sfixed(21.724138, 11, 10);
+    elsif (x=30) then return to_sfixed(21.000000, 11, 10);
+    elsif (x=31) then return to_sfixed(20.322581, 11, 10);
+    elsif (x=32) then return to_sfixed(19.687500, 11, 10);
+    elsif (x=33) then return to_sfixed(19.090909, 11, 10);
+    elsif (x=34) then return to_sfixed(18.529412, 11, 10);
+    elsif (x=35) then return to_sfixed(18.000000, 11, 10);
+    elsif (x=36) then return to_sfixed(17.500000, 11, 10);
+    elsif (x=37) then return to_sfixed(17.027027, 11, 10);
+    elsif (x=38) then return to_sfixed(16.578947, 11, 10);
+    elsif (x=39) then return to_sfixed(16.153846, 11, 10);
+    elsif (x=40) then return to_sfixed(15.750000, 11, 10);
+    elsif (x=41) then return to_sfixed(15.365854, 11, 10);
+    elsif (x=42) then return to_sfixed(15.000000, 11, 10);
+    elsif (x=43) then return to_sfixed(14.651163, 11, 10);
+    elsif (x=44) then return to_sfixed(14.318182, 11, 10);
+    elsif (x=45) then return to_sfixed(14.000000, 11, 10);
+    elsif (x=46) then return to_sfixed(13.695652, 11, 10);
+    elsif (x=47) then return to_sfixed(13.404255, 11, 10);
+    elsif (x=48) then return to_sfixed(13.125000, 11, 10);
+    elsif (x=49) then return to_sfixed(12.857143, 11, 10);
+    elsif (x=50) then return to_sfixed(12.600000, 11, 10);
+    elsif (x=51) then return to_sfixed(12.352941, 11, 10);
+    elsif (x=52) then return to_sfixed(12.115385, 11, 10);
+    elsif (x=53) then return to_sfixed(11.886792, 11, 10);
+    elsif (x=54) then return to_sfixed(11.666667, 11, 10);
+    elsif (x=55) then return to_sfixed(11.454545, 11, 10);
+    elsif (x=56) then return to_sfixed(11.250000, 11, 10);
+    elsif (x=57) then return to_sfixed(11.052632, 11, 10);
+    elsif (x=58) then return to_sfixed(10.862069, 11, 10);
+    elsif (x=59) then return to_sfixed(10.677966, 11, 10);
+    elsif (x=60) then return to_sfixed(10.500000, 11, 10);
+    elsif (x=61) then return to_sfixed(10.327869, 11, 10);
+    elsif (x=62) then return to_sfixed(10.161290, 11, 10);
+    elsif (x=63) then return to_sfixed(10.000000, 11, 10);
+    elsif (x=64) then return to_sfixed(9.843750, 11, 10);
+    elsif (x=65) then return to_sfixed(9.692308, 11, 10);
+    elsif (x=66) then return to_sfixed(9.545455, 11, 10);
+    elsif (x=67) then return to_sfixed(9.402985, 11, 10);
+    elsif (x=68) then return to_sfixed(9.264706, 11, 10);
+    elsif (x=69) then return to_sfixed(9.130435, 11, 10);
+    elsif (x=70) then return to_sfixed(9.000000, 11, 10);
+    elsif (x=71) then return to_sfixed(8.873239, 11, 10);
+    elsif (x=72) then return to_sfixed(8.750000, 11, 10);
+    elsif (x=73) then return to_sfixed(8.630137, 11, 10);
+    elsif (x=74) then return to_sfixed(8.513514, 11, 10);
+    elsif (x=75) then return to_sfixed(8.400000, 11, 10);
+    elsif (x=76) then return to_sfixed(8.289474, 11, 10);
+    elsif (x=77) then return to_sfixed(8.181818, 11, 10);
+    elsif (x=78) then return to_sfixed(8.076923, 11, 10);
+    elsif (x=79) then return to_sfixed(7.974684, 11, 10);
+    elsif (x=80) then return to_sfixed(7.875000, 11, 10);
+    elsif (x=81) then return to_sfixed(7.777778, 11, 10);
+    elsif (x=82) then return to_sfixed(7.682927, 11, 10);
+    elsif (x=83) then return to_sfixed(7.590361, 11, 10);
+    elsif (x=84) then return to_sfixed(7.500000, 11, 10);
+    elsif (x=85) then return to_sfixed(7.411765, 11, 10);
+    elsif (x=86) then return to_sfixed(7.325581, 11, 10);
+    elsif (x=87) then return to_sfixed(7.241379, 11, 10);
+    elsif (x=88) then return to_sfixed(7.159091, 11, 10);
+    elsif (x=89) then return to_sfixed(7.078652, 11, 10);
+    elsif (x=90) then return to_sfixed(7.000000, 11, 10);
+    elsif (x=91) then return to_sfixed(6.923077, 11, 10);
+    elsif (x=92) then return to_sfixed(6.847826, 11, 10);
+    elsif (x=93) then return to_sfixed(6.774194, 11, 10);
+    elsif (x=94) then return to_sfixed(6.702128, 11, 10);
+    elsif (x=95) then return to_sfixed(6.631579, 11, 10);
+    elsif (x=96) then return to_sfixed(6.562500, 11, 10);
+    elsif (x=97) then return to_sfixed(6.494845, 11, 10);
+    elsif (x=98) then return to_sfixed(6.428571, 11, 10);
+    elsif (x=99) then return to_sfixed(6.363636, 11, 10);
+    elsif (x=100) then return to_sfixed(6.300000, 11, 10);
+    elsif (x=101) then return to_sfixed(6.237624, 11, 10);
+    elsif (x=102) then return to_sfixed(6.176471, 11, 10);
+    elsif (x=103) then return to_sfixed(6.116505, 11, 10);
+    elsif (x=104) then return to_sfixed(6.057692, 11, 10);
+    elsif (x=105) then return to_sfixed(6.000000, 11, 10);
+    elsif (x=106) then return to_sfixed(5.943396, 11, 10);
+    elsif (x=107) then return to_sfixed(5.887850, 11, 10);
+    elsif (x=108) then return to_sfixed(5.833333, 11, 10);
+    elsif (x=109) then return to_sfixed(5.779817, 11, 10);
+    elsif (x=110) then return to_sfixed(5.727273, 11, 10);
+    elsif (x=111) then return to_sfixed(5.675676, 11, 10);
+    elsif (x=112) then return to_sfixed(5.625000, 11, 10);
+    elsif (x=113) then return to_sfixed(5.575221, 11, 10);
+    elsif (x=114) then return to_sfixed(5.526316, 11, 10);
+    elsif (x=115) then return to_sfixed(5.478261, 11, 10);
+    elsif (x=116) then return to_sfixed(5.431034, 11, 10);
+    elsif (x=117) then return to_sfixed(5.384615, 11, 10);
+    elsif (x=118) then return to_sfixed(5.338983, 11, 10);
+    elsif (x=119) then return to_sfixed(5.294118, 11, 10);
+    elsif (x=120) then return to_sfixed(5.250000, 11, 10);
+    elsif (x=121) then return to_sfixed(5.206612, 11, 10);
+    elsif (x=122) then return to_sfixed(5.163934, 11, 10);
+    elsif (x=123) then return to_sfixed(5.121951, 11, 10);
+    elsif (x=124) then return to_sfixed(5.080645, 11, 10);
+    elsif (x=125) then return to_sfixed(5.040000, 11, 10);
+    elsif (x=126) then return to_sfixed(5.000000, 11, 10);
+    elsif (x=127) then return to_sfixed(4.960630, 11, 10);
+    elsif (x=128) then return to_sfixed(4.921875, 11, 10);
+    elsif (x=129) then return to_sfixed(4.883721, 11, 10);
+    elsif (x=130) then return to_sfixed(4.846154, 11, 10);
+    elsif (x=131) then return to_sfixed(4.809160, 11, 10);
+    elsif (x=132) then return to_sfixed(4.772727, 11, 10);
+    elsif (x=133) then return to_sfixed(4.736842, 11, 10);
+    elsif (x=134) then return to_sfixed(4.701493, 11, 10);
+    elsif (x=135) then return to_sfixed(4.666667, 11, 10);
+    elsif (x=136) then return to_sfixed(4.632353, 11, 10);
+    elsif (x=137) then return to_sfixed(4.598540, 11, 10);
+    elsif (x=138) then return to_sfixed(4.565217, 11, 10);
+    elsif (x=139) then return to_sfixed(4.532374, 11, 10);
+    elsif (x=140) then return to_sfixed(4.500000, 11, 10);
+    elsif (x=141) then return to_sfixed(4.468085, 11, 10);
+    elsif (x=142) then return to_sfixed(4.436620, 11, 10);
+    elsif (x=143) then return to_sfixed(4.405594, 11, 10);
+    elsif (x=144) then return to_sfixed(4.375000, 11, 10);
+    elsif (x=145) then return to_sfixed(4.344828, 11, 10);
+    elsif (x=146) then return to_sfixed(4.315068, 11, 10);
+    elsif (x=147) then return to_sfixed(4.285714, 11, 10);
+    elsif (x=148) then return to_sfixed(4.256757, 11, 10);
+    elsif (x=149) then return to_sfixed(4.228188, 11, 10);
+    elsif (x=150) then return to_sfixed(4.200000, 11, 10);
+    elsif (x=151) then return to_sfixed(4.172185, 11, 10);
+    elsif (x=152) then return to_sfixed(4.144737, 11, 10);
+    elsif (x=153) then return to_sfixed(4.117647, 11, 10);
+    elsif (x=154) then return to_sfixed(4.090909, 11, 10);
+    elsif (x=155) then return to_sfixed(4.064516, 11, 10);
+    elsif (x=156) then return to_sfixed(4.038462, 11, 10);
+    elsif (x=157) then return to_sfixed(4.012739, 11, 10);
+    elsif (x=158) then return to_sfixed(3.987342, 11, 10);
+    elsif (x=159) then return to_sfixed(3.962264, 11, 10);
+    elsif (x=160) then return to_sfixed(3.937500, 11, 10);
+    elsif (x=161) then return to_sfixed(3.913043, 11, 10);
+    elsif (x=162) then return to_sfixed(3.888889, 11, 10);
+    elsif (x=163) then return to_sfixed(3.865031, 11, 10);
+    elsif (x=164) then return to_sfixed(3.841463, 11, 10);
+    elsif (x=165) then return to_sfixed(3.818182, 11, 10);
+    elsif (x=166) then return to_sfixed(3.795181, 11, 10);
+    elsif (x=167) then return to_sfixed(3.772455, 11, 10);
+    elsif (x=168) then return to_sfixed(3.750000, 11, 10);
+    elsif (x=169) then return to_sfixed(3.727811, 11, 10);
+    elsif (x=170) then return to_sfixed(3.705882, 11, 10);
+    elsif (x=171) then return to_sfixed(3.684211, 11, 10);
+    elsif (x=172) then return to_sfixed(3.662791, 11, 10);
+    elsif (x=173) then return to_sfixed(3.641618, 11, 10);
+    elsif (x=174) then return to_sfixed(3.620690, 11, 10);
+    elsif (x=175) then return to_sfixed(3.600000, 11, 10);
+    elsif (x=176) then return to_sfixed(3.579545, 11, 10);
+    elsif (x=177) then return to_sfixed(3.559322, 11, 10);
+    elsif (x=178) then return to_sfixed(3.539326, 11, 10);
+    elsif (x=179) then return to_sfixed(3.519553, 11, 10);
+    elsif (x=180) then return to_sfixed(3.500000, 11, 10);
+    elsif (x=181) then return to_sfixed(3.480663, 11, 10);
+    elsif (x=182) then return to_sfixed(3.461538, 11, 10);
+    elsif (x=183) then return to_sfixed(3.442623, 11, 10);
+    elsif (x=184) then return to_sfixed(3.423913, 11, 10);
+    elsif (x=185) then return to_sfixed(3.405405, 11, 10);
+    elsif (x=186) then return to_sfixed(3.387097, 11, 10);
+    elsif (x=187) then return to_sfixed(3.368984, 11, 10);
+    elsif (x=188) then return to_sfixed(3.351064, 11, 10);
+    elsif (x=189) then return to_sfixed(3.333333, 11, 10);
+    elsif (x=190) then return to_sfixed(3.315789, 11, 10);
+    elsif (x=191) then return to_sfixed(3.298429, 11, 10);
+    elsif (x=192) then return to_sfixed(3.281250, 11, 10);
+    elsif (x=193) then return to_sfixed(3.264249, 11, 10);
+    elsif (x=194) then return to_sfixed(3.247423, 11, 10);
+    elsif (x=195) then return to_sfixed(3.230769, 11, 10);
+    elsif (x=196) then return to_sfixed(3.214286, 11, 10);
+    elsif (x=197) then return to_sfixed(3.197970, 11, 10);
+    elsif (x=198) then return to_sfixed(3.181818, 11, 10);
+    elsif (x=199) then return to_sfixed(3.165829, 11, 10);
+    elsif (x=200) then return to_sfixed(3.150000, 11, 10);
+    elsif (x=201) then return to_sfixed(3.134328, 11, 10);
+    elsif (x=202) then return to_sfixed(3.118812, 11, 10);
+    elsif (x=203) then return to_sfixed(3.103448, 11, 10);
+    elsif (x=204) then return to_sfixed(3.088235, 11, 10);
+    elsif (x=205) then return to_sfixed(3.073171, 11, 10);
+    elsif (x=206) then return to_sfixed(3.058252, 11, 10);
+    elsif (x=207) then return to_sfixed(3.043478, 11, 10);
+    elsif (x=208) then return to_sfixed(3.028846, 11, 10);
+    elsif (x=209) then return to_sfixed(3.014354, 11, 10);
+    elsif (x=210) then return to_sfixed(3.000000, 11, 10);
+    elsif (x=211) then return to_sfixed(2.985782, 11, 10);
+    elsif (x=212) then return to_sfixed(2.971698, 11, 10);
+    elsif (x=213) then return to_sfixed(2.957746, 11, 10);
+    elsif (x=214) then return to_sfixed(2.943925, 11, 10);
+    elsif (x=215) then return to_sfixed(2.930233, 11, 10);
+    elsif (x=216) then return to_sfixed(2.916667, 11, 10);
+    elsif (x=217) then return to_sfixed(2.903226, 11, 10);
+    elsif (x=218) then return to_sfixed(2.889908, 11, 10);
+    elsif (x=219) then return to_sfixed(2.876712, 11, 10);
+    elsif (x=220) then return to_sfixed(2.863636, 11, 10);
+    elsif (x=221) then return to_sfixed(2.850679, 11, 10);
+    elsif (x=222) then return to_sfixed(2.837838, 11, 10);
+    elsif (x=223) then return to_sfixed(2.825112, 11, 10);
+    elsif (x=224) then return to_sfixed(2.812500, 11, 10);
+    elsif (x=225) then return to_sfixed(2.800000, 11, 10);
+    elsif (x=226) then return to_sfixed(2.787611, 11, 10);
+    elsif (x=227) then return to_sfixed(2.775330, 11, 10);
+    elsif (x=228) then return to_sfixed(2.763158, 11, 10);
+    elsif (x=229) then return to_sfixed(2.751092, 11, 10);
+    elsif (x=230) then return to_sfixed(2.739130, 11, 10);
+    elsif (x=231) then return to_sfixed(2.727273, 11, 10);
+    elsif (x=232) then return to_sfixed(2.715517, 11, 10);
+    elsif (x=233) then return to_sfixed(2.703863, 11, 10);
+    elsif (x=234) then return to_sfixed(2.692308, 11, 10);
+    elsif (x=235) then return to_sfixed(2.680851, 11, 10);
+    elsif (x=236) then return to_sfixed(2.669492, 11, 10);
+    elsif (x=237) then return to_sfixed(2.658228, 11, 10);
+    elsif (x=238) then return to_sfixed(2.647059, 11, 10);
+    elsif (x=239) then return to_sfixed(2.635983, 11, 10);
+    elsif (x=240) then return to_sfixed(2.625000, 11, 10);
+    elsif (x=241) then return to_sfixed(2.614108, 11, 10);
+    elsif (x=242) then return to_sfixed(2.603306, 11, 10);
+    elsif (x=243) then return to_sfixed(2.592593, 11, 10);
+    elsif (x=244) then return to_sfixed(2.581967, 11, 10);
+    elsif (x=245) then return to_sfixed(2.571429, 11, 10);
+    elsif (x=246) then return to_sfixed(2.560976, 11, 10);
+    elsif (x=247) then return to_sfixed(2.550607, 11, 10);
+    elsif (x=248) then return to_sfixed(2.540323, 11, 10);
+    elsif (x=249) then return to_sfixed(2.530120, 11, 10);
+    elsif (x=250) then return to_sfixed(2.520000, 11, 10);
+    elsif (x=251) then return to_sfixed(2.509960, 11, 10);
+    elsif (x=252) then return to_sfixed(2.500000, 11, 10);
+    elsif (x=253) then return to_sfixed(2.490119, 11, 10);
+    elsif (x=254) then return to_sfixed(2.480315, 11, 10);
+    elsif (x=255) then return to_sfixed(2.470588, 11, 10);
+    elsif (x=256) then return to_sfixed(2.460938, 11, 10);
+    elsif (x=257) then return to_sfixed(2.451362, 11, 10);
+    elsif (x=258) then return to_sfixed(2.441860, 11, 10);
+    elsif (x=259) then return to_sfixed(2.432432, 11, 10);
+    elsif (x=260) then return to_sfixed(2.423077, 11, 10);
+    elsif (x=261) then return to_sfixed(2.413793, 11, 10);
+    elsif (x=262) then return to_sfixed(2.404580, 11, 10);
+    elsif (x=263) then return to_sfixed(2.395437, 11, 10);
+    elsif (x=264) then return to_sfixed(2.386364, 11, 10);
+    elsif (x=265) then return to_sfixed(2.377358, 11, 10);
+    elsif (x=266) then return to_sfixed(2.368421, 11, 10);
+    elsif (x=267) then return to_sfixed(2.359551, 11, 10);
+    elsif (x=268) then return to_sfixed(2.350746, 11, 10);
+    elsif (x=269) then return to_sfixed(2.342007, 11, 10);
+    elsif (x=270) then return to_sfixed(2.333333, 11, 10);
+    elsif (x=271) then return to_sfixed(2.324723, 11, 10);
+    elsif (x=272) then return to_sfixed(2.316176, 11, 10);
+    elsif (x=273) then return to_sfixed(2.307692, 11, 10);
+    elsif (x=274) then return to_sfixed(2.299270, 11, 10);
+    elsif (x=275) then return to_sfixed(2.290909, 11, 10);
+    elsif (x=276) then return to_sfixed(2.282609, 11, 10);
+    elsif (x=277) then return to_sfixed(2.274368, 11, 10);
+    elsif (x=278) then return to_sfixed(2.266187, 11, 10);
+    elsif (x=279) then return to_sfixed(2.258065, 11, 10);
+    elsif (x=280) then return to_sfixed(2.250000, 11, 10);
+    elsif (x=281) then return to_sfixed(2.241993, 11, 10);
+    elsif (x=282) then return to_sfixed(2.234043, 11, 10);
+    elsif (x=283) then return to_sfixed(2.226148, 11, 10);
+    elsif (x=284) then return to_sfixed(2.218310, 11, 10);
+    elsif (x=285) then return to_sfixed(2.210526, 11, 10);
+    elsif (x=286) then return to_sfixed(2.202797, 11, 10);
+    elsif (x=287) then return to_sfixed(2.195122, 11, 10);
+    elsif (x=288) then return to_sfixed(2.187500, 11, 10);
+    elsif (x=289) then return to_sfixed(2.179931, 11, 10);
+    elsif (x=290) then return to_sfixed(2.172414, 11, 10);
+    elsif (x=291) then return to_sfixed(2.164948, 11, 10);
+    elsif (x=292) then return to_sfixed(2.157534, 11, 10);
+    elsif (x=293) then return to_sfixed(2.150171, 11, 10);
+    elsif (x=294) then return to_sfixed(2.142857, 11, 10);
+    elsif (x=295) then return to_sfixed(2.135593, 11, 10);
+    elsif (x=296) then return to_sfixed(2.128378, 11, 10);
+    elsif (x=297) then return to_sfixed(2.121212, 11, 10);
+    elsif (x=298) then return to_sfixed(2.114094, 11, 10);
+    elsif (x=299) then return to_sfixed(2.107023, 11, 10);
+    elsif (x=300) then return to_sfixed(2.100000, 11, 10);
+    elsif (x=301) then return to_sfixed(2.093023, 11, 10);
+    elsif (x=302) then return to_sfixed(2.086093, 11, 10);
+    elsif (x=303) then return to_sfixed(2.079208, 11, 10);
+    elsif (x=304) then return to_sfixed(2.072368, 11, 10);
+    elsif (x=305) then return to_sfixed(2.065574, 11, 10);
+    elsif (x=306) then return to_sfixed(2.058824, 11, 10);
+    elsif (x=307) then return to_sfixed(2.052117, 11, 10);
+    elsif (x=308) then return to_sfixed(2.045455, 11, 10);
+    elsif (x=309) then return to_sfixed(2.038835, 11, 10);
+    elsif (x=310) then return to_sfixed(2.032258, 11, 10);
+    elsif (x=311) then return to_sfixed(2.025723, 11, 10);
+    elsif (x=312) then return to_sfixed(2.019231, 11, 10);
+    elsif (x=313) then return to_sfixed(2.012780, 11, 10);
+    elsif (x=314) then return to_sfixed(2.006369, 11, 10);
+    elsif (x=315) then return to_sfixed(2.000000, 11, 10);
+    elsif (x=316) then return to_sfixed(1.993671, 11, 10);
+    elsif (x=317) then return to_sfixed(1.987382, 11, 10);
+    elsif (x=318) then return to_sfixed(1.981132, 11, 10);
+    elsif (x=319) then return to_sfixed(1.974922, 11, 10);
+    elsif (x=320) then return to_sfixed(1.968750, 11, 10);
+    elsif (x=321) then return to_sfixed(1.962617, 11, 10);
+    elsif (x=322) then return to_sfixed(1.956522, 11, 10);
+    elsif (x=323) then return to_sfixed(1.950464, 11, 10);
+    elsif (x=324) then return to_sfixed(1.944444, 11, 10);
+    elsif (x=325) then return to_sfixed(1.938462, 11, 10);
+    elsif (x=326) then return to_sfixed(1.932515, 11, 10);
+    elsif (x=327) then return to_sfixed(1.926606, 11, 10);
+    elsif (x=328) then return to_sfixed(1.920732, 11, 10);
+    elsif (x=329) then return to_sfixed(1.914894, 11, 10);
+    elsif (x=330) then return to_sfixed(1.909091, 11, 10);
+    elsif (x=331) then return to_sfixed(1.903323, 11, 10);
+    elsif (x=332) then return to_sfixed(1.897590, 11, 10);
+    elsif (x=333) then return to_sfixed(1.891892, 11, 10);
+    elsif (x=334) then return to_sfixed(1.886228, 11, 10);
+    elsif (x=335) then return to_sfixed(1.880597, 11, 10);
+    elsif (x=336) then return to_sfixed(1.875000, 11, 10);
+    elsif (x=337) then return to_sfixed(1.869436, 11, 10);
+    elsif (x=338) then return to_sfixed(1.863905, 11, 10);
+    elsif (x=339) then return to_sfixed(1.858407, 11, 10);
+    elsif (x=340) then return to_sfixed(1.852941, 11, 10);
+    elsif (x=341) then return to_sfixed(1.847507, 11, 10);
+    elsif (x=342) then return to_sfixed(1.842105, 11, 10);
+    elsif (x=343) then return to_sfixed(1.836735, 11, 10);
+    elsif (x=344) then return to_sfixed(1.831395, 11, 10);
+    elsif (x=345) then return to_sfixed(1.826087, 11, 10);
+    elsif (x=346) then return to_sfixed(1.820809, 11, 10);
+    elsif (x=347) then return to_sfixed(1.815562, 11, 10);
+    elsif (x=348) then return to_sfixed(1.810345, 11, 10);
+    elsif (x=349) then return to_sfixed(1.805158, 11, 10);
+    elsif (x=350) then return to_sfixed(1.800000, 11, 10);
+    elsif (x=351) then return to_sfixed(1.794872, 11, 10);
+    elsif (x=352) then return to_sfixed(1.789773, 11, 10);
+    elsif (x=353) then return to_sfixed(1.784703, 11, 10);
+    elsif (x=354) then return to_sfixed(1.779661, 11, 10);
+    elsif (x=355) then return to_sfixed(1.774648, 11, 10);
+    elsif (x=356) then return to_sfixed(1.769663, 11, 10);
+    elsif (x=357) then return to_sfixed(1.764706, 11, 10);
+    elsif (x=358) then return to_sfixed(1.759777, 11, 10);
+    elsif (x=359) then return to_sfixed(1.754875, 11, 10);
+    elsif (x=360) then return to_sfixed(1.750000, 11, 10);
+    elsif (x=361) then return to_sfixed(1.745152, 11, 10);
+    elsif (x=362) then return to_sfixed(1.740331, 11, 10);
+    elsif (x=363) then return to_sfixed(1.735537, 11, 10);
+    elsif (x=364) then return to_sfixed(1.730769, 11, 10);
+    elsif (x=365) then return to_sfixed(1.726027, 11, 10);
+    elsif (x=366) then return to_sfixed(1.721311, 11, 10);
+    elsif (x=367) then return to_sfixed(1.716621, 11, 10);
+    elsif (x=368) then return to_sfixed(1.711957, 11, 10);
+    elsif (x=369) then return to_sfixed(1.707317, 11, 10);
+    elsif (x=370) then return to_sfixed(1.702703, 11, 10);
+    elsif (x=371) then return to_sfixed(1.698113, 11, 10);
+    elsif (x=372) then return to_sfixed(1.693548, 11, 10);
+    elsif (x=373) then return to_sfixed(1.689008, 11, 10);
+    elsif (x=374) then return to_sfixed(1.684492, 11, 10);
+    elsif (x=375) then return to_sfixed(1.680000, 11, 10);
+    elsif (x=376) then return to_sfixed(1.675532, 11, 10);
+    elsif (x=377) then return to_sfixed(1.671088, 11, 10);
+    elsif (x=378) then return to_sfixed(1.666667, 11, 10);
+    elsif (x=379) then return to_sfixed(1.662269, 11, 10);
+    elsif (x=380) then return to_sfixed(1.657895, 11, 10);
+    elsif (x=381) then return to_sfixed(1.653543, 11, 10);
+    elsif (x=382) then return to_sfixed(1.649215, 11, 10);
+    elsif (x=383) then return to_sfixed(1.644909, 11, 10);
+    elsif (x=384) then return to_sfixed(1.640625, 11, 10);
+    elsif (x=385) then return to_sfixed(1.636364, 11, 10);
+    elsif (x=386) then return to_sfixed(1.632124, 11, 10);
+    elsif (x=387) then return to_sfixed(1.627907, 11, 10);
+    elsif (x=388) then return to_sfixed(1.623711, 11, 10);
+    elsif (x=389) then return to_sfixed(1.619537, 11, 10);
+    elsif (x=390) then return to_sfixed(1.615385, 11, 10);
+    elsif (x=391) then return to_sfixed(1.611253, 11, 10);
+    elsif (x=392) then return to_sfixed(1.607143, 11, 10);
+    elsif (x=393) then return to_sfixed(1.603053, 11, 10);
+    elsif (x=394) then return to_sfixed(1.598985, 11, 10);
+    elsif (x=395) then return to_sfixed(1.594937, 11, 10);
+    elsif (x=396) then return to_sfixed(1.590909, 11, 10);
+    elsif (x=397) then return to_sfixed(1.586902, 11, 10);
+    elsif (x=398) then return to_sfixed(1.582915, 11, 10);
+    elsif (x=399) then return to_sfixed(1.578947, 11, 10);
+    elsif (x=400) then return to_sfixed(1.575000, 11, 10);
+    elsif (x=401) then return to_sfixed(1.571072, 11, 10);
+    elsif (x=402) then return to_sfixed(1.567164, 11, 10);
+    elsif (x=403) then return to_sfixed(1.563275, 11, 10);
+    elsif (x=404) then return to_sfixed(1.559406, 11, 10);
+    elsif (x=405) then return to_sfixed(1.555556, 11, 10);
+    elsif (x=406) then return to_sfixed(1.551724, 11, 10);
+    elsif (x=407) then return to_sfixed(1.547912, 11, 10);
+    elsif (x=408) then return to_sfixed(1.544118, 11, 10);
+    elsif (x=409) then return to_sfixed(1.540342, 11, 10);
+    elsif (x=410) then return to_sfixed(1.536585, 11, 10);
+    elsif (x=411) then return to_sfixed(1.532847, 11, 10);
+    elsif (x=412) then return to_sfixed(1.529126, 11, 10);
+    elsif (x=413) then return to_sfixed(1.525424, 11, 10);
+    elsif (x=414) then return to_sfixed(1.521739, 11, 10);
+    elsif (x=415) then return to_sfixed(1.518072, 11, 10);
+    elsif (x=416) then return to_sfixed(1.514423, 11, 10);
+    elsif (x=417) then return to_sfixed(1.510791, 11, 10);
+    elsif (x=418) then return to_sfixed(1.507177, 11, 10);
+    elsif (x=419) then return to_sfixed(1.503580, 11, 10);
+    elsif (x=420) then return to_sfixed(1.500000, 11, 10);
+    elsif (x=421) then return to_sfixed(1.496437, 11, 10);
+    elsif (x=422) then return to_sfixed(1.492891, 11, 10);
+    elsif (x=423) then return to_sfixed(1.489362, 11, 10);
+    elsif (x=424) then return to_sfixed(1.485849, 11, 10);
+    elsif (x=425) then return to_sfixed(1.482353, 11, 10);
+    elsif (x=426) then return to_sfixed(1.478873, 11, 10);
+    elsif (x=427) then return to_sfixed(1.475410, 11, 10);
+    elsif (x=428) then return to_sfixed(1.471963, 11, 10);
+    elsif (x=429) then return to_sfixed(1.468531, 11, 10);
+    elsif (x=430) then return to_sfixed(1.465116, 11, 10);
+    elsif (x=431) then return to_sfixed(1.461717, 11, 10);
+    elsif (x=432) then return to_sfixed(1.458333, 11, 10);
+    elsif (x=433) then return to_sfixed(1.454965, 11, 10);
+    elsif (x=434) then return to_sfixed(1.451613, 11, 10);
+    elsif (x=435) then return to_sfixed(1.448276, 11, 10);
+    elsif (x=436) then return to_sfixed(1.444954, 11, 10);
+    elsif (x=437) then return to_sfixed(1.441648, 11, 10);
+    elsif (x=438) then return to_sfixed(1.438356, 11, 10);
+    elsif (x=439) then return to_sfixed(1.435080, 11, 10);
+    elsif (x=440) then return to_sfixed(1.431818, 11, 10);
+    elsif (x=441) then return to_sfixed(1.428571, 11, 10);
+    elsif (x=442) then return to_sfixed(1.425339, 11, 10);
+    elsif (x=443) then return to_sfixed(1.422122, 11, 10);
+    elsif (x=444) then return to_sfixed(1.418919, 11, 10);
+    elsif (x=445) then return to_sfixed(1.415730, 11, 10);
+    elsif (x=446) then return to_sfixed(1.412556, 11, 10);
+    elsif (x=447) then return to_sfixed(1.409396, 11, 10);
+    elsif (x=448) then return to_sfixed(1.406250, 11, 10);
+    elsif (x=449) then return to_sfixed(1.403118, 11, 10);
+    elsif (x=450) then return to_sfixed(1.400000, 11, 10);
+    elsif (x=451) then return to_sfixed(1.396896, 11, 10);
+    elsif (x=452) then return to_sfixed(1.393805, 11, 10);
+    elsif (x=453) then return to_sfixed(1.390728, 11, 10);
+    elsif (x=454) then return to_sfixed(1.387665, 11, 10);
+    elsif (x=455) then return to_sfixed(1.384615, 11, 10);
+    elsif (x=456) then return to_sfixed(1.381579, 11, 10);
+    elsif (x=457) then return to_sfixed(1.378556, 11, 10);
+    elsif (x=458) then return to_sfixed(1.375546, 11, 10);
+    elsif (x=459) then return to_sfixed(1.372549, 11, 10);
+    elsif (x=460) then return to_sfixed(1.369565, 11, 10);
+    elsif (x=461) then return to_sfixed(1.366594, 11, 10);
+    elsif (x=462) then return to_sfixed(1.363636, 11, 10);
+    elsif (x=463) then return to_sfixed(1.360691, 11, 10);
+    elsif (x=464) then return to_sfixed(1.357759, 11, 10);
+    elsif (x=465) then return to_sfixed(1.354839, 11, 10);
+    elsif (x=466) then return to_sfixed(1.351931, 11, 10);
+    elsif (x=467) then return to_sfixed(1.349036, 11, 10);
+    elsif (x=468) then return to_sfixed(1.346154, 11, 10);
+    elsif (x=469) then return to_sfixed(1.343284, 11, 10);
+    elsif (x=470) then return to_sfixed(1.340426, 11, 10);
+    elsif (x=471) then return to_sfixed(1.337580, 11, 10);
+    elsif (x=472) then return to_sfixed(1.334746, 11, 10);
+    elsif (x=473) then return to_sfixed(1.331924, 11, 10);
+    elsif (x=474) then return to_sfixed(1.329114, 11, 10);
+    elsif (x=475) then return to_sfixed(1.326316, 11, 10);
+    elsif (x=476) then return to_sfixed(1.323529, 11, 10);
+    elsif (x=477) then return to_sfixed(1.320755, 11, 10);
+    elsif (x=478) then return to_sfixed(1.317992, 11, 10);
+    elsif (x=479) then return to_sfixed(1.315240, 11, 10);
+    elsif (x=480) then return to_sfixed(1.312500, 11, 10);
+    elsif (x=481) then return to_sfixed(1.309771, 11, 10);
+    elsif (x=482) then return to_sfixed(1.307054, 11, 10);
+    elsif (x=483) then return to_sfixed(1.304348, 11, 10);
+    elsif (x=484) then return to_sfixed(1.301653, 11, 10);
+    elsif (x=485) then return to_sfixed(1.298969, 11, 10);
+    elsif (x=486) then return to_sfixed(1.296296, 11, 10);
+    elsif (x=487) then return to_sfixed(1.293634, 11, 10);
+    elsif (x=488) then return to_sfixed(1.290984, 11, 10);
+    elsif (x=489) then return to_sfixed(1.288344, 11, 10);
+    elsif (x=490) then return to_sfixed(1.285714, 11, 10);
+    elsif (x=491) then return to_sfixed(1.283096, 11, 10);
+    elsif (x=492) then return to_sfixed(1.280488, 11, 10);
+    elsif (x=493) then return to_sfixed(1.277890, 11, 10);
+    elsif (x=494) then return to_sfixed(1.275304, 11, 10);
+    elsif (x=495) then return to_sfixed(1.272727, 11, 10);
+    elsif (x=496) then return to_sfixed(1.270161, 11, 10);
+    elsif (x=497) then return to_sfixed(1.267606, 11, 10);
+    elsif (x=498) then return to_sfixed(1.265060, 11, 10);
+    elsif (x=499) then return to_sfixed(1.262525, 11, 10);
+    elsif (x=500) then return to_sfixed(1.260000, 11, 10);
+    elsif (x=501) then return to_sfixed(1.257485, 11, 10);
+    elsif (x=502) then return to_sfixed(1.254980, 11, 10);
+    elsif (x=503) then return to_sfixed(1.252485, 11, 10);
+    elsif (x=504) then return to_sfixed(1.250000, 11, 10);
+    elsif (x=505) then return to_sfixed(1.247525, 11, 10);
+    elsif (x=506) then return to_sfixed(1.245059, 11, 10);
+    elsif (x=507) then return to_sfixed(1.242604, 11, 10);
+    elsif (x=508) then return to_sfixed(1.240157, 11, 10);
+    elsif (x=509) then return to_sfixed(1.237721, 11, 10);
+    elsif (x=510) then return to_sfixed(1.235294, 11, 10);
+    elsif (x=511) then return to_sfixed(1.232877, 11, 10);
+    elsif (x=512) then return to_sfixed(1.230469, 11, 10);
+    elsif (x=513) then return to_sfixed(1.228070, 11, 10);
+    elsif (x=514) then return to_sfixed(1.225681, 11, 10);
+    elsif (x=515) then return to_sfixed(1.223301, 11, 10);
+    elsif (x=516) then return to_sfixed(1.220930, 11, 10);
+    elsif (x=517) then return to_sfixed(1.218569, 11, 10);
+    elsif (x=518) then return to_sfixed(1.216216, 11, 10);
+    elsif (x=519) then return to_sfixed(1.213873, 11, 10);
+    elsif (x=520) then return to_sfixed(1.211538, 11, 10);
+    elsif (x=521) then return to_sfixed(1.209213, 11, 10);
+    elsif (x=522) then return to_sfixed(1.206897, 11, 10);
+    elsif (x=523) then return to_sfixed(1.204589, 11, 10);
+    elsif (x=524) then return to_sfixed(1.202290, 11, 10);
+    elsif (x=525) then return to_sfixed(1.200000, 11, 10);
+    elsif (x=526) then return to_sfixed(1.197719, 11, 10);
+    elsif (x=527) then return to_sfixed(1.195446, 11, 10);
+    elsif (x=528) then return to_sfixed(1.193182, 11, 10);
+    elsif (x=529) then return to_sfixed(1.190926, 11, 10);
+    elsif (x=530) then return to_sfixed(1.188679, 11, 10);
+    elsif (x=531) then return to_sfixed(1.186441, 11, 10);
+    elsif (x=532) then return to_sfixed(1.184211, 11, 10);
+    elsif (x=533) then return to_sfixed(1.181989, 11, 10);
+    elsif (x=534) then return to_sfixed(1.179775, 11, 10);
+    elsif (x=535) then return to_sfixed(1.177570, 11, 10);
+    elsif (x=536) then return to_sfixed(1.175373, 11, 10);
+    elsif (x=537) then return to_sfixed(1.173184, 11, 10);
+    elsif (x=538) then return to_sfixed(1.171004, 11, 10);
+    elsif (x=539) then return to_sfixed(1.168831, 11, 10);
+    elsif (x=540) then return to_sfixed(1.166667, 11, 10);
+    elsif (x=541) then return to_sfixed(1.164510, 11, 10);
+    elsif (x=542) then return to_sfixed(1.162362, 11, 10);
+    elsif (x=543) then return to_sfixed(1.160221, 11, 10);
+    elsif (x=544) then return to_sfixed(1.158088, 11, 10);
+    elsif (x=545) then return to_sfixed(1.155963, 11, 10);
+    elsif (x=546) then return to_sfixed(1.153846, 11, 10);
+    elsif (x=547) then return to_sfixed(1.151737, 11, 10);
+    elsif (x=548) then return to_sfixed(1.149635, 11, 10);
+    elsif (x=549) then return to_sfixed(1.147541, 11, 10);
+    elsif (x=550) then return to_sfixed(1.145455, 11, 10);
+    elsif (x=551) then return to_sfixed(1.143376, 11, 10);
+    elsif (x=552) then return to_sfixed(1.141304, 11, 10);
+    elsif (x=553) then return to_sfixed(1.139241, 11, 10);
+    elsif (x=554) then return to_sfixed(1.137184, 11, 10);
+    elsif (x=555) then return to_sfixed(1.135135, 11, 10);
+    elsif (x=556) then return to_sfixed(1.133094, 11, 10);
+    elsif (x=557) then return to_sfixed(1.131059, 11, 10);
+    elsif (x=558) then return to_sfixed(1.129032, 11, 10);
+    elsif (x=559) then return to_sfixed(1.127013, 11, 10);
+    elsif (x=560) then return to_sfixed(1.125000, 11, 10);
+    elsif (x=561) then return to_sfixed(1.122995, 11, 10);
+    elsif (x=562) then return to_sfixed(1.120996, 11, 10);
+    elsif (x=563) then return to_sfixed(1.119005, 11, 10);
+    elsif (x=564) then return to_sfixed(1.117021, 11, 10);
+    elsif (x=565) then return to_sfixed(1.115044, 11, 10);
+    elsif (x=566) then return to_sfixed(1.113074, 11, 10);
+    elsif (x=567) then return to_sfixed(1.111111, 11, 10);
+    elsif (x=568) then return to_sfixed(1.109155, 11, 10);
+    elsif (x=569) then return to_sfixed(1.107206, 11, 10);
+    elsif (x=570) then return to_sfixed(1.105263, 11, 10);
+    elsif (x=571) then return to_sfixed(1.103327, 11, 10);
+    elsif (x=572) then return to_sfixed(1.101399, 11, 10);
+    elsif (x=573) then return to_sfixed(1.099476, 11, 10);
+    elsif (x=574) then return to_sfixed(1.097561, 11, 10);
+    elsif (x=575) then return to_sfixed(1.095652, 11, 10);
+    elsif (x=576) then return to_sfixed(1.093750, 11, 10);
+    elsif (x=577) then return to_sfixed(1.091854, 11, 10);
+    elsif (x=578) then return to_sfixed(1.089965, 11, 10);
+    elsif (x=579) then return to_sfixed(1.088083, 11, 10);
+    elsif (x=580) then return to_sfixed(1.086207, 11, 10);
+    elsif (x=581) then return to_sfixed(1.084337, 11, 10);
+    elsif (x=582) then return to_sfixed(1.082474, 11, 10);
+    elsif (x=583) then return to_sfixed(1.080617, 11, 10);
+    elsif (x=584) then return to_sfixed(1.078767, 11, 10);
+    elsif (x=585) then return to_sfixed(1.076923, 11, 10);
+    elsif (x=586) then return to_sfixed(1.075085, 11, 10);
+    elsif (x=587) then return to_sfixed(1.073254, 11, 10);
+    elsif (x=588) then return to_sfixed(1.071429, 11, 10);
+    elsif (x=589) then return to_sfixed(1.069610, 11, 10);
+    elsif (x=590) then return to_sfixed(1.067797, 11, 10);
+    elsif (x=591) then return to_sfixed(1.065990, 11, 10);
+    elsif (x=592) then return to_sfixed(1.064189, 11, 10);
+    elsif (x=593) then return to_sfixed(1.062395, 11, 10);
+    elsif (x=594) then return to_sfixed(1.060606, 11, 10);
+    elsif (x=595) then return to_sfixed(1.058824, 11, 10);
+    elsif (x=596) then return to_sfixed(1.057047, 11, 10);
+    elsif (x=597) then return to_sfixed(1.055276, 11, 10);
+    elsif (x=598) then return to_sfixed(1.053512, 11, 10);
+    elsif (x=599) then return to_sfixed(1.051753, 11, 10);
+    elsif (x=600) then return to_sfixed(1.050000, 11, 10);
+    elsif (x=601) then return to_sfixed(1.048253, 11, 10);
+    elsif (x=602) then return to_sfixed(1.046512, 11, 10);
+    elsif (x=603) then return to_sfixed(1.044776, 11, 10);
+    elsif (x=604) then return to_sfixed(1.043046, 11, 10);
+    elsif (x=605) then return to_sfixed(1.041322, 11, 10);
+    elsif (x=606) then return to_sfixed(1.039604, 11, 10);
+    elsif (x=607) then return to_sfixed(1.037891, 11, 10);
+    elsif (x=608) then return to_sfixed(1.036184, 11, 10);
+    elsif (x=609) then return to_sfixed(1.034483, 11, 10);
+    elsif (x=610) then return to_sfixed(1.032787, 11, 10);
+    elsif (x=611) then return to_sfixed(1.031097, 11, 10);
+    elsif (x=612) then return to_sfixed(1.029412, 11, 10);
+    elsif (x=613) then return to_sfixed(1.027732, 11, 10);
+    elsif (x=614) then return to_sfixed(1.026059, 11, 10);
+    elsif (x=615) then return to_sfixed(1.024390, 11, 10);
+    elsif (x=616) then return to_sfixed(1.022727, 11, 10);
+    elsif (x=617) then return to_sfixed(1.021070, 11, 10);
+    elsif (x=618) then return to_sfixed(1.019417, 11, 10);
+    elsif (x=619) then return to_sfixed(1.017771, 11, 10);
+    elsif (x=620) then return to_sfixed(1.016129, 11, 10);
+    elsif (x=621) then return to_sfixed(1.014493, 11, 10);
+    elsif (x=622) then return to_sfixed(1.012862, 11, 10);
+    elsif (x=623) then return to_sfixed(1.011236, 11, 10);
+    elsif (x=624) then return to_sfixed(1.009615, 11, 10);
+    elsif (x=625) then return to_sfixed(1.008000, 11, 10);
+    elsif (x=626) then return to_sfixed(1.006390, 11, 10);
+    elsif (x=627) then return to_sfixed(1.004785, 11, 10);
+    elsif (x=628) then return to_sfixed(1.003185, 11, 10);
+    elsif (x=629) then return to_sfixed(1.001590, 11, 10);
+    elsif (x=630) then return to_sfixed(1.000000, 11, 10);
+    end if;
+  end;
+
+#+end_example
+
+** Post-Fit Coordinate Transformation
+Transform from local to global coordinates
+** Output Data Format
+
+The currently proposed output data format is:
+| Field   | Bits | Notes                                                       |
+|---------+------+-------------------------------------------------------------|
+| Eta     |    4 | 16 eta positions (stubs can't cross more than 2 partitions) |
+| Phi     |   10 | 768 phi positions ("half strip" resolution)                 |
+| Bend    |    9 | 512 different bend angles                                   |
+| Quality |    4 | 16 different quality levels                                 |
+|---------+------+-------------------------------------------------------------|
+| Total   |   27 | Bits per Segment                                            |
+
+*** Eta
+*** Phi
+Phi is encoded as a number from 0-768
+
+The resolution of the trigger primitive is in the OR of two adjacent strips
+(0-191) so this is a factor of 4 increase in nominal resolution.
+
+*** Bend
+The bend angle is encoded as a fixed point number
+  + 4 bits integer bend (units of strips/layer)
+  + 5 bits fractional bend
+*** Quality
+
+* Firmware Implementation
+** Configurable Options
+*** Compile Time Options
+**** Pattern definitions
+**** Multiplexing factors
+**** Fitting resolution
+**** Number of output segments
+*** Runtime Options
+**** Layer threshold
+**** Pattern enables
+** Firmware
+*** pat_unit.vhd
+*** pat_unit_mux.vhd
+*** partition.vhd
+*** segment_selector.vhd
+*** fit.vhd
+* Testbench
+* Presentations:
+https://docs.google.com/presentation/d/10K-16xrXGUYcb-aZzMEEbbvJrTAYdaBR/edit#slide=id.ga773dc3468_0_22
+* Local Variables :noexport:
+# eval: (make-variable-buffer-local 'after-save-hook)
+# Local Variables:
+# eval: (add-hook 'after-save-hook #'org-html-export-to-html nil 'local)
+# eval: (add-hook 'after-save-hook (lambda () (start-process "copy-to-ohm" nil "rsync" "-av" (format "%s.html" (file-name-base)) "ohm:~/public_html/notes/"))) nil 'local)
+# eval: (add-hook 'after-save-hook (lambda () (mapcar (lambda (file) (start-process "copy-to-ohm" nil "rsync" "-av" file "ohm:~/public_html/notes/")) (file-expand-wildcards "*.svg" )) nil 'local))
+# End:
