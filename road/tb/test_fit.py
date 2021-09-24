@@ -153,8 +153,9 @@ async def fit_tb(dut):
         intercept = dut.intercept_o.value.signed_integer / \
             (2**intercept_fracb-1)
 
-        max_error_strips_per_layer = 0.5
+        max_error_strips_per_layer = 0.2
         max_error_strips = 1.00
+        max_error_intercept = 0.5
 
         # slope = round(slope, 1)
         # intercept = round(intercept, 1)
@@ -171,8 +172,11 @@ async def fit_tb(dut):
 
         # print(this_data)
 
+        # print_slope(slope, intercept, m, b)
+
+        assert (abs(b-intercept) < max_error_intercept), print_slope(slope, intercept, m, b)
         assert (abs(m-slope) < max_error_strips_per_layer), print_slope(slope, intercept, m, b)
-        assert (abs(key_s - key_strip) < max_error_strips), print_slope(slope, intercept, m, b)
+        #assert (abs(key_s - key_strip) < max_error_strips), print_slope(slope, intercept, m, b)
         #assert (abs(b-intercept) < max_error_strips), print_slope(slope, intercept, m, b)
 
         itests += 1

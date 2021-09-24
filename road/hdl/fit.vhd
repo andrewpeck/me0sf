@@ -26,7 +26,7 @@ entity fit is
     --
     -- max slope is ~40 strips / 6 layers = ~7 so give it 4 bits
     M_INT_BITS  : natural := 4;
-    M_FRAC_BITS : natural := 5;
+    M_FRAC_BITS : natural := 8;
 
     -- intercept
     --
@@ -36,7 +36,7 @@ entity fit is
     -- it is too large right now because the fit is not being correctly
     -- constrained to the center
     --
-    B_INT_BITS  : natural := 5;
+    B_INT_BITS  : natural := 6;
     B_FRAC_BITS : natural := 6
 
     );
@@ -135,7 +135,7 @@ architecture behavioral of fit is
   -- initialize to 1 to prevent a divide by zero in simulation
   --
   signal square_sum : integer range 0 to 630 := 1;
-  signal square_sum_reciprocal : sfixed (1 downto -12);
+  signal square_sum_reciprocal : sfixed (1 downto -13);
 
   --------------------------------------------------------------------------------
   -- s5
@@ -152,14 +152,14 @@ architecture behavioral of fit is
   --------------------------------------------------------------------------------
 
   signal slope_times_x : sfixed
-    (M_INT_BITS + 11 -1 downto - M_FRAC_BITS+1) := (others => '0');
+    (4+M_INT_BITS-1 downto -M_FRAC_BITS-1) := (others => '0');
 
   --------------------------------------------------------------------------------
   -- s7
   --------------------------------------------------------------------------------
 
   signal y_minus_mb : sfixed
-    (B_INT_BITS+3-1 downto - M_FRAC_BITS+1) := (others => '0');
+    (3+B_INT_BITS-1 downto -M_FRAC_BITS-1) := (others => '0');
 
   --------------------------------------------------------------------------------
   -- s8
@@ -333,7 +333,8 @@ begin
       --                    square(3), square(4), square(5), valid(3));
       square_sum_reciprocal <= reciprocal (
         sum6(square(0), square(1), square(2),
-             square(3), square(4), square(5), valid(3)));
+             square(3), square(4), square(5), valid(3)),
+        13);
 
 
       --------------------------------------------------------------------------------
