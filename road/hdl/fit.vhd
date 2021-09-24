@@ -92,7 +92,7 @@ architecture behavioral of fit is
 
   -- n * x
   type n_x_array_t is array (integer range 0 to N_LAYERS-1) of integer range 0 to 5*6; -- ly=5 * cnt=6
-  type n_y_array_t is array (integer range 0 to N_LAYERS-1) of integer range -32*6+1 to 32*6-1;
+  type n_y_array_t is array (integer range 0 to N_LAYERS-1) of integer range -255 to 255;
   signal n_x : n_x_array_t := (others => 1);
   signal n_y : n_y_array_t := (others => 0);
 
@@ -101,7 +101,7 @@ architecture behavioral of fit is
   --------------------------------------------------------------------------------
 
   type x_diff_array_t is array (integer range 0 to N_LAYERS-1) of integer range -15 to 15;
-  type y_diff_array_t is array (integer range 0 to N_LAYERS-1) of integer range -32*6+1 to 32*6-1;
+  type y_diff_array_t is array (integer range 0 to N_LAYERS-1) of integer range -127 to 127;
   signal x_diff : x_diff_array_t := (others => 1);  -- (x - mean(x))
   signal y_diff : y_diff_array_t := (others => 0);  -- (y - mean(y))
 
@@ -172,12 +172,7 @@ architecture behavioral of fit is
   --------------------------------------------------------------------------------
 
   -- sum 6 signed numbers with an enable for each number
-  function sum6 (p0    : integer;
-                 p1    : integer;
-                 p2    : integer;
-                 p3    : integer;
-                 p4    : integer;
-                 p5    : integer;
+  function sum6 (p0, p1, p2, p3, p4, p5    : integer;
                  en    : std_logic_vector (5 downto 0))
     return integer is
     variable result : integer;
@@ -328,17 +323,20 @@ begin
       --------------------------------------------------------------------------------
 
       -- Σ (n*xi - Σx)*(n*yi - Σy)
-      product_sum <= sum6(product(0), product(1), product(2), product(3), product(4), product(5), valid(3));
+      product_sum <= sum6(product(0), product(1), product(2),
+                          product(3), product(4), product(5), valid(3));
 
       -- Σ (n*xi - Σx)^2
-      square_sum <= sum6(square(0), square(1), square(2), square(3), square(4), square(5), valid(3));
+      square_sum <= sum6(square(0), square(1), square(2),
+                         square(3), square(4), square(5), valid(3));
 
 
       --------------------------------------------------------------------------------
       -- s5 slope= Σ (n*xi - Σx)*(n*yi - Σy) / Σ (n*xi - Σx)^2
       --------------------------------------------------------------------------------
 
-      slope <= resize (to_sfixed(product_sum, 14) * reciprocal(square_sum), slope);
+      -- FIXME: pull the number of bits from the integer (somehow)
+      slope <= resize (to_sfixed(product_sum, 13) * reciprocal(square_sum), slope);
       -- slope <= resize (to_sfixed(product_sum, product_sum'length) /
       --                  to_sfixed(square_sum, square_sum'length), slope);
 
@@ -346,14 +344,16 @@ begin
       -- s6 slope*Σx
       --------------------------------------------------------------------------------
 
-      slope_times_x <= resize(slope * to_sfixed(x_sum(5), 11), slope_times_x);
+      -- FIXME: pull the number of bits from the integer (somehow)
+      slope_times_x <= resize(slope * to_sfixed(x_sum(5), 5), slope_times_x);
       slope_s6      <= slope;
 
       --------------------------------------------------------------------------------
       -- s7 Σy-mb = Σy - slope*Σx
       --------------------------------------------------------------------------------
 
-      y_minus_mb <= resize((to_sfixed(y_sum(6), 14) - slope_times_x), y_minus_mb);
+      -- 13 = number of bits needed
+      y_minus_mb <= resize((to_sfixed(y_sum(6), 7) - slope_times_x), y_minus_mb);
       slope_s7   <= slope_s6;
 
       --------------------------------------------------------------------------------
