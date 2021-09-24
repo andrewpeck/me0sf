@@ -376,7 +376,7 @@ begin
       -- s8 b = (Σy - slope*Σx) / n
       --------------------------------------------------------------------------------
 
-      intercept <= resize(y_minus_mb / to_sfixed(cnt(7), cnt(7)'length), intercept);
+      intercept <= resize(y_minus_mb * reciprocal6(cnt(7)), intercept);
       slope_s8  <= slope_s7;
 
     end if;

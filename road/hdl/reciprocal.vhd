@@ -3,13 +3,13 @@ use ieee.fixed_pkg.all;
 
 package reciprocal_pkg is
   function reciprocal (x : integer) return sfixed;
+  function reciprocal6 (x : integer) return sfixed;
 end package reciprocal_pkg;
 
 package body reciprocal_pkg is
   --------------------------------------------------------------------------------
   -- functions
   --------------------------------------------------------------------------------
-
 
   function reciprocal (x : integer) return sfixed is
   begin
@@ -646,6 +646,20 @@ package body reciprocal_pkg is
     elsif (x=628) then return to_sfixed(0.001592356688, 11, -12);
     elsif (x=629) then return to_sfixed(0.001589825119, 11, -12);
     elsif (x=630) then return to_sfixed(0.001587301587, 11, -12);
+    end if;
+  end;
+
+  function reciprocal6 (x : integer) return sfixed is
+  begin
+    if (x<1 or x> 6) then
+      assert false report "invalid reciprocal6 lookup x=" & integer'image(x) severity error;
+      return to_sfixed(0, 11, -12);
+    elsif (x=1) then return to_sfixed(1.000000000000, 11, -12);
+    elsif (x=2) then return to_sfixed(0.500000000000, 11, -12);
+    elsif (x=3) then return to_sfixed(0.333333333333, 11, -12);
+    elsif (x=4) then return to_sfixed(0.250000000000, 11, -12);
+    elsif (x=5) then return to_sfixed(0.200000000000, 11, -12);
+    elsif (x=6) then return to_sfixed(0.166666666667, 11, -12);
     end if;
   end;
 
