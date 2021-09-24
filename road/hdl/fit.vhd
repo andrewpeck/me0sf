@@ -39,20 +39,22 @@ entity fit is
     B_FRAC_BITS : natural := 6
 
     );
-  port(
+  port
 
-    clock   : in std_logic;
-    ly0     : in signed (STRIP_BITS-1 downto 0)        := (others => '0');
-    ly1     : in signed (STRIP_BITS-1 downto 0)        := (others => '0');
-    ly2     : in signed (STRIP_BITS-1 downto 0)        := (others => '0');
-    ly3     : in signed (STRIP_BITS-1 downto 0)        := (others => '0');
-    ly4     : in signed (STRIP_BITS-1 downto 0)        := (others => '0');
-    ly5     : in signed (STRIP_BITS-1 downto 0)        := (others => '0');
-    valid_i : in std_logic_vector(N_LAYERS-1 downto 0) := (others => '1');
+    (
 
-    intercept_o : out sfixed (B_INT_BITS-1 downto -B_FRAC_BITS);
-    slope_o     : out sfixed (M_INT_BITS-1 downto -M_FRAC_BITS)
-    );
+      clock   : in std_logic;
+      ly0     : in signed (STRIP_BITS-1 downto 0)        := (others => '0');
+      ly1     : in signed (STRIP_BITS-1 downto 0)        := (others => '0');
+      ly2     : in signed (STRIP_BITS-1 downto 0)        := (others => '0');
+      ly3     : in signed (STRIP_BITS-1 downto 0)        := (others => '0');
+      ly4     : in signed (STRIP_BITS-1 downto 0)        := (others => '0');
+      ly5     : in signed (STRIP_BITS-1 downto 0)        := (others => '0');
+      valid_i : in std_logic_vector(N_LAYERS-1 downto 0) := (others => '1');
+
+      intercept_o : out sfixed (B_INT_BITS-1 downto -B_FRAC_BITS);
+      slope_o     : out sfixed (M_INT_BITS-1 downto -M_FRAC_BITS)
+      );
 end fit;
 
 architecture behavioral of fit is
@@ -341,7 +343,7 @@ begin
              valid(3), 16), square_sum'length);
 
       --------------------------------------------------------------------------------
-      -- s5
+      -- s5 slope= Σ (n*xi - Σx)*(n*yi - Σy) / Σ (n*xi - Σx)^2
       --------------------------------------------------------------------------------
 
       slope <= resize (
@@ -349,21 +351,21 @@ begin
         to_sfixed(square_sum, square_sum'length), slope);
 
       --------------------------------------------------------------------------------
-      -- s6 slope*sum(x)
+      -- s6 slope*Σx
       --------------------------------------------------------------------------------
 
       slope_times_x <= resize(slope * to_sfixed(x_sum(5), x_sum(5)'length), slope_times_x);
       slope_s6      <= slope;
 
       --------------------------------------------------------------------------------
-      -- s7 y = (sum(y) - slope*sum(x))
+      -- s7 Σy-mb = Σy - slope*Σx
       --------------------------------------------------------------------------------
 
-      y_minus_mb <= resize((to_sfixed(y_sum(6), y_sum(6)'length) - slope_times_x),y_minus_mb);
+      y_minus_mb <= resize((to_sfixed(y_sum(6), y_sum(6)'length) - slope_times_x), y_minus_mb);
       slope_s7   <= slope_s6;
 
       --------------------------------------------------------------------------------
-      -- s8 y= (sum(y) - slope*sum(x)) / n
+      -- s8 b = (Σy - slope*Σx) / n
       --------------------------------------------------------------------------------
 
       intercept <= resize(y_minus_mb / to_sfixed(cnt(7), cnt(7)'length), intercept);
