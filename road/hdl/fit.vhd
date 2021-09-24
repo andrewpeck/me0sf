@@ -18,7 +18,7 @@ entity fit is
 
     N_LAYERS : natural := 6;
 
-    N_STAGES : natural := 8;
+    N_STAGES : natural := 9;
 
     STRIP_BITS : natural := 6;
 
@@ -53,6 +53,7 @@ entity fit is
       ly5     : in signed (STRIP_BITS-1 downto 0)        := (others => '0');
       valid_i : in std_logic_vector(N_LAYERS-1 downto 0) := (others => '1');
 
+      strip_o     : out sfixed (B_INT_BITS-1 downto -B_FRAC_BITS);
       intercept_o : out sfixed (B_INT_BITS-1 downto -B_FRAC_BITS);
       slope_o     : out sfixed (M_INT_BITS-1 downto -M_FRAC_BITS)
       );
@@ -367,11 +368,15 @@ begin
       intercept <= resize(y_minus_mb * reciprocal6(cnt(7)), intercept);
       slope_s8  <= slope_s7;
 
+      --------------------------------------------------------------------------------
+      -- s9 coordinate transform + output registers
+      --------------------------------------------------------------------------------
+
+      strip_o     <= resize(slope_s8 * 2.5 + intercept, strip_o);
+      intercept_o <= resize(intercept, intercept_o);
+      slope_o     <= resize(slope_s8, slope_o);
+
     end if;
   end process;
-
-  -- truncation, don't need to register
-  intercept_o <= intercept(B_INT_BITS-1 downto -B_FRAC_BITS);
-  slope_o     <= slope_s8(M_INT_BITS-1 downto -M_FRAC_BITS);
 
 end behavioral;

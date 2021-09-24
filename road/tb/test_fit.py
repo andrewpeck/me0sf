@@ -128,7 +128,7 @@ async def fit_tb(dut):
 
         await RisingEdge(dut.clock)  # Synchronize with the clock
 
-    for i in range(10000):
+    for i in range(50000):
 
         y = rand_y()
 
@@ -153,8 +153,11 @@ async def fit_tb(dut):
         intercept = dut.intercept_o.value.signed_integer / \
             (2**intercept_fracb-1)
 
+        key_strip = dut.strip_o.value.signed_integer / \
+            (2**intercept_fracb-1)
+
         max_error_strips_per_layer = 0.2
-        max_error_strips = 1.00
+        max_error_strips = 0.5
         max_error_intercept = 0.5
 
         # slope = round(slope, 1)
@@ -168,7 +171,7 @@ async def fit_tb(dut):
         #print_slope(slope, intercept, m, b)
 
         key_s = m*2.5 + b
-        key_strip = slope*2.5 + b
+        # key_strip = slope*2.5 + b
 
         # print(this_data)
 
@@ -176,9 +179,10 @@ async def fit_tb(dut):
 
         assert (abs(b-intercept) < max_error_intercept), print_slope(slope, intercept, m, b)
         assert (abs(m-slope) < max_error_strips_per_layer), print_slope(slope, intercept, m, b)
-        #assert (abs(key_s - key_strip) < max_error_strips), print_slope(slope, intercept, m, b)
-        #assert (abs(b-intercept) < max_error_strips), print_slope(slope, intercept, m, b)
+        assert (abs(key_s - key_strip) < max_error_strips), print_slope(slope, intercept, m, b)
 
+        if (itests % 1000 == 0):
+            print("%d fits tested" % itests)
         itests += 1
 
     print("================================================================================")
