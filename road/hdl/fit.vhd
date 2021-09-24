@@ -10,6 +10,9 @@ use ieee.math_real.all;
 library ieee;
 use ieee.fixed_pkg.all;
 
+library work;
+use work.reciprocal_pkg.all;
+
 entity fit is
   generic(
 
@@ -122,7 +125,7 @@ architecture behavioral of fit is
     signed (2*x_diff(0)'length-1 downto 0);
 
   signal product : product_array_t := (others => (others => '0'));  -- (x - mean(x)) * (y - mean(y))
-  signal square  : square_array_t  := (others => (others => '1'));  -- (x - mean(x)) ** 2
+  signal square  : square_array_t  := (others => (others => '0'));  -- (x - mean(x)) ** 2
 
   --------------------------------------------------------------------------------
   -- s4
@@ -144,14 +147,18 @@ architecture behavioral of fit is
   --
   -- initialize to 1 to prevent a divide by zero in simulation
   --
-  signal square_sum  : signed (10 downto 0) := (others => '1');
+  signal square_sum : integer range 0 to 630 := 1;
+  --signal square_sum : signed (10 downto 0) := (others => '1');
 
   --------------------------------------------------------------------------------
   -- s5
   --------------------------------------------------------------------------------
 
-  signal slope, slope_s6, slope_s7, slope_s8 : sfixed
-    (M_INT_BITS-1 downto - M_FRAC_BITS) := (others => '0');
+  -- type slope_array_t is array (integer range 5 to 8) of
+  --   sfixed (M_INT_BITS-1 downto - M_FRAC_BITS) := (others => '0');
+
+  signal slope, slope_s6, slope_s7, slope_s8 :
+    sfixed (M_INT_BITS-1 downto - M_FRAC_BITS) := (others => '0');
 
   --------------------------------------------------------------------------------
   -- s6
@@ -337,18 +344,19 @@ begin
              valid(3), 18), product_sum'length);
 
       -- Σ (n*xi - Σx)^2
-      square_sum <= resize(sum6(square(0), square(1),
-             square(2), square(3),
-             square(4), square(5),
-             valid(3), 16), square_sum'length);
+      square_sum <= to_integer(sum6(square(0), square(1),
+                                    square(2), square(3),
+                                    square(4), square(5),
+                                    valid(3), 19));
+
 
       --------------------------------------------------------------------------------
       -- s5 slope= Σ (n*xi - Σx)*(n*yi - Σy) / Σ (n*xi - Σx)^2
       --------------------------------------------------------------------------------
 
-      slope <= resize (
-        to_sfixed(product_sum, product_sum'length) /
-        to_sfixed(square_sum, square_sum'length), slope);
+      slope <= resize (to_sfixed(product_sum, product_sum'length) * reciprocal(square_sum), slope);
+      -- slope <= resize (to_sfixed(product_sum, product_sum'length) /
+      --                  to_sfixed(square_sum, square_sum'length), slope);
 
       --------------------------------------------------------------------------------
       -- s6 slope*Σx

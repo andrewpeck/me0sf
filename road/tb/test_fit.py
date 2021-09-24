@@ -154,7 +154,7 @@ async def fit_tb(dut):
             (2**intercept_fracb-1)
 
         max_error_strips_per_layer = 0.5
-        max_error_strips = 0.75
+        max_error_strips = 1.00
 
         # slope = round(slope, 1)
         # intercept = round(intercept, 1)
@@ -189,7 +189,8 @@ def test_fit():
     module = os.path.splitext(os.path.basename(__file__))[0]
 
     vhdl_sources = [
-        os.path.join(rtl_dir, f"fit.vhd")
+        os.path.join(rtl_dir, "reciprocal.vhd"),
+        os.path.join(rtl_dir, "fit.vhd")
     ]
 
     run(
