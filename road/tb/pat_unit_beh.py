@@ -118,5 +118,6 @@ def process_pat(patlist,ly0_x,ly1_x,ly2_x,ly3_x,ly4_x,ly5_x,MAX_SPAN=37):
         return b_lc,b_id
 
     [ly_c,pat_id]=priority_encoder(lc_id_vec)
-
+    if (ly_c==0):
+        pat_id=0
     return pat_id,ly_c
