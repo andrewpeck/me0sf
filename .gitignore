@@ -11,4 +11,9 @@ tags
 road/work
 road/transcript
 road/vsim.wlf
+*.csv
+*.swp
+*.txt
+*.xml
+road/tb_bakup
 wave.do
