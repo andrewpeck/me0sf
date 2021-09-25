@@ -1,6 +1,0 @@
-<testsuites name="results">
-  <testsuite name="all" package="all">
-    <property name="random_seed" value="1627940613" />
-    <testcase name="pat_unit_test" classname="pat_unit_tb" file="/home/chloe/me0sf/road/tb/pat_unit_tb.py" lineno="12" time="269.270494222641" sim_time_ns="16812109.0" ratio_time="62435.763890637194" />
-  </testsuite>
-</testsuites>
