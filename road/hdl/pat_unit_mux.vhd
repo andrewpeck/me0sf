@@ -72,6 +72,8 @@ architecture behavioral of pat_unit_mux is
 
   signal lyX_in_dav : std_logic := '0';
 
+  signal dav_d0, dav_d1, dav_d2, dav_d3, dav_d4, dav_d5: std_logic;
+
 begin
 
   ly0_padded <= pad_layer(PADDING, ly0);
@@ -97,12 +99,12 @@ begin
   --------------------------------------------------------------------------------
 
   dav_to_phase_i_inst : entity work.dav_to_phase
-    generic map (MAX => MUX_FACTOR)
+    generic map (MAX => 8, DIV => 8/MUX_FACTOR)
     port map (clock  => clock, dav => dav_i, phase_o => phase_i);
 
   dav_to_phase_o_inst : entity work.dav_to_phase
-    generic map (MAX => MUX_FACTOR)
-    port map (clock  => clock, dav => patterns_mux_dav, phase_o => patterns_mux_phase);
+    generic map (MAX => 8, DIV => 8/MUX_FACTOR)
+    port map (clock  => clock, dav => dav_d1, phase_o => patterns_mux_phase);
 
   patgen : for I in 0 to NUM_SECTORS-1 generate
 
@@ -167,6 +169,13 @@ begin
   process (clock) is
   begin
     if (rising_edge(clock)) then
+
+      dav_d0 <= patterns_mux_dav;
+      dav_d1 <= dav_d0;
+      dav_d2 <= dav_d1;
+      dav_d3 <= dav_d2;
+      dav_d4 <= dav_d3;
+      dav_d5 <= dav_d4;
 
       dav_o <= patterns_mux_dav;
 
