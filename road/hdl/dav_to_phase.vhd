@@ -61,7 +61,9 @@ begin
 
       if (rising_edge(clock)) then
 
-        if (div_cnt = DIV-1) then
+        if (dav = '1' and DIV=1) then
+          phase_cnt <= 1;
+        elsif (div_cnt = DIV-1) then
           if (phase_cnt = MAX/DIV-1) then
             phase_cnt <= 0;
           else
