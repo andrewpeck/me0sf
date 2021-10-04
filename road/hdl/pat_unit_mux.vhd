@@ -97,11 +97,11 @@ begin
   --------------------------------------------------------------------------------
 
   dav_to_phase_i_inst : entity work.dav_to_phase
-    generic map (MAX => MUX_FACTOR)
+    generic map (DIV => 8/MUX_FACTOR)
     port map (clock  => clock, dav => dav_i, phase_o => phase_i);
 
   dav_to_phase_o_inst : entity work.dav_to_phase
-    generic map (MAX => MUX_FACTOR)
+    generic map (DIV => 8/MUX_FACTOR)
     port map (clock  => clock, dav => patterns_mux_dav, phase_o => patterns_mux_phase);
 
   patgen : for I in 0 to NUM_SECTORS-1 generate
