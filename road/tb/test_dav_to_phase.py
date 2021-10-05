@@ -16,9 +16,9 @@ def princ(string):
 
 async def gen_dav(dut):
     while True:
-        dut.dav = 1
+        dut.dav.value = 1
         await RisingEdge(dut.clock)
-        dut.dav = 0
+        dut.dav.value = 0
         for _ in range(7):
             await RisingEdge(dut.clock)
 
