@@ -14,7 +14,7 @@ library work;
 use work.reciprocal_pkg.all;
 
 entity fit is
-  generic(
+  generic (
 
     N_LAYERS : natural := 6;
 
@@ -40,22 +40,20 @@ entity fit is
     B_FRAC_BITS : natural := 6
 
     );
-  port
 
-    (
+  port (
+    clock   : in std_logic;
+    ly0     : in signed (STRIP_BITS-1 downto 0)        := (others => '0');
+    ly1     : in signed (STRIP_BITS-1 downto 0)        := (others => '0');
+    ly2     : in signed (STRIP_BITS-1 downto 0)        := (others => '0');
+    ly3     : in signed (STRIP_BITS-1 downto 0)        := (others => '0');
+    ly4     : in signed (STRIP_BITS-1 downto 0)        := (others => '0');
+    ly5     : in signed (STRIP_BITS-1 downto 0)        := (others => '0');
+    valid_i : in std_logic_vector(N_LAYERS-1 downto 0) := (others => '1');
 
-      clock   : in std_logic;
-      ly0     : in signed (STRIP_BITS-1 downto 0)        := (others => '0');
-      ly1     : in signed (STRIP_BITS-1 downto 0)        := (others => '0');
-      ly2     : in signed (STRIP_BITS-1 downto 0)        := (others => '0');
-      ly3     : in signed (STRIP_BITS-1 downto 0)        := (others => '0');
-      ly4     : in signed (STRIP_BITS-1 downto 0)        := (others => '0');
-      ly5     : in signed (STRIP_BITS-1 downto 0)        := (others => '0');
-      valid_i : in std_logic_vector(N_LAYERS-1 downto 0) := (others => '1');
-
-      strip_o     : out sfixed (B_INT_BITS-1 downto -B_FRAC_BITS);
-      intercept_o : out sfixed (B_INT_BITS-1 downto -B_FRAC_BITS);
-      slope_o     : out sfixed (M_INT_BITS-1 downto -M_FRAC_BITS)
+    strip_o     : out sfixed (B_INT_BITS-1 downto -B_FRAC_BITS);
+    intercept_o : out sfixed (B_INT_BITS-1 downto -B_FRAC_BITS);
+    slope_o     : out sfixed (M_INT_BITS-1 downto -M_FRAC_BITS)
       );
 end fit;
 
