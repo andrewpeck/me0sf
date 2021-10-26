@@ -147,6 +147,9 @@ architecture behavioral of fit is
   signal slope, slope_s6, slope_s7, slope_s8, slope_s9 :
     sfixed (M_INT_BITS-1 downto - M_FRAC_BITS) := (others => '0');
 
+  signal slope_s9_2p5 :
+    sfixed (B_INT_BITS-1 downto -B_FRAC_BITS);
+
   --------------------------------------------------------------------------------
   -- s6
   --------------------------------------------------------------------------------
@@ -382,13 +385,14 @@ begin
       -- s9 (pipelined multiplier) takes 2 clock cycles
       --------------------------------------------------------------------------------
 
-      slope_s9  <= slope_s8;
+      slope_s9      <= slope_s8;
+      slope_s9_2p5  <= resize(slope_s8 * 2.5, slope_s9_2p5);
 
       --------------------------------------------------------------------------------
       -- s9 coordinate transform + output registers
       --------------------------------------------------------------------------------
 
-      strip_o     <= resize(slope_s9 * 2.5 + intercept, strip_o);
+      strip_o     <= resize(slope_s9_2p5 + intercept, strip_o);
       intercept_o <= resize(intercept, intercept_o);
       slope_o     <= resize(slope_s9, slope_o);
 
