@@ -134,7 +134,6 @@ architecture behavioral of fit is
   --
   -- initialize to 1 to prevent a divide by zero in simulation
   --
-  signal square_sum : integer range 0 to 630 := 1;
   signal square_sum_reciprocal : sfixed (1 downto -13);
 
   --------------------------------------------------------------------------------
@@ -342,9 +341,6 @@ begin
                           product(3), product(4), product(5), valid(3));
 
       -- Σ (n*xi - Σx)^2
-      -- square_sum <=
-      -- sum6(square(0), square(1), square(2),
-      --                    square(3), square(4), square(5), valid(3));
       square_sum_reciprocal <= reciprocal (
         sum6(square(0), square(1), square(2),
              square(3), square(4), square(5), valid(3)),
@@ -356,6 +352,7 @@ begin
       --------------------------------------------------------------------------------
 
       -- FIXME: pull the number of bits from the integer (somehow)
+      -- need 13 bits to represent the number 8192
       slope <= resize (to_sfixed(product_sum, 13) * square_sum_reciprocal, slope);
 
       --------------------------------------------------------------------------------
