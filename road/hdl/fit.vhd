@@ -18,7 +18,7 @@ entity fit is
 
     N_LAYERS : natural := 6;
 
-    N_STAGES : natural := 9;
+    N_STAGES : natural := 10;
 
     STRIP_BITS : natural := 6;
 
@@ -100,6 +100,7 @@ architecture behavioral of fit is
   --------------------------------------------------------------------------------
 
   type x_diff_array_t is array (integer range 0 to N_LAYERS-1) of integer range -15 to 15;
+
   type y_diff_array_t is array (integer range 0 to N_LAYERS-1) of integer range -127 to 127;
   signal x_diff : x_diff_array_t := (others => 1);  -- (x - mean(x))
   signal y_diff : y_diff_array_t := (others => 0);  -- (y - mean(y))
@@ -143,7 +144,7 @@ architecture behavioral of fit is
   -- type slope_array_t is array (integer range 5 to 8) of
   --   sfixed (M_INT_BITS-1 downto - M_FRAC_BITS) := (others => '0');
 
-  signal slope, slope_s6, slope_s7, slope_s8 :
+  signal slope, slope_s6, slope_s7, slope_s8, slope_s9 :
     sfixed (M_INT_BITS-1 downto - M_FRAC_BITS) := (others => '0');
 
   --------------------------------------------------------------------------------
@@ -163,6 +164,17 @@ architecture behavioral of fit is
   --------------------------------------------------------------------------------
   -- s8
   --------------------------------------------------------------------------------
+
+  constant MULT_RECIP_FRACB : integer := 14;
+
+  signal intercept_signed : signed
+    (y_minus_mb'length+MULT_RECIP_FRACB+2-1 downto 0) := (others => '0');
+
+  constant intercept_mult_decb : integer := 1+M_FRAC_BITS+MULT_RECIP_FRACB;
+
+  signal intercept_smult : sfixed
+    (intercept_signed'length-intercept_mult_decb-1
+     downto -(intercept_mult_decb)) := (others => '0');
 
   signal intercept : sfixed
     (B_INT_BITS-1 downto - B_FRAC_BITS) := (others => '0');
@@ -363,18 +375,43 @@ begin
       -- s8 b = (Σy - slope*Σx) / n
       --------------------------------------------------------------------------------
 
-      intercept <= resize(y_minus_mb * reciprocal6(cnt(7)), intercept);
+      -- (multiplication pipelined below)
       slope_s8  <= slope_s7;
+
+      --------------------------------------------------------------------------------
+      -- s9 (pipelined multiplier) takes 2 clock cycles
+      --------------------------------------------------------------------------------
+
+      slope_s9  <= slope_s8;
 
       --------------------------------------------------------------------------------
       -- s9 coordinate transform + output registers
       --------------------------------------------------------------------------------
 
-      strip_o     <= resize(slope_s8 * 2.5 + intercept, strip_o);
+      strip_o     <= resize(slope_s9 * 2.5 + intercept, strip_o);
       intercept_o <= resize(intercept, intercept_o);
-      slope_o     <= resize(slope_s8, slope_o);
+      slope_o     <= resize(slope_s9, slope_o);
 
     end if;
   end process;
+
+  intercept_multiplier : entity work.pipelined_smult
+    generic map (
+      WIDTH_A => y_minus_mb'length,
+      WIDTH_B => MULT_RECIP_FRACB+2
+      )
+    port map (
+      clock   => clock,
+      input_a => signed(to_slv(y_minus_mb)),
+      input_b => signed(to_slv(reciprocal6(cnt(7), MULT_RECIP_FRACB))),
+      output  => intercept_signed
+      );
+
+  intercept_smult <=
+    to_sfixed(std_logic_vector(intercept_signed),
+              intercept_smult'high,
+              intercept_smult'low);
+
+  intercept <= resize(intercept_smult,intercept);
 
 end behavioral;

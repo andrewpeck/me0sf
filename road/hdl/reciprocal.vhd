@@ -3,7 +3,7 @@ use ieee.fixed_pkg.all;
 
 package reciprocal_pkg is
   function reciprocal (x : integer; nbits : integer) return sfixed;
-  function reciprocal6 (x : integer) return sfixed;
+  function reciprocal6 (x : integer; nbits : integer) return sfixed;
 end package reciprocal_pkg;
 
 package body reciprocal_pkg is
@@ -2067,17 +2067,17 @@ package body reciprocal_pkg is
   end;
 
 
-  function reciprocal6 (x : integer) return sfixed is
+  function reciprocal6 (x : integer; nbits : integer) return sfixed is
   begin
     if (x<1 or x> 6) then
-      assert false report "invalid reciprocal6 lookup x=" & integer'image(x) severity error;
-      return to_sfixed(0, 1, -14);
-    elsif (x=1) then return to_sfixed(1.000000000000, 1, -14);
-    elsif (x=2) then return to_sfixed(0.500000000000, 1, -14);
-    elsif (x=3) then return to_sfixed(0.333333333333, 1, -14);
-    elsif (x=4) then return to_sfixed(0.250000000000, 1, -14);
-    elsif (x=5) then return to_sfixed(0.200000000000, 1, -14);
-    elsif (x=6) then return to_sfixed(0.166666666667, 1, -14);
+      assert false report "invalid reciprocal6 lookup x=" & integer'image(x) severity warning;
+      return to_sfixed(0, 1, -nbits);
+    elsif (x=1) then return to_sfixed(1.000000000000, 1, -nbits);
+    elsif (x=2) then return to_sfixed(0.500000000000, 1, -nbits);
+    elsif (x=3) then return to_sfixed(0.333333333333, 1, -nbits);
+    elsif (x=4) then return to_sfixed(0.250000000000, 1, -nbits);
+    elsif (x=5) then return to_sfixed(0.200000000000, 1, -nbits);
+    elsif (x=6) then return to_sfixed(0.166666666667, 1, -nbits);
     end if;
   end;
 

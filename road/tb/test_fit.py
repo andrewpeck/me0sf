@@ -46,12 +46,11 @@ def rand_y():
     #         random.randint(-15, 15),
     #         random.randint(-15, 15),
     #         random.randint(-15, 15)]
+    #
     #return [1, 2, 3, 4, 5, 6]
 
 
-def print_slope(slope, intercept, m, b):
-    key_s = m * 2.5 + b
-    key_strip = slope * 2.5 + b
+def print_slope(slope, intercept, key_strip, m, b, key_s):
     print("found y=%.3f x + %f (s=%f)" % (slope, intercept, key_strip))
     print("expec y=%.3f x + %f (s=%f)" % (m, b, key_s))
     print("\n")
@@ -155,9 +154,11 @@ async def fit_tb(dut):
 
         # print_slope(slope, intercept, m, b)
 
-        assert (abs(b-intercept) < max_error_intercept), print_slope(slope, intercept, m, b)
-        assert (abs(m-slope) < max_error_strips_per_layer), print_slope(slope, intercept, m, b)
-        assert (abs(key_s - key_strip) < max_error_strips), print_slope(slope, intercept, m, b)
+        #print_slope(slope, intercept, key_strip, m, b, key_s)
+
+        assert (abs(b-intercept) < max_error_intercept), print_slope(slope, intercept, key_strip, m, b, key_s)
+        assert (abs(m-slope) < max_error_strips_per_layer), print_slope(slope, intercept, key_strip, m, b, key_s)
+        assert (abs(key_s - key_strip) < max_error_strips), print_slope(slope, intercept, key_strip, m, b, key_s)
 
         if itests % 1000 == 0:
             print("%d fits tested" % itests)
@@ -176,6 +177,7 @@ def test_fit():
 
     vhdl_sources = [
         os.path.join(rtl_dir, "reciprocal.vhd"),
+        os.path.join(rtl_dir, "pipelined_mult.vhd"),
         os.path.join(rtl_dir, "fit.vhd")
     ]
 
