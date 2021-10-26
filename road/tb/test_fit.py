@@ -1,34 +1,12 @@
 #!/usr/bin/env python3
-
 import os
-
-from cocotb_test.simulator import run
-
-import cocotb
-from cocotb.clock import Clock
-from cocotb.triggers import RisingEdge
 import random
 import math
 
-import matplotlib.pyplot as plt
-
-# import pytest
-# from cocotb.triggers import Timer
-# from cocotb.triggers import Event
-# from cocotb.triggers import FallingEdge
-
-# from https://github.com/cocotb/cocotb/blob/master/tests/test_cases/test_discovery/test_discovery.py
-# @cocotb.test()
-# async def recursive_discover(dut):
-#     """Discover absolutely everything in the DUT"""
-#     def _discover(obj):
-#         for thing in obj:
-#             dut._log.info("Found %s (%s)", thing._name, type(thing))
-#             _discover(thing)
-#     _discover(dut)
-
-#  good example:
-#  https://github.com/alexforencich/verilog-ethernet/blob/master/tb/ptp_clock_cdc/test_ptp_clock_cdc.py
+import cocotb
+from cocotb_test.simulator import run
+from cocotb.clock import Clock
+from cocotb.triggers import RisingEdge
 
 
 def fit_modified(x, y):
@@ -72,8 +50,8 @@ def rand_y():
 
 
 def print_slope(slope, intercept, m, b):
-    key_s = m*2.5 + b
-    key_strip = slope*2.5 + b
+    key_s = m * 2.5 + b
+    key_strip = slope * 2.5 + b
     print("found y=%.3f x + %f (s=%f)" % (slope, intercept, key_strip))
     print("expec y=%.3f x + %f (s=%f)" % (m, b, key_s))
     print("\n")
@@ -92,14 +70,14 @@ async def fit_tb(dut):
     dut.valid_i = 0x3f
 
     # flush the pipeline
-    dut.ly0 = 1
-    dut.ly1 = 2
-    dut.ly2 = 3
-    dut.ly3 = 4
-    dut.ly4 = 5
-    dut.ly5 = 6
+    dut.ly0.value = 1
+    dut.ly1.value = 2
+    dut.ly2.value = 3
+    dut.ly3.value = 4
+    dut.ly4.value = 5
+    dut.ly5.value = 6
 
-    LATENCY = dut.N_STAGES.value+1
+    LATENCY = dut.N_STAGES.value + 1
 
     for i in range(LATENCY):
         await RisingEdge(dut.clock)
@@ -119,12 +97,12 @@ async def fit_tb(dut):
 
         data.append(y)
 
-        dut.ly0 = y[0]
-        dut.ly1 = y[1]
-        dut.ly2 = y[2]
-        dut.ly3 = y[3]
-        dut.ly4 = y[4]
-        dut.ly5 = y[5]
+        dut.ly0.value = y[0]
+        dut.ly1.value = y[1]
+        dut.ly2.value = y[2]
+        dut.ly3.value = y[3]
+        dut.ly4.value = y[4]
+        dut.ly5.value = y[5]
 
         await RisingEdge(dut.clock)  # Synchronize with the clock
 
@@ -132,12 +110,12 @@ async def fit_tb(dut):
 
         y = rand_y()
 
-        dut.ly0 = y[0]
-        dut.ly1 = y[1]
-        dut.ly2 = y[2]
-        dut.ly3 = y[3]
-        dut.ly4 = y[4]
-        dut.ly5 = y[5]
+        dut.ly0.value = y[0]
+        dut.ly1.value = y[1]
+        dut.ly2.value = y[2]
+        dut.ly3.value = y[3]
+        dut.ly4.value = y[4]
+        dut.ly5.value = y[5]
 
         data.append(y)
 
@@ -181,7 +159,7 @@ async def fit_tb(dut):
         assert (abs(m-slope) < max_error_strips_per_layer), print_slope(slope, intercept, m, b)
         assert (abs(key_s - key_strip) < max_error_strips), print_slope(slope, intercept, m, b)
 
-        if (itests % 1000 == 0):
+        if itests % 1000 == 0:
             print("%d fits tested" % itests)
         itests += 1
 
@@ -200,6 +178,8 @@ def test_fit():
         os.path.join(rtl_dir, "reciprocal.vhd"),
         os.path.join(rtl_dir, "fit.vhd")
     ]
+
+    os.environ["SIM"] = "questa"
 
     run(
         vhdl_sources=vhdl_sources,

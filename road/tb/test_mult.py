@@ -52,6 +52,8 @@ def test_fit(A, B):
         os.path.join(rtl_dir, "pipelined_mult.vhd"),
     ]
 
+    os.environ["SIM"] = "questa"
+
     parameters = {}
     parameters['WIDTH_A'] = A
     parameters['WIDTH_B'] = B
