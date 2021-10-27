@@ -18,7 +18,7 @@ entity fit is
 
     N_LAYERS : natural := 6;
 
-    N_STAGES : natural := 10;
+    N_STAGES : natural := 11;
 
     STRIP_BITS : natural := 6;
 
@@ -79,13 +79,13 @@ architecture behavioral of fit is
     integer range 0 to 6;               -- number of layers hit
   signal cnt : cnt_array_t := (others => 6);
 
-  type x_sum_array_t is array (integer range 1 to 5) of integer range 0 to 15;  -- (min=0, max=0+1+2+3+4+5)
+  type x_sum_array_t is array (integer range 1 to 6) of integer range 0 to 15;  -- (min=0, max=0+1+2+3+4+5)
   signal x_sum : x_sum_array_t := (others => 0);                                -- sum (x_i)
 
   -- since tracks are designed to go through the center, the positive and negative
   -- will mostly offset and the sum will mostly be a small number, so the range can be restricted
   -- the simulator will barf if we exceed it
-  type y_sum_array_t is array (integer range 1 to 6) of integer range -63 to 63;
+  type y_sum_array_t is array (integer range 1 to 7) of integer range -63 to 63;
   signal y_sum : y_sum_array_t := (others => 0);  -- sum (y_i)
 
   -- n * x
@@ -142,13 +142,22 @@ architecture behavioral of fit is
   -- type slope_array_t is array (integer range 5 to 8) of
   --   sfixed (M_INT_BITS-1 downto - M_FRAC_BITS) := (others => '0');
 
-  signal slope, slope_s6, slope_s7, slope_s8, slope_s9 :
+  constant product_sum_cntb : integer := 14; -- from # of bits to represent -8191-8191
+
+  signal slope_signed : signed
+    (square_sum_reciprocal'length+product_sum_cntb-1 downto 0) := (others => '0');
+
+  signal slope_sfixed : sfixed
+    (slope_signed'length+square_sum_reciprocal'low-1
+     downto square_sum_reciprocal'low) := (others => '0');
+
+  signal slope, slope_s6, slope_s7, slope_s8, slope_s9, slope_s10 :
     sfixed (M_INT_BITS-1 downto - (M_FRAC_BITS)) := (others => '0');
 
-  signal slope_s8_x5 :
+  signal slope_s9_x5 :
     sfixed (M_INT_BITS+3-1 downto -(M_FRAC_BITS-4));
 
-  signal slope_s9_2p5 :
+  signal slope_s10_2p5 :
     sfixed (M_INT_BITS+2-1 downto -(M_FRAC_BITS-4));
 
   --------------------------------------------------------------------------------
@@ -176,7 +185,7 @@ architecture behavioral of fit is
 
   constant intercept_mult_decb : integer := 1+M_FRAC_BITS+MULT_RECIP_FRACB;
 
-  signal intercept_smult : sfixed
+  signal intercept_sfixed : sfixed
     (intercept_signed'length-intercept_mult_decb-1
      downto -(intercept_mult_decb)) := (others => '0');
 
@@ -355,49 +364,84 @@ begin
 
       -- FIXME: pull the number of bits from the integer (somehow)
       -- need 13 bits to represent the number 8192
-      slope <= resize (to_sfixed(product_sum, 13) * square_sum_reciprocal, slope);
+      --slope <= resize (to_sfixed(product_sum, 13) * square_sum_reciprocal, slope);
+      --
+      -- (slope multiplication is pipelined below)
 
       --------------------------------------------------------------------------------
-      -- s6 slope*Σx
+      -- s6
+      --------------------------------------------------------------------------------
+
+      -- slope 2nd stage
+
+      --------------------------------------------------------------------------------
+      -- s7 slope*Σx
       --------------------------------------------------------------------------------
 
       -- FIXME: pull the number of bits from the integer (somehow)
-      slope_times_x <= resize(slope * to_sfixed(x_sum(5), 5), slope_times_x);
-      slope_s6      <= slope;
+      slope_times_x <= resize(slope * to_sfixed(x_sum(6), 5), slope_times_x);
+      slope_s7      <= slope;
 
       --------------------------------------------------------------------------------
-      -- s7 Σy-mb = Σy - slope*Σx
+      -- s8 Σy-mb = Σy - slope*Σx
       --------------------------------------------------------------------------------
 
       -- 13 = number of bits needed
-      y_minus_mb <= resize((to_sfixed(y_sum(6), 7) - slope_times_x), y_minus_mb);
-      slope_s7   <= slope_s6;
+      y_minus_mb <= resize((to_sfixed(y_sum(7), 7) - slope_times_x), y_minus_mb);
+      slope_s8   <= slope_s7;
 
       --------------------------------------------------------------------------------
-      -- s8 b = (Σy - slope*Σx) / n
+      -- s9 b = (Σy - slope*Σx) / n
       --------------------------------------------------------------------------------
 
       -- (multiplication pipelined below)
-      slope_s8 <= slope_s7;
-      slope_s8_x5 <= resize(slope_s7*5.0, slope_s8_x5);
+      slope_s9    <= slope_s8;
+      slope_s9_x5 <= resize(slope_s8*5.0, slope_s9_x5);
 
       --------------------------------------------------------------------------------
-      -- s9 (pipelined multiplier) takes 2 clock cycles
+      -- s10 (pipelined multiplier) takes 2 clock cycles
       --------------------------------------------------------------------------------
 
-      slope_s9     <= slope_s8;
-      slope_s9_2p5 <= resize(slope_s8_x5/2.0, slope_s9_2p5);
+      slope_s10     <= slope_s9;
+      slope_s10_2p5 <= resize(slope_s9_x5/2.0, slope_s10_2p5);
 
       --------------------------------------------------------------------------------
-      -- s9 coordinate transform + output registers
+      -- s10 coordinate transform + output registers
       --------------------------------------------------------------------------------
 
-      strip_o     <= resize(slope_s9_2p5 + intercept, strip_o);
+      strip_o     <= resize(slope_s10_2p5 + intercept, strip_o);
       intercept_o <= resize(intercept, intercept_o);
-      slope_o     <= resize(slope_s9, slope_o);
+      slope_o     <= resize(slope_s10, slope_o);
 
     end if;
   end process;
+
+  --------------------------------------------------------------------------------
+  -- Slope Pipelined Multiply
+  --------------------------------------------------------------------------------
+
+  slope_multiplier : entity work.pipelined_smult
+    generic map (
+      WIDTH_A => product_sum_cntb,
+      WIDTH_B => square_sum_reciprocal'length
+      )
+    port map (
+      clock   => clock,
+      input_a => to_signed(product_sum, product_sum_cntb),
+      input_b => signed(to_slv(square_sum_reciprocal)),
+      output  => slope_signed
+      );
+
+  slope_sfixed <=
+    to_sfixed(std_logic_vector(slope_signed),
+              slope_sfixed'high,
+              slope_sfixed'low);
+
+  slope <= resize(slope_sfixed, slope);
+
+  --------------------------------------------------------------------------------
+  -- Intercept Pipelined Multiply
+  --------------------------------------------------------------------------------
 
   intercept_multiplier : entity work.pipelined_smult
     generic map (
@@ -411,11 +455,11 @@ begin
       output  => intercept_signed
       );
 
-  intercept_smult <=
+  intercept_sfixed <=
     to_sfixed(std_logic_vector(intercept_signed),
-              intercept_smult'high,
-              intercept_smult'low);
+              intercept_sfixed'high,
+              intercept_sfixed'low);
 
-  intercept <= resize(intercept_smult, intercept);
+  intercept <= resize(intercept_sfixed, intercept);
 
 end behavioral;
