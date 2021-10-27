@@ -23,21 +23,20 @@ entity fit is
     STRIP_BITS : natural := 6;
 
     -- slope
-    --
     -- max slope is ~40 strips / 6 layers = ~7 so give it 4 bits
     M_INT_BITS  : natural := 4;
     M_FRAC_BITS : natural := 6;
 
     -- intercept
-    --
-    --intercepts are by construction centered around 0 with just some wander of
-    -- a few strips around the center
-    --
-    -- it is too large right now because the fit is not being correctly
-    -- constrained to the center
-    --
+    -- this is the intercept at the 0th layer, different than the pattern-centered strip
+    -- (for debugging)
     B_INT_BITS  : natural := 6;
-    B_FRAC_BITS : natural := 6
+    B_FRAC_BITS : natural := 6;
+
+    -- strip
+    -- this is the strip, centered in the 2.5 layer (center of the chamber)
+    STRIP_INT_BITS  : natural := 4;
+    STRIP_FRAC_BITS : natural := 5
 
     );
 
@@ -51,7 +50,7 @@ entity fit is
     ly5     : in signed (STRIP_BITS-1 downto 0)        := (others => '0');
     valid_i : in std_logic_vector(N_LAYERS-1 downto 0) := (others => '1');
 
-    strip_o     : out sfixed (B_INT_BITS-1 downto -B_FRAC_BITS);
+    strip_o     : out sfixed (STRIP_INT_BITS-1 downto -STRIP_FRAC_BITS);
     intercept_o : out sfixed (B_INT_BITS-1 downto -B_FRAC_BITS);
     slope_o     : out sfixed (M_INT_BITS-1 downto -M_FRAC_BITS)
     );

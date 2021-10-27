@@ -63,6 +63,7 @@ async def fit_tb(dut):
 
     intercept_fracb = dut.B_FRAC_BITS.value
     slope_fracb = dut.M_FRAC_BITS.value
+    strip_fracb = dut.STRIP_FRAC_BITS.value
 
     x = range(6)  # layers 0-5, always the same
 
@@ -131,7 +132,7 @@ async def fit_tb(dut):
             (2**intercept_fracb-1)
 
         key_strip = dut.strip_o.value.signed_integer / \
-            (2**intercept_fracb-1)
+            (2**strip_fracb-1)
 
         max_error_strips_per_layer = 0.2
         max_error_strips = 0.5
