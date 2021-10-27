@@ -26,7 +26,7 @@ entity fit is
     --
     -- max slope is ~40 strips / 6 layers = ~7 so give it 4 bits
     M_INT_BITS  : natural := 4;
-    M_FRAC_BITS : natural := 8;
+    M_FRAC_BITS : natural := 6;
 
     -- intercept
     --
