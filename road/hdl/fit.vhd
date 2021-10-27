@@ -54,7 +54,7 @@ entity fit is
     strip_o     : out sfixed (B_INT_BITS-1 downto -B_FRAC_BITS);
     intercept_o : out sfixed (B_INT_BITS-1 downto -B_FRAC_BITS);
     slope_o     : out sfixed (M_INT_BITS-1 downto -M_FRAC_BITS)
-      );
+    );
 end fit;
 
 architecture behavioral of fit is
@@ -77,11 +77,11 @@ architecture behavioral of fit is
   --------------------------------------------------------------------------------
 
   type cnt_array_t is array (integer range 0 to 7) of
-    integer range 0 to 6;         -- number of layers hit
+    integer range 0 to 6;               -- number of layers hit
   signal cnt : cnt_array_t := (others => 6);
 
-  type x_sum_array_t is array (integer range 1 to 5) of integer range 0 to 15; -- (min=0, max=0+1+2+3+4+5)
-  signal x_sum : x_sum_array_t := (others => 0);  -- sum (x_i)
+  type x_sum_array_t is array (integer range 1 to 5) of integer range 0 to 15;  -- (min=0, max=0+1+2+3+4+5)
+  signal x_sum : x_sum_array_t := (others => 0);                                -- sum (x_i)
 
   -- since tracks are designed to go through the center, the positive and negative
   -- will mostly offset and the sum will mostly be a small number, so the range can be restricted
@@ -90,7 +90,7 @@ architecture behavioral of fit is
   signal y_sum : y_sum_array_t := (others => 0);  -- sum (y_i)
 
   -- n * x
-  type n_x_array_t is array (integer range 0 to N_LAYERS-1) of integer range 0 to 5*6; -- ly=5 * cnt=6
+  type n_x_array_t is array (integer range 0 to N_LAYERS-1) of integer range 0 to 5*6;  -- ly=5 * cnt=6
   type n_y_array_t is array (integer range 0 to N_LAYERS-1) of integer range -255 to 255;
   signal n_x : n_x_array_t := (others => 1);
   signal n_y : n_y_array_t := (others => 0);
@@ -186,8 +186,8 @@ architecture behavioral of fit is
   --------------------------------------------------------------------------------
 
   -- sum 6 signed numbers with an enable for each number
-  function sum6 (p0, p1, p2, p3, p4, p5    : integer;
-                 en    : std_logic_vector (5 downto 0))
+  function sum6 (p0, p1, p2, p3, p4, p5 : integer;
+                 en                     : std_logic_vector (5 downto 0))
     return integer is
     variable result : integer;
   begin
@@ -280,7 +280,7 @@ begin
 
       y_sum(1) <= sum6(to_integer(ly(0)), to_integer(ly(1)), to_integer(ly(2)),
                        to_integer(ly(3)), to_integer(ly(4)), to_integer(ly(5)), valid_i);
-      x_sum(1) <= sum6(0,1,2,3,4,5, valid_i);
+      x_sum(1) <= sum6(0, 1, 2, 3, 4, 5, valid_i);
 
       -- n * y_i
       -- n * x_i
@@ -376,14 +376,14 @@ begin
       --------------------------------------------------------------------------------
 
       -- (multiplication pipelined below)
-      slope_s8  <= slope_s7;
+      slope_s8 <= slope_s7;
 
       --------------------------------------------------------------------------------
       -- s9 (pipelined multiplier) takes 2 clock cycles
       --------------------------------------------------------------------------------
 
-      slope_s9      <= slope_s8;
-      slope_s9_2p5  <= resize(slope_s8 * 2.5, slope_s9_2p5);
+      slope_s9     <= slope_s8;
+      slope_s9_2p5 <= resize(slope_s8 * 2.5, slope_s9_2p5);
 
       --------------------------------------------------------------------------------
       -- s9 coordinate transform + output registers
@@ -413,6 +413,6 @@ begin
               intercept_smult'high,
               intercept_smult'low);
 
-  intercept <= resize(intercept_smult,intercept);
+  intercept <= resize(intercept_smult, intercept);
 
 end behavioral;
