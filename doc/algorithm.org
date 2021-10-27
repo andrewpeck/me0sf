@@ -287,7 +287,8 @@ Thus, we restrict the chamber to only accept one segment for every N strips,
 reducing the # of segments that need to be sorted by a factor of N.
 
 ** Chamber Segment Selection
-Choose from (8 partitions * N segments) -> M segments
+Choose from (8 partitions * 192/N segments) -> M segments, where N is the
+pre-sorting factor from the previous stage.
 ** Centroid Coordinate Transformation
 f(pattern id, 6x centroids) -> 6x hit position
 ** Fitting
@@ -467,6 +468,11 @@ The bend angle is encoded as a fixed point number
 *** segment_selector.vhd
 *** fit.vhd
 * Testbench
+* Resource Utilization
+|         |  LUT |  FF | DSP |                                       |
+|---------+------+-----+-----+---------------------------------------|
+| Fitting | 1627 | 763 |   0 | Runs at 320MHz, can do 8x fits per bx |
+
 * Presentations
 - https://docs.google.com/presentation/d/10K-16xrXGUYcb-aZzMEEbbvJrTAYdaBR/edit#slide=id.ga773dc3468_0_22
 * Source Code
