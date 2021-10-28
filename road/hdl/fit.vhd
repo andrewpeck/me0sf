@@ -406,7 +406,7 @@ begin
       slope_s10_2p5 <= resize(slope_s9_x5/2.0, slope_s10_2p5);
 
       --------------------------------------------------------------------------------
-      -- s10 coordinate transform + output registers
+      -- s11 coordinate transform + output registers
       --------------------------------------------------------------------------------
 
       strip_o     <= resize(slope_s10_2p5 + intercept, strip_o);

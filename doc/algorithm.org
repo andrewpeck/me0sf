@@ -316,12 +316,12 @@ To reduce the computational difficulty in an FPGA, we modify this formula in a f
 To defer a division by n and continue more of the calculation in signed
 arithmetic (rather than fixed point), we instead calculate:
 
-\begin{align}
+\begin{align*}
   m =& \frac {\sum{}{}(x_i - \overline{X})(y_i-\overline{Y})}{\sum{}{} (x_i-\overline{X})^2} \\
     =& \frac {\sum{}{}(x - \frac{\sum{}{}x_i}{n})(y-\frac{\sum{}{}x_i}{n})}{\sum{}{} (x-\frac{\sum{}{}x_i}{n})^2} \\
     =& \frac{n}{n} \frac {\sum{}{}(x - \frac{\sum{}{}x_i}{n})(y-\frac{\sum{}{}x_i}{n})}{\sum{}{} (x-\frac{\sum{}{}x_i}{n})^2} \\
     =& \frac {\sum{}{}(nx - \sum{}{}{x_{i}})(ny_i-\sum{}{}{y_i})} {\sum{}{} (nx_{i}-\sum{}{}x_{i})^2}
-\end{align}
+\end{align*}
 
 To make this even simpler, we take advantage of the fact that the range of the
 divisor in the above equation is limited to a maximum value of 630.
@@ -403,6 +403,30 @@ this fit.
 *** Quality of Fit
 how to calculate??
 
+*** Pipelined Multiplication
+Some steps of the fit (multiplications) are pipelined into multiple (2) clock cycles.
+
+The basic scheme of the pipelined multiplication is to split the numbers into
+most-significant and least-significant parts, and multiply the parts
+independently, summing their products at the end.
+
+e.g. consider the multiplication of two 16 bit numbers, A and B:
+
+\begin{align*}
+A \times B =& A[15:0] \times B[15:0]  \\
+           =& (A[15:8] \cdot 2^8 + A[7:0]) \times (B[15:8] \cdot 2^8 + B[7:0])  \\
+           =& (A_{HI} \cdot 2^8 + A_{LO}) \times (B_{HI} \cdot 2^8 + B_{LO})  \\
+           =& (A_{HI} \cdot 1^8 + A_{LO}) \times (B_{HI} \cdot 2^8 + B_{LO})  \\
+           =& (A_{HI} \cdot B_{HI} \cdot 2^{16}) + (A_{HI} \cdot B_{LO} \cdot 2^8) + (A_{LO} \cdot B_{HI} \cdot 2^8) + (A_{LO} \cdot B_{LO}) \\
+           =& (A_{HI} \cdot B_{HI} << 16) + (A_{HI} \cdot B_{LO} \cdot << 8) + (A_{LO} \cdot B_{HI} \cdot << 8) + (A_{LO} \cdot B_{LO}) \\
+\end{align*}
+
+So, we are able to split a 16x16 bit multiplication into two steps: (1) four 8x8
+bit multiplications w/ bitshifting (2) three additions. This allows us to
+pipeline the multiplication into two clock cycles and achieve timing at 320 MHz.
+Bitshifting is "free" in the FPGA (just zero padding) so this can easily meet
+timing.
+
 *** Reciprocal
 The lookup table for the reciprocal LUT is calculated through a simple python script:
 
@@ -446,9 +470,21 @@ The resolution of the trigger primitive is in the OR of two adjacent strips
 (0-191) so this is a factor of 4 increase in nominal resolution.
 
 *** Bend
+
 The bend angle is encoded as a fixed point number
-  + 4 bits integer bend (units of strips/layer)
+  + 4 bits integer bend (units of strips/layer, twos complement signed number)
   + 5 bits fractional bend
+
+In fixed point fashion, the interpretation of the fractional bend is that
+
+| bit0 | 1/2 strip/layer  |
+| bit1 | 1/4 strip/layer  |
+| bit2 | 1/8 strip/layer  |
+| bit3 | 1/16 strip/layer |
+| bit4 | 1/32 strip/layer |
+
+The resolution may be reduced later after further studies are done.
+
 *** Quality
 
 * Firmware Implementation
