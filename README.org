@@ -1,5 +1,7 @@
 #+TITLE: ME0 Segment Finder
 
+Documentation can be found at: http://ohm.bu.edu/~apeck/notes/algorithm.html
+
 The ME0 segment finder is based on a simple "road based" pattern finding scheme optimized for low latency and low resource usage.
 
 *** Code Structure
