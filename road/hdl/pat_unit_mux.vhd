@@ -185,9 +185,12 @@ begin
         strips_reg(I*MUX_FACTOR+patterns_mux_phase).strip   <= I*MUX_FACTOR+patterns_mux_phase;
       end loop;
 
+      if (patterns_mux_phase=0) then
+        strips_o <= strips_reg;
+      end if;
+
     end if;
   end process;
 
-  strips_o <= strips_reg;
 
 end behavioral;
