@@ -1,5 +1,6 @@
 def printly_dat(mask=None, data=None, MAX_SPAN=37):
     """takes in data and/or a mask and returns a visual representation of the info"""
+    assert type(MAX_SPAN)==int,"MAX_SPAN input must be an integer."
     # create an iterable mask string
     if mask is not None:
         iterable_mask = []
@@ -16,6 +17,8 @@ def printly_dat(mask=None, data=None, MAX_SPAN=37):
             val_d = bin(data_v)[2:]
             val_d = val_d.zfill(MAX_SPAN)
             iterable_data.append(val_d)
+    if mask is None and data is None:
+        print("Error; need to provide values")
     for i in range(6):
         print("ly%d " % i, end="")
         for j in range(MAX_SPAN):

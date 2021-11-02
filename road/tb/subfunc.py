@@ -1,4 +1,5 @@
 # Functions, global variables, and classes used in multiple files
+from typing import List
 class hi_lo_t:
     def __init__(self, hi, lo):
         self.hi = hi
@@ -18,6 +19,9 @@ class patdef_t:
 
 def mirror_patdef(pat, id):
     """takes in a pattern definition and an id and returns a mirrored pattern definition associated with that id"""
+    assert type(pat) == patdef_t, "pat input must be of the class patdef_t"
+    assert type(pat.ly0) == hi_lo_t, "each layer of pat must be of the class hi_lo_t"
+    assert type(id) == int, "id input must be an integer"
     ly0_h = pat.ly0.lo * (-1)
     ly0_l = pat.ly0.hi * (-1)
     ly1_h = pat.ly1.lo * (-1)
@@ -39,6 +43,8 @@ def mirror_patdef(pat, id):
     result = patdef_t(id, ly0, ly1, ly2, ly3, ly4, ly5)
     return result
 
+
+# FIXME: take these globals out of here and bury them somewhere
 
 # true patlist; only used for testing pat_unit.vhd emulator
 pat_straight = patdef_t(
@@ -120,6 +126,7 @@ pat_l7 = patdef_t(
     hi_lo_t(18, 10),
 )
 pat_r7 = mirror_patdef(pat_l7, pat_l7.id - 1)
+
 patlist = [
     pat_straight,
     pat_l,
@@ -141,6 +148,7 @@ patlist = [
 
 def count_ones(int_ones):
     """takes in an integer and counts how many ones are in that integer's binary form"""
+    assert type(int_ones) == int, "int_ones input must be an integer."
     n_ones = 0
     iterable = bin(int_ones)[2:]
     for i in range(len(iterable)):
@@ -151,6 +159,8 @@ def count_ones(int_ones):
 
 def set_bit(index, num1=0):
     """takes in an integer index to set a one within a binary number; if num1 parameter is filled with an integer, that is the binary number it sets the bit within"""
+    assert type(index) == int, "index input must be an integer."
+    assert type(num1) == int, "num1 input must be an integer."
     num2 = 1 << index
     final_v = num1 | num2
     return final_v
@@ -158,12 +168,15 @@ def set_bit(index, num1=0):
 
 def clear_bit(num, index):
     """takes in an integer num and an integer index; clears the value of the index within the binary version of num and returns the new num as an integer"""
+    assert type(num) == int, "num input must be an integer."
+    assert type(index) == int, "index input must be an integer."
     bit = 1 & (num >> index)
     return num ^ (bit << index)
 
 
 def ones_bit_mask(num):
     """takes in an integer num; converts num into its binary version and returns mask of ones the same length as this binary version as an integer"""
+    assert type(num) == int, "num input must be an integer"
     o_mask = 0
     iterable_data = bin(num)[2:]
     for m in range(len(iterable_data)):
@@ -174,6 +187,14 @@ def ones_bit_mask(num):
 
 def get_ly_mask(ly_pat, MAX_SPAN=37):
     """takes in a given layer pattern and returns a list of integer bit masks for each layer"""
+    assert (
+        type(ly_pat) == patdef_t
+    ), "ly_pat input must be defined in the patdef_t class"
+    assert (
+        type(ly_pat.ly0) == hi_lo_t
+    ), "each layer of ly_pat must be of the class hi_lo_t"
+    assert type(ly_pat.id) == int, "ly_pat's id must be an integer"
+    assert type(MAX_SPAN) == int, "MAX_SPAN input must be an integer"
     m_vec = []
     center = round(MAX_SPAN / 2)
     # generate indices of the high bits for each layer based on the provided hi and lo values from the pattern definition
@@ -189,7 +210,14 @@ def get_ly_mask(ly_pat, MAX_SPAN=37):
     e_hi = ly_pat.ly4.hi + center
     f_lo = ly_pat.ly5.lo + center
     f_hi = ly_pat.ly5.hi + center
-    m_vals = [[a_lo, a_hi], [b_lo, b_hi], [c_lo, c_hi], [d_lo, d_hi], [e_lo, e_hi], [f_lo, f_hi]]
+    m_vals = [
+        [a_lo, a_hi],
+        [b_lo, b_hi],
+        [c_lo, c_hi],
+        [d_lo, d_hi],
+        [e_lo, e_hi],
+        [f_lo, f_hi],
+    ]
     # use the high and low indices to determine where the high bits must go for each layer
     for i in range(len(m_vals)):
         holder = 0
@@ -199,3 +227,21 @@ def get_ly_mask(ly_pat, MAX_SPAN=37):
             holder = holder | val
         m_vec.append(holder)
     return m_vec
+
+
+def get_mypattern(pat_id:int, patlist:'List[patdef_t]') -> patdef_t:
+    assert type(pat_id) == int, "pat_id input must be an integer"
+    assert (
+        type(patlist) == list
+    ), "patlist input must be a list of patdef_t class values"
+    assert (
+        type(patlist[0]) == patdef_t
+    ), "each value in patlist input must be of the class patdef_t"
+    assert (
+        type(patlist[0].ly0) == hi_lo_t
+    ), "each patlist layer must be of the class hi_lo_t"
+    assert type(patlist[0].id) == int, "each patlist id must be an integer"
+    for i in range(len(patlist)):
+        if patlist[i].id == pat_id:
+            mypattern = patlist[i]
+    return mypattern
