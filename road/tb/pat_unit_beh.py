@@ -4,31 +4,42 @@ from subfunc import*
 def process_pat(patlist,ly0_x,ly1_x,ly2_x,ly3_x,ly4_x,ly5_x,MAX_SPAN=37):
     """takes in a list of patterns and sample data for each layer to generate a layer count and id for the pattern that best matches the data"""
 
-    def get_ly_mask(ly_pat,MAX_SPAN=37):
+    def get_ly_mask(ly_pat, MAX_SPAN=37):
         """takes in a given layer pattern and returns a list of integer bit masks for each layer"""
-        m_vec=[]
-        center=round(MAX_SPAN/2)
-        #generate indices of the high bits for each layer based on the provided hi and lo values from the pattern definition
-        a_lo=ly_pat.ly0.lo+center
-        a_hi=ly_pat.ly0.hi+center
-        b_lo=ly_pat.ly1.lo+center
-        b_hi=ly_pat.ly1.hi+center
-        c_lo=ly_pat.ly2.lo+center
-        c_hi=ly_pat.ly2.hi+center
-        d_lo=ly_pat.ly3.lo+center
-        d_hi=ly_pat.ly3.hi+center
-        e_lo=ly_pat.ly4.lo+center
-        e_hi=ly_pat.ly4.hi+center
-        f_lo=ly_pat.ly5.lo+center
-        f_hi=ly_pat.ly5.hi+center
-        m_vals=[[a_lo,a_hi],[b_lo,b_hi],[c_lo,c_hi],[d_lo,d_hi],[e_lo,e_hi],[f_lo,f_hi]]
-        #use the high and low indices to determine where the high bits must go for each layer
+        assert type(ly_pat)==patdef_t,"ly_pat input must be defined in the patdef_t class"
+        assert type(ly_pat.ly0)==hi_lo_t,"each layer of ly_pat must be of the class hi_lo_t"
+        assert type(ly_pat.id)==int,"ly_pat's id must be an integer"
+        assert type(MAX_SPAN)==int,"MAX_SPAN input must be an integer"
+        m_vec = []
+        center = round(MAX_SPAN / 2)
+        # generate indices of the high bits for each layer based on the provided hi and lo values from the pattern definition
+        a_lo = ly_pat.ly0.lo + center
+        a_hi = ly_pat.ly0.hi + center
+        b_lo = ly_pat.ly1.lo + center
+        b_hi = ly_pat.ly1.hi + center
+        c_lo = ly_pat.ly2.lo + center
+        c_hi = ly_pat.ly2.hi + center
+        d_lo = ly_pat.ly3.lo + center
+        d_hi = ly_pat.ly3.hi + center
+        e_lo = ly_pat.ly4.lo + center
+        e_hi = ly_pat.ly4.hi + center
+        f_lo = ly_pat.ly5.lo + center
+        f_hi = ly_pat.ly5.hi + center
+        m_vals = [
+            [a_lo, a_hi],
+            [b_lo, b_hi],
+            [c_lo, c_hi],
+            [d_lo, d_hi],
+            [e_lo, e_hi],
+            [f_lo, f_hi],
+        ]
+        # use the high and low indices to determine where the high bits must go for each layer
         for i in range(len(m_vals)):
-            holder=0
-            #keep setting high bits from the low index to the high index; leave all else as low bits
-            for index in range(m_vals[i][0],m_vals[i][1]+1):
-                val=1<<index
-                holder=holder|val
+            holder = 0
+            # keep setting high bits from the low index to the high index; leave all else as low bits
+            for index in range(m_vals[i][0], m_vals[i][1] + 1):
+                val = 1 << index
+                holder = holder | val
             m_vec.append(holder)
         return m_vec
 

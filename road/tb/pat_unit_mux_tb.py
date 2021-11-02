@@ -3,7 +3,6 @@ import random
 import csv
 import cocotb
 from cocotb.triggers import RisingEdge
-#from cocotb.triggers import Timer
 from cocotb.clock import Clock
 from datadev_mux import datadev_mux
 from pat_unit_mux_beh import pat_mux
@@ -86,11 +85,7 @@ async def pat_unit_mux_test(dut):
     dut.ly4 <= 0
     dut.ly5 <= 0
 
-    hit = 1 << 0
-    [ly0_x, ly1_x, ly2_x, ly3_x, ly4_x, ly5_x] = [hit]*6
 
-    # datadev CHANGE ME AFTER WE FIX THE DATA SHIFT PROBLEM
-    # [ly0_x,ly1_x,ly2_x,ly3_x,ly4_x,ly5_x]=datadev_mux(dut.WIDTH.value)
     # rewrite id and cnt discrepancies files at the start of each test bench run
 
     titles_iddiscrepancies = ['Testcase #', 'Strip',
@@ -112,8 +107,27 @@ async def pat_unit_mux_test(dut):
     for _ in range(10):
         await RisingEdge(dut.clock)
 
+    #set up queue
+    latency=6
+    queue=latency*[0]
+    for r in range(len(queue)):
+        queue[r]=datadev_mux(dut.WIDTH.value)
+        [ly0_x,ly1_x,ly2_x,ly3_x,ly4_x,ly5_x]=queue[r]
+        dut.ly0 <= ly0_x
+        dut.ly1 <= ly1_x
+        dut.ly2 <= ly2_x
+        dut.ly3 <= ly3_x
+        dut.ly4 <= ly4_x
+        dut.ly5 <= ly5_x
+        # align to the dav_i
+        while True:
+            await RisingEdge(dut.clock)
+            if dut.dav_i == 1:
+                break
+
+
     # loop over some number of test cases
-    for j in range(1000):
+    for j in range(10):
 
         # align to the dav_i
         while True:
@@ -121,48 +135,56 @@ async def pat_unit_mux_test(dut):
             if dut.dav_i == 1:
                 break
 
+        #use queue data
+        [ly0_x,ly1_x,ly2_x,ly3_x,ly4_x,ly5_x]=queue.pop(0)
+
+        new_data = datadev_mux(dut.WIDTH.value)
+        #maintain queue length
+        queue.append(new_data)
+
         print("Testcase %d:" % j)
 
-        dut.ly0 <= ly0_x
-        dut.ly1 <= ly1_x
-        dut.ly2 <= ly2_x
-        dut.ly3 <= ly3_x
-        dut.ly4 <= ly4_x
-        dut.ly5 <= ly5_x
+        dut.ly0 <= new_data[0]
+        dut.ly1 <= new_data[1]
+        dut.ly2 <= new_data[2]
+        dut.ly3 <= new_data[3]
+        dut.ly4 <= new_data[4]
+        dut.ly5 <= new_data[5]
+
+        #await RisingEdge(dut.clock)
 
         # keep the data high for 8 clock cycles, since we
         # are running on a 320MHz clock but the data is valid for 25ns
-        for i in range(8):
-            await RisingEdge(dut.clock)
+        # for i in range(8):
+        #     await RisingEdge(dut.clock)
 
-        dut.ly0 <= 0
-        dut.ly1 <= 0
-        dut.ly2 <= 0
-        dut.ly3 <= 0
-        dut.ly4 <= 0
-        dut.ly5 <= 0
+        # dut.ly0 <= 0
+        # dut.ly1 <= 0
+        # dut.ly2 <= 0
+        # dut.ly3 <= 0
+        # dut.ly4 <= 0
+        # dut.ly5 <= 0
 
-        await RisingEdge(dut.clock)
-        # pat_unit_inputs = [[], [], [], [], [], []]
-        # for a in range(dut.WIDTH.value):
-        #     pat_unit_inputs[0].append(dut.patgen[a].pat_unit_inst.ly0.value)
-        #     pat_unit_inputs[1].append(dut.patgen[a].pat_unit_inst.ly1.value)
-        #     pat_unit_inputs[2].append(dut.patgen[a].pat_unit_inst.ly2.value)
-        #     pat_unit_inputs[3].append(dut.patgen[a].pat_unit_inst.ly3.value)
-        #     pat_unit_inputs[4].append(dut.patgen[a].pat_unit_inst.ly4.value)
-        #     pat_unit_inputs[5].append(dut.patgen[a].pat_unit_inst.ly5.value)
 
         [patterns, strips_data] = pat_mux(chamber_data=[ly0_x, ly1_x, ly2_x, ly3_x, ly4_x, ly5_x],
                                           patlist=patlist,
                                           MAX_SPAN=MAX_SPAN,
                                           WIDTH=dut.WIDTH.value)
-        print('\n\n')
-        printly_dat(data=[ly0_x, ly1_x, ly2_x, ly3_x, ly4_x, ly5_x], MAX_SPAN=dut.WIDTH.value)
 
-        # wait for a few clocks for the data to go through the pipeline
-        latency = 6
-        for _ in range(latency-2):
-            await RisingEdge(dut.clock)
+        def princ(astring):
+            print(astring, end="")
+
+        print("loop %d" % j)
+        princ("  > emulator: ")
+        for k in range(8):
+            princ(str(patterns[k][0]) + " ")
+        princ("\n")
+        princ("  > firmware: ")
+        for k in range(8):
+            princ(str(dut.strips_o[k].pattern.id.value.integer) + " ")
+        princ('\n')
+
+        #printly_dat(data=[ly0_x, ly1_x, ly2_x, ly3_x, ly4_x, ly5_x], MAX_SPAN=dut.WIDTH.value)
 
         pat_dat_id_b = []
         pat_dat_id_t = []
@@ -174,24 +196,6 @@ async def pat_unit_mux_test(dut):
         disagreement_cnt_vals_b = []
         disagreement_indices_id = []
         # print warning if the data doesn't match
-        emulator_vals = []
-        hardware_vals = []
-
-        # for a in range(dut.WIDTH.value):
-        #   for b in range(6):
-        #       if (int(pat_unit_inputs[b][a]) != strips_data[a][b]):
-        #           print("Discrepancy in ly%d data at strip %d"%(b,a))
-        #           print("Pat_unit_mux data: "+str(pat_unit_inputs[b][a]))
-        #           print("Emulator data:     " +str(bin(strips_data[a][b])[2:].zfill(MAX_SPAN)))
-        #   emulator_vals.append([bin(strips_data[a][0])[2:].zfill(MAX_SPAN), bin(strips_data[a][1])[2:].zfill(MAX_SPAN), bin(strips_data[a][2])[2:].zfill(MAX_SPAN), bin(strips_data[a][3])[2:].zfill(MAX_SPAN), bin(strips_data[a][4])[2:].zfill(MAX_SPAN), bin(strips_data[a][5])[2:].zfill(MAX_SPAN)])
-        #   hardware_vals.append([, str(dut.patgen[a].pat_unit_inst.ly1.value), str(dut.patgen[a].pat_unit_inst.ly2.value), str(dut.patgen[a].pat_unit_inst.ly3.value), str(dut.patgen[a].pat_unit_inst.ly4.value), str(dut.patgen[a].pat_unit_inst.ly5.value)])
-        #   print('\n\n')
-        # print("These are the values:")
-        # print('Hardware Values:')
-        # print(hardware_vals)
-        # print('\n\n')
-        # print("Emulator Values:")
-        # print(emulator_vals)
 
         for i in range(len(patterns)):
 
@@ -223,54 +227,16 @@ async def pat_unit_mux_test(dut):
         total_disagreements = total_disagreements + disagreements_id + disagreements_cnt
         total_agreements = total_agreements + agreements_id + agreements_cnt
 
-        print("In %d testcases..." % j)
-        print("Pat_unit_mux's Pattern ID's:\n" + str(pat_dat_id_t))
-        print("\nEmulator's Pattern ID's:\n" + str(pat_dat_id_b))
-        print('\n\n')
-        print("Pat_unit_mux's Layer Counts:\n" + str(pat_dat_cnt_t))
-        print("\nEmulator's Layer Counts:\n" + str(pat_dat_cnt_b))
-        print('\n\n')
-        print("Total disagreements: %d" % total_disagreements)
-        print("Total agreements: %d" % total_agreements)
-        print('\n\n')
-        print("Total disagreements from Pattern ID: %d" % disagreements_id)
-        print("Disagreement Indices from Pattern ID: " + str(disagreement_indices_id))
-        print('\n\n')
-        print("Total disagreements from Layer Count: %d"%disagreements_cnt)
-        print("Disagreement Indices from  Layer Count: "+str(disagreement_indices_cnt))
-        print('\n\n\n\n')
+        #print("In %d testcases..." % j)
+        #print("Total disagreements: %d" % total_disagreements)
+        #print('\n\n')
+        #print("Total disagreements from Pattern ID: %d" % disagreements_id)
+        #print("Disagreement Indices from Pattern ID: " + str(disagreement_indices_id))
+        #print('\n\n')
+        #print("Total disagreements from Layer Count: %d"%disagreements_cnt)
+        #print("Disagreement Indices from  Layer Count: "+str(disagreement_indices_cnt))
+        #print('\n\n\n\n')
 
-        # id_discrepancies_towrite=[]
-        # cnt_discrepancies_towrite=[]
-        # for p in range(len(disagreement_indices_id)):
-        #     parsed_data=parse_chamber_dat(strip=disagreement_indices_id[p],chamber_data=[ly0_x,ly1_x,ly2_x,ly3_x,ly4_x,ly5_x],WIDTH=dut.WIDTH.value,MAX_SPAN=MAX_SPAN)
-        #     p_unit_mux_id=pat_dat_id_t[disagreement_indices_id[p]]
-        #     emulator_id=pat_dat_id_b[disagreement_indices_id[p]]
-        #     id_discrepancies_towrite.append([j,disagreement_indices_id[p],parsed_data,p_unit_mux_id,emulator_id])
-        # for l in range(len(disagreement_indices_cnt)):
-        #     parsed_data=parse_chamber_dat(strip=disagreement_indices_cnt[l],chamber_data=[ly0_x,ly1_x,ly2_x,ly3_x,ly4_x,ly5_x],WIDTH=dut.WIDTH.value,MAX_SPAN=MAX_SPAN)
-        #     p_unit_mux_cnt=pat_dat_cnt_t[disagreement_indices_cnt[l]]
-        #     emulator_cnt=pat_dat_cnt_b[disagreement_indices_cnt[l]]
-        #     p_unit_mux_id=pat_dat_id_t[disagreement_indices_cnt[l]]
-        #     emulator_id=pat_dat_id_b[disagreement_indices_cnt[l]]
-        #     cnt_discrepancies_towrite.append([j,disagreement_indices_cnt[l],parsed_data,p_unit_mux_cnt,p_unit_mux_id,emulator_cnt,emulator_id])
-        # with open('../discrepancies_id.csv', 'a') as csv_file:
-        #     csv_writer = csv.writer(csv_file)
-        #     for i in range(len(id_discrepancies_towrite)):
-        #         csv_writer.writerow(id_discrepancies_towrite[i])
-        #     csv_file.close()
-        # with open('../discrepancies_cnt.csv', 'a') as csv_file:
-        #     csv_writer=csv.writer(csv_file)
-        #     for j in range(len(cnt_discrepancies_towrite)):
-        #         csv_writer.writerow(cnt_discrepancies_towrite[j])
-        #     csv_file.close()
-        # disagreement_indices_id=[]
-        # pat_dat_id_b=[]
-        # pat_dat_id_t=[]
-        # pat_dat_cnt_b=[]
-        # pat_dat_cnt_t=[]
-        # datadev CHANGE ME AFTER WE FIX THE DATA SHIFT PROBLEM
-        # [ly0_x,ly1_x,ly2_x,ly3_x,ly4_x,ly5_x]=datadev_mux(dut.WIDTH.value)
 
     for _ in range(1000):
         await RisingEdge(dut.clock)
@@ -307,3 +273,4 @@ def test_pat_unit_mux_1():
 
 if __name__ == "__main__":
     test_pat_unit_mux_1()
+
