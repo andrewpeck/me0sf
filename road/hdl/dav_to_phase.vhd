@@ -6,7 +6,8 @@ use ieee.numeric_std.all;
 entity dav_to_phase is
   generic(
     MAX : natural := 8;
-    DIV : natural := 1
+    DIV : natural := 1;
+    DLY : natural := 0
     );
   port(
 
@@ -18,6 +19,9 @@ entity dav_to_phase is
 end dav_to_phase;
 
 architecture behavioral of dav_to_phase is
+
+  signal delay   : std_logic_vector (DLY-1 downto 0);
+  signal dav_dly : std_logic := '0';
 
   -- Example outputs for MAX=8 at different
   -- divider settings
@@ -56,12 +60,29 @@ begin
 
     div_cnt <= cnt mod DIV;
 
+    dav_dly_gen : if (DLY>0) generate
+      process (clock) is
+      begin
+        if (rising_edge(clock)) then
+          delay(0) <= dav;
+          for I in 1 to DLY-1 loop
+            delay(I) <= delay(I-1);
+          end loop;
+        end if;
+      end process;
+      dav_dly <= delay(DLY-1);
+    end generate;
+
+    dav_nodly_gen : if (DLY=0) generate
+      dav_dly <= dav;
+    end generate;
+
     process (clock) is
     begin
 
       if (rising_edge(clock)) then
 
-        if (dav = '1' and DIV=1) then
+        if (dav_dly = '1' and DIV = 1) then
           phase_cnt <= 1;
         elsif (div_cnt = DIV-1) then
           if (phase_cnt = MAX/DIV-1) then
@@ -71,7 +92,7 @@ begin
           end if;
         end if;
 
-        if (dav = '1') then
+        if (dav_dly = '1') then
           cnt <= 1;
         else
           if (cnt = MAX-1) then
