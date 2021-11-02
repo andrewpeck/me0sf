@@ -6,13 +6,17 @@ from subfunc import *
 
 def datadev(ly_t=6, MAX_SPAN=37, nhit_lo=3, nhit_hi=10):
     """generates data for each layer based on an artificial muon track and noise"""
+    assert type(ly_t)==int,"ly_t input must be an integer."
+    assert type(MAX_SPAN)==int,"MAX_SPAN input must be an integer."
+    assert type(nhit_lo)==int,"nhit_lo input must be an integer."
+    assert type(nhit_hi)==int,"nhit_hi input must be an integer."
     N_LAYERS = 6
 
     # nhits corresponds to the number of hits from noise; slope and hit1 determine the muon track to generate hits from
     nhits = random.randint(nhit_lo, nhit_hi)
     slope = random.uniform(-1 * (MAX_SPAN / (N_LAYERS - 1)), MAX_SPAN / (N_LAYERS - 1))
-    center_lo=MAX_SPAN//2-1
-    center_hi=MAX_SPAN//2+1
+    center_lo = MAX_SPAN // 2 - 1
+    center_hi = MAX_SPAN // 2 + 1
     hit1 = round(random.randint(center_lo, center_hi) - slope * 2.5)
     data = []
 
@@ -137,6 +141,9 @@ def datadev(ly_t=6, MAX_SPAN=37, nhit_lo=3, nhit_hi=10):
 
     def return_indices(data, iterable_data, MAX_SPAN=37):
         """determines where the high bits are in all the layer data; returns the indices of the layer and strip of each high bit"""
+        assert type(data[0])==int,"data input must be a list of integers"
+        assert type(iterable_data[0])==str,"iterable data input must be a list of binary strings"
+        assert type(MAX_SPAN)==int,"MAX_SPAN input must be an integer"
         indices = []
         # create a mask of ones with the same dimensions as the given data value; AND the mask with the data value and count the ones to detemine if high bits are present
         for n in range(len(data)):
@@ -163,5 +170,3 @@ def datadev(ly_t=6, MAX_SPAN=37, nhit_lo=3, nhit_hi=10):
         data[in_1] = clear_bit(data[in_1], in_2)
 
     return data
-
-
