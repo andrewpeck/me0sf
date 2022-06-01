@@ -1,3 +1,6 @@
+from subfunc import get_ly_mask
+
+
 def printly_dat(mask=None, data=None, MAX_SPAN=37):
     """takes in data and/or a mask and returns a visual representation of the info"""
     assert type(MAX_SPAN)==int,"MAX_SPAN input must be an integer."

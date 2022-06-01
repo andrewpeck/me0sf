@@ -35,7 +35,7 @@ def find_pos(dat_pos_bin):
 
 
 def general_findcentroid(data, width):
-    """takes in integer data and a set binary width to return a centroid for the data set"""
+    """takes in an integer and a set binary width to return a centroid for the data set"""
     bin_dat = bin(data)[2:].zfill(width)
     ly_pos = find_pos(bin_dat)
     sum_ly_pos = 0

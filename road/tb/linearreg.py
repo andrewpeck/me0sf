@@ -26,66 +26,6 @@ def find_pos(dat_pos_bin):
     return positions
 
 
-def find_centroid(pat_id, patlist, data, ly_index, lut=None, MAX_SPAN=37):
-    """takes a given pattern ID, patlist, MAX_SPAN, and the list of  data for each layer to determine the hits in the pattern closest to the 'true' centroids"""
-    # take pat_id and patlist to determine integer pattern
-    pattern = get_mypattern(pat_id, patlist)
-    # get bit masks representing each integer layer pattern
-    pattern = get_ly_mask(pattern)
-    # isolate the bitmask of the layer index specified
-    pattern_ly = pattern[ly_index]
-    # get the length of the pattern bit mask
-    bin_ly_pat = bin(pattern_ly)[2:].zfill(MAX_SPAN)
-    len_ly_pat = len(bin_ly_pat)
-    # pad the data if data and mask are not same length
-    bin_ly_dat = bin(data)[2:].zfill(MAX_SPAN)
-    indices_p = []
-    indices_d = []
-    for i in range(len(bin_ly_pat)):
-        if bin_ly_pat[i] == "1":
-            indices_p.append(i)
-        if bin_ly_dat == "1":
-            indices_d.append(i)
-    hi_index_p = max(indices_p)
-    hi_index_d = max(indices_d)
-    if hi_index_d > hi_index_p:
-        data = data << (MAX_SPAN - hi_index_p)
-    # return a string the length of the layer pattern's mask, representing the hits present in the layer
-    positions = data & pattern_ly
-    # ensure that the positions vector has the same dimension as the original mask
-    positions = bin(positions)[2:].zfill(len_ly_pat)
-    # determine the integer positions of the hits in the layer
-    ly_pos = find_pos(positions)
-    sum_ly_pos = 0
-    if ly_pos != None:
-        # average the different positions of hits within the layer to find the 'true' centroid of the data set
-        for l in range(len(ly_pos)):
-            sum_ly_pos = sum_ly_pos + ly_pos[l]
-        centroid = sum_ly_pos // len(ly_pos)
-        # determine which data value in the layer is closest to this 'true' centroid; set that as the centroid for the data
-        min_dist = 999
-        closest = 0
-        for i in range(len(ly_pos)):
-            dist = abs(ly_pos[i] - centroid)
-            if dist <= min_dist:
-                min_dist = dist
-                closest = ly_pos[i]
-        centroid = closest
-    else:
-        centroid = None
-    return centroid
-
-
-def find_centroids(pat_id, patlist, ly_data, lut=None, MAX_SPAN=37):
-    """takes a given pattern ID, patlist, MAX_SPAN, and the list of layer data for each layer to determine the hits in the pattern closest to the 'true' centroids"""
-    centroids = []
-    for i in range(len(ly_data)):
-        centroids.append(
-            find_centroid(
-                pat_id, patlist, ly_data[i], ly_index=i, lut=None, MAX_SPAN=37
-            )
-        )
-    return centroids
 
 
 def find_true_coordinates(centroids, pat_id, patlist, MAX_SPAN=37):
@@ -123,18 +63,18 @@ def find_true_coordinates(centroids, pat_id, patlist, MAX_SPAN=37):
 def best_fit(x_data, y_data):
     """takes in x_data and y_data to determine the values necessary for linear regression; uses linear least squares method"""
     # eliminate data values that correlate to no hits within the mask of a layer
-    elimination_indices = []
-    for i in range(len(y_data)):
-        if y_data[i] == None:
-            elimination_indices.append(i)
-    elimination_vals = []
-    for j in range(len(elimination_indices)):
-        elimination_vals.append(x_data[elimination_indices[j]])
-    x_data = set(x_data)
-    elimination_vals = set(elimination_vals)
-    x_data = x_data - elimination_vals
-    x_data = list(x_data)
-    y_data = [n for n in y_data if n != None]
+    # elimination_indices = []
+    # for i in range(len(y_data)):
+    #     if y_data[i] == None:
+    #         elimination_indices.append(i)
+    # elimination_vals = []
+    # for j in range(len(elimination_indices)):
+    #     elimination_vals.append(x_data[elimination_indices[j]])
+    # x_data = set(x_data)
+    # elimination_vals = set(elimination_vals)
+    # x_data = x_data - elimination_vals
+    # x_data = list(x_data)
+    # y_data = [n for n in y_data if n != None]
     sum_x = 0
     sum_y = 0
     for i in range(len(x_data)):
@@ -156,22 +96,26 @@ def best_fit(x_data, y_data):
     y_fit = []
     for j in range(len(y_data)):
         y_fit.append(slope * x_data[j] + b)
-    slope = round(slope, 4)
-    b = round(b, 4)
+    slope = round(slope, 8)
+    b = round(b, 8)
+    int(slope)
+    int(b)
+    for i in range(len(y_fit)):
+        y_fit[i]=int(y_fit[i])
 
-    return slope, b, y_fit, x_data, y_data
-
+    return slope, b, y_fit
 
 def plot_my_best_fit(slope, b, x_data, y_data, y_fit):
     """uses matplotlib.pyplot to plot line of best fit and print its equation to the figure"""
-    string = "y=" + str(slope) + "+" + str(b)
+    string = "y=" + str(slope)+'x' + "+" + str(b)
     plt.ylim(1, 36)
     plt.plot(x_data, y_data, "o")
-    plt.plot(x_data, y_fit, "k-", label=string)
+    plt.plot(x_data, y_fit, "k-")
     plt.title("Sample Data")
-    plt.legend()
+    plt.legend([None,string])
     plt.show()
 
+# plot_my_best_fit(slope=1,b=0,x_data=[1,2,3,4,5],y_data=[1,12,3,4,5],y_fit=[1,2,3,4,5])
 
 # temporary testing framework
 # for i in range(15):

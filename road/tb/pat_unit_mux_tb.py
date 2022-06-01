@@ -88,23 +88,6 @@ async def pat_unit_mux_test(dut):
     dut.ly4.value = 0
     dut.ly5.value = 0
 
-    # rewrite id and cnt discrepancies files at the start of each test bench run
-
-    # titles_iddiscrepancies = ['Testcase #', 'Strip',
-    #                           'Parsed Data', 'Pat_unit_mux ID', 'Emulator ID']
-    # titles_cntdiscrepancies = ['Testcase #', 'Strip', 'Parsed Data',
-    #                            'Pat_unit_mux CNT', 'Pat_unit_mux ID', 'Emulator CNT', 'Emulator ID']
-
-    # with open('../discrepancies_id.csv', 'w') as csv_file:
-    #     csv_writer = csv.writer(csv_file)
-    #     csv_writer.writerow(titles_iddiscrepancies)
-    #     csv_file.close()
-
-    # with open('../discrepancies_cnt.csv', 'w') as csv_file:
-    #     csv_writer = csv.writer(csv_file)
-    #     csv_writer.writerow(titles_cntdiscrepancies)
-    #     csv_file.close()
-
     # flush the pipeline for a few clocks
     for _ in range(10):
         await RisingEdge(dut.clock)
@@ -155,7 +138,7 @@ async def pat_unit_mux_test(dut):
         # (1) pop old data from the head of the queue
         # (2) run the emulator on the old data
 
-        [patterns, strips_data] = \
+        patterns = \
             pat_mux(chamber_data=queue.pop(0),
                     patlist=patlist,
                     MAX_SPAN=MAX_SPAN,
@@ -163,31 +146,6 @@ async def pat_unit_mux_test(dut):
 
         # def princ(astring):
         #     print(astring, end="")
-
-        # print("loop %d" % j)
-        # princ("  > emulator: ")
-        # for k in range(16):
-        #     princ("%2d/%1d " % (patterns[k][0], patterns[k][1]))
-        # princ("\n")
-        # princ("  > firmware: ")
-        # for k in range(16):
-        #     princ("%2d/%1d " % (dut.strips_o[k].pattern.id.value.integer,
-        #                         dut.strips_o[k].pattern.cnt.value.integer))
-        # princ('\n')
-
-        #printly_dat(data=[ly0_x, ly1_x, ly2_x, ly3_x, ly4_x, ly5_x],
-        # MAX_SPAN=dut.WIDTH.value)
-
-        # pat_dat_id_b = []
-        # pat_dat_id_t = []
-        # pat_dat_cnt_b = []
-        # pat_dat_cnt_t = []
-        # disagreement_id_vals_t = []
-        # disagreement_cnt_vals_t = []
-        # disagreement_id_vals_b = []
-        # disagreement_cnt_vals_b = []
-        # disagreement_indices_id = []
-        # print warning if the data doesn't match
 
         for (i, pattern) in enumerate(patterns):
 
@@ -257,7 +215,7 @@ def test_pat_unit_mux():
         toplevel="pat_unit_mux",   # top level HDL
         toplevel_lang="vhdl",
         parameters=parameters,
-        gui=0
+        gui=1
     )
 
 

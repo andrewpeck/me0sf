@@ -1,5 +1,7 @@
 #Python implementation of the pat_unit.vhd behavior
 from subfunc import*
+from datadev import datadev
+from printly_dat import printly_dat
 
 def process_pat(patlist,ly0_x,ly1_x,ly2_x,ly3_x,ly4_x,ly5_x,MAX_SPAN=37):
     """takes in a list of patterns and sample data for each layer to generate a layer count and id for the pattern that best matches the data"""
@@ -132,3 +134,5 @@ def process_pat(patlist,ly0_x,ly1_x,ly2_x,ly3_x,ly4_x,ly5_x,MAX_SPAN=37):
     if (ly_c==0):
         pat_id=0
     return pat_id,ly_c
+
+

@@ -28,15 +28,14 @@ def pat_mux(chamber_data, patlist, MAX_SPAN=37, WIDTH=192):
         [pat_id, ly_c] = process_pat(
             patlist, ly0_x, ly1_x, ly2_x, ly3_x, ly4_x, ly5_x, MAX_SPAN
         )
-        return pat_id, ly_c, strip, p_unit_dat
+        return pat_id, ly_c, strip
 
     patterns = []
     strips_data = []
     for i in range(WIDTH):
-        [pat_id, ly_c, strip, p_unit_dat] = find_pattern(
+        [pat_id, ly_c, strip] = find_pattern(
             chamber_data, i, patlist, MAX_SPAN
         )
-        strips_data.append(p_unit_dat)
         patterns.append([pat_id, ly_c, strip])
 
-    return patterns, strips_data
+    return patterns

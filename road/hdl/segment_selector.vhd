@@ -70,7 +70,7 @@ begin
         INPUTS               => CLOG_WIDTH,
         OUTPUTS              => NUM_OUTPUTS,
         DATA_BITS            => BITS,
-        KEY_BITS             => BITS - 3 - STRIP_BITS - null_pattern.hash'length,
+        KEY_BITS             => BITS - null_pattern.hash'length,
         META_BITS            => 1,
         PIPELINE_STAGE_AFTER => 1,
         ADD_INPUT_REGISTERS  => true,
