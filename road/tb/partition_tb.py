@@ -247,6 +247,7 @@ def test_partition_1():
         compile_args=["-2008"],
         toplevel="partition",  # top level HDL
         toplevel_lang="vhdl",
+        sim_args = ["-do \"set NumericStdNoWarnings 1;\""],
         parameters=parameters,
         gui=0,
     )
