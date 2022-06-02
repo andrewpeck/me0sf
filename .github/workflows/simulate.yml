@@ -11,17 +11,18 @@ on:
 jobs:
   build:
     runs-on: self-hosted
+    strategy:
+      fail-fast: false
+      matrix:
+        testbenches:
+          - road/tb/pat_unit_tb.py
+          - road/tb/pat_unit_mux_tb.py
+          - road/tb/partition_tb.py
     steps:
 
       - uses: actions/checkout@v2
         with:
           submodules: 'true'
 
-      - name: Pat Unit Test Bench
-        run: python road/tb/pat_unit_tb.py
-      - name: Pat Unit Multiplexer Test Bench
-        run: python road/tb/pat_unit_mux_tb.py
-      - name: Pat Unit Multiplexer Test Bench
-        run: python road/tb/partition_tb.py
-      - name: Pat Unit Multiplexer Test Bench
-        run: python road/tb/partition_tb.py
+      - name: Test Firmware Module
+        run: python ${{ matrix.testbenches }}
