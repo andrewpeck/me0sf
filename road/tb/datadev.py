@@ -2,11 +2,43 @@
 # TODO: repalce ly_t with a random number (0-1) that specifies the gaussian probability that any given layer will be hit
 # TODO: should slope be uniform or follow some distribution (e.g. vaguely modeling the pT distribution [from nick]?)
 # TODO: this can be made a lot more concise
+# TODO: layer generation can be mapped some list comprehenson tuple
 import random
-#from printly_dat import printly_dat
 from subfunc import *
 from constants import *
 
+def return_indices(data, iterable_data, MAX_SPAN=37):
+    """determines where the high bits are in all the layer data; returns the indices of the layer and strip of each high bit
+
+    Args:
+        data:
+        iterable_data:
+        MAX_SPAN:  (Default value = 37)
+
+    Returns:
+
+    Raises:
+
+    """
+    assert type(data[0]) == int, "data input must be a list of integers"
+    assert (
+        type(iterable_data[0]) == str
+    ), "iterable data input must be a list of binary strings"
+    assert type(MAX_SPAN) == int, "MAX_SPAN input must be an integer"
+    indices = []
+    # create a mask of ones with the same dimensions as the given data value; AND the mask with the data value and count the ones to detemine if high bits are present
+    for n in range(len(data)):
+        mask = ones_bit_mask(data[n])
+        check = count_ones(data[n] & mask)
+        if check >= 1:
+            # create iterable binary version of the mask and data integers; set the dimensions of each to be the max layer strip span
+            iterable_mask = bin(mask)[2:]
+            iterable_mask = iterable_mask.zfill(MAX_SPAN)
+            # AND the iterable data and iterable mask to find the high bits; return the layer n and strip o where the high bit occurs
+            for o in range(len(iterable_data[n])):
+                if int(iterable_data[n][o]) & int(iterable_mask[o]) == 1:
+                    indices.append([n, o])
+    return indices
 
 def datadev(ly_t=6, MAX_SPAN=37, nhit_lo=3, nhit_hi=10):
     """generates data for each layer based on an artificial muon track and noise
@@ -36,6 +68,12 @@ def datadev(ly_t=6, MAX_SPAN=37, nhit_lo=3, nhit_hi=10):
     center_hi = MAX_SPAN // 2 + 1
     hit1 = round(random.randint(center_lo, center_hi) - slope * 2.5)
     data = []
+
+    ly1_h = 0
+    ly2_h = 0
+    ly3_h = 0
+    ly4_h = 0
+    ly5_h = 0
 
     # generate the different hits for each layer based on how many layers the muon traveled through
     if ly_t == 1:
@@ -80,6 +118,8 @@ def datadev(ly_t=6, MAX_SPAN=37, nhit_lo=3, nhit_hi=10):
         ly3_h = round((slope * 3) + hit1)
         ly4_h = round((slope * 4) + hit1)
         ly5_h = round((slope * 5) + hit1)
+    else:
+        assert False, "invalid selection"
 
     # setting the hit index boundaries at the thresholds 0 and 36
     lyx_h = [ly0_h, ly1_h, ly2_h, ly3_h, ly4_h, ly5_h]
@@ -142,7 +182,7 @@ def datadev(ly_t=6, MAX_SPAN=37, nhit_lo=3, nhit_hi=10):
         data.append(0)
 
     # noise for all 6 layers
-    for ihit in range(nhits):
+    for _ in range(nhits):
         strip = random.randint(0, MAX_SPAN - 1)
         ly = random.randint(0, N_LAYERS - 1)
         data[ly] = set_bit(strip, data[ly])
@@ -156,44 +196,11 @@ def datadev(ly_t=6, MAX_SPAN=37, nhit_lo=3, nhit_hi=10):
         iterable_data_v = iterable_data_v.zfill(MAX_SPAN)
         iterable_data.append(iterable_data_v)
 
-    def return_indices(data, iterable_data, MAX_SPAN=37):
-        """determines where the high bits are in all the layer data; returns the indices of the layer and strip of each high bit
-
-        Args:
-          data: 
-          iterable_data: 
-          MAX_SPAN:  (Default value = 37)
-
-        Returns:
-
-        Raises:
-
-        """
-        assert type(data[0]) == int, "data input must be a list of integers"
-        assert (
-            type(iterable_data[0]) == str
-        ), "iterable data input must be a list of binary strings"
-        assert type(MAX_SPAN) == int, "MAX_SPAN input must be an integer"
-        indices = []
-        # create a mask of ones with the same dimensions as the given data value; AND the mask with the data value and count the ones to detemine if high bits are present
-        for n in range(len(data)):
-            mask = ones_bit_mask(data[n])
-            check = count_ones(data[n] & mask)
-            if check >= 1:
-                # create iterable binary version of the mask and data integers; set the dimensions of each to be the max layer strip span
-                iterable_mask = bin(mask)[2:]
-                iterable_mask = iterable_mask.zfill(MAX_SPAN)
-                # AND the iterable data and iterable mask to find the high bits; return the layer n and strip o where the high bit occurs
-                for o in range(len(iterable_data[n])):
-                    if int(iterable_data[n][o]) & int(iterable_mask[o]) == 1:
-                        indices.append([n, o])
-        return indices
-
     n_eliminate = round(ones_ct * 0.1)
     el_indices = return_indices(data, iterable_data, MAX_SPAN=MAX_SPAN)
 
     # clear 10% of the data on random strips and layers
-    for k in range(n_eliminate):
+    for _ in range(n_eliminate):
         target = random.choice(el_indices)
         in_1 = target[0]
         in_2 = target[1]
