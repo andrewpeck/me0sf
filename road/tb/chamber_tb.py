@@ -292,7 +292,7 @@ def test_chamber_1():
         compile_args=["-2008"],
         toplevel="chamber",  # top level HDL
         toplevel_lang="vhdl",
-        sim_args = ['-do "set NumericStdNoWarnings 1;"'],
+        # sim_args = ['-do "set NumericStdNoWarnings 1;"'],
         parameters=parameters,
         gui=0,
     )
