@@ -222,7 +222,7 @@ def test_pat_unit_mux():
         compile_args=["-2008"],
         toplevel="pat_unit_mux",  # top level HDL
         toplevel_lang="vhdl",
-        sim_args = ["-do \"set NumericStdNoWarnings 1;\""],
+        sim_args = ['-do "set NumericStdNoWarnings 1;"'],
         parameters=parameters,
         gui=0,
     )
