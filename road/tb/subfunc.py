@@ -1,7 +1,6 @@
 # Functions, global variables, and classes used in multiple files
 from typing import List
 
-
 class hi_lo_t:
     def __init__(self, hi, lo):
         self.hi = hi

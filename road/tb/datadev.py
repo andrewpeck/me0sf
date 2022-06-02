@@ -1,16 +1,33 @@
 # Test case generator for pat_unit.vhd
+# TODO: repalce ly_t with a random number (0-1) that specifies the gaussian probability that any given layer will be hit
+# TODO: should slope be uniform or follow some distribution (e.g. vaguely modeling the pT distribution [from nick]?)
+# TODO: this can be made a lot more concise
 import random
 #from printly_dat import printly_dat
 from subfunc import *
+from constants import *
 
 
 def datadev(ly_t=6, MAX_SPAN=37, nhit_lo=3, nhit_hi=10):
-    """generates data for each layer based on an artificial muon track and noise"""
+    """generates data for each layer based on an artificial muon track and noise
+
+    Args:
+      ly_t:  # number of layers hit (Default value = 6)
+      MAX_SPAN:  width of a pattern window (Default value = 37)
+      nhit_lo:  lower bound for number of hits (Default value = 3)
+      nhit_hi:  upper bound for number of hits (Default value = 10)
+
+    Returns:
+      A list of 6 integers (1 integer per layer) representing the generated hits on those layers
+
+    To do:
+
+    """
+
     assert type(ly_t) == int, "ly_t input must be an integer."
     assert type(MAX_SPAN) == int, "MAX_SPAN input must be an integer."
     assert type(nhit_lo) == int, "nhit_lo input must be an integer."
     assert type(nhit_hi) == int, "nhit_hi input must be an integer."
-    N_LAYERS = 6
 
     # nhits corresponds to the number of hits from noise; slope and hit1 determine the muon track to generate hits from
     nhits = random.randint(nhit_lo, nhit_hi)
@@ -140,7 +157,18 @@ def datadev(ly_t=6, MAX_SPAN=37, nhit_lo=3, nhit_hi=10):
         iterable_data.append(iterable_data_v)
 
     def return_indices(data, iterable_data, MAX_SPAN=37):
-        """determines where the high bits are in all the layer data; returns the indices of the layer and strip of each high bit"""
+        """determines where the high bits are in all the layer data; returns the indices of the layer and strip of each high bit
+
+        Args:
+          data: 
+          iterable_data: 
+          MAX_SPAN:  (Default value = 37)
+
+        Returns:
+
+        Raises:
+
+        """
         assert type(data[0]) == int, "data input must be a list of integers"
         assert (
             type(iterable_data[0]) == str
