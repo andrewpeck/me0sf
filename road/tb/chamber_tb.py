@@ -6,10 +6,8 @@ from cocotb.triggers import RisingEdge
 from cocotb.clock import Clock
 from numpy import partition
 from datadev_mux import datadev_mux
-from datadev_part import datadev_part
 from subfunc import *
 from cocotb_test.simulator import run
-from printly_dat import printly_dat
 from chamber_beh import work_chamber
 from random import seed
 
