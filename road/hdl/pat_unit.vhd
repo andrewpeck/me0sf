@@ -202,7 +202,7 @@ begin
   begin
     if (rising_edge(clock)) then
 
-      dav_o <= best_dav;
+      -- dav_o <= best_dav;
 
       if (best.cnt >= THRESHOLD) then
         pat_o     <= best;
