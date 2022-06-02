@@ -1,5 +1,7 @@
 # Functions, global variables, and classes used in multiple files
 from typing import List
+
+
 class hi_lo_t:
     def __init__(self, hi, lo):
         self.hi = hi
@@ -229,7 +231,7 @@ def get_ly_mask(ly_pat, MAX_SPAN=37):
     return m_vec
 
 
-def get_mypattern(pat_id:int, patlist:'List[patdef_t]') -> patdef_t:
+def get_mypattern(pat_id: int, patlist: "List[patdef_t]") -> patdef_t:
     assert type(pat_id) == int, "pat_id input must be an integer"
     assert (
         type(patlist) == list

@@ -7,10 +7,10 @@ from printly_dat import printly_dat
 
 def datadev_mux(WIDTH=192, track_num=4, nhit_lo=3, nhit_hi=10):
     """takes a given chamber width and a range of hits to generate a random number of tracks for populating data throughout layers"""
-    assert type(WIDTH)==int,"WIDTH input must be an integer"
-    assert type(track_num)==int,"track_num input must be an integer"
-    assert type(nhit_lo)==int,"nhit_lo input must be an integer"
-    assert type(nhit_hi)==int,"nhit_hi input must be an integer"
+    assert type(WIDTH) == int, "WIDTH input must be an integer"
+    assert type(track_num) == int, "track_num input must be an integer"
+    assert type(nhit_lo) == int, "nhit_lo input must be an integer"
+    assert type(nhit_hi) == int, "nhit_hi input must be an integer"
     N_LAYERS = 6
     # create space for 6 layers of data
     data_store = [0, 0, 0, 0, 0, 0]

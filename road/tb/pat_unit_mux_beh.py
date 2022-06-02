@@ -13,10 +13,10 @@ def pat_mux(chamber_data, patlist, MAX_SPAN=37, WIDTH=192):
         """takes in data, a strip index, and a MAX_SPAN to get the data a pat_unit on that strip would see"""
         if strip < MAX_SPAN // 2 + 1:
             data_shifted = data << (MAX_SPAN // 2 - strip)
-            parsed_data = data_shifted & (2 ** MAX_SPAN - 1)
+            parsed_data = data_shifted & (2**MAX_SPAN - 1)
         else:
             shift = strip - MAX_SPAN // 2
-            parsed_data = (data >> shift) & (2 ** MAX_SPAN - 1)
+            parsed_data = (data >> shift) & (2**MAX_SPAN - 1)
         return parsed_data
 
     def find_pattern(ly_dat, strip, patlist, MAX_SPAN=37):
@@ -33,9 +33,7 @@ def pat_mux(chamber_data, patlist, MAX_SPAN=37, WIDTH=192):
     patterns = []
     strips_data = []
     for i in range(WIDTH):
-        [pat_id, ly_c, strip] = find_pattern(
-            chamber_data, i, patlist, MAX_SPAN
-        )
+        [pat_id, ly_c, strip] = find_pattern(chamber_data, i, patlist, MAX_SPAN)
         patterns.append([pat_id, ly_c, strip])
 
     return patterns

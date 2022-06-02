@@ -1,4 +1,4 @@
-#Testbenh for partition.vhd
+# Testbenh for partition.vhd
 import os
 import random
 import csv
@@ -8,13 +8,14 @@ from cocotb.clock import Clock
 from numpy import partition
 from datadev_mux import datadev_mux
 from datadev_part import datadev_part
-from subfunc import*
+from subfunc import *
 from cocotb_test.simulator import run
 from printly_dat import printly_dat
 from partition_beh import work_partition
 import time
 from cocotb.triggers import Timer
 from pat_unit_mux_beh import pat_mux
+
 
 async def generate_dav(dut):
     "Generates a dav signal every 8th clock cycle"
@@ -25,22 +26,28 @@ async def generate_dav(dut):
         for _ in range(7):
             await RisingEdge(dut.clock)
 
+
 random.seed(56)
+
 
 @cocotb.test()
 async def partition_test(dut):
     "Test the partition.vhd module"
-    group_size=8
-    ghost_width=2
-    discrepancy_cnt=0
-    N_LAYERS=6
+    group_size = 8
+    ghost_width = 2
+    discrepancy_cnt = 0
+    N_LAYERS = 6
 
-    MAX_SPAN = max([dut.pat_unit_mux_inst.LY0_SPAN.value,
-                    dut.pat_unit_mux_inst.LY1_SPAN.value,
-                    dut.pat_unit_mux_inst.LY2_SPAN.value,
-                    dut.pat_unit_mux_inst.LY3_SPAN.value,
-                    dut.pat_unit_mux_inst.LY4_SPAN.value,
-                    dut.pat_unit_mux_inst.LY5_SPAN.value,])
+    MAX_SPAN = max(
+        [
+            dut.pat_unit_mux_inst.LY0_SPAN.value,
+            dut.pat_unit_mux_inst.LY1_SPAN.value,
+            dut.pat_unit_mux_inst.LY2_SPAN.value,
+            dut.pat_unit_mux_inst.LY3_SPAN.value,
+            dut.pat_unit_mux_inst.LY4_SPAN.value,
+            dut.pat_unit_mux_inst.LY5_SPAN.value,
+        ]
+    )
 
     patlist = []
     for i in range(len(dut.pat_unit_mux_inst.PATLIST)):
@@ -84,20 +91,22 @@ async def partition_test(dut):
         await RisingEdge(dut.dav_i)
 
     # set up a fixed latency queue
-    latency = 2 #FIXME: input the actual latency value; not an exact clock cycle --> 1 dav or 8 clock cycles from the dav_i await above
+    latency = 2  # FIXME: input the actual latency value; not an exact clock cycle --> 1 dav or 8 clock cycles from the dav_i await above
     queue = []
 
-    bad_strips=[]
-    bad_patterns=[]
-    bad_lyc=[]
-    partition_num=0
+    bad_strips = []
+    bad_patterns = []
+    bad_lyc = []
+    partition_num = 0
     for j in range(latency):
 
         # align to the dav_i
         await RisingEdge(dut.dav_i)
 
         # if (j==1):
-        chamber_data = datadev_mux(WIDTH=dut.pat_unit_mux_inst.WIDTH.value,track_num=4,nhit_hi=10,nhit_lo=3)
+        chamber_data = datadev_mux(
+            WIDTH=dut.pat_unit_mux_inst.WIDTH.value, track_num=4, nhit_hi=10, nhit_lo=3
+        )
         # else:
         #     chamber_data = [0,0,0,0,0,0]
 
@@ -108,7 +117,7 @@ async def partition_test(dut):
 
     for j in range(10000):
 
-        print("Case %d" %  j)
+        print("Case %d" % j)
 
         # align to the dav_i
         await RisingEdge(dut.dav_i)
@@ -117,9 +126,11 @@ async def partition_test(dut):
         # (2) push it onto the queue
         # (3) set the DUT inputs to the new data
 
-   #     if (j==2):
-        new_data = datadev_mux(WIDTH=dut.pat_unit_mux_inst.WIDTH.value,track_num=4,nhit_hi=10,nhit_lo=3)
-   #     else: 
+        #     if (j==2):
+        new_data = datadev_mux(
+            WIDTH=dut.pat_unit_mux_inst.WIDTH.value, track_num=4, nhit_hi=10, nhit_lo=3
+        )
+        #     else:
         # new_data = [0,0,0,0,0,0]
 
         queue.append(new_data)
@@ -127,7 +138,7 @@ async def partition_test(dut):
         for i in range(6):
             dut.partition_i[i].value = new_data[i]
 
-        #set neighbor_i to 0 for now
+        # set neighbor_i to 0 for now
         dut.neighbor_i[0].value = 0
         dut.neighbor_i[1].value = 0
         dut.neighbor_i[2].value = 0
@@ -135,22 +146,26 @@ async def partition_test(dut):
         dut.neighbor_i[4].value = 0
         dut.neighbor_i[5].value = 0
 
+        # latency equals 9 clock cycles
 
-        #latency equals 9 clock cycles
+        # gather emulator output
+        current_data = queue.pop(0)
+        emulator_dat = work_partition(
+            chamber_data=current_data,
+            patlist=patlist,
+            MAX_SPAN=MAX_SPAN,
+            WIDTH=dut.pat_unit_mux_inst.WIDTH.value,
+        )
+        print("\n\n")
+        printly_dat(data=current_data, MAX_SPAN=dut.pat_unit_mux_inst.WIDTH.value)
+        print("\n\n")
 
-        #gather emulator output
-        current_data=queue.pop(0)
-        emulator_dat=work_partition(chamber_data=current_data,patlist=patlist,MAX_SPAN=MAX_SPAN,WIDTH=dut.pat_unit_mux_inst.WIDTH.value)
-        print('\n\n')
-        printly_dat(data=current_data,MAX_SPAN=dut.pat_unit_mux_inst.WIDTH.value)
-        print('\n\n')
-
-        #set up the comparisons
-        #list of [pat_id, ly_c, strip]
+        # set up the comparisons
+        # list of [pat_id, ly_c, strip]
 
         for r in range(len(dut.segments_o)):
 
-            #print ("segment %d" % r)
+            # print ("segment %d" % r)
 
             firmware_id = dut.segments_o[r].strip.pattern.id.value
             emulator_id = emulator_dat[r][0]
@@ -165,42 +180,51 @@ async def partition_test(dut):
             #     print('Case #%d'%j)
             #     print("=============================----------------------------------------------------")
             #     print("=============================----------------------------------------------------")
-            #compare the partition id/cnt/strips
-            if (firmware_id != emulator_id):
-                bad_patterns.append([j,r])
-                print("  > emulator id = %d, simulator_id = %d" % (emulator_id, firmware_id))
-            if (firmware_cnt != emulator_cnt):
-                bad_lyc.append([j,r])
-                print("  > emulator cnt = %d, simulator_cnt = %d" % (emulator_cnt, firmware_cnt))
-            if (firmware_strip != emulator_strip):
-                bad_strips.append([j,r])
-                print("  > emulator strip = %d, simulator_strip = %d" % (emulator_strip, firmware_strip))
+            # compare the partition id/cnt/strips
+            if firmware_id != emulator_id:
+                bad_patterns.append([j, r])
+                print(
+                    "  > emulator id = %d, simulator_id = %d"
+                    % (emulator_id, firmware_id)
+                )
+            if firmware_cnt != emulator_cnt:
+                bad_lyc.append([j, r])
+                print(
+                    "  > emulator cnt = %d, simulator_cnt = %d"
+                    % (emulator_cnt, firmware_cnt)
+                )
+            if firmware_strip != emulator_strip:
+                bad_strips.append([j, r])
+                print(
+                    "  > emulator strip = %d, simulator_strip = %d"
+                    % (emulator_strip, firmware_strip)
+                )
 
-            if (dut.segments_o[r].strip.pattern.id.value!=emulator_dat[r][0]):
-                bad_patterns.append([j,r])
+            if dut.segments_o[r].strip.pattern.id.value != emulator_dat[r][0]:
+                bad_patterns.append([j, r])
 
-            if (dut.segments_o[r].strip.pattern.cnt.value!=emulator_dat[r][1]):
-                bad_lyc.append([j,r])
+            if dut.segments_o[r].strip.pattern.cnt.value != emulator_dat[r][1]:
+                bad_lyc.append([j, r])
 
-        if (j==2): #check once that the PARTITION_NUM is the correct value
-            for i in range (len(dut.segments_o)):
-                assert partition_num==dut.segments_o[i].partition.value;
+        if j == 2:  # check once that the PARTITION_NUM is the correct value
+            for i in range(len(dut.segments_o)):
+                assert partition_num == dut.segments_o[i].partition.value
 
-        print('We have %d strip discrepancies' %(len(bad_strips)))
+        print("We have %d strip discrepancies" % (len(bad_strips)))
         print(bad_strips)
-        print('\n\n')
-        print('We have %d pattern discrepancies' %(len(bad_patterns)))
+        print("\n\n")
+        print("We have %d pattern discrepancies" % (len(bad_patterns)))
         print(bad_patterns)
-        print('\n\n')
-        print('We have %d lyc discrepancies' %(len(bad_lyc)))
+        print("\n\n")
+        print("We have %d lyc discrepancies" % (len(bad_lyc)))
         print(bad_lyc)
-        print('\n\n')
-        assert len(bad_strips)+len(bad_patterns)+(len(bad_lyc))==0, "Oh no"
+        print("\n\n")
+        assert len(bad_strips) + len(bad_patterns) + (len(bad_lyc)) == 0, "Oh no"
 
 
 def test_partition_1():
     tests_dir = os.path.abspath(os.path.dirname(__file__))
-    rtl_dir = os.path.abspath(os.path.join(tests_dir, '..', 'hdl'))
+    rtl_dir = os.path.abspath(os.path.join(tests_dir, "..", "hdl"))
     module = os.path.splitext(os.path.basename(__file__))[0]
 
     vhdl_sources = [
@@ -210,24 +234,24 @@ def test_partition_1():
         os.path.join(rtl_dir, "pat_unit.vhd"),
         os.path.join(rtl_dir, "dav_to_phase.vhd"),
         os.path.join(rtl_dir, "pat_unit_mux.vhd"),
-        os.path.join(rtl_dir, "partition.vhd")]
+        os.path.join(rtl_dir, "partition.vhd"),
+    ]
 
     parameters = {}
-    parameters['MUX_FACTOR'] = 8
+    parameters["MUX_FACTOR"] = 8
 
     os.environ["SIM"] = "questa"
 
     run(
         vhdl_sources=vhdl_sources,
-        module=module,       # name of cocotb test module
+        module=module,  # name of cocotb test module
         compile_args=["-2008"],
-        toplevel="partition",   # top level HDL
+        toplevel="partition",  # top level HDL
         toplevel_lang="vhdl",
         parameters=parameters,
-        gui=0
+        gui=0,
     )
 
 
 if __name__ == "__main__":
     test_partition_1()
-

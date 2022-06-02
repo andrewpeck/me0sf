@@ -26,8 +26,6 @@ def find_pos(dat_pos_bin):
     return positions
 
 
-
-
 def find_true_coordinates(centroids, pat_id, patlist, MAX_SPAN=37):
     """takes in a list of centroids for all layers, pat_id, patlist, and MAX_SPAN to determine the centroid coordinates relative to the entire layer"""
     center = MAX_SPAN // 2
@@ -88,7 +86,7 @@ def best_fit(x_data, y_data):
         x_sq_list.append(x_data[k] ** 2)
     sum_xy = sum(xy_list)
     sum_x_sq = sum(x_sq_list)
-    denominator = n * sum_x_sq - sum_x ** 2
+    denominator = n * sum_x_sq - sum_x**2
     if denominator == 0:
         denominator = 1
     slope = (n * sum_xy - (sum_x * sum_y)) / denominator
@@ -101,19 +99,21 @@ def best_fit(x_data, y_data):
     int(slope)
     int(b)
     for i in range(len(y_fit)):
-        y_fit[i]=int(y_fit[i])
+        y_fit[i] = int(y_fit[i])
 
     return slope, b, y_fit
 
+
 def plot_my_best_fit(slope, b, x_data, y_data, y_fit):
     """uses matplotlib.pyplot to plot line of best fit and print its equation to the figure"""
-    string = "y=" + str(slope)+'x' + "+" + str(b)
+    string = "y=" + str(slope) + "x" + "+" + str(b)
     plt.ylim(1, 36)
     plt.plot(x_data, y_data, "o")
     plt.plot(x_data, y_fit, "k-")
     plt.title("Sample Data")
-    plt.legend([None,string])
+    plt.legend([None, string])
     plt.show()
+
 
 # plot_my_best_fit(slope=1,b=0,x_data=[1,2,3,4,5],y_data=[1,12,3,4,5],y_fit=[1,2,3,4,5])
 

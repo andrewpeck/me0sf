@@ -1,25 +1,27 @@
-#Generates visual representations of pat_unit.vhd masks
+# Generates visual representations of pat_unit.vhd masks
 from printly_dat import printly_dat
-from subfunc import*
+from subfunc import *
 
-pats_m=[]
+pats_m = []
 for w in range(len(patlist)):
-            pats_m.append(get_ly_mask(patlist[w],37))
+    pats_m.append(get_ly_mask(patlist[w], 37))
 
-pat_id_list=[]
+pat_id_list = []
 for y in range(len(patlist)):
     pat_id_list.append(patlist[y].id)
 
-def print_my_masks(pats_m,pat_id_list):
+
+def print_my_masks(pats_m, pat_id_list):
     for x in range(len(pats_m)):
-        print('Pattern ID: %d' %pat_id_list[x])
+        print("Pattern ID: %d" % pat_id_list[x])
         printly_dat(pats_m[x])
-        print('\n')
+        print("\n")
 
-print_my_masks(pats_m,pat_id_list)
 
-#Emulator patlist:
-#------------------------------------------
+print_my_masks(pats_m, pat_id_list)
+
+# Emulator patlist:
+# ------------------------------------------
 # Pattern ID: 15
 # ly0 -----------------XXX-----------------
 
@@ -32,7 +34,6 @@ print_my_masks(pats_m,pat_id_list)
 # ly4 -----------------XXX-----------------
 
 # ly5 -----------------XXX-----------------
-
 
 
 # Pattern ID: 14
@@ -49,7 +50,6 @@ print_my_masks(pats_m,pat_id_list)
 # ly5 --------------XXXX-------------------
 
 
-
 # Pattern ID: 13
 # ly0 --------------XXXX-------------------
 
@@ -62,7 +62,6 @@ print_my_masks(pats_m,pat_id_list)
 # ly4 ------------------XXXX---------------
 
 # ly5 -------------------XXXX--------------
-
 
 
 # Pattern ID: 12
@@ -79,7 +78,6 @@ print_my_masks(pats_m,pat_id_list)
 # ly5 -------------XXXX--------------------
 
 
-
 # Pattern ID: 11
 # ly0 -------------XXXX--------------------
 
@@ -92,7 +90,6 @@ print_my_masks(pats_m,pat_id_list)
 # ly4 -------------------XXXX--------------
 
 # ly5 --------------------XXXX-------------
-
 
 
 # Pattern ID: 10
@@ -109,7 +106,6 @@ print_my_masks(pats_m,pat_id_list)
 # ly5 ----------XXXX-----------------------
 
 
-
 # Pattern ID: 9
 # ly0 ----------XXXX-----------------------
 
@@ -122,7 +118,6 @@ print_my_masks(pats_m,pat_id_list)
 # ly4 ----------------------XXXX-----------
 
 # ly5 -----------------------XXXX----------
-
 
 
 # Pattern ID: 8
@@ -139,7 +134,6 @@ print_my_masks(pats_m,pat_id_list)
 # ly5 ----------XXXX-----------------------
 
 
-
 # Pattern ID: 7
 # ly0 ----------XXXX-----------------------
 
@@ -152,7 +146,6 @@ print_my_masks(pats_m,pat_id_list)
 # ly4 ----------------------XXXX-----------
 
 # ly5 -----------------------XXXX----------
-
 
 
 # Pattern ID: 6
@@ -169,7 +162,6 @@ print_my_masks(pats_m,pat_id_list)
 # ly5 -------XXXX--------------------------
 
 
-
 # Pattern ID: 5
 # ly0 -------XXXX--------------------------
 
@@ -182,7 +174,6 @@ print_my_masks(pats_m,pat_id_list)
 # ly4 -----------------------XXXXX---------
 
 # ly5 --------------------------XXXX-------
-
 
 
 # Pattern ID: 4
@@ -199,7 +190,6 @@ print_my_masks(pats_m,pat_id_list)
 # ly5 ---XXXXX-----------------------------
 
 
-
 # Pattern ID: 3
 # ly0 ---XXXXX-----------------------------
 
@@ -214,7 +204,6 @@ print_my_masks(pats_m,pat_id_list)
 # ly5 -----------------------------XXXXX---
 
 
-
 # Pattern ID: 2
 # ly0 ----------------------------XXXXXXXXX
 
@@ -227,7 +216,6 @@ print_my_masks(pats_m,pat_id_list)
 # ly4 ----XXXXXXXXX------------------------
 
 # ly5 XXXXXXXXX----------------------------
-
 
 
 # Pattern ID: 1

@@ -1,15 +1,16 @@
-# Python emulator of the partition.vhd file
+""" Emulator that processes a single partition (6 layers x 192 strips) and returns a collection of segments"""
 from pat_unit_mux_beh import pat_mux
 from datadev_mux import datadev_mux
 from subfunc import *
 
 
-
 def work_partition(
     chamber_data, patlist, MAX_SPAN=37, WIDTH=192, group_width=8, ghost_width=4
 ):
+
     """takes in pat_unit_mux_data, a group size, and a ghost width to return a smaller data set, using ghost edge cancellation
     and segment quality filtering
+
     NOTE: ghost width denotes the width where we can likely see copies of the same segment in the data"""
     pat_mux_dat = pat_mux(
         chamber_data=chamber_data, patlist=patlist, MAX_SPAN=MAX_SPAN, WIDTH=WIDTH
@@ -20,7 +21,7 @@ def work_partition(
         comp_list = [x for x in comp_list if x != 0]
         if len(comp_list) != 0:
             for i in range(len(comp_list)):
-                if (val == 0):
+                if val == 0:
                     break
                 if (
                     val[0] == comp_list[i][0]
@@ -51,7 +52,9 @@ def work_partition(
             quality_index = 0
             max_ID = 0
             for n in range(len(ID_group)):
-                if ID_group[n][0] > max_ID: #don't compare on the rightmost; we want lower
+                if (
+                    ID_group[n][0] > max_ID
+                ):  # don't compare on the rightmost; we want lower
                     max_ID = ID_group[n][0]
                     quality_index = original_indices[n]
         # save data from the highest quality pattern; set all other values to 0
@@ -77,16 +80,10 @@ def work_partition(
     #     ghost_width=ghost_width,
     #     WIDTH=WIDTH,
     # )
-    #ADD ME LATER!
+    # ADD ME LATER!
 
-    final_dat=[]
-    for s in range(0,len(pat_mux_dat),group_width):
-        final_dat.append(priority_encoder(pat_mux_dat[s:(s+group_width)]))
+    final_dat = []
+    for s in range(0, len(pat_mux_dat), group_width):
+        final_dat.append(priority_encoder(pat_mux_dat[s : (s + group_width)]))
 
     return final_dat
-
-# chamber_data=datadev_mux()
-# sample=work_partition(chamber_data=chamber_data,patlist=patlist)
-
-# print(sample)
-# print(len(sample))

@@ -11,6 +11,7 @@ from subfunc import *
 import os
 from cocotb_test.simulator import run
 
+
 async def generate_dav(dut):
     "Generates a dav signal every 8th clock cycle"
     while True:
@@ -19,6 +20,7 @@ async def generate_dav(dut):
         dut.dav_i.value = 0
         for _ in range(7):
             await RisingEdge(dut.clock)
+
 
 def get_patlist_from_dut(dut):
     # set patlist from firmware
@@ -48,6 +50,7 @@ def get_patlist_from_dut(dut):
         )
         patlist.append(pat_o)
     return patlist
+
 
 @cocotb.test()
 async def pat_unit_test(dut):
@@ -88,12 +91,12 @@ async def pat_unit_test(dut):
     for j in range(10):
         await RisingEdge(dut.clock)
 
-    #setup the FIFO queuing to a fixed latency
-    latency=3
-    queue=[]
+    # setup the FIFO queuing to a fixed latency
+    latency = 3
+    queue = []
     for _ in range(latency):
 
-        ly_data=datadev(ly_t,MAX_SPAN)
+        ly_data = datadev(ly_t, MAX_SPAN)
         queue.append(ly_data)
         dut.ly0.value = ly_data[0]
         dut.ly1.value = ly_data[1]
@@ -101,10 +104,10 @@ async def pat_unit_test(dut):
         dut.ly3.value = ly_data[3]
         dut.ly4.value = ly_data[4]
         dut.ly5.value = ly_data[5]
-        #align to the dav_i
-        await RisingEdge(dut.clock) #FIXME:try this out and then align with dav_i eventually
-
-   
+        # align to the dav_i
+        await RisingEdge(
+            dut.clock
+        )  # FIXME:try this out and then align with dav_i eventually
 
     for k in range(100000):
         dut.dav_i.value = 1
@@ -113,7 +116,7 @@ async def pat_unit_test(dut):
         # (2) push it onto the queue
         # (3) set the DUT inputs to the new data
 
-        new_data=datadev(ly_t,MAX_SPAN)
+        new_data = datadev(ly_t, MAX_SPAN)
         dut.ly0.value = new_data[0]
         dut.ly1.value = new_data[1]
         dut.ly2.value = new_data[2]
@@ -122,24 +125,29 @@ async def pat_unit_test(dut):
         dut.ly5.value = new_data[5]
         queue.append(new_data)
 
-        #sync checks with the clock
+        # sync checks with the clock
         await RisingEdge(dut.clock)
 
         # (1) pop old data from the head of the queue
         # (2) run the emulator on the old data
-        [ly0_x, ly1_x, ly2_x, ly3_x, ly4_x, ly5_x]=queue.pop(0)
-        [pat_id, ly_c] = process_pat(patlist, ly0_x, ly1_x, ly2_x, ly3_x, ly4_x, ly5_x, MAX_SPAN)
+        [ly0_x, ly1_x, ly2_x, ly3_x, ly4_x, ly5_x] = queue.pop(0)
+        [pat_id, ly_c] = process_pat(
+            patlist, ly0_x, ly1_x, ly2_x, ly3_x, ly4_x, ly5_x, MAX_SPAN
+        )
 
-        #generate visual data from old data in queue
+        # generate visual data from old data in queue
         print("Testcase %d Original Data:" % i)
         printly_dat(data=[ly0_x, ly1_x, ly2_x, ly3_x, ly4_x, ly5_x], MAX_SPAN=MAX_SPAN)
-
 
         for m in range(len(patlist)):
             if patlist[m].id == pat_id:
                 mask_v = get_ly_mask(patlist[m], MAX_SPAN)
                 print("Emulator Pattern Assignment:")
-                printly_dat(data=[ly0_x, ly1_x, ly2_x, ly3_x, ly4_x, ly5_x], mask=mask_v, MAX_SPAN=MAX_SPAN)
+                printly_dat(
+                    data=[ly0_x, ly1_x, ly2_x, ly3_x, ly4_x, ly5_x],
+                    mask=mask_v,
+                    MAX_SPAN=MAX_SPAN,
+                )
                 print("\n")
 
         # apply count threshold conditions to emulator pattern assignment
@@ -147,17 +155,18 @@ async def pat_unit_test(dut):
             pat_id = 0
             ly_c = 0
 
-
-
         for n in range(len(patlist)):
             if patlist[n].id == dut.pat_o.id.value:
                 mask_v = get_ly_mask(patlist[n], MAX_SPAN)
                 print("Pat_unit Pattern Assignment:")
-                printly_dat(data=[ly0_x, ly1_x, ly2_x, ly3_x, ly4_x, ly5_x], mask=mask_v, MAX_SPAN=MAX_SPAN)
+                printly_dat(
+                    data=[ly0_x, ly1_x, ly2_x, ly3_x, ly4_x, ly5_x],
+                    mask=mask_v,
+                    MAX_SPAN=MAX_SPAN,
+                )
                 print("\n")
-            if (n==len(patlist)-1) and (patlist[n].id!=dut.pat_o.id.value):
+            if (n == len(patlist) - 1) and (patlist[n].id != dut.pat_o.id.value):
                 print("Pat_unit ID not in Patlist")
-
 
         print("Emulator Pat ID: %d" % pat_id)
         print("Pat_unit Pat ID: %d" % dut.pat_o.id.value)
@@ -172,7 +181,11 @@ async def pat_unit_test(dut):
             lc_disagreement += 1
             disagreement_vec_lc.append(i)
         # keep a count for how many testcases pass the layer count threshold
-        if (ly_c > cnt_thresh and dut.pat_o.cnt.value == ly_c and dut.pat_o.id.value == pat_id):
+        if (
+            ly_c > cnt_thresh
+            and dut.pat_o.cnt.value == ly_c
+            and dut.pat_o.id.value == pat_id
+        ):
             agreement_ct += 1
 
         print("In %d Testcases...\n" % (i + 1))
@@ -180,7 +193,9 @@ async def pat_unit_test(dut):
         print("Testcase Indexes of ID Disagreements: " + str(disagreement_vec_id))
         print("\n\n")
         print("%d Disagreements in Layer Count" % lc_disagreement)
-        print("Testcase Indexes of Layer Count disagreements: " + str(disagreement_vec_lc))
+        print(
+            "Testcase Indexes of Layer Count disagreements: " + str(disagreement_vec_lc)
+        )
         print("\n\n")
         print("Amount of Agreements above the Layer Count: %d" % agreement_ct)
         print("\n")
@@ -193,28 +208,29 @@ async def pat_unit_test(dut):
 
 def test_pat_unit():
     tests_dir = os.path.abspath(os.path.dirname(__file__))
-    rtl_dir = os.path.abspath(os.path.join(tests_dir, '..', 'hdl'))
+    rtl_dir = os.path.abspath(os.path.join(tests_dir, "..", "hdl"))
     module = os.path.splitext(os.path.basename(__file__))[0]
 
     vhdl_sources = [
         os.path.join(rtl_dir, "priority_encoder/hdl/priority_encoder.vhd"),
         os.path.join(rtl_dir, "pat_pkg.vhd"),
         os.path.join(rtl_dir, "patterns.vhd"),
-        os.path.join(rtl_dir, "pat_unit.vhd")]
+        os.path.join(rtl_dir, "pat_unit.vhd"),
+    ]
 
     parameters = {}
-    parameters['MUX_FACTOR'] = 8
+    parameters["MUX_FACTOR"] = 8
 
     os.environ["SIM"] = "questa"
 
     run(
         vhdl_sources=vhdl_sources,
-        module=module,       # name of cocotb test module
+        module=module,  # name of cocotb test module
         compile_args=["-2008"],
-        toplevel="pat_unit",   # top level HDL
+        toplevel="pat_unit",  # top level HDL
         toplevel_lang="vhdl",
         parameters=parameters,
-        gui=0
+        gui=0,
     )
 
 

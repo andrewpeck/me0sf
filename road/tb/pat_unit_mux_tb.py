@@ -6,7 +6,7 @@ from cocotb.triggers import RisingEdge
 from cocotb.clock import Clock
 from datadev_mux import datadev_mux
 from pat_unit_mux_beh import pat_mux
-from subfunc import*
+from subfunc import *
 from cocotb_test.simulator import run
 from printly_dat import printly_dat
 
@@ -19,6 +19,7 @@ async def generate_dav(dut):
         dut.dav_i.value = 0
         for _ in range(7):
             await RisingEdge(dut.clock)
+
 
 def get_patlist_from_dut(dut):
     # set patlist from firmware
@@ -49,6 +50,7 @@ def get_patlist_from_dut(dut):
         patlist.append(pat_o)
     return patlist
 
+
 @cocotb.test()
 async def pat_unit_mux_test(dut):
     "Test the pat_unix_mux.vhd module"
@@ -56,21 +58,25 @@ async def pat_unit_mux_test(dut):
     # random.seed(56)
     disagreements_id = 0
     agreements_id = 0
-    #disagreement_indices_cnt = []
+    # disagreement_indices_cnt = []
     disagreements_cnt = 0
     agreements_cnt = 0
-    #disagreement_indices_strip = []
-    #disagreements_strip = 0
-    #agreements_strip = 0
+    # disagreement_indices_strip = []
+    # disagreements_strip = 0
+    # agreements_strip = 0
     total_disagreements = 0
     total_agreements = 0
 
-    MAX_SPAN = max([dut.LY0_SPAN.value,
-                    dut.LY1_SPAN.value,
-                    dut.LY2_SPAN.value,
-                    dut.LY3_SPAN.value,
-                    dut.LY4_SPAN.value,
-                    dut.LY5_SPAN.value])
+    MAX_SPAN = max(
+        [
+            dut.LY0_SPAN.value,
+            dut.LY1_SPAN.value,
+            dut.LY2_SPAN.value,
+            dut.LY3_SPAN.value,
+            dut.LY4_SPAN.value,
+            dut.LY5_SPAN.value,
+        ]
+    )
 
     patlist = get_patlist_from_dut(dut)
 
@@ -115,7 +121,7 @@ async def pat_unit_mux_test(dut):
     NLOOPS = 1000
     for j in range(NLOOPS):
 
-        if (j % 100 == 0):
+        if j % 100 == 0:
             print("%d loops completed..." % j)
 
         # align to the dav_i
@@ -138,11 +144,12 @@ async def pat_unit_mux_test(dut):
         # (1) pop old data from the head of the queue
         # (2) run the emulator on the old data
 
-        patterns = \
-            pat_mux(chamber_data=queue.pop(0),
-                    patlist=patlist,
-                    MAX_SPAN=MAX_SPAN,
-                    WIDTH=dut.WIDTH.value)
+        patterns = pat_mux(
+            chamber_data=queue.pop(0),
+            patlist=patlist,
+            MAX_SPAN=MAX_SPAN,
+            WIDTH=dut.WIDTH.value,
+        )
 
         # def princ(astring):
         #     print(astring, end="")
@@ -192,7 +199,7 @@ async def pat_unit_mux_test(dut):
 
 def test_pat_unit_mux():
     tests_dir = os.path.abspath(os.path.dirname(__file__))
-    rtl_dir = os.path.abspath(os.path.join(tests_dir, '..', 'hdl'))
+    rtl_dir = os.path.abspath(os.path.join(tests_dir, "..", "hdl"))
     module = os.path.splitext(os.path.basename(__file__))[0]
 
     vhdl_sources = [
@@ -201,21 +208,22 @@ def test_pat_unit_mux():
         os.path.join(rtl_dir, "patterns.vhd"),
         os.path.join(rtl_dir, "pat_unit.vhd"),
         os.path.join(rtl_dir, "dav_to_phase.vhd"),
-        os.path.join(rtl_dir, "pat_unit_mux.vhd")]
+        os.path.join(rtl_dir, "pat_unit_mux.vhd"),
+    ]
 
     parameters = {}
-    parameters['MUX_FACTOR'] = 8
+    parameters["MUX_FACTOR"] = 8
 
     os.environ["SIM"] = "questa"
 
     run(
         vhdl_sources=vhdl_sources,
-        module=module,       # name of cocotb test module
+        module=module,  # name of cocotb test module
         compile_args=["-2008"],
-        toplevel="pat_unit_mux",   # top level HDL
+        toplevel="pat_unit_mux",  # top level HDL
         toplevel_lang="vhdl",
         parameters=parameters,
-        gui=1
+        gui=1,
     )
 
 
