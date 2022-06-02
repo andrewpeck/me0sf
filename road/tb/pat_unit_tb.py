@@ -109,7 +109,7 @@ async def pat_unit_test(dut):
             dut.clock
         )  # FIXME:try this out and then align with dav_i eventually
 
-    for k in range(100000):
+    for k in range(1000):
         dut.dav_i.value = 1
 
         # (1) generate new random data
