@@ -10,15 +10,16 @@ use work.priority_encoder_pkg.all;
 
 entity pat_unit is
   generic(
-    VERBOSE : boolean    := false;
-    PATLIST : patdef_array_t := patdef_array;
-    THRESHOLD : natural := CNT_THRESH;
-    LY0_SPAN : natural    := get_max_span(patdef_array);
-    LY1_SPAN : natural    := get_max_span(patdef_array);  -- TODO: variably size the other layers instead of using the max
-    LY2_SPAN : natural    := get_max_span(patdef_array);  -- TODO: variably size the other layers instead of using the max
-    LY3_SPAN : natural    := get_max_span(patdef_array);  -- TODO: variably size the other layers instead of using the max
-    LY4_SPAN : natural    := get_max_span(patdef_array);  -- TODO: variably size the other layers instead of using the max
-    LY5_SPAN : natural    := get_max_span(patdef_array)   -- TODO: variably size the other layers instead of using the max
+    VERBOSE   : boolean        := false;
+    PATLIST   : patdef_array_t := patdef_array;
+    THRESHOLD : natural        := CNT_THRESH;
+
+    LY0_SPAN : natural := get_max_span(patdef_array);
+    LY1_SPAN : natural := get_max_span(patdef_array);  -- TODO: variably size the other layers instead of using the max
+    LY2_SPAN : natural := get_max_span(patdef_array);  -- TODO: variably size the other layers instead of using the max
+    LY3_SPAN : natural := get_max_span(patdef_array);  -- TODO: variably size the other layers instead of using the max
+    LY4_SPAN : natural := get_max_span(patdef_array);  -- TODO: variably size the other layers instead of using the max
+    LY5_SPAN : natural := get_max_span(patdef_array)   -- TODO: variably size the other layers instead of using the max
     );
 
   port(
@@ -42,7 +43,8 @@ end pat_unit;
 
 architecture behavioral of pat_unit is
 
-  signal pats : pat_list_t (NUM_PATTERNS-1 downto 0);
+  signal pats     : pat_list_t (NUM_PATTERNS-1 downto 0);
+  signal pats_dav : std_logic := '0';
 
   function count_ones(slv : std_logic_vector) return natural is
     variable n_ones : natural := 0;
@@ -151,7 +153,8 @@ begin
     process (clock) is
     begin
       if (rising_edge(clock)) then
-        pats(I) <= null_pattern;
+        pats_dav <= dav_i;
+        pats(I)  <= null_pattern;
         pats(I).cnt <= to_unsigned(count_ones(
           or_reduce(ly0_mask) &
           or_reduce(ly1_mask) &
@@ -198,7 +201,10 @@ begin
   process (clock) is
   begin
     if (rising_edge(clock)) then
-      if (best.cnt >= CNT_THRESH) then
+
+      dav_o <= best_dav;
+
+      if (best.cnt >= THRESHOLD) then
         pat_o     <= best;
         pat_o.dav <= '1';
       else
