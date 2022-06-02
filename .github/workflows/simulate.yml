@@ -9,7 +9,7 @@ on:
     #   - master
 
 jobs:
-  build:
+  cocotb:
     runs-on: self-hosted
     strategy:
       fail-fast: false
