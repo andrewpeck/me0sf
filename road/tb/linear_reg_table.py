@@ -1,11 +1,9 @@
 # generates the look up table for our linear regression software
 
 from subfunc import *
-import pprint
 
 # set widths to current and anticipated pattern sizes
 all_widths = range(1, 15)
-
 
 def generate_all_comb(width=all_widths):
     all_comb = []
