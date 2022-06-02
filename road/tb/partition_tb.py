@@ -114,7 +114,7 @@ async def partition_test(dut):
         for i in range(6):
             dut.partition_i[i].value = chamber_data[i]
 
-    for j in range(10000):
+    for j in range(1000):
 
         print("Case %d" % j)
 
