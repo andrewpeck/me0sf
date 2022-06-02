@@ -1,0 +1,27 @@
+---
+
+name: "CI"
+on:
+  pull_request:
+  push:
+    # Comment out this section to enable testing of all branches.
+    # branches:
+    #   - master
+
+jobs:
+  build:
+    runs-on: self-hosted
+    steps:
+
+      - uses: actions/checkout@v2
+        with:
+          submodules: 'true'
+
+      - name: Pat Unit Test Bench
+        run: python road/tb/pat_unit_tb.py
+      - name: Pat Unit Multiplexer Test Bench
+        run: python road/tb/pat_unit_mux_tb.py
+      - name: Pat Unit Multiplexer Test Bench
+        run: python road/tb/partition_tb.py
+      - name: Pat Unit Multiplexer Test Bench
+        run: python road/tb/partition_tb.py
