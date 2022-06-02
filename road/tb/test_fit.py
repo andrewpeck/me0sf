@@ -18,18 +18,18 @@ def fit_modified(x, y):
     products = 0
     squares = 0
     for i in range(len(x)):
-        products += (n*x[i]-x_sum)*(n*y[i]-y_sum)
-        squares += (n*x[i]-x_sum)**2
+        products += (n * x[i] - x_sum) * (n * y[i] - y_sum)
+        squares += (n * x[i] - x_sum) ** 2
 
-    m = 1.0*products / squares
-    b = 1.0/n * (y_sum - m * x_sum)
+    m = 1.0 * products / squares
+    b = 1.0 / n * (y_sum - m * x_sum)
 
     return m, b
 
 
 def rand_y():
 
-    rand_m = random.randint(math.floor(-37/6), math.floor(37/6))
+    rand_m = random.randint(math.floor(-37 / 6), math.floor(37 / 6))
     rand_b = random.randint(-5, 5)
 
     return [
@@ -38,7 +38,8 @@ def rand_y():
         math.floor(rand_m * (2 - 2.5) + rand_b + random.randint(-1, 1)),
         math.floor(rand_m * (3 - 2.5) + rand_b + random.randint(-1, 1)),
         math.floor(rand_m * (4 - 2.5) + rand_b + random.randint(-1, 1)),
-        math.floor(rand_m * (5 - 2.5) + rand_b + random.randint(-1, 1))]
+        math.floor(rand_m * (5 - 2.5) + rand_b + random.randint(-1, 1)),
+    ]
 
     # return [random.randint(-15, 15),
     #         random.randint(-15, 15),
@@ -47,13 +48,14 @@ def rand_y():
     #         random.randint(-15, 15),
     #         random.randint(-15, 15)]
     #
-    #return [1, 2, 3, 4, 5, 6]
+    # return [1, 2, 3, 4, 5, 6]
 
 
 def print_slope(slope, intercept, key_strip, m, b, key_s):
     print("found y=%.3f x + %f (s=%f)" % (slope, intercept, key_strip))
     print("expec y=%.3f x + %f (s=%f)" % (m, b, key_s))
     print("\n")
+
 
 @cocotb.test()
 async def fit_tb(dut):
@@ -67,7 +69,7 @@ async def fit_tb(dut):
 
     x = range(6)  # layers 0-5, always the same
 
-    dut.valid_i = 0x3f
+    dut.valid_i = 0x3F
 
     # flush the pipeline
     dut.ly0.value = 1
@@ -86,8 +88,7 @@ async def fit_tb(dut):
 
     itests = 0
 
-
-    for i in range(LATENCY-1):
+    for i in range(LATENCY - 1):
 
         y = rand_y()
 
@@ -125,14 +126,11 @@ async def fit_tb(dut):
         m, b = fit_modified(x, this_data)
 
         # sfixed --> float
-        slope = dut.slope_o.value.signed_integer / \
-            (2**slope_fracb-1)
+        slope = dut.slope_o.value.signed_integer / (2**slope_fracb - 1)
 
-        intercept = dut.intercept_o.value.signed_integer / \
-            (2**intercept_fracb-1)
+        intercept = dut.intercept_o.value.signed_integer / (2**intercept_fracb - 1)
 
-        key_strip = dut.strip_o.value.signed_integer / \
-            (2**strip_fracb-1)
+        key_strip = dut.strip_o.value.signed_integer / (2**strip_fracb - 1)
 
         max_error_strips_per_layer = 0.2
         max_error_strips = 0.5
@@ -143,55 +141,61 @@ async def fit_tb(dut):
         # m = round(m, 1)
         # b = round(b, 1)
 
-        #if (round(slope, 1) != round(m, 1) or round(intercept, 2) != round(b, 1)):
+        # if (round(slope, 1) != round(m, 1) or round(intercept, 2) != round(b, 1)):
 
         # if (slope != m or intercept != b):
-        #print_slope(slope, intercept, m, b)
+        # print_slope(slope, intercept, m, b)
 
-        key_s = m*2.5 + b
+        key_s = m * 2.5 + b
         # key_strip = slope*2.5 + b
 
         # print(this_data)
 
         # print_slope(slope, intercept, m, b)
 
-        #print_slope(slope, intercept, key_strip, m, b, key_s)
+        # print_slope(slope, intercept, key_strip, m, b, key_s)
 
-        assert (abs(b-intercept) < max_error_intercept), print_slope(slope, intercept, key_strip, m, b, key_s)
-        assert (abs(m-slope) < max_error_strips_per_layer), print_slope(slope, intercept, key_strip, m, b, key_s)
-        assert (abs(key_s - key_strip) < max_error_strips), print_slope(slope, intercept, key_strip, m, b, key_s)
+        assert abs(b - intercept) < max_error_intercept, print_slope(
+            slope, intercept, key_strip, m, b, key_s
+        )
+        assert abs(m - slope) < max_error_strips_per_layer, print_slope(
+            slope, intercept, key_strip, m, b, key_s
+        )
+        assert abs(key_s - key_strip) < max_error_strips, print_slope(
+            slope, intercept, key_strip, m, b, key_s
+        )
 
         if itests % 1000 == 0:
             print("%d fits tested" % itests)
         itests += 1
 
-    print("================================================================================")
+    print("="*80)
     print("%d fits tested" % itests)
-    print("================================================================================")
+    print("="*80)
 
 
 def test_fit():
 
     tests_dir = os.path.abspath(os.path.dirname(__file__))
-    rtl_dir = os.path.abspath(os.path.join(tests_dir, '..', 'hdl'))
+    rtl_dir = os.path.abspath(os.path.join(tests_dir, "..", "hdl"))
     module = os.path.splitext(os.path.basename(__file__))[0]
 
     vhdl_sources = [
         os.path.join(rtl_dir, "reciprocal.vhd"),
         os.path.join(rtl_dir, "pipelined_mult.vhd"),
-        os.path.join(rtl_dir, "fit.vhd")
+        os.path.join(rtl_dir, "fit.vhd"),
     ]
 
     os.environ["SIM"] = "questa"
 
     run(
         vhdl_sources=vhdl_sources,
-        module=module,       # name of cocotb test module
+        module=module,  # name of cocotb test module
         compile_args=["-2008"],
-        toplevel="fit",            # top level HDL
+        toplevel="fit",  # top level HDL
         toplevel_lang="vhdl",
         # parameters=parameters,
-        gui=0
+        gui=0,
     )
 
 
