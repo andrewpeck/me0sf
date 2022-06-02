@@ -223,7 +223,7 @@ def test_pat_unit_mux():
         toplevel="pat_unit_mux",  # top level HDL
         toplevel_lang="vhdl",
         parameters=parameters,
-        gui=1,
+        gui=0,
     )
 
 
