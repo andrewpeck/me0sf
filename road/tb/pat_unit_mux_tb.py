@@ -1,14 +1,11 @@
 import os
-import random
-import csv
 import cocotb
 from cocotb.triggers import RisingEdge
 from cocotb.clock import Clock
+from cocotb_test.simulator import run
 from datadev_mux import datadev_mux
 from pat_unit_mux_beh import pat_mux
 from subfunc import *
-from cocotb_test.simulator import run
-from printly_dat import printly_dat
 
 
 async def generate_dav(dut):
@@ -22,9 +19,13 @@ async def generate_dav(dut):
 
 
 def get_patlist_from_dut(dut):
-    # set patlist from firmware
+
+    """set patlist from firmware"""
+
     patlist = []
+
     for i in range(len(dut.PATLIST)):
+
         id = dut.PATLIST[i].id.value
         ly0_hi = dut.PATLIST[i].ly0.hi.value
         ly0_lo = dut.PATLIST[i].ly0.lo.value
@@ -38,6 +39,7 @@ def get_patlist_from_dut(dut):
         ly4_lo = dut.PATLIST[i].ly4.lo.value
         ly5_hi = dut.PATLIST[i].ly5.hi.value
         ly5_lo = dut.PATLIST[i].ly5.lo.value
+
         pat_o = patdef_t(
             id,
             hi_lo_t(ly0_hi, ly0_lo),
@@ -47,15 +49,31 @@ def get_patlist_from_dut(dut):
             hi_lo_t(ly4_hi, ly4_lo),
             hi_lo_t(ly5_hi, ly5_lo),
         )
+
         patlist.append(pat_o)
+
     return patlist
+
+
+def set_layer_hits(dut, hits):
+
+    """
+    Take a collection of 6 layers, each of which is an integer bitmask of
+    hits and set the DUT inputs
+    """
+
+    dut.ly0.value = hits[0]
+    dut.ly1.value = hits[1]
+    dut.ly2.value = hits[2]
+    dut.ly3.value = hits[3]
+    dut.ly4.value = hits[4]
+    dut.ly5.value = hits[5]
 
 
 @cocotb.test()
 async def pat_unit_mux_test(dut):
     "Test the pat_unix_mux.vhd module"
 
-    # random.seed(56)
     disagreements_id = 0
     agreements_id = 0
     # disagreement_indices_cnt = []
@@ -87,12 +105,7 @@ async def pat_unit_mux_test(dut):
     # start the dav signal (high every 8th clock cycle)
     cocotb.fork(generate_dav(dut))
 
-    dut.ly0.value = 0
-    dut.ly1.value = 0
-    dut.ly2.value = 0
-    dut.ly3.value = 0
-    dut.ly4.value = 0
-    dut.ly5.value = 0
+    set_layer_hits(dut, [0] * 6)
 
     # flush the pipeline for a few clocks
     for _ in range(10):
@@ -110,12 +123,8 @@ async def pat_unit_mux_test(dut):
 
         ly_data = datadev_mux(width)
         queue.append(ly_data)
-        dut.ly0.value = ly_data[0]
-        dut.ly1.value = ly_data[1]
-        dut.ly2.value = ly_data[2]
-        dut.ly3.value = ly_data[3]
-        dut.ly4.value = ly_data[4]
-        dut.ly5.value = ly_data[5]
+
+        set_layer_hits(dut, ly_data)
 
     # loop over some number of test cases
     NLOOPS = 1000
@@ -134,12 +143,7 @@ async def pat_unit_mux_test(dut):
         new_data = datadev_mux(width)
         queue.append(new_data)
 
-        dut.ly0.value = new_data[0]
-        dut.ly1.value = new_data[1]
-        dut.ly2.value = new_data[2]
-        dut.ly3.value = new_data[3]
-        dut.ly4.value = new_data[4]
-        dut.ly5.value = new_data[5]
+        set_layer_hits(dut, new_data)
 
         # (1) pop old data from the head of the queue
         # (2) run the emulator on the old data
@@ -159,7 +163,7 @@ async def pat_unit_mux_test(dut):
             # readout pat_unit_mux outputs from the simulator
             patid = dut.strips_o[i].pattern.id.value.integer
             cnt = dut.strips_o[i].pattern.cnt.value.integer
-            strip = dut.strips_o[i].strip.value
+            # strip = dut.strips_o[i].strip.value
 
             if pattern[0] != patid:
                 # disagreement_indices_id.append(strip)
