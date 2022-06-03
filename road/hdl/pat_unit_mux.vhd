@@ -11,6 +11,7 @@ use work.priority_encoder_pkg.all;
 entity pat_unit_mux is
   generic(
     VERBOSE    : boolean := false;
+    PATLIST  : patdef_array_t := patdef_array;
     WIDTH      : natural := 192;
     -- Need padding for half the width of the pattern this is to handle the edges
     -- of the chamber where some virtual chamber of all zeroes exists... to be
@@ -72,6 +73,8 @@ architecture behavioral of pat_unit_mux is
 
   signal lyX_in_dav : std_logic := '0';
 
+  signal dav_d0, dav_d1, dav_d2, dav_d3, dav_d4, dav_d5: std_logic;
+
 begin
 
   ly0_padded <= pad_layer(PADDING, ly0);
@@ -102,7 +105,8 @@ begin
 
   dav_to_phase_o_inst : entity work.dav_to_phase
     generic map (DIV => 8/MUX_FACTOR)
-    port map (clock  => clock, dav => patterns_mux_dav, phase_o => patterns_mux_phase);
+    -- port map (clock  => clock, dav => patterns_mux_dav, phase_o => patterns_mux_phase);
+    port map (clock  => clock, dav => dav_d1, phase_o => patterns_mux_phase);
 
   patgen : for I in 0 to NUM_SECTORS-1 generate
 
@@ -168,6 +172,13 @@ begin
   begin
     if (rising_edge(clock)) then
 
+      dav_d0 <= patterns_mux_dav;
+      dav_d1 <= dav_d0;
+      dav_d2 <= dav_d1;
+      dav_d3 <= dav_d2;
+      dav_d4 <= dav_d3;
+      dav_d5 <= dav_d4;
+
       dav_o <= patterns_mux_dav;
 
       for I in 0 to NUM_SECTORS-1 loop
@@ -175,9 +186,12 @@ begin
         strips_reg(I*MUX_FACTOR+patterns_mux_phase).strip   <= I*MUX_FACTOR+patterns_mux_phase;
       end loop;
 
+      if (patterns_mux_phase=0) then
+        strips_o <= strips_reg;
+      end if;
+
     end if;
   end process;
 
-  strips_o <= strips_reg;
 
 end behavioral;

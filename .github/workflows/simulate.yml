@@ -1,0 +1,31 @@
+---
+
+name: "CI"
+on:
+  pull_request:
+  push:
+    # Comment out this section to enable testing of all branches.
+    # branches:
+    #   - master
+
+jobs:
+  cocotb:
+    runs-on: self-hosted
+    strategy:
+      fail-fast: false
+      matrix:
+        testbenches:
+          - road/tb/pat_unit_tb.py
+          - road/tb/pat_unit_mux_tb.py
+          - road/tb/partition_tb.py
+          - road/tb/test_fit.py
+          - road/tb/test_mult.py
+          - road/tb/chamber_tb.py
+    steps:
+
+      - uses: actions/checkout@v2
+        with:
+          submodules: 'true'
+
+      - name: Test Firmware Module
+        run: python ${{ matrix.testbenches }}

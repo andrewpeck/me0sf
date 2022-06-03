@@ -16,26 +16,20 @@ entity chamber_prbs is
     NUM_SEGMENTS : integer := 4
     );
   port(
-    reset  : in  std_logic;
-    clock  : in  std_logic;
-    dav_i  : in  std_logic;
-    segs_o : out std_logic
+    reset : in  std_logic;
+    clock : in  std_logic;
+    dav_i : in  std_logic;
+    segs  : out pat_list_t (NUM_SEGMENTS-1 downto 0)
     );
 end chamber_prbs;
+
 architecture behavioral of chamber_prbs is
 
-  signal segs : segment_list_t (NUM_SEGMENTS-1 downto 0);
-    signal phase : integer := 0;
+  signal phase : integer := 0;
   signal sbits : chamber_t;
 
   signal dav_o : std_logic := '0';
 begin
-
-  segs_o <=
-    or_reduce(to_slv(segs(0))) or
-    or_reduce(to_slv(segs(1))) or
-    or_reduce(to_slv(segs(2))) or
-    or_reduce(to_slv(segs(3)));
 
   prtgen : for partition in 0 to 7 generate
   begin

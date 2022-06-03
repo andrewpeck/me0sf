@@ -12,7 +12,7 @@ entity partition is
     NUM_SEGMENTS  : integer := 4;
     PARTITION_NUM : integer := 0;
     PRT_WIDTH     : natural := PRT_WIDTH;
-    S0_WIDTH      : natural := 1
+    S0_WIDTH      : natural := 8 ---CHANGE ME BACK CHLOE 
     );
   port(
 

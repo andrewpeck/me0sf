@@ -1,5 +1,3 @@
-use std.textio.all;
-
 library ieee;
 use ieee.std_logic_1164.all;
 use ieee.std_logic_misc.all;
@@ -23,6 +21,7 @@ entity pat_unit is
     LY4_SPAN : natural := get_max_span(patdef_array);  -- TODO: variably size the other layers instead of using the max
     LY5_SPAN : natural := get_max_span(patdef_array)   -- TODO: variably size the other layers instead of using the max
     );
+
   port(
 
     clock : in std_logic;
@@ -60,9 +59,7 @@ architecture behavioral of pat_unit is
 
   signal best_slv : std_logic_vector (PATTERN_LENGTH-1 downto 0);
   signal best     : pattern_t;
-  signal best_dav : std_logic := '0';
   signal cand_slv : bus_array (0 to NUM_PATTERNS-1) (PATTERN_LENGTH-1 downto 0);
-  signal cand_dav : std_logic := '0';
 
 begin
 
@@ -89,6 +86,14 @@ begin
     report "Layer Span Must be Odd (span=" & integer'image(LY4_SPAN) & ")" severity error;
   assert (LY5_SPAN mod 2 = 1)
     report "Layer Span Must be Odd (span=" & integer'image(LY5_SPAN) & ")" severity error;
+
+  process (clock) is
+  begin
+    if (rising_edge(clock)) then
+      -- FIXME: we need to time this in
+      dav_o <= dav_i;
+    end if;
+  end process;
 
   patgen : for I in 0 to patlist'length-1 generate
 
@@ -163,8 +168,6 @@ begin
   end generate;
 
 
-  cand_dav <= pats_dav;
-
   cand_to_slv : for I in 0 to NUM_PATTERNS-1 generate
   begin
     cand_slv(I) <= to_slv(pats(I));
@@ -182,15 +185,14 @@ begin
       )
     port map (
       clock => clock,
-      dav_i => cand_dav,
+      dav_i => '1',
+      dav_o => open,
       dat_i => cand_slv,
-      dav_o => best_dav,
       dat_o => best_slv,
       adr_o => open
       );
 
-  best     <= to_pattern(best_slv);
-  best.dav <= best_dav;
+  best <= to_pattern(best_slv);
 
   --------------------------------------------------------------------------------
   -- Put a threshold, make sure the pattern is above some minimum layer cnt
@@ -200,7 +202,7 @@ begin
   begin
     if (rising_edge(clock)) then
 
-      dav_o <= best_dav;
+      -- dav_o <= best_dav;
 
       if (best.cnt >= THRESHOLD) then
         pat_o     <= best;

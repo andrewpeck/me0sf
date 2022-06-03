@@ -11,3 +11,12 @@ tags
 road/work
 road/transcript
 road/vsim.wlf
+*.csv
+*.swp
+*.txt
+*.xml
+transcript
+.mypy_cache
+modelsim.ini
+road/tb_bakup
+wave.do
