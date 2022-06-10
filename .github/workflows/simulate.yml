@@ -18,9 +18,10 @@ jobs:
           - road/tb/pat_unit_tb.py
           - road/tb/pat_unit_mux_tb.py
           - road/tb/partition_tb.py
+          # - road/tb/chamber_tb.py
           - road/tb/test_fit.py
           - road/tb/test_mult.py
-          - road/tb/chamber_tb.py
+          - road/tb/test_dav_to_phase.py
     steps:
 
       - uses: actions/checkout@v2
