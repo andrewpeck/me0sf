@@ -93,49 +93,12 @@ def test_get_lc_id():
     assert get_lc_id([0b100000000000000000, 0b100000000000000000000, 0b100000000000000000000, 0b100000000000000000000, 0b100000000000000000000, 0b100000000000000000000], 37 ) == [[1, 15], [3, 14], [1, 13], [2, 12], [1, 11], [1, 10], [2, 9], [1, 8], [2, 7], [1, 6], [1, 5], [1, 4], [1, 3], [2, 2], [1, 1]]
     assert get_lc_id([0b100000000000000000000, 0b100000000000000000000, 0b100000000000000000000, 0b100000000000000000000, 0b100000000000000000000, 0b100000000000000000000], 37 ) == [[0, 15], [2, 14], [2, 13], [2, 12], [2, 11], [1, 10], [2, 9], [1, 8], [2, 7], [1, 6], [1, 5], [1, 4], [1, 3], [2, 2], [1, 1]]
 
-def priority_encoder(lc_id_vec):
-    """
-    receives a list of layer counts and ids from each mask and the layer data
-    to determine which pattern is the best fit, based on the highest layer
-    count; returns the id of this best pattern; if the layer count is the same
-    for two patterns, the pattern higher id will be returned
 
-    """
-    max_lc = 0
-    max_id = 0
-    s_list = []
-
-    # find the highest layer count and save its index r
-    for r in range(len(lc_id_vec)):
-        if lc_id_vec[r][0] >= max_lc:
-            max_lc = lc_id_vec[r][0]
-
-    # check if any other patterns have the same layer count as the max layer count and save these values to s_list
-    for s in range(len(lc_id_vec)):
-        if lc_id_vec[s][0] == max_lc:
-            s_list.append(lc_id_vec[s])
-
-    # check which id value in slist has the highest pattern id; save the index as the best pattern index
-    for t in range(len(s_list)):
-        if s_list[t][1] > max_id:
-            max_id = s_list[t][1]
-            b_pat_index = t
-
-    # choose the highest layer count and pattern id from s_list
-    [b_lc, b_id] = s_list[b_pat_index]
-    b_lc = int(b_lc)
-    b_id = int(b_id)
-    return b_lc, b_id
-
-def test_priority_encoder():
-    assert priority_encoder([[6, 15], [4, 14], [4, 13], [3, 12], [3, 11], [2, 10], [2, 9], [2, 8], [2, 7], [2, 6], [2, 5], [1, 4], [1, 3], [1, 2], [1, 1]]) == (6, 15)
-    assert priority_encoder([[5, 15], [4, 14], [4, 13], [3, 12], [4, 11], [2, 10], [1, 9], [2, 8], [1, 7], [1, 6], [1, 5], [1, 4], [1, 3], [1, 2], [1, 1]]) == (5, 15)
-    assert priority_encoder([[4, 15], [6, 14], [3, 13], [5, 12], [3, 11], [1, 10], [2, 9], [1, 8], [2, 7], [1, 6], [2, 5], [1, 4], [1, 3], [1, 2], [1, 1]]) == (6, 14)
-    assert priority_encoder([[3, 15], [5, 14], [2, 13], [4, 12], [2, 11], [1, 10], [2, 9], [1, 8], [2, 7], [1, 6], [1, 5], [1, 4], [1, 3], [2, 2], [1, 1]]) == (5, 14)
-    assert priority_encoder([[2, 15], [4, 14], [1, 13], [3, 12], [1, 11], [1, 10], [2, 9], [1, 8], [2, 7], [1, 6], [1, 5], [1, 4], [1, 3], [2, 2], [1, 1]]) == (4, 14)
-    assert priority_encoder([[1, 15], [3, 14], [1, 13], [2, 12], [1, 11], [1, 10], [2, 9], [1, 8], [2, 7], [1, 6], [1, 5], [1, 4], [1, 3], [2, 2], [1, 1]]) == (3, 14)
-    assert priority_encoder([[0, 15], [2, 14], [2, 13], [2, 12], [2, 11], [1, 10], [2, 9], [1, 8], [2, 7], [1, 6], [1, 5], [1, 4], [1, 3], [2, 2], [1, 1]]) == (2, 14) 
-
+def get_seg(lc_id_pair):
+    """creates segment object for a given pair of layer count and pattern id"""
+    seg = Segment(lc_id_pair[0], lc_id_pair[1])
+    seg.get_quality()
+    return seg
 
 def process_pat(data, MAX_SPAN=37):
 
@@ -145,11 +108,11 @@ def process_pat(data, MAX_SPAN=37):
     """
 
     lc_id_vec = get_lc_id(data, MAX_SPAN)
+    seg_list = list(map(get_seg, lc_id_vec))
+    best_seg = max(seg_list)
 
-    [ly_c, pat_id] = priority_encoder(lc_id_vec)
-    if ly_c == 0:
-        pat_id = 0
-    return pat_id, ly_c
+    return best_seg.id, best_seg.lc
+
 
 def test_process_pat():
     assert process_pat([0b1000000000000000000, 0b1000000000000000000, 0b1000000000000000000, 0b1000000000000000000, 0b1000000000000000000, 0b1000000000000000000], 37) == (15, 6)
