@@ -6,7 +6,6 @@ class hi_lo_t:
         self.hi = hi
         self.lo = lo
 
-
 class patdef_t:
     def __init__(self, id, layer_list):
         self.id = id
@@ -16,6 +15,44 @@ class Mask:
     def __init__(self, mask, id):
         self.mask = mask
         self.id = id
+
+class Segment:
+    def __init__(self, lc, id, strip=None, partition=None, centroid=None, substrip=None, bend_ang=None, quality=None):
+        self.lc = lc
+        self.id = id
+        self.strip = strip
+        self.partition = partition
+        self.centroid = centroid
+        self.substrip = substrip
+        self.bend_ang = bend_ang
+        self.quality = quality
+
+    def get_quality(self):
+        """ create sortable number to compare segments"""
+        if self.quality == None:
+            if self.partition == None:
+                if self.strip == None:
+                    self.quality = (self.id << 12) | (self.lc << 17) 
+                else:
+                    self.quality = (self.strip <<4) | (self.id << 12) | (self.lc << 17) 
+            elif self.strip == None:
+                self.quality = self.partition | (self.id << 12) | (self.lc << 17) 
+            else:
+                self.quality = self.partition | (self.strip <<4) | (self.id << 12) | (self.lc << 17)
+
+    def __eq__(self, other):
+        if self.quality == other.quality:
+            return True
+        else:
+            return False
+
+    def __gt__(self, other):
+        if isinstance(other, Segment):
+            return self.quality > other.quality
+
+    def __lt__(self, other):
+        if isinstance(other, Segment):
+            return self.qualityy < other.quality
 
 def mirror_hi_lo(ly):
     """"helper function for mirror_patdef, mirrors the hi and lo values"""
