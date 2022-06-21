@@ -220,7 +220,7 @@ def get_mypattern(pat_id: int, patlist: "List[patdef_t]") -> patdef_t:
         type(patlist[0]) == patdef_t
     ), "each value in patlist input must be of the class patdef_t"
     assert (
-        type(patlist[0].ly0) == hi_lo_t
+        type(patlist[0].layers[0]) == hi_lo_t
     ), "each patlist layer must be of the class hi_lo_t"
     assert type(patlist[0].id) == int, "each patlist id must be an integer"
     for i in range(len(patlist)):

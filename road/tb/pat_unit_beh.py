@@ -94,13 +94,13 @@ def test_get_lc_id():
     assert get_lc_id([0b100000000000000000000, 0b100000000000000000000, 0b100000000000000000000, 0b100000000000000000000, 0b100000000000000000000, 0b100000000000000000000], 37 ) == [[0, 15], [2, 14], [2, 13], [2, 12], [2, 11], [1, 10], [2, 9], [1, 8], [2, 7], [1, 6], [1, 5], [1, 4], [1, 3], [2, 2], [1, 1]]
 
 
-def get_seg(lc_id_pair):
+def get_seg(lc_id_pair, strip):
     """creates segment object for a given pair of layer count and pattern id"""
-    seg = Segment(lc_id_pair[0], lc_id_pair[1])
+    seg = Segment(lc_id_pair[0], lc_id_pair[1], strip)
     seg.get_quality()
     return seg
 
-def process_pat(data, MAX_SPAN=37):
+def process_pat(data, strip=None, MAX_SPAN=37):
 
     """
     takes in sample data for each layer to generate a
@@ -108,10 +108,9 @@ def process_pat(data, MAX_SPAN=37):
     """
 
     lc_id_vec = get_lc_id(data, MAX_SPAN)
-    seg_list = list(map(get_seg, lc_id_vec))
-    best_seg = max(seg_list)
+    seg_list = [get_seg(lc_id_pair, strip) for lc_id_pair in lc_id_vec]
 
-    return best_seg.id, best_seg.lc
+    return max(seg_list)
 
 
 def test_process_pat():
