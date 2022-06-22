@@ -2,9 +2,8 @@
 from subfunc import *
 from constants import *
 
-
 def shift_center(ly, MAX_SPAN=37):
-    """helper function to shift center of hi and lo values"""
+    """helper function that shifts center of hi and lo values"""
     center = round(MAX_SPAN/2)
     hi = ly.hi + center
     lo = ly.lo + center
@@ -52,12 +51,21 @@ def return_layer_mask():
     
 return_layer_mask()
 
+def get_lc(ones):
+    """assigns a layer count of 1 for at least 1 hit in a mask for a given layer, else assign layer count of 0"""
+    if ones >= 1:
+        return 1
+    else:
+        return 0
+
+def create_lc_id_pair(lc, mask):
+    """creates pair of layer count and pattern id"""
+    return [lc, mask.id]
+
 def get_lc_id(data, MAX_SPAN=37):
     """takes in the data (list of each layer's data) to determine the layer count that would be obtained from the data overlaying any mask; returns id and layer count for each mask"""
     lc_vec_x = []
-    lc_id_vec = []
-
-    # and the layer data with the respective mask layer to determine how many hits are in each layer
+    # and the layer data with the respective layer mask to determine how many hits are in each layer
     for v in range(len(LAYER_MASK)):
         ly_hits = [] 
         for i in range(N_LAYERS):
@@ -65,23 +73,13 @@ def get_lc_id(data, MAX_SPAN=37):
  
         # count the hits in each layer and store in ly_ones
         ly_ones = list(map(count_ones, ly_hits))
- 
-        # assign a layer count of 1 for at least 1 hit in a mask for a given layer, else assign layer count of 0
-        layer_count = []
-        for j in range(len(ly_ones)):
-            if ly_ones[j] >= 1:
-                layer_count.append(1)
-            else:
-                layer_count.append(0)
-
+        # assign a layer count for each layer
+        layer_count = list(map(get_lc, ly_ones))
         # total up layer counts for each layer to get pattern's total layer count
         lc_vec_x.append(sum(layer_count))
 
-    # match the correct pattern id to its total layer count
-    for p in range(len(LAYER_MASK)):
-        lc_id_vec.append([lc_vec_x[p], LAYER_MASK[p].id])
-
-    return lc_id_vec
+    # return list of corresponding total layer counts and pattern ids 
+    return list(map(create_lc_id_pair, lc_vec_x, LAYER_MASK))
 
 def test_get_lc_id():
     """ test function for get_lc_id """
@@ -93,7 +91,6 @@ def test_get_lc_id():
     assert get_lc_id([0b100000000000000000, 0b100000000000000000000, 0b100000000000000000000, 0b100000000000000000000, 0b100000000000000000000, 0b100000000000000000000], 37 ) == [[1, 15], [3, 14], [1, 13], [2, 12], [1, 11], [1, 10], [2, 9], [1, 8], [2, 7], [1, 6], [1, 5], [1, 4], [1, 3], [2, 2], [1, 1]]
     assert get_lc_id([0b100000000000000000000, 0b100000000000000000000, 0b100000000000000000000, 0b100000000000000000000, 0b100000000000000000000, 0b100000000000000000000], 37 ) == [[0, 15], [2, 14], [2, 13], [2, 12], [2, 11], [1, 10], [2, 9], [1, 8], [2, 7], [1, 6], [1, 5], [1, 4], [1, 3], [2, 2], [1, 1]]
 
-
 def get_seg(lc_id_pair, strip):
     """creates segment object for a given pair of layer count and pattern id"""
     seg = Segment(lc_id_pair[0], lc_id_pair[1], strip)
@@ -101,23 +98,25 @@ def get_seg(lc_id_pair, strip):
     return seg
 
 def process_pat(data, strip=None, MAX_SPAN=37):
-
-    """
-    takes in sample data for each layer to generate a
-    layer count and id for the pattern in the pattern list (patlist) that best matches the data. Returns best id, layer count
-    """
+    """takes in sample data for each layer and returns best segment"""
 
     lc_id_vec = get_lc_id(data, MAX_SPAN)
     seg_list = [get_seg(lc_id_pair, strip) for lc_id_pair in lc_id_vec]
 
     return max(seg_list)
 
-
 def test_process_pat():
-    assert process_pat([0b1000000000000000000, 0b1000000000000000000, 0b1000000000000000000, 0b1000000000000000000, 0b1000000000000000000, 0b1000000000000000000], 37) == (15, 6)
-    assert process_pat([0b100000000000000000, 0b100000000000000000, 0b100000000000000000, 0b100000000000000000, 0b100000000000000000, 0b100000000000000000], 37) == (15, 5)
-    assert process_pat([0b100000000000000000, 0b1000000000000000000, 0b10000000000000000000, 0b1000000000000000000, 0b100000000000000000000, 0b100000000000000000000], 37 ) == (14, 6)
-    assert process_pat([0b100000000000000000, 0b1000000000000000000, 0b10000000000000000000, 0b100000000000000000000, 0b100000000000000000000, 0b100000000000000000000], 37 ) == (14, 5)
-    assert process_pat([0b100000000000000000, 0b1000000000000000000, 0b100000000000000000000, 0b100000000000000000000, 0b100000000000000000000, 0b100000000000000000000], 37 ) == (14, 4)
-    assert process_pat([0b100000000000000000, 0b100000000000000000000, 0b100000000000000000000, 0b100000000000000000000, 0b100000000000000000000, 0b100000000000000000000], 37 ) == (14, 3)
-    assert process_pat([0b100000000000000000000, 0b100000000000000000000, 0b100000000000000000000, 0b100000000000000000000, 0b100000000000000000000, 0b100000000000000000000], 37 ) == (14, 2)
+    assert process_pat([0b1000000000000000000, 0b1000000000000000000, 0b1000000000000000000, 0b1000000000000000000, 0b1000000000000000000, 0b1000000000000000000], 37).id == 15
+    assert process_pat([0b1000000000000000000, 0b1000000000000000000, 0b1000000000000000000, 0b1000000000000000000, 0b1000000000000000000, 0b1000000000000000000], 37).lc == 6 
+    assert process_pat([0b100000000000000000, 0b100000000000000000, 0b100000000000000000, 0b100000000000000000, 0b100000000000000000, 0b100000000000000000], 37).id == 15
+    assert process_pat([0b100000000000000000, 0b100000000000000000, 0b100000000000000000, 0b100000000000000000, 0b100000000000000000, 0b100000000000000000], 37).lc == 5
+    assert process_pat([0b100000000000000000, 0b1000000000000000000, 0b10000000000000000000, 0b1000000000000000000, 0b100000000000000000000, 0b100000000000000000000], 37 ).id == 14
+    assert process_pat([0b100000000000000000, 0b1000000000000000000, 0b10000000000000000000, 0b1000000000000000000, 0b100000000000000000000, 0b100000000000000000000], 37 ).lc == 6
+    assert process_pat([0b100000000000000000, 0b1000000000000000000, 0b10000000000000000000, 0b100000000000000000000, 0b100000000000000000000, 0b100000000000000000000], 37 ).id == 14
+    assert process_pat([0b100000000000000000, 0b1000000000000000000, 0b10000000000000000000, 0b100000000000000000000, 0b100000000000000000000, 0b100000000000000000000], 37 ).lc == 5
+    assert process_pat([0b100000000000000000, 0b1000000000000000000, 0b100000000000000000000, 0b100000000000000000000, 0b100000000000000000000, 0b100000000000000000000], 37 ).id == 14
+    assert process_pat([0b100000000000000000, 0b1000000000000000000, 0b100000000000000000000, 0b100000000000000000000, 0b100000000000000000000, 0b100000000000000000000], 37 ).lc == 4
+    assert process_pat([0b100000000000000000, 0b100000000000000000000, 0b100000000000000000000, 0b100000000000000000000, 0b100000000000000000000, 0b100000000000000000000], 37 ).id == 14
+    assert process_pat([0b100000000000000000, 0b100000000000000000000, 0b100000000000000000000, 0b100000000000000000000, 0b100000000000000000000, 0b100000000000000000000], 37 ).lc == 3
+    assert process_pat([0b100000000000000000000, 0b100000000000000000000, 0b100000000000000000000, 0b100000000000000000000, 0b100000000000000000000, 0b100000000000000000000], 37 ).id == 14
+    assert process_pat([0b100000000000000000000, 0b100000000000000000000, 0b100000000000000000000, 0b100000000000000000000, 0b100000000000000000000, 0b100000000000000000000], 37 ).lc == 2
