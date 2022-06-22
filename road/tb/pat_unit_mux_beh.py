@@ -1,6 +1,6 @@
 # Emulator for pat_unit_mux.vhd
 from subfunc import *
-from pat_unit_beh import process_pat
+from pat_unit_beh import get_best_seg
 from constants import *
 
 def parse_data(data, strip, MAX_SPAN=37):
@@ -15,10 +15,8 @@ def parse_data(data, strip, MAX_SPAN=37):
 
 def test_parse_data():
     """ test function for parse_data"""
-    assert parse_data(0b1000000000000000000, 18) == 0b1000000000000000000
     assert parse_data(0b1000000000000000000, 10) == 0b100000000000000000000000000
     assert parse_data(0b1000000000000000000, 25) == 0b100000000000
-    assert parse_data(0b100000000000000000, 30) == 0b100000
 
 def extract_data_window(ly_dat, strip, MAX_SPAN=37):
     """extracts data window around given strip"""
@@ -29,13 +27,13 @@ def test_extract_data_window():
     assert extract_data_window([0b100000000000000000, 0b1000100000000000000, 0b1000000000000000000, 0b1000000000000000000, 0b1000000000000000000, 0b1000000000000000000], 8) == [134217728, 285212672, 268435456, 268435456, 268435456, 268435456]
     assert extract_data_window([0b100000000000000000, 0b1000100000000000000, 0b1000000000000000000, 0b1000000000000000000, 0b1000000000000000000, 0b1000000000000000000], 20) == [32768, 69632, 65536, 65536, 65536, 65536]
 
-def pat_mux(chamber_data, MAX_SPAN=37, WIDTH=192):
+def pat_mux(partition_data, MAX_SPAN=37, WIDTH=192):
     """
-    takes in a list of integers for the chamber data in each layer, 
-    the MAX_SPAN of each pat_unit, and the chamber width to return a list of the
-    patterns the pat_unit_mux.vhd would find as segment objects
+    takes in a list of integers for the partition data in each layer, 
+    the MAX_SPAN of each pat_unit, and the partition width to return a list of the
+    segments the pat_unit_mux.vhd would find 
     """
-    return[process_pat(extract_data_window(chamber_data, strip, MAX_SPAN), strip) for strip in range(WIDTH)] 
+    return [get_best_seg(extract_data_window(partition_data, strip, MAX_SPAN), strip) for strip in range(WIDTH)] 
     
 def test_pat_mux():
     assert pat_mux([0b1000000000000000000, 0b1000000000000000000, 0b1000000000000000000, 0b1000000000000000000, 0b1000000000000000000, 0b1000000000000000000])[0].id == 2

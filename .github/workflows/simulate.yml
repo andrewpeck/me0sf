@@ -16,6 +16,7 @@ jobs:
       matrix:
         behs:
           - road/tb/pat_unit_beh.py
+          - road/tb/pat_unit_mux_beh.py
     steps:
 
       - uses: actions/checkout@v2
@@ -23,7 +24,7 @@ jobs:
           submodules: 'true'
 
       - name: Test Behaviors
-        run: python ${{ matrix.behs }}
+        run: pytest ${{ matrix.behs }}
   cocotb:
     runs-on: self-hosted
     strategy:
