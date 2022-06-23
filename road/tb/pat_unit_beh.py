@@ -9,29 +9,17 @@ def shift_center(ly, MAX_SPAN=37):
     lo = ly.lo + center
     return [lo, hi]
 
+def set_high_bits(pat_ly):
+    """sets high bits for a layer in a pattern using high and low indices"""
+    return 2**(pat_ly[1]-pat_ly[0]+1)-1 << pat_ly[0]
+
 def get_ly_mask(ly_pat, MAX_SPAN=37):
     """takes in a given layer pattern and returns a list of integer bit masks for each layer"""
-    assert (
-        type(ly_pat) == patdef_t
-    ), "ly_pat input must be defined in the patdef_t class"
-    assert (
-        type(ly_pat.layers[0]) == hi_lo_t
-    ), "each layer of ly_pat must be of the class hi_lo_t"
-    assert type(ly_pat.id) == int, "ly_pat's id must be an integer"
-    assert type(MAX_SPAN) == int, "MAX_SPAN input must be an integer"
-    m_vec = []
     #for each layer, shift the provided hi and lo values for each layer from pattern definition by center
     m_vals = list(map(shift_center, ly_pat.layers))    
     # use the high and low indices to determine where the high bits must go for each layer
-    for i in range(len(m_vals)):
-        high_bits = 0
-        # keep setting high bits from the low index to the high index; leave all else as low bits
-        for index in range(m_vals[i][0], m_vals[i][1] + 1):
-            val = 1 << index
-            high_bits = high_bits | val
-        m_vec.append(high_bits)
-    mask_vec = Mask(m_vec, ly_pat.id)
-    return mask_vec
+    m_vec = list(map(set_high_bits, m_vals))
+    return Mask(m_vec, ly_pat.id)
 
 def test_get_ly_mask():
     """ test function for get_ly_mask """
@@ -62,24 +50,21 @@ def create_lc_id_pair(lc, mask):
     """creates pair of layer count and pattern id"""
     return [lc, mask.id]
 
+def get_total_lc(data, mask):
+    """takes in a pattern mask and returns the pattern's total layer count"""
+    # and the layer data with the respective layer mask to determine how many hits are in each layer
+    ly_hits = list(map(lambda ly_dat, ly_mask: ly_dat&ly_mask , data, mask.mask))
+    # count the hits in each layer and store in ly_ones
+    ly_ones = list(map(count_ones, ly_hits))
+    # assign a layer count for each layer
+    layer_count = list(map(get_lc, ly_ones))
+    return sum(layer_count)
+
 def get_lc_id(data, MAX_SPAN=37):
     """takes in the data (list of each layer's data) to determine the layer count that would be obtained from the data overlaying any mask; returns id and layer count for each mask"""
-    lc_vec_x = []
-    # and the layer data with the respective layer mask to determine how many hits are in each layer
-    for v in range(len(LAYER_MASK)):
-        ly_hits = [] 
-        for i in range(N_LAYERS):
-            ly_hits.append(data[i] & LAYER_MASK[v].mask[i])
- 
-        # count the hits in each layer and store in ly_ones
-        ly_ones = list(map(count_ones, ly_hits))
-        # assign a layer count for each layer
-        layer_count = list(map(get_lc, ly_ones))
-        # total up layer counts for each layer to get pattern's total layer count
-        lc_vec_x.append(sum(layer_count))
-
+    lc_vec = [get_total_lc(data, mask) for mask in LAYER_MASK]
     # return list of corresponding total layer counts and pattern ids 
-    return list(map(create_lc_id_pair, lc_vec_x, LAYER_MASK))
+    return list(map(create_lc_id_pair, lc_vec, LAYER_MASK))
 
 def test_get_lc_id():
     """ test function for get_lc_id """
