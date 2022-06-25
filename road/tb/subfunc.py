@@ -52,7 +52,7 @@ class Segment:
 
     def __lt__(self, other):
         if isinstance(other, Segment):
-            return self.qualityy < other.quality
+            return self.quality < other.quality
 
 def mirror_hi_lo(ly):
     """"helper function for mirror_patdef, mirrors the hi and lo values"""
