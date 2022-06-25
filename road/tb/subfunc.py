@@ -160,7 +160,7 @@ pat_l7 = patdef_t(
 )
 pat_r7 = mirror_patdef(pat_l7, pat_l7.id - 1)
 
-patlist = [
+PATLIST = [
     pat_straight,
     pat_l,
     pat_r,

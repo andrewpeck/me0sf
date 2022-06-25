@@ -32,12 +32,12 @@ def test_get_ly_mask():
     assert get_ly_mask(pat_r3).mask == [0b111100000000000000000000000, 0b11110000000000000000000000, 0b1111000000000000000000, 0b111110000000000000000, 0b111100000000000, 0b11110000000000]
     assert get_ly_mask(pat_l4).mask == [0b11110000000000, 0b111100000000000, 0b1111000000000000000, 0b111110000000000000000, 0b11110000000000000000000000, 0b111100000000000000000000000] 
 
-def return_layer_mask():
+def calculate_global_layer_mask(patlist):
     """create layer masks for patterns in patlist"""
     global LAYER_MASK
     LAYER_MASK = list(map(get_ly_mask, patlist))
     
-return_layer_mask()
+calculate_global_layer_mask(PATLIST)
 
 def get_lc(ones):
     """assigns a layer count of 1 for at least 1 hit in a mask for a given layer, else assign layer count of 0"""
