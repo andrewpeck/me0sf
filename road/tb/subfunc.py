@@ -83,85 +83,85 @@ def mirror_patdef(pat, id):
 # true patlist; only used for testing pat_unit.vhd emulator
 pat_straight = patdef_t(
     15,
-    [hi_lo_t(1, -1),
+    (hi_lo_t(1, -1),
     hi_lo_t(1, -1),
     hi_lo_t(1, -1),
     hi_lo_t(0, 0),
     hi_lo_t(1, -1),
-    hi_lo_t(1, -1)]
+    hi_lo_t(1, -1))
 )
 pat_l = patdef_t(
     14,
-    [hi_lo_t(-1, -4),
+    (hi_lo_t(-1, -4),
     hi_lo_t(0, -3),
     hi_lo_t(1, -1),
     hi_lo_t(1, -1),
     hi_lo_t(3, 0),
-    hi_lo_t(4, 1)]
+    hi_lo_t(4, 1))
 )
 pat_r = mirror_patdef(pat_l, pat_l.id - 1)
 pat_l2 = patdef_t(
     12,
-    [hi_lo_t(-2, -5),
+    (hi_lo_t(-2, -5),
     hi_lo_t(1, -4),
     hi_lo_t(1, -1),
     hi_lo_t(1, -1),
     hi_lo_t(4, 1),
-    hi_lo_t(5, 2)]
+    hi_lo_t(5, 2))
 )
 pat_r2 = mirror_patdef(pat_l2, pat_l2.id - 1)
 pat_l3 = patdef_t(
     10,
-    [hi_lo_t(-5, -8),
+    (hi_lo_t(-5, -8),
     hi_lo_t(-4, -7),
     hi_lo_t(0, -3),
     hi_lo_t(2, -2),
     hi_lo_t(7, 4),
-    hi_lo_t(8, 5)]
+    hi_lo_t(8, 5))
 )
 pat_r3 = mirror_patdef(pat_l3, pat_l3.id - 1)
 pat_l4 = patdef_t(
     8,
-    [hi_lo_t(-5, -8),
+    (hi_lo_t(-5, -8),
     hi_lo_t(-4, -7),
     hi_lo_t(0, -3),
     hi_lo_t(2, -2),
     hi_lo_t(7, 4),
-    hi_lo_t(8, 5)]
+    hi_lo_t(8, 5))
 )
 pat_r4 = mirror_patdef(pat_l4, pat_l4.id - 1)
 pat_l5 = patdef_t(
     6,
-    [hi_lo_t(-8, -11),
+    (hi_lo_t(-8, -11),
     hi_lo_t(-5, -9),
     hi_lo_t(0, -3),
     hi_lo_t(3, 0),
     hi_lo_t(9, 5),
-    hi_lo_t(11, 8)]
+    hi_lo_t(11, 8))
 )
 pat_r5 = mirror_patdef(pat_l5, pat_l5.id - 1)
 pat_l6 = patdef_t(
     4,
-    [hi_lo_t(-11, -15),
+    (hi_lo_t(-11, -15),
     hi_lo_t(-9, -11),
     hi_lo_t(4, -9),
     hi_lo_t(9, 4),
     hi_lo_t(11, 9),
-    hi_lo_t(15, 11)]
+    hi_lo_t(15, 11))
 )
 pat_r6 = mirror_patdef(pat_l6, pat_l6.id - 1)
 pat_l7 = patdef_t(
     2,
-    [hi_lo_t(-10, -18),
+    (hi_lo_t(-10, -18),
     hi_lo_t(-6, -14),
     hi_lo_t(2, -9),
     hi_lo_t(9, 2),
     hi_lo_t(14, 6),
-    hi_lo_t(18, 10)]
+    hi_lo_t(18, 10))
 )
 pat_r7 = mirror_patdef(pat_l7, pat_l7.id - 1)
 
-PATLIST = [
+PATLIST = (
     pat_straight,
     pat_l,
     pat_r,
@@ -177,7 +177,7 @@ PATLIST = [
     pat_r6,
     pat_l7,
     pat_r7,
-]
+)
 
 
 def count_ones(int_ones):
