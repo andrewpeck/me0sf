@@ -47,6 +47,9 @@ class Segment:
             self.substrip==other.substrip and \
             self.bend_ang==other.bend_ang
 
+    def __str__(self):
+        return f"id={self.id}, lc={self.lc}, strip={self.strip}, quality={self.quality}"
+
     def __gt__(self, other):
         if isinstance(other, Segment):
             return self.quality > other.quality
