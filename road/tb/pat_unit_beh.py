@@ -79,7 +79,6 @@ def test_get_lc_id():
 def get_seg(lc_id_pair, strip):
     """creates segment object for a given pair of layer count and pattern id"""
     seg = Segment(lc_id_pair[0], lc_id_pair[1], strip)
-    seg.get_quality()
     return seg
 
 def get_best_seg(data, strip=None, MAX_SPAN=37):

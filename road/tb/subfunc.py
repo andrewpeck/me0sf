@@ -17,7 +17,9 @@ class Mask:
         self.id = id
 
 class Segment:
-    def __init__(self, lc, id, strip=None, partition=None, centroid=None, substrip=None, bend_ang=None, quality=None):
+
+    def __init__(self, lc, id, strip=None, partition=None, centroid=None,
+                 substrip=None, bend_ang=None):
         self.lc = lc
         self.id = id
         self.strip = strip
@@ -25,20 +27,21 @@ class Segment:
         self.centroid = centroid
         self.substrip = substrip
         self.bend_ang = bend_ang
-        self.quality = quality
+        self.update_quality()
 
-    def get_quality(self):
+    def update_quality(self):
         """ create sortable number to compare segments"""
-        if self.quality == None:
-            if self.partition == None:
-                if self.strip == None:
-                    self.quality = (self.id << 12) | (self.lc << 17) 
-                else:
-                    self.quality = (self.strip <<4) | (self.id << 12) | (self.lc << 17) 
-            elif self.strip == None:
-                self.quality = self.partition | (self.id << 12) | (self.lc << 17) 
-            else:
-                self.quality = self.partition | (self.strip <<4) | (self.id << 12) | (self.lc << 17)
+        lc = self.lc
+        id = self.id
+        prt = self.partition
+        strip = self.strip
+
+        prt = 0 if prt is None else prt
+        strip = 0 if strip is None else strip
+
+        quality = prt | (strip << 4) | (id << 12) | (lc << 17)
+
+        self.quality=quality
 
     def __eq__(self, other):
         return self.id==other.id and self.lc==other.lc and self.strip==other.strip and \
