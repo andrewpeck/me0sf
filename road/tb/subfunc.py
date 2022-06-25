@@ -41,10 +41,11 @@ class Segment:
                 self.quality = self.partition | (self.strip <<4) | (self.id << 12) | (self.lc << 17)
 
     def __eq__(self, other):
-        if self.quality == other.quality:
-            return True
-        else:
-            return False
+        return self.id==other.id and self.lc==other.lc and self.strip==other.strip and \
+            self.partition==other.partition and  \
+            self.centroid==other.centroid and  \
+            self.substrip==other.substrip and \
+            self.bend_ang==other.bend_ang
 
     def __gt__(self, other):
         if isinstance(other, Segment):
