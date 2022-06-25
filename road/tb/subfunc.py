@@ -48,7 +48,8 @@ class Segment:
             self.partition==other.partition and  \
             self.centroid==other.centroid and  \
             self.substrip==other.substrip and \
-            self.bend_ang==other.bend_ang
+            self.bend_ang==other.bend_ang and \
+            self.quality==other.quality
 
     def __str__(self):
         return f"id={self.id}, lc={self.lc}, strip={self.strip}, quality={self.quality}"
