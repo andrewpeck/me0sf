@@ -17,7 +17,9 @@ class Mask:
         self.id = id
 
 class Segment:
-    def __init__(self, lc, id, strip=None, partition=None, centroid=None, substrip=None, bend_ang=None, quality=None):
+
+    def __init__(self, lc, id, strip=None, partition=None, centroid=None,
+                 substrip=None, bend_ang=None):
         self.lc = lc
         self.id = id
         self.strip = strip
@@ -25,26 +27,32 @@ class Segment:
         self.centroid = centroid
         self.substrip = substrip
         self.bend_ang = bend_ang
-        self.quality = quality
+        self.update_quality()
 
-    def get_quality(self):
+    def update_quality(self):
         """ create sortable number to compare segments"""
-        if self.quality == None:
-            if self.partition == None:
-                if self.strip == None:
-                    self.quality = (self.id << 12) | (self.lc << 17) 
-                else:
-                    self.quality = (self.strip <<4) | (self.id << 12) | (self.lc << 17) 
-            elif self.strip == None:
-                self.quality = self.partition | (self.id << 12) | (self.lc << 17) 
-            else:
-                self.quality = self.partition | (self.strip <<4) | (self.id << 12) | (self.lc << 17)
+        lc = self.lc
+        id = self.id
+        prt = self.partition
+        strip = self.strip
+
+        prt = 0 if prt is None else prt
+        strip = 0 if strip is None else strip
+
+        quality = prt | (strip << 4) | (id << 12) | (lc << 17)
+
+        self.quality=quality
 
     def __eq__(self, other):
-        if self.quality == other.quality:
-            return True
-        else:
-            return False
+        return self.id==other.id and self.lc==other.lc and self.strip==other.strip and \
+            self.partition==other.partition and  \
+            self.centroid==other.centroid and  \
+            self.substrip==other.substrip and \
+            self.bend_ang==other.bend_ang and \
+            self.quality==other.quality
+
+    def __str__(self):
+        return f"id={self.id}, lc={self.lc}, strip={self.strip}, quality={self.quality}"
 
     def __gt__(self, other):
         if isinstance(other, Segment):
@@ -52,7 +60,7 @@ class Segment:
 
     def __lt__(self, other):
         if isinstance(other, Segment):
-            return self.qualityy < other.quality
+            return self.quality < other.quality
 
 def mirror_hi_lo(ly):
     """"helper function for mirror_patdef, mirrors the hi and lo values"""
@@ -75,85 +83,85 @@ def mirror_patdef(pat, id):
 # true patlist; only used for testing pat_unit.vhd emulator
 pat_straight = patdef_t(
     15,
-    [hi_lo_t(1, -1),
+    (hi_lo_t(1, -1),
     hi_lo_t(1, -1),
     hi_lo_t(1, -1),
     hi_lo_t(0, 0),
     hi_lo_t(1, -1),
-    hi_lo_t(1, -1)]
+    hi_lo_t(1, -1))
 )
 pat_l = patdef_t(
     14,
-    [hi_lo_t(-1, -4),
+    (hi_lo_t(-1, -4),
     hi_lo_t(0, -3),
     hi_lo_t(1, -1),
     hi_lo_t(1, -1),
     hi_lo_t(3, 0),
-    hi_lo_t(4, 1)]
+    hi_lo_t(4, 1))
 )
 pat_r = mirror_patdef(pat_l, pat_l.id - 1)
 pat_l2 = patdef_t(
     12,
-    [hi_lo_t(-2, -5),
+    (hi_lo_t(-2, -5),
     hi_lo_t(1, -4),
     hi_lo_t(1, -1),
     hi_lo_t(1, -1),
     hi_lo_t(4, 1),
-    hi_lo_t(5, 2)]
+    hi_lo_t(5, 2))
 )
 pat_r2 = mirror_patdef(pat_l2, pat_l2.id - 1)
 pat_l3 = patdef_t(
     10,
-    [hi_lo_t(-5, -8),
+    (hi_lo_t(-5, -8),
     hi_lo_t(-4, -7),
     hi_lo_t(0, -3),
     hi_lo_t(2, -2),
     hi_lo_t(7, 4),
-    hi_lo_t(8, 5)]
+    hi_lo_t(8, 5))
 )
 pat_r3 = mirror_patdef(pat_l3, pat_l3.id - 1)
 pat_l4 = patdef_t(
     8,
-    [hi_lo_t(-5, -8),
+    (hi_lo_t(-5, -8),
     hi_lo_t(-4, -7),
     hi_lo_t(0, -3),
     hi_lo_t(2, -2),
     hi_lo_t(7, 4),
-    hi_lo_t(8, 5)]
+    hi_lo_t(8, 5))
 )
 pat_r4 = mirror_patdef(pat_l4, pat_l4.id - 1)
 pat_l5 = patdef_t(
     6,
-    [hi_lo_t(-8, -11),
+    (hi_lo_t(-8, -11),
     hi_lo_t(-5, -9),
     hi_lo_t(0, -3),
     hi_lo_t(3, 0),
     hi_lo_t(9, 5),
-    hi_lo_t(11, 8)]
+    hi_lo_t(11, 8))
 )
 pat_r5 = mirror_patdef(pat_l5, pat_l5.id - 1)
 pat_l6 = patdef_t(
     4,
-    [hi_lo_t(-11, -15),
+    (hi_lo_t(-11, -15),
     hi_lo_t(-9, -11),
     hi_lo_t(4, -9),
     hi_lo_t(9, 4),
     hi_lo_t(11, 9),
-    hi_lo_t(15, 11)]
+    hi_lo_t(15, 11))
 )
 pat_r6 = mirror_patdef(pat_l6, pat_l6.id - 1)
 pat_l7 = patdef_t(
     2,
-    [hi_lo_t(-10, -18),
+    (hi_lo_t(-10, -18),
     hi_lo_t(-6, -14),
     hi_lo_t(2, -9),
     hi_lo_t(9, 2),
     hi_lo_t(14, 6),
-    hi_lo_t(18, 10)]
+    hi_lo_t(18, 10))
 )
 pat_r7 = mirror_patdef(pat_l7, pat_l7.id - 1)
 
-patlist = [
+PATLIST = (
     pat_straight,
     pat_l,
     pat_r,
@@ -169,7 +177,7 @@ patlist = [
     pat_r6,
     pat_l7,
     pat_r7,
-]
+)
 
 
 def count_ones(int_ones):
