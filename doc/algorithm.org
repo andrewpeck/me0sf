@@ -1,6 +1,7 @@
-* #+TITLE: ME0 Segment Finding
+#+TITLE: ME0 Segment Finding
 #+HTML_HEAD: <link href="theme.css" rel="stylesheet">
 #+OPTIONS: tex:t author:nil
+#+OPTIONS: num:nil
 #+STARTUP: latexpreview
 #+STARTUP: fninline
 #+STARTUP: fnadjust
@@ -11,8 +12,7 @@ Each ME0 chamber is composed of 6 layers of GEMs.
 
 Each layer is composed of 8 partitions in eta, each of which is split into 384 strips in phi.
 
-[ put an image of the chamber here ]
-
+: [ put an image of the chamber here ]
 
 The trigger output of a GEM chamber is a binary readout called an "S-bit", which
 is the OR of two adjacent strips. The resolution of a ME0 chamber in the trigger
@@ -42,6 +42,9 @@ along the lines of:
 
 #+begin_src dot :file dataflow.svg :results value
 digraph {
+  graph [fontname = "Roboto Mono"];
+  node [fontname = "Roboto Mono"];
+  edge [fontname = "Roboto Mono"];
   node [shape=box]
   rankdir=LR
   "Input\nSbits" -> "Segment\nIdentification" -> "Sorting" -> "Fitting" -> "Output"
@@ -290,7 +293,9 @@ reducing the # of segments that need to be sorted by a factor of N.
 Choose from (8 partitions * 192/N segments) -> M segments, where N is the
 pre-sorting factor from the previous stage.
 ** Centroid Coordinate Transformation
-f(pattern id, 6x centroids) -> 6x hit position
+
+/f/ (~pattern id~, ~6x centroids~) → 6x hit position
+
 ** Fitting
 
 A standard linear fit follows a formula:
@@ -453,6 +458,8 @@ f (pat_unit_strip, fit_offset) -> strip
 ** Output Data Format
 
 The currently proposed output data format is:
+
+|---------+------+-------------------------------------------------------------|
 | Field   | Bits | Notes                                                       |
 |---------+------+-------------------------------------------------------------|
 | Eta     |    4 | 16 eta positions (stubs can't cross more than 2 partitions) |
@@ -461,6 +468,7 @@ The currently proposed output data format is:
 | Quality |    4 | 16 different quality levels                                 |
 |---------+------+-------------------------------------------------------------|
 | Total   |   27 | Bits per Segment                                            |
+|---------+------+-------------------------------------------------------------|
 
 *** Eta
 *** Phi
@@ -477,11 +485,15 @@ The bend angle is encoded as a fixed point number
 
 In fixed point fashion, the interpretation of the fractional bend is that
 
+|------+------------------|
+| Bit  | Resolution       |
+|------+------------------|
 | bit0 | 1/2 strip/layer  |
 | bit1 | 1/4 strip/layer  |
 | bit2 | 1/8 strip/layer  |
 | bit3 | 1/16 strip/layer |
 | bit4 | 1/32 strip/layer |
+|------+------------------|
 
 The resolution may be reduced later after further studies are done.
 
@@ -504,6 +516,10 @@ The resolution may be reduced later after further studies are done.
 *** segment_selector.vhd
 *** fit.vhd
 * Testbench
+
+The firmware is tested against a standalone Python emulator, using CocoTB as the
+test runner and Questasim (or modelsim, or Aldec Riviera) as the simulator.
+
 * Resource Utilization
 |         |  LUT |  FF | DSP |                                       |
 |---------+------+-----+-----+---------------------------------------|
