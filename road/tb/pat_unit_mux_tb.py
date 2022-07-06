@@ -86,9 +86,10 @@ async def pat_unit_mux_test(dut, NLOOPS=1000):
         fw_segments = get_segments_from_dut(dut)
 
         for i in range(len(sw_segments)):
-            print(f"{i}:")
-            print(" > sw: " + str(sw_segments[i]))
-            print(" > fw: " + str(fw_segments[i]))
+            if sw_segments[i] != fw_segments[i]:
+                print(f"{i}:")
+                print(" > sw: " + str(sw_segments[i]))
+                print(" > fw: " + str(fw_segments[i]))
             assert sw_segments[i] == fw_segments[i]
 
 
