@@ -1,1 +1,2 @@
 N_LAYERS = 6
+LY_THRESH = 4

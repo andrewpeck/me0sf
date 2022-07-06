@@ -81,13 +81,17 @@ def get_seg(lc_id_pair, strip):
     seg = Segment(lc_id_pair[0], lc_id_pair[1], strip)
     return seg
 
-def get_best_seg(data, strip=None, MAX_SPAN=37):
+def get_best_seg(data, strip=None, max_span=37, ly_thresh=LY_THRESH):
     """takes in sample data for each layer and returns best segment"""
 
-    lc_id_vec = get_lc_id(data, MAX_SPAN)
+    lc_id_vec = get_lc_id(data, max_span)
     seg_list = [get_seg(lc_id_pair, strip) for lc_id_pair in lc_id_vec]
 
-    return max(seg_list)
+    best = max(seg_list)
+    if (best.lc < ly_thresh):
+        best.reset()
+
+    return best
 
 def test_get_best_seg():
     assert get_best_seg([0b1000000000000000000, 0b1000000000000000000, 0b1000000000000000000, 0b1000000000000000000, 0b1000000000000000000, 0b1000000000000000000], 37).id == 15
