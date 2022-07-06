@@ -29,6 +29,11 @@ class Segment:
         self.bend_ang = bend_ang
         self.update_quality()
 
+    def reset(self):
+        self.lc = 0
+        self.id = 0
+        self.update_quality()
+
     def update_quality(self):
         """ create sortable number to compare segments"""
         lc = self.lc

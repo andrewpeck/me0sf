@@ -36,5 +36,10 @@ def pat_mux(partition_data, MAX_SPAN=37, WIDTH=192):
     return [get_best_seg(extract_data_window(partition_data, strip, MAX_SPAN), strip) for strip in range(WIDTH)] 
     
 def test_pat_mux():
-    assert pat_mux([0b1000000000000000000, 0b1000000000000000000, 0b1000000000000000000, 0b1000000000000000000, 0b1000000000000000000, 0b1000000000000000000])[0].id == 2
-    assert pat_mux([0b1000000000000000000, 0b1000000000000000000, 0b1000000000000000000, 0b1000000000000000000, 0b1000000000000000000, 0b1000000000000000000])[0].lc == 1 
+    data = [0b1, 0b1, 0b1, 0b1, 0b1, 0b1]
+    mux = pat_mux(data)
+    # check for expected pattern
+    assert mux[0].id == 15
+    assert mux[0].lc == 6
+    # check for lack of unexpected pattern
+    assert mux[4].lc == 0
