@@ -1,9 +1,8 @@
 import os
-import random
-import csv
 import cocotb
 from cocotb.triggers import RisingEdge
 from cocotb.clock import Clock
+from cocotb_test.simulator import run
 from datadev_mux import datadev_mux
 from pat_unit_mux_beh import pat_mux
 from subfunc import *
@@ -11,6 +10,21 @@ from cocotb_test.simulator import run
 from test_common import *
 
 from pat_unit_beh import calculate_global_layer_mask
+
+def set_layer_hits(dut, hits):
+
+    """
+    Take a collection of 6 layers, each of which is an integer bitmask of
+    hits and set the DUT inputs
+    """
+
+    dut.ly0.value = hits[0]
+    dut.ly1.value = hits[1]
+    dut.ly2.value = hits[2]
+    dut.ly3.value = hits[3]
+    dut.ly4.value = hits[4]
+    dut.ly5.value = hits[5]
+
 
 @cocotb.test()
 async def pat_unit_mux_test(dut, NLOOPS=1000):

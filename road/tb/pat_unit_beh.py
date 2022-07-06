@@ -16,7 +16,7 @@ def set_high_bits(pat_ly):
 def get_ly_mask(ly_pat, MAX_SPAN=37):
     """takes in a given layer pattern and returns a list of integer bit masks for each layer"""
     #for each layer, shift the provided hi and lo values for each layer from pattern definition by center
-    m_vals = list(map(shift_center, ly_pat.layers))    
+    m_vals = [shift_center(ly, MAX_SPAN) for ly in ly_pat.layers]
     # use the high and low indices to determine where the high bits must go for each layer
     m_vec = list(map(set_high_bits, m_vals))
     return Mask(m_vec, ly_pat.id)
@@ -35,7 +35,7 @@ def test_get_ly_mask():
 def calculate_global_layer_mask(patlist):
     """create layer masks for patterns in patlist"""
     global LAYER_MASK
-    LAYER_MASK = list(map(get_ly_mask, patlist))
+    LAYER_MASK = [get_ly_mask(pat) for pat in patlist]
     
 calculate_global_layer_mask(PATLIST)
 
