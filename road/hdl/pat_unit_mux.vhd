@@ -6,6 +6,7 @@ use ieee.math_real.all;
 
 use work.pat_pkg.all;
 use work.patterns.all;
+use work.pat_types.all;
 use work.priority_encoder_pkg.all;
 
 entity pat_unit_mux is
@@ -184,7 +185,7 @@ begin
 
       for I in 0 to NUM_SECTORS-1 loop
         strips_reg(I*MUX_FACTOR+patterns_mux_phase).pattern <= patterns_mux(I);
-        strips_reg(I*MUX_FACTOR+patterns_mux_phase).strip   <= I*MUX_FACTOR+patterns_mux_phase;
+        strips_reg(I*MUX_FACTOR+patterns_mux_phase).strip   <= to_unsigned(I*MUX_FACTOR+patterns_mux_phase, STRIP_BITS);
       end loop;
 
       if (patterns_mux_phase=0) then

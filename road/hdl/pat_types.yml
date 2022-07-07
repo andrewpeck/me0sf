@@ -1,0 +1,67 @@
+---
+config:
+  basic_convert_functions: on
+  packages:
+    - ieee: [std_logic_1164, numeric_std, math_real]
+
+types:
+
+  - CNT_BITS: {qualifier: constant, type: integer, value: 3, comment: "number of bits to count 6 layers, always 3"}
+  - PID_BITS: {qualifier: constant, type: integer, value: 4, comment: "number of bits to cnt the pids"}
+  - CENTROID_BITS: {qualifier: constant, type: integer, value: 4, comment: "number of bits to cnt the centroid"}
+  # - VALID_BIT: {qualifier: constant, type: integer, value: 1, comment: "number of valid bits"}
+
+  # - PATTERN_LENGTH: {qualifier: constant, type: integer, value: CNT_BITS + PID_BITS + CENTROID_BITS + VALID_BIT, comment: ""}
+
+  # - PATTERN_SORTB_HI: {qualifier: constant, type: integer, value: CNT_BITS + PID_BITS + CENTROID_BITS*6, comment: ""}
+  # - PATTERN_SORTB_LO: {qualifier: constant, type: integer, value: CENTROID_BITS*6, comment: ""}
+  - PATTERN_IGNOREB : {qualifier: constant, type: integer, value: CENTROID_BITS*6, comment: ""}
+
+  - STRIP_BITS: {qualifier: constant, type: integer, value: 8, comment: "8 bits to count 0-191"}
+  - PARTITION_BITS: {qualifier: constant, type: integer, value: 3, comment: "3 bits to count 0-7"}
+
+  - hi_lo_t:
+      - hi: {type: integer}
+      - lo: {type: integer}
+
+  - patdef_t:
+      - id: {type: natural}
+      - ly0: {type: hi_lo_t}
+      - ly1: {type: hi_lo_t}
+      - ly2: {type: hi_lo_t}
+      - ly3: {type: hi_lo_t}
+      - ly4: {type: hi_lo_t}
+      - ly5: {type: hi_lo_t}
+
+  - centroid_array_t: {array: [0, 5], type: unsigned, range: [CENTROID_BITS-1, 0]}
+
+  - pattern_t:
+      # msbs are ignored, sorting bits should be placed in MSB --> LSB order
+      - hits: {type: centroid_array_t}
+      - cnt: {type: unsigned, range: [CNT_BITS-1, 0]}
+      - id: {type: unsigned, range: [PID_BITS-1, 0]}
+
+  - layer_t: {type: logic, range: [191, 0], qualifier: subtype}
+
+  - partition_t: {array: [0, 5], type: layer_t}
+  - int_array_t: {array: open, type: integer}
+  - patdef_array_t: {array: open, type: patdef_t}
+# - chamber_t: {array: [0, 7], type: partition_t}
+
+  - strip_t:
+      - strip: {type: unsigned, range: [7, 0]}
+      - pattern: {type: pattern_t}
+
+  - segment_t:
+      - strip: {type: strip_t}
+      - partition: {type: unsigned, range: [2, 0]}
+
+  #- pattern_list_slv_t: {array: open, type: logic, range: [PATTERN_LENGTH-1 downto 0]};
+
+  - pat_list_t: {array: open, type: pattern_t}
+  - strip_list_t: {array: open, type: strip_t}
+  - segment_list_t: {array: open, type: segment_t}
+
+  # - cand_array_t is array (integer range 0 to 7) of pat_list_t (PRT_WIDTH-1 downto 0);
+
+  # type cand_array_s0_t is array (integer range 0 to 7) of pat_list_t (PRT_WIDTH/S0_REGION_SIZE-1 downto 0);

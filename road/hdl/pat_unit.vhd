@@ -5,8 +5,10 @@ use ieee.numeric_std.all;
 use ieee.math_real.all;
 
 use work.pat_pkg.all;
+use work.centroid_finding.all;
 use work.patterns.all;
 use work.priority_encoder_pkg.all;
+use work.pat_types.all;
 
 entity pat_unit is
   generic(
@@ -19,7 +21,7 @@ entity pat_unit is
     LY2_SPAN : natural := get_max_span(patdef_array);  -- TODO: variably size the other layers instead of using the max
     LY3_SPAN : natural := get_max_span(patdef_array);  -- TODO: variably size the other layers instead of using the max
     LY4_SPAN : natural := get_max_span(patdef_array);  -- TODO: variably size the other layers instead of using the max
-    LY5_SPAN : natural := get_max_span(patdef_array)   -- TODO: variably size the other layers instead of using the max
+    LY5_SPAN : natural := get_max_span(patdef_array)  -- TODO: variably size the other layers instead of using the max
     );
 
   port(
@@ -57,22 +59,13 @@ architecture behavioral of pat_unit is
     return n_ones;
   end function count_ones;
 
-  signal best_slv : std_logic_vector (PATTERN_LENGTH-1 downto 0);
+  signal best_slv : std_logic_vector (pattern_t'w-1 downto 0);
   signal best     : pattern_t;
-  signal cand_slv : bus_array (0 to NUM_PATTERNS-1) (PATTERN_LENGTH-1 downto 0);
+  signal cand_slv : bus_array (0 to NUM_PATTERNS-1) (pattern_t'w-1 downto 0);
 
 begin
 
   check_pattern_operators(true);
-
-  assert check_pattern_conversion("1101" & x"A9CD")
-    report "Failed to convert pattern slv" severity error;
-  assert check_pattern_conversion("1111" & x"FFFF")
-    report "Failed to convert pattern slv" severity error;
-  assert check_pattern_conversion("0101" & x"5555")
-    report "Failed to convert pattern slv" severity error;
-  assert check_pattern_conversion("1010" & x"AAAA")
-    report "Failed to convert pattern slv" severity error;
 
   assert (LY0_SPAN mod 2 = 1)
     report "Layer Span Must be Odd (span=" & integer'image(LY0_SPAN) & ")" severity error;
@@ -153,8 +146,12 @@ begin
     process (clock) is
     begin
       if (rising_edge(clock)) then
+
         pats_dav <= dav_i;
-        pats(I)  <= null_pattern;
+
+        pats(I) <= null_pattern;
+
+        -- count
         pats(I).cnt <= to_unsigned(count_ones(
           or_reduce(ly0_mask) &
           or_reduce(ly1_mask) &
@@ -162,15 +159,20 @@ begin
           or_reduce(ly3_mask) &
           or_reduce(ly4_mask) &
           or_reduce(ly5_mask)), CNT_BITS);
+
+        -- pattern id
         pats(I).id <= to_unsigned(patlist(I).id, PID_BITS);
+
+        -- centroid finding
+        pats(I).hits(0) <= to_unsigned(centroid(ly0_mask, ly0_size), CENTROID_BITS);
+
       end if;
     end process;
   end generate;
 
-
   cand_to_slv : for I in 0 to NUM_PATTERNS-1 generate
   begin
-    cand_slv(I) <= to_slv(pats(I));
+    cand_slv(I) <= convert(pats(I), cand_slv(I));
   end generate;
 
   priority_encoder_inst : entity work.priority_encoder
@@ -179,8 +181,8 @@ begin
       REG_INPUT  => true,
       REG_OUTPUT => true,
       REG_STAGES => 0,
-      DAT_BITS   => PATTERN_LENGTH,
-      QLT_BITS   => 1+CNT_BITS+PID_BITS,
+      DAT_BITS   => best_slv'length,
+      QLT_BITS   => CNT_BITS+PID_BITS,
       ADR_BITS_o => integer(ceil(log2(real(NUM_PATTERNS))))
       )
     port map (
@@ -192,7 +194,7 @@ begin
       adr_o => open
       );
 
-  best <= to_pattern(best_slv);
+  best <= convert(best_slv, best);
 
   --------------------------------------------------------------------------------
   -- Put a threshold, make sure the pattern is above some minimum layer cnt
@@ -201,17 +203,10 @@ begin
   process (clock) is
   begin
     if (rising_edge(clock)) then
-
-      -- dav_o <= best_dav;
-
       if (best.cnt >= THRESHOLD) then
-        pat_o     <= best;
-        pat_o.dav <= '1';
+        pat_o <= best;
       else
-        pat_o.cnt  <= (others => '0');
-        pat_o.hash <= (others => '0');
-        pat_o.id   <= (others => '0');
-        pat_o.dav  <= '0';
+        pat_o <= zero(pat_o);
       end if;
     end if;
   end process;

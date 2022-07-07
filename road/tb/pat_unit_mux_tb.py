@@ -100,7 +100,9 @@ def test_pat_unit_mux():
 
     vhdl_sources = [
         os.path.join(rtl_dir, "priority_encoder/hdl/priority_encoder.vhd"),
+        os.path.join(rtl_dir, "pat_types.vhd"),
         os.path.join(rtl_dir, "pat_pkg.vhd"),
+        os.path.join(rtl_dir, "centroid_finding.vhd"),
         os.path.join(rtl_dir, "patterns.vhd"),
         os.path.join(rtl_dir, "pat_unit.vhd"),
         os.path.join(rtl_dir, "dav_to_phase.vhd"),

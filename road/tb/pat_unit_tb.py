@@ -28,26 +28,27 @@ async def pat_unit_test(dut):
     # zero the inputs
     set_dut_inputs(dut, [0] * 6)
 
-    # flush the buffer
+    # flush the pipeline
     for _ in range(10):
         await RisingEdge(dut.clock)
 
     # setup the FIFO queuing to a fixed latency
-    latency = 3
+    LATENCY = 3
     queue = []
-    for _ in range(latency):
+    for _ in range(LATENCY):
         ly_data = datadev(ly_t, MAX_SPAN)
         queue.append(ly_data)
         set_dut_inputs(dut, ly_data)
         await RisingEdge(dut.clock)
 
-    for _ in range(10000):
+    for i in range(10000):
 
         # (1) generate new random data
         # (2) push it onto the queue
         # (3) set the DUT inputs to the new data
 
         new_data = datadev(ly_t, MAX_SPAN)
+
         set_dut_inputs(dut, new_data)
         queue.append(new_data)
 
@@ -67,8 +68,9 @@ async def pat_unit_test(dut):
             sw_segment.lc = 0
 
         if sw_segment != fw_segment:
-            print("sw=%s" % sw_segment)
-            print("fw=%s" % fw_segment)
+            print(f"loop={i}")
+            print("> sw=%s" % sw_segment)
+            print("> fw=%s" % fw_segment)
 
         assert sw_segment == fw_segment
 
@@ -80,6 +82,8 @@ def test_pat_unit():
 
     vhdl_sources = [
         os.path.join(rtl_dir, "priority_encoder/hdl/priority_encoder.vhd"),
+        os.path.join(rtl_dir, "centroid_finding.vhd"),
+        os.path.join(rtl_dir, "pat_types.vhd"),
         os.path.join(rtl_dir, "pat_pkg.vhd"),
         os.path.join(rtl_dir, "patterns.vhd"),
         os.path.join(rtl_dir, "pat_unit.vhd"),
@@ -96,7 +100,7 @@ def test_pat_unit():
         compile_args=["-2008"],
         toplevel="pat_unit",  # top level HDL
         toplevel_lang="vhdl",
-        # sim_args=["-do", '"set NumericStdNoWarnings 1;"'],
+        sim_args=["-do", '"set NumericStdNoWarnings 1;"'],
         parameters=parameters,
         gui=0,
     )

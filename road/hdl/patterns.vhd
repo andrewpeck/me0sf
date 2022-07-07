@@ -5,6 +5,7 @@ use ieee.std_logic_1164.all;
 use ieee.std_logic_misc.all;
 use ieee.numeric_std.all;
 use work.pat_pkg.all;
+use work.pat_types.all;
 
 package patterns is
 
