@@ -1,87 +1,81 @@
 """ Emulator that processes a single partition (6 layers x 192 strips) and returns a collection of segments"""
+import numpy as np
 from pat_unit_mux_beh import pat_mux
-from datadev_mux import datadev_mux
 from subfunc import *
 
-def compare_ghosts(val, comp_list):
-    """takes in a strip value and a list of strip values to ensure that there aren't copies of the same data (ID value identical) or mirrors (ID value +2 or -2 from each other)"""
-    comp_list = [x for x in comp_list if x != 0]
+def compare_ghosts(seg, comp_list):
+    """takes in a segment and a list of segments to ensure that there aren't copies of the same data (ID value identical) or mirrors (ID value +2 or -2 from each other)"""
+    comp_list = [x for x in comp_list if x.id != 0 ]
     if len(comp_list) != 0:
         for i in range(len(comp_list)):
-            if val == 0:
+            if seg.id == 0 and seg.lc == 0:
                 break
             if (
-                val[0] == comp_list[i][0]
-                or val[0] + 2 == comp_list[i][0]
-                or val[0] - 2 == comp_list[i][0]
+                seg.id == comp_list[i].id
+                or seg.id + 2 == comp_list[i].id
+                or seg.id - 2 == comp_list[i].id
             ):
-                val = 0
-    return val
+                seg.reset()
+    return seg
 
-def priority_encoder(group_vals):
-    max_lyc = 0
-    quality_index = 0
-    ID_group = []
-    original_indices = []
-    for l in range(len(group_vals)):
-        # determine the strip with the max layer count
-        if group_vals[l] != 0 and group_vals[l][1] >= max_lyc:
-            max_lyc = group_vals[l][1]
-            quality_index = l
-    for m in range(len(group_vals)):
-        # check if we have any layer count ties; save them to a list
-        if group_vals[m] != 0 and group_vals[m][1] == max_lyc:
-            ID_group.append(group_vals[m])
-            # save the original indices of the ID group values
-            original_indices.append(m)
-    if len(ID_group) > 1:
-        # go through layer count tie strip values; choose value with highest pattern ID
-        quality_index = 0
-        max_ID = 0
-        for n in range(len(ID_group)):
-            if ID_group[n][0] > max_ID:  # don't compare on the rightmost; we want lower
-                max_ID = ID_group[n][0]
-                quality_index = original_indices[n]
-    # save data from the highest quality pattern; set all other values to 0
-    best_strip = group_vals[quality_index]
-    return best_strip
+def test_compare_ghosts():
+    seg_list = [Segment(6, 15), Segment(6, 12), Segment(6,5)]
+    seg1 = Segment(6, 15)
+    seg2 = Segment(6, 10)
+    seg3 = Segment(6, 7)
+    #check for reset with copy, ID+2, ID-2
+    assert compare_ghosts(seg1, seg_list).id == 0
+    assert compare_ghosts(seg2, seg_list).id == 0
+    assert compare_ghosts(seg3, seg_list).id == 0
 
-
-def partition_filtering(pat_mux_dat, group_width=8, ghost_width=4, WIDTH=37):
-    """takes in pat_unit_mux_data and performs edge cancellation"""
-    for group in range(round((WIDTH - 1) / group_width)):
-        lo_index = int(
-            (group + group_width - (ghost_width / 2))
-        )  # maybe check this first if there's discrepancies
-        hi_index = lo_index + (ghost_width)
-        values = pat_mux_dat[lo_index:hi_index]
-        for j in range(len(values)):
-            values[j] = compare_ghosts(values[j], values[(j + 1) :])
-        pat_mux_dat[lo_index:hi_index] = values
+def cancel_edges(pat_mux_dat, group_width=8, ghost_width=4, WIDTH=192): 
+    """takes in pat_unit_mux_data, finds edges of groups w/given group width, and performs edge cancellation by checking ghosts around each edge within given ghost width"""
+    for edge in range((WIDTH // group_width)-1): 
+        lo_index = group_width*(edge+1) - (ghost_width//2)
+        hi_index = lo_index + ghost_width
+        for j in range(lo_index, hi_index): 
+            pat_mux_dat[j] = compare_ghosts(pat_mux_dat[j], pat_mux_dat[(j + 1):hi_index])
     return pat_mux_dat
 
-def work_partition(
-    chamber_data, patlist, MAX_SPAN=37, WIDTH=192, group_width=8, ghost_width=4
-):
+def test_cancel_edges():
+    seg_list1 = []
+    for i in range(24):
+        seg_list1.append(Segment(6, 15)) 
+    cancelled1 = cancel_edges(seg_list1, 8, 4, 24)
+    #check first edge is cancelled correctly
+    assert cancelled1[6].id == 0
+    assert cancelled1[7].id == 0
+    assert cancelled1[8].id == 0
+    assert cancelled1[9].id == 15
+    #check second edge is cancelled correctly 
+    assert cancelled1[14].id == 0 
+    assert cancelled1[15].id == 0
+    assert cancelled1[16].id == 0
+    assert cancelled1[17].id == 15
+    seg_list2 = [Segment(6, 15), Segment(6, 15), Segment(6, 15), Segment(6, 15), Segment(6, 15), Segment(6, 15), Segment(6, 15), Segment(6, 14),Segment(6, 11), Segment(6, 15), Segment(6, 15), Segment(6, 15), Segment(6, 15), Segment(6, 15), Segment(6, 15), Segment(6, 15), Segment(6, 15),Segment(6, 15), Segment(6, 15), Segment(6, 15), Segment(6, 15), Segment(6, 15), Segment(6, 15), Segment(6, 15)]
+    cancelled2 = cancel_edges(seg_list2, 8, 4, 24)
+    #check only 6th segment is cancelled in first edge
+    assert cancelled2[6].id == 0
+    assert cancelled2[7].id == 14
+    assert cancelled2[8].id == 11
 
-    """takes in pat_unit_mux_data, a group size, and a ghost width to return a smaller data set, using ghost edge cancellation
+def work_partition(partition_data, MAX_SPAN=37, WIDTH=192, group_width=8, ghost_width=4):
+    """takes in partition data, a group size, and a ghost width to return a smaller data set, using ghost edge cancellation
     and segment quality filtering
 
-    NOTE: ghost width denotes the width where we can likely see copies of the same segment in the data"""
-    pat_mux_dat = pat_mux(
-        chamber_data=chamber_data, patlist=patlist, MAX_SPAN=MAX_SPAN, WIDTH=WIDTH
-    )
+    NOTE: ghost width denotes the width where we can likely see copies of the same segment in the data
 
-    # pat_mux_dat = partition_filtering(
-    #     pat_mux_dat=pat_mux_dat,
-    #     group_width=group_width,
-    #     ghost_width=ghost_width,
-    #     WIDTH=WIDTH,
-    # )
-    # ADD ME LATER!
-
-    final_dat = []
-    for s in range(0, len(pat_mux_dat), group_width):
-        final_dat.append(priority_encoder(pat_mux_dat[s : (s + group_width)]))
-
+    steps: process partition data with pat_mux, perfom edge cancellations, divide partition into pieces, take best segment from each piece"""
+    #process the data with pat_mux and perform edge cancellation 
+    pat_mux_dat = np.array(cancel_edges(pat_mux(partition_data, MAX_SPAN, WIDTH), group_width, ghost_width, WIDTH))
+    #divide partition into pieces and take best segment from each piece
+    final_dat = list(map(max, pat_mux_dat.reshape(WIDTH//group_width, group_width)))
     return final_dat
+
+def test_work_partition():
+    data = [0b1, 0b1, 0b1, 0b1, 0b1, 0b1]
+    part = work_partition(data)
+    assert part[0].id == 15
+    assert part[0].lc == 6
+    assert part[1].id == 0
+    assert part[1].lc == 0
