@@ -7,6 +7,12 @@ from datadev import datadev
 import random
 from linear_reg_table import *
 
+# def get_mypattern(pat_id: int, patlist: "List[patdef_t]") -> patdef_t:
+#     for i in range(len(patlist)):
+#         if patlist[i].id == pat_id:
+#             mypattern = patlist[i]
+#     return mypattern
+
 
 def get_mypattern(pat_id: int, patlist: "List[patdef_t]") -> patdef_t:
     assert type(pat_id) == int, "pat_id input must be an integer"

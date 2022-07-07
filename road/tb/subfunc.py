@@ -187,7 +187,6 @@ PATLIST = (
 
 def count_ones(int_ones):
     """takes in an integer and counts how many ones are in that integer's binary form"""
-    assert type(int_ones) == int, "int_ones input must be an integer."
     n_ones = 0
     iterable = bin(int_ones)[2:]
     for i in range(len(iterable)):
@@ -197,47 +196,26 @@ def count_ones(int_ones):
 
 
 def set_bit(index, num1=0):
-    """takes in an integer index to set a one within a binary number; if num1 parameter is filled with an integer, that is the binary number it sets the bit within"""
-    assert type(index) == int, "index input must be an integer."
-    assert type(num1) == int, "num1 input must be an integer."
+    """takes in an integer index to set a one within a binary number; if num1 parameter is filled
+    with an integer, that is the binary number it sets the bit within"""
     num2 = 1 << index
     final_v = num1 | num2
     return final_v
 
 
 def clear_bit(num, index):
-    """takes in an integer num and an integer index; clears the value of the index within the binary version of num and returns the new num as an integer"""
-    assert type(num) == int, "num input must be an integer."
-    assert type(index) == int, "index input must be an integer."
+    """takes in an integer num and an integer index; clears the value of the index within the binary
+    version of num and returns the new num as an integer"""
     bit = 1 & (num >> index)
     return num ^ (bit << index)
 
 
 def ones_bit_mask(num):
-    """takes in an integer num; converts num into its binary version and returns mask of ones the same length as this binary version as an integer"""
-    assert type(num) == int, "num input must be an integer"
+    """takes in an integer num; converts num into its binary version and returns mask of ones the
+    same length as this binary version as an integer"""
     o_mask = 0
     iterable_data = bin(num)[2:]
     for m in range(len(iterable_data)):
         mask_1 = 1 << m
         o_mask = o_mask | mask_1
     return o_mask
-
-
-def get_mypattern(pat_id: int, patlist: "List[patdef_t]") -> patdef_t:
-    assert type(pat_id) == int, "pat_id input must be an integer"
-    assert (
-        type(patlist) == list
-    ), "patlist input must be a list of patdef_t class values"
-    assert (
-        type(patlist[0]) == patdef_t
-    ), "each value in patlist input must be of the class patdef_t"
-    assert (
-        type(patlist[0].layers[0]) == hi_lo_t
-    ), "each patlist layer must be of the class hi_lo_t"
-    assert type(patlist[0].id) == int, "each patlist id must be an integer"
-    for i in range(len(patlist)):
-        if patlist[i].id == pat_id:
-            mypattern = patlist[i]
-    return mypattern
-

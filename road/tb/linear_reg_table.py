@@ -30,7 +30,6 @@ def find_centroid(data):
     """get the centroid for some given binary hitmask"""
 
     ones = find_ones(data)
-    sum_ly_pos = 0
 
     if len(ones)==0:
         return 0
