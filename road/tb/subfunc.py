@@ -15,6 +15,9 @@ class Mask:
     def __init__(self, mask, id):
         self.mask = mask
         self.id = id
+    def __str__(self):
+        s = ["{0:b}".format(x).zfill(38) + "\n" for x in self.mask]
+        return ''.join(s)
 
 class Segment:
 
