@@ -128,10 +128,6 @@ package body pat_pkg is
     variable pat2 : segment_t := (cnt => to_unsigned(1, CNT_BITS), id => x"2", hits => (others => (others => '0')), partition => (others => '0'), strip => (others => '0'));
   begin
 
-    report "===========================" severity note;
-    report "Testing pattern comparators" severity note;
-    report "===========================" severity note;
-
     -- > testing
     assert ply2 > ply1 report "ERROR: pattern > failure" severity error;
     assert ply1 > ply0 report "ERROR: pattern > failure" severity error;

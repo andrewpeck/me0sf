@@ -47,7 +47,10 @@ class Segment:
         prt = 0 if prt is None else prt
         strip = 0 if strip is None else strip
 
-        quality = prt | (strip << 4) | (id << 12) | (lc << 17)
+        quality = 0
+        if (lc > 0):
+            quality = prt  | (id << 12) | (lc << 17)
+           #quality = prt | (strip << 4) | (id << 12) | (lc << 17)
 
         self.quality=quality
 

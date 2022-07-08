@@ -27,7 +27,7 @@ def get_segments_from_dut(dut):
     def convert_segment(segment):
         pid = segment.id.value.integer
         lyc = segment.cnt.value.integer
-        strip = segment.strip.value
+        strip = segment.strip.value.integer
         seg = Segment(lyc, pid, strip=strip)
         return seg
 

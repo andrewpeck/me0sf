@@ -17,6 +17,7 @@ entity partition is
     S0_WIDTH      : natural := 8;          -- width of the pre-sorting regions
 
     PATLIST   : patdef_array_t := patdef_array;
+    THRESHOLD : natural        := CNT_THRESH;
 
     LY0_SPAN : natural := get_max_span(patdef_array);
     LY1_SPAN : natural := get_max_span(patdef_array);  -- TODO: variably size the other layers instead of using the max
@@ -61,14 +62,10 @@ architecture behavioral of partition is
   signal lyor_dav : std_logic := '0';
 
   --
-  signal strips     : strip_list_t (PRT_WIDTH-1 downto 0);
+  signal strips     : segment_list_t (PRT_WIDTH-1 downto 0);
   signal strips_dav : std_logic := '0';
 
-  --type pat_list_array_t is array (integer range 0 to FILTER_STAGES) of pat_list_t;
-  -- FIXME put these in an array somehow...
-  signal strips_s0 : strip_list_t (PRT_WIDTH/S0_WIDTH-1 downto 0);
-
-  -- signal pats_gcl : pat_list_t (PRT_WIDTH-1 downto 0);
+  signal strips_s0 : segment_list_t (PRT_WIDTH/S0_WIDTH-1 downto 0);
 
 begin
 
@@ -121,8 +118,8 @@ begin
       ly4   => lyor(4),
       ly5   => lyor(5),
 
-      dav_o    => strips_dav,
-      strips_o => strips
+      dav_o      => strips_dav,
+      segments_o => strips
       );
 
   -------------------------------------------------------------------------------
@@ -139,22 +136,20 @@ begin
   -------------------------------------------------------------------------------
 
   s0_gen : for region in 0 to PRT_WIDTH/S0_WIDTH-1 generate
-    constant BITS : natural := STRIP_BITS + PATTERN_LENGTH;
-
     signal dav      : std_logic := '0';
-    signal best     : std_logic_vector (BITS-1 downto 0);
-    signal cand_slv : bus_array (0 to S0_WIDTH-1) (BITS-1 downto 0);
+    signal best     : std_logic_vector (segment_t'w - 1 downto 0);
+    signal cand_slv : bus_array (0 to S0_WIDTH-1) (segment_t'w - 1 downto 0);
   begin
 
     cand_to_slv : for I in 0 to S0_WIDTH-1 generate
     begin
-      cand_slv(I) <= to_slv(strips(REGION*S0_WIDTH+I));
+      cand_slv(I) <= convert(strips(REGION*S0_WIDTH+I), cand_slv(I));
     end generate;
 
     priority_encoder_inst : entity work.priority_encoder
       generic map (
-        DAT_BITS   => BITS,
-        QLT_BITS   => BITS - STRIP_BITS - null_pattern.hash'length,
+        DAT_BITS   => best'length,
+        QLT_BITS   => PATTERN_SORTB,
         WIDTH      => S0_WIDTH,
         REG_INPUT  => false,
         REG_OUTPUT => true,
@@ -169,7 +164,7 @@ begin
         adr_o => open
         );
 
-    strips_s0(region) <= to_strip(best);
+    strips_s0(region) <= convert(best, strips_s0(region));
 
     davassign : if (region = 0) generate
       dav_o <= dav;
@@ -183,8 +178,8 @@ begin
 
   outputs : for I in 0 to PRT_WIDTH/S0_WIDTH-1 generate
   begin
-    segments_o(I).strip     <= strips_s0(I);
-    segments_o(I).partition <= PARTITION_NUM;
+    segments_o(I)           <= strips_s0(I);
+    segments_o(I).partition <= to_unsigned(PARTITION_NUM, segments_o(I).partition'length);
   end generate;
 
 end behavioral;
