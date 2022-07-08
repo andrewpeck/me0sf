@@ -10,6 +10,7 @@
 --
 -------------------------------------------------------------------------------
 
+use work.pat_types.all;
 use work.pat_pkg.all;
 use work.patterns.all;
 use work.priority_encoder_pkg.all;
@@ -25,7 +26,16 @@ entity chamber is
     NUM_PARTITIONS : integer := 8;
     NUM_SEGMENTS   : integer := 4;
     S0_WIDTH       : natural := 16;
-    S1_REUSE       : natural := 4       -- 1, 2, or 4
+    S1_REUSE       : natural := 4;      -- 1, 2, or 4
+
+    PATLIST   : patdef_array_t := patdef_array;
+
+    LY0_SPAN : natural := get_max_span(patdef_array);
+    LY1_SPAN : natural := get_max_span(patdef_array);  -- TODO: variably size the other layers instead of using the max
+    LY2_SPAN : natural := get_max_span(patdef_array);  -- TODO: variably size the other layers instead of using the max
+    LY3_SPAN : natural := get_max_span(patdef_array);  -- TODO: variably size the other layers instead of using the max
+    LY4_SPAN : natural := get_max_span(patdef_array);  -- TODO: variably size the other layers instead of using the max
+    LY5_SPAN : natural := get_max_span(patdef_array)  -- TODO: variably size the other layers instead of using the max
     );
   port(
     clock   : in  std_logic;            -- MUST BE 320MHZ

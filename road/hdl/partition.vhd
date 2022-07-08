@@ -3,6 +3,7 @@ use ieee.std_logic_1164.all;
 use ieee.std_logic_misc.all;
 use ieee.numeric_std.all;
 
+use work.pat_types.all;
 use work.pat_pkg.all;
 use work.patterns.all;
 use work.priority_encoder_pkg.all;
@@ -13,7 +14,16 @@ entity partition is
     PARTITION_NUM : integer := 0;          -- just assign a number (e.g. 0-7) to each
                                            -- partition so we can look it up later
     PRT_WIDTH     : natural := PRT_WIDTH;  -- width of the partition (192)
-    S0_WIDTH      : natural := 8           -- width of the pre-sorting regions
+    S0_WIDTH      : natural := 8;          -- width of the pre-sorting regions
+
+    PATLIST   : patdef_array_t := patdef_array;
+
+    LY0_SPAN : natural := get_max_span(patdef_array);
+    LY1_SPAN : natural := get_max_span(patdef_array);  -- TODO: variably size the other layers instead of using the max
+    LY2_SPAN : natural := get_max_span(patdef_array);  -- TODO: variably size the other layers instead of using the max
+    LY3_SPAN : natural := get_max_span(patdef_array);  -- TODO: variably size the other layers instead of using the max
+    LY4_SPAN : natural := get_max_span(patdef_array);  -- TODO: variably size the other layers instead of using the max
+    LY5_SPAN : natural := get_max_span(patdef_array)  -- TODO: variably size the other layers instead of using the max
     );
   port(
 
