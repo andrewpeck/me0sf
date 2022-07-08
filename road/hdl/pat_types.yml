@@ -40,7 +40,7 @@ types:
   - partition_t: {array: [0, 5], type: layer_t}
   - int_array_t: {array: open, type: integer}
   - patdef_array_t: {array: open, type: patdef_t}
-# - chamber_t: {array: [0, 7], type: partition_t}
+  #- chamber_t: {array: [0, 7], type: partition_t}
 
   - segment_t:
       # msbs are ignored, sorting bits should be placed in MSB --> LSB order

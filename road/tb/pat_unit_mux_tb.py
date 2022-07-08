@@ -21,6 +21,7 @@ def set_layer_hits(dut, hits):
     dut.ly0.value = hits[0]
     dut.ly1.value = hits[1]
     dut.ly2.value = hits[2]
+
     dut.ly3.value = hits[3]
     dut.ly4.value = hits[4]
     dut.ly5.value = hits[5]

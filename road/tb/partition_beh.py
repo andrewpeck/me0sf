@@ -1,7 +1,8 @@
 """ Emulator that processes a single partition (6 layers x 192 strips) and returns a collection of segments"""
-import numpy as np
+from itertools import islice
 from pat_unit_mux_beh import pat_mux
 from subfunc import *
+import numpy as np
 
 def compare_ghosts(seg, comp_list):
     """takes in a segment and a list of segments to ensure that there aren't copies of the same data (ID value identical) or mirrors (ID value +2 or -2 from each other)"""
@@ -28,8 +29,11 @@ def test_compare_ghosts():
     assert compare_ghosts(seg2, seg_list).id == 0
     assert compare_ghosts(seg3, seg_list).id == 0
 
-def cancel_edges(pat_mux_dat, group_width=8, ghost_width=4, WIDTH=192): 
-    """takes in pat_unit_mux_data, finds edges of groups w/given group width, and performs edge cancellation by checking ghosts around each edge within given ghost width"""
+def cancel_edges(pat_mux_dat, group_width=8, ghost_width=4, WIDTH=192):
+
+    """takes in pat_unit_mux_data, finds edges of groups w/given group width, and performs edge
+    cancellation by checking ghosts around each edge within given ghost width"""
+
     for edge in range((WIDTH // group_width)-1): 
         lo_index = group_width*(edge+1) - (ghost_width//2)
         hi_index = lo_index + ghost_width
@@ -59,17 +63,37 @@ def test_cancel_edges():
     assert cancelled2[7].id == 14
     assert cancelled2[8].id == 11
 
-def work_partition(partition_data, MAX_SPAN=37, WIDTH=192, group_width=8, ghost_width=4):
-    """takes in partition data, a group size, and a ghost width to return a smaller data set, using ghost edge cancellation
-    and segment quality filtering
+def work_partition(partition_data, max_span=37, width=192, group_width=8, ghost_width=4, enable_gcl=True):
 
-    NOTE: ghost width denotes the width where we can likely see copies of the same segment in the data
+    """
 
-    steps: process partition data with pat_mux, perfom edge cancellations, divide partition into pieces, take best segment from each piece"""
-    #process the data with pat_mux and perform edge cancellation 
-    pat_mux_dat = np.array(cancel_edges(pat_mux(partition_data, MAX_SPAN, WIDTH), group_width, ghost_width, WIDTH))
+    takes in partition data, a group size, and a ghost width to return a smaller data set, using
+    ghost edge cancellation and segment quality filtering
+
+    NOTE: ghost width denotes the width where we can likely see copies of the same segment in the
+    data
+
+    steps: process partition data with pat_mux, perfom edge cancellations, divide partition into
+    pieces, take best segment from each piece
+
+    """
+
+    segments = pat_mux(partition_data, max_span, width)
+
+    if (enable_gcl):
+        segments = cancel_edges(partition_data, group_width, ghost_width, width)
+
     #divide partition into pieces and take best segment from each piece
-    final_dat = list(map(max, pat_mux_dat.reshape(WIDTH//group_width, group_width)))
+
+    def chunk(it, size):
+        it = iter(it)
+        return iter(lambda: tuple(islice(it, size)), ())
+
+    chunked = chunk(segments, group_width)
+
+    #final_dat = list(map(max, chunked, group_width))
+    final_dat = list(map(max, np.array(segments).reshape(width//group_width, group_width)))
+
     return final_dat
 
 def test_work_partition():

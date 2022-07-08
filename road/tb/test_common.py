@@ -21,7 +21,6 @@ def setup(dut):
     # start the dav signal (high every 8th clock cycle)
     cocotb.fork(generate_dav(dut))
 
-
 def get_segments_from_dut(dut):
 
     def convert_segment(segment):

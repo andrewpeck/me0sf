@@ -9,6 +9,8 @@ use work.pat_types.all;
 
 package pat_pkg is
 
+  type chamber_t is array(integer range 0 to 7) of partition_t;
+
   --------------------------------------------------------------------------------
   -- Build Parameters
   --------------------------------------------------------------------------------

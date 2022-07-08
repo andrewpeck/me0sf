@@ -29,6 +29,7 @@ entity chamber is
     S1_REUSE       : natural := 4;      -- 1, 2, or 4
 
     PATLIST   : patdef_array_t := patdef_array;
+    THRESHOLD : natural        := CNT_THRESH;
 
     LY0_SPAN : natural := get_max_span(patdef_array);
     LY1_SPAN : natural := get_max_span(patdef_array);  -- TODO: variably size the other layers instead of using the max
@@ -42,7 +43,7 @@ entity chamber is
     dav_i   : in  std_logic;
     dav_o   : out std_logic;
     sbits_i : in  chamber_t;
-    segs_o  : out segment_list_t (NUM_SEGMENTS-1 downto 0)
+    segments_o  : out segment_list_t (NUM_SEGMENTS-1 downto 0)
     );
 end chamber;
 
@@ -271,7 +272,7 @@ begin
     port map (
       clock  => clock,
       segs_i => segs_s1_flat,
-      segs_o => segs_o
+      segs_o => segments_o
       );
 
 end behavioral;

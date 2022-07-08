@@ -4,6 +4,7 @@ use ieee.std_logic_misc.all;
 use ieee.numeric_std.all;
 use ieee.math_real.all;
 
+use work.pat_types.all;
 use work.pat_pkg.all;
 use work.patterns.all;
 use work.priority_encoder_pkg.all;
@@ -28,7 +29,7 @@ architecture behavioral of segment_selector is
     return 2**integer(ceil(log2(real(size))));
   end;
   constant CLOG_WIDTH : natural := next_power_of_two(NUM_INPUTS);
-  constant BITS       : natural := PATTERN_LENGTH + STRIP_BITS + 3;
+  constant BITS       : natural := segment_t'w;
 
 begin
 
@@ -54,15 +55,15 @@ begin
     inloop : for I in 0 to NUM_INPUTS-1 generate
       constant bithi : natural := (I+1)*BITS;
       constant bitlo : natural := I*BITS;
+      signal sl : std_logic_vector (bithi-bitlo -1 downto 0);
     begin
-      segs_i_slv(bithi-1 downto bitlo) <= to_slv(segs_i(I));
+      segs_i_slv(bithi-1 downto bitlo) <= convert(segs_i(I), sl);
     end generate;
 
     -- Select a subset of outputs from the sorter
     outloop : for I in 0 to NUM_OUTPUTS-1 generate
     begin
-      segs_o(I) <=
-        to_segment(segs_o_slv((I+1)*BITS-1 downto I*BITS));
+      segs_o(I) <= convert(segs_o_slv((I+1)*BITS-1 downto I*BITS), segs_o(I));
     end generate;
 
     bitonic_sort_inst : entity work.bitonic_sort
@@ -70,7 +71,7 @@ begin
         INPUTS               => CLOG_WIDTH,
         OUTPUTS              => NUM_OUTPUTS,
         DATA_BITS            => BITS,
-        KEY_BITS             => BITS - null_pattern.hash'length,
+        KEY_BITS             => PATTERN_SORTB,
         META_BITS            => 1,
         PIPELINE_STAGE_AFTER => 1,
         ADD_INPUT_REGISTERS  => true,

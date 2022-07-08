@@ -65,6 +65,9 @@ class Segment:
     def __str__(self):
         return f"id={self.id}, lc={self.lc}, strip={self.strip}, quality={self.quality}"
 
+    def __repr__(self):
+        return f"Seg {self.quality}"
+
     def __gt__(self, other):
         if isinstance(other, Segment):
             return self.quality > other.quality
