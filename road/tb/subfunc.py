@@ -187,6 +187,24 @@ PATLIST = (
     pat_r7,
 )
 
+PATLIST_LUT = {
+    15: pat_straight,
+    14: pat_l,
+    13: pat_r,
+    12: pat_l2,
+    11: pat_r2,
+    10: pat_l3,
+    9: pat_r3,
+    8: pat_l4,
+    7: pat_r4,
+    6: pat_l5,
+    5: pat_r5,
+    4: pat_l6,
+    3: pat_r6,
+    2: pat_l7,
+    1: pat_r7,
+}
+
 
 def count_ones(int_ones):
     """takes in an integer and counts how many ones are in that integer's binary form"""
