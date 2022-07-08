@@ -240,3 +240,21 @@ def ones_bit_mask(num):
         mask_1 = 1 << m
         o_mask = o_mask | mask_1
     return o_mask
+
+def find_ones(data):
+    """return a list with the positions of '1's in a string"""
+    ones = []
+    cnt = 0
+
+    while (data > 0):
+        if (data & 0x1):
+            ones.append(cnt+1)
+        data = data >> 1
+        cnt = cnt + 1
+
+    return ones
+
+def test_find_ones():
+    assert find_ones(0b100) == [3]
+    assert find_ones(0b111) == [1,2,3]
+    assert find_ones(0b001) == [1]
