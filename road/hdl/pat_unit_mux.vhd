@@ -11,15 +11,15 @@ use work.priority_encoder_pkg.all;
 
 entity pat_unit_mux is
   generic(
-    VERBOSE   : boolean        := false;
-    PATLIST   : patdef_array_t := patdef_array;
-    WIDTH     : natural        := 192;
-    THRESHOLD : natural        := CNT_THRESH;
+    VERBOSE    : boolean        := false;
+    PATLIST    : patdef_array_t := patdef_array;
+    WIDTH      : natural        := 192;
+    THRESHOLD  : natural        := CNT_THRESH;
     -- Need padding for half the width of the pattern this is to handle the edges
     -- of the chamber where some virtual chamber of all zeroes exists... to be
     -- trimmed away by the compiler during optimization
-    PADDING    : natural := (get_max_span(patdef_array)-1)/2;
-    MUX_FACTOR : natural := 1
+    PADDING    : natural        := (get_max_span(patdef_array)-1)/2;
+    MUX_FACTOR : natural        := 1
     );
   port(
 
@@ -34,7 +34,7 @@ entity pat_unit_mux is
     ly4 : in std_logic_vector (WIDTH-1 downto 0);
     ly5 : in std_logic_vector (WIDTH-1 downto 0);
 
-    strips_o : out strip_list_t (WIDTH-1 downto 0)
+    segments_o : out segment_list_t (WIDTH-1 downto 0)
 
     );
 end pat_unit_mux;
@@ -66,16 +66,16 @@ architecture behavioral of pat_unit_mux is
   signal ly5_padded : std_logic_vector (WIDTH-1 + 2*PADDING downto 0);
 
   signal patterns_mux_dav : std_logic := '0';
-  signal patterns_mux     : pat_list_t (NUM_SECTORS-1 downto 0);
+  signal patterns_mux     : segment_list_t (NUM_SECTORS-1 downto 0);
 
   -- convert to strip type, appends the strip # to the format
-  signal strips_reg : strip_list_t (WIDTH-1 downto 0);
+  signal strips_reg : segment_list_t (WIDTH-1 downto 0);
 
   signal phase_i, patterns_mux_phase : natural range 0 to MUX_FACTOR-1;
 
   signal lyX_in_dav : std_logic := '0';
 
-  signal dav_d0, dav_d1, dav_d2, dav_d3, dav_d4, dav_d5: std_logic;
+  signal dav_d0, dav_d1, dav_d2, dav_d3, dav_d4, dav_d5 : std_logic;
 
 begin
 
@@ -184,12 +184,12 @@ begin
       dav_o <= patterns_mux_dav;
 
       for I in 0 to NUM_SECTORS-1 loop
-        strips_reg(I*MUX_FACTOR+patterns_mux_phase).pattern <= patterns_mux(I);
-        strips_reg(I*MUX_FACTOR+patterns_mux_phase).strip   <= to_unsigned(I*MUX_FACTOR+patterns_mux_phase, STRIP_BITS);
+        strips_reg(I*MUX_FACTOR+patterns_mux_phase)       <= patterns_mux(I);
+        strips_reg(I*MUX_FACTOR+patterns_mux_phase).strip <= to_unsigned(I*MUX_FACTOR+patterns_mux_phase, STRIP_BITS);
       end loop;
 
-      if (patterns_mux_phase=0) then
-        strips_o <= strips_reg;
+      if (patterns_mux_phase = 0) then
+        segments_o <= strips_reg;
       end if;
 
     end if;

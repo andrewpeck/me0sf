@@ -38,14 +38,14 @@ entity pat_unit is
     ly4 : in std_logic_vector (LY4_SPAN-1 downto 0);
     ly5 : in std_logic_vector (LY5_SPAN-1 downto 0);
 
-    pat_o : out pattern_t
+    pat_o : out segment_t
 
     );
 end pat_unit;
 
 architecture behavioral of pat_unit is
 
-  signal pats     : pat_list_t (NUM_PATTERNS-1 downto 0);
+  signal pats     : segment_list_t (NUM_PATTERNS-1 downto 0);
   signal pats_dav : std_logic := '0';
 
   function count_ones(slv : std_logic_vector) return natural is
@@ -59,9 +59,9 @@ architecture behavioral of pat_unit is
     return n_ones;
   end function count_ones;
 
-  signal best_slv : std_logic_vector (pattern_t'w-1 downto 0);
-  signal best     : pattern_t;
-  signal cand_slv : bus_array (0 to NUM_PATTERNS-1) (pattern_t'w-1 downto 0);
+  signal best_slv : std_logic_vector (segment_t'w-1 downto 0);
+  signal best     : segment_t;
+  signal cand_slv : bus_array (0 to NUM_PATTERNS-1) (segment_t'w-1 downto 0);
 
 begin
 

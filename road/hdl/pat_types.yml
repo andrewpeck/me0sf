@@ -15,7 +15,7 @@ types:
 
   # - PATTERN_SORTB_HI: {qualifier: constant, type: integer, value: CNT_BITS + PID_BITS + CENTROID_BITS*6, comment: ""}
   # - PATTERN_SORTB_LO: {qualifier: constant, type: integer, value: CENTROID_BITS*6, comment: ""}
-  - PATTERN_IGNOREB : {qualifier: constant, type: integer, value: CENTROID_BITS*6, comment: ""}
+  - PATTERN_SORTB : {qualifier: constant, type: integer, value: CNT_BITS+PID_BITS, comment: ""}
 
   - STRIP_BITS: {qualifier: constant, type: integer, value: 8, comment: "8 bits to count 0-191"}
   - PARTITION_BITS: {qualifier: constant, type: integer, value: 3, comment: "3 bits to count 0-7"}
@@ -35,12 +35,6 @@ types:
 
   - centroid_array_t: {array: [0, 5], type: unsigned, range: [CENTROID_BITS-1, 0]}
 
-  - pattern_t:
-      # msbs are ignored, sorting bits should be placed in MSB --> LSB order
-      - hits: {type: centroid_array_t}
-      - cnt: {type: unsigned, range: [CNT_BITS-1, 0]}
-      - id: {type: unsigned, range: [PID_BITS-1, 0]}
-
   - layer_t: {type: logic, range: [191, 0], qualifier: subtype}
 
   - partition_t: {array: [0, 5], type: layer_t}
@@ -48,19 +42,22 @@ types:
   - patdef_array_t: {array: open, type: patdef_t}
 # - chamber_t: {array: [0, 7], type: partition_t}
 
-  - strip_t:
-      - strip: {type: unsigned, range: [7, 0]}
-      - pattern: {type: pattern_t}
-
   - segment_t:
-      - strip: {type: strip_t}
+      # msbs are ignored, sorting bits should be placed in MSB --> LSB order
+
+      # Ignore:
+      - hits: {type: centroid_array_t}
       - partition: {type: unsigned, range: [2, 0]}
+      - strip: {type: unsigned, range: [7, 0]}
+
+      # Sort:
+      - cnt: {type: unsigned, range: [CNT_BITS-1, 0]}
+      - id: {type: unsigned, range: [PID_BITS-1, 0]}
+
+  - segment_list_t: {array: open, type: segment_t}
 
   #- pattern_list_slv_t: {array: open, type: logic, range: [PATTERN_LENGTH-1 downto 0]};
 
-  - pat_list_t: {array: open, type: pattern_t}
-  - strip_list_t: {array: open, type: strip_t}
-  - segment_list_t: {array: open, type: segment_t}
 
   # - cand_array_t is array (integer range 0 to 7) of pat_list_t (PRT_WIDTH-1 downto 0);
 

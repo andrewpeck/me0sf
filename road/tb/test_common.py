@@ -25,13 +25,13 @@ def setup(dut):
 def get_segments_from_dut(dut):
 
     def convert_segment(segment):
-        pid = segment.pattern.id.value.integer
-        lyc = segment.pattern.cnt.value.integer
+        pid = segment.id.value.integer
+        lyc = segment.cnt.value.integer
         strip = segment.strip.value
         seg = Segment(lyc, pid, strip=strip)
         return seg
 
-    x = list(map(convert_segment, dut.strips_o))
+    x = list(map(convert_segment, dut.segments_o))
     x.reverse()
 
     return x

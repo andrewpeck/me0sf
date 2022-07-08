@@ -22,11 +22,13 @@ package pat_pkg is
   -- Types for patterns
   --------------------------------------------------------------------------------
 
-  constant null_pattern : pattern_t :=
+  constant null_pattern : segment_t :=
     (
-      cnt  => (others => '0'),
-      id   => (others => '0'),
-      hits => (others => (others => '0'))
+      cnt       => (others => '0'),
+      id        => (others => '0'),
+      hits      => (others => (others => '0')),
+      partition => (others => '0'),
+      strip     => (others => '0')
       );
 
   --------------------------------------------------------------------------------
@@ -39,11 +41,11 @@ package pat_pkg is
   function get_sortb (x : std_logic_vector) return std_logic_vector;
 
   -- comparisons
-  function "<"(L  : pattern_t; R : pattern_t) return boolean;
-  function ">"(L  : pattern_t; R : pattern_t) return boolean;
-  function "="(L  : pattern_t; R : pattern_t) return boolean;
-  function ">="(L : pattern_t; R : pattern_t) return boolean;
-  function "<="(L : pattern_t; R : pattern_t) return boolean;
+  function "<"(L  : segment_t; R : segment_t) return boolean;
+  function ">"(L  : segment_t; R : segment_t) return boolean;
+  function "="(L  : segment_t; R : segment_t) return boolean;
+  function ">="(L : segment_t; R : segment_t) return boolean;
+  function "<="(L : segment_t; R : segment_t) return boolean;
 
   procedure check_pattern_operators (nil : boolean);
 
@@ -55,9 +57,9 @@ end package pat_pkg;
 package body pat_pkg is
 
   function get_sortb (x : std_logic_vector) return std_logic_vector is
-    variable y : std_logic_vector(x'length-PATTERN_IGNOREB-1 downto 0);
+    variable y : std_logic_vector(PATTERN_SORTB-1 downto 0);
   begin
-    y := x(x'length-1 - PATTERN_IGNOREB downto 0);
+    y := x(PATTERN_SORTB-1 downto 0);
     return y;
   end;
 
@@ -74,24 +76,24 @@ package body pat_pkg is
     return result;
   end;
 
-  function "=" (L : pattern_t; R : pattern_t) return boolean is
-    variable left, right : std_logic_vector(pattern_t'w-1 downto 0);
+  function "=" (L : segment_t; R : segment_t) return boolean is
+    variable left, right : std_logic_vector(segment_t'w-1 downto 0);
   begin
     left := convert(L, left);
     right := convert(R, right);
     return (unsigned(get_sortb(left)) = unsigned(get_sortb(right)));
   end;
 
-  function ">" (L : pattern_t; R : pattern_t) return boolean is
-    variable left, right : std_logic_vector(pattern_t'w-1 downto 0);
+  function ">" (L : segment_t; R : segment_t) return boolean is
+    variable left, right : std_logic_vector(segment_t'w-1 downto 0);
   begin
     left := convert(L, left);
     right := convert(R, right);
     return (unsigned(get_sortb(left)) > unsigned(get_sortb(right)));
   end;
 
-  function "<" (L : pattern_t; R : pattern_t) return boolean is
-    variable left, right : std_logic_vector(pattern_t'w-1 downto 0);
+  function "<" (L : segment_t; R : segment_t) return boolean is
+    variable left, right : std_logic_vector(segment_t'w-1 downto 0);
   begin
     left := convert(L, left);
     right := convert(R, right);
@@ -105,25 +107,25 @@ package body pat_pkg is
     return (unsigned(get_sortb(left)) < unsigned(get_sortb(right)));
   end;
 
-  function "<=" (L : pattern_t; R : pattern_t) return boolean is
+  function "<=" (L : segment_t; R : segment_t) return boolean is
   begin
     return L<R or L=R;
   end;
 
-  function ">=" (L : pattern_t; R : pattern_t) return boolean is
+  function ">=" (L : segment_t; R : segment_t) return boolean is
   begin
     return L>R or L=R;
   end;
 
   -- unit test function to check that the sorting operators are working correctly
   procedure check_pattern_operators (nil : boolean) is
-    variable ply0 : pattern_t := (cnt => to_unsigned(0, CNT_BITS), id => x"A", hits => (others => (others => '0')));
-    variable ply1 : pattern_t := (cnt => to_unsigned(1, CNT_BITS), id => x"9", hits => (others => (others => '0')));
-    variable ply2 : pattern_t := (cnt => to_unsigned(2, CNT_BITS), id => x"8", hits => (others => (others => '0')));
+    variable ply0 : segment_t := (cnt => to_unsigned(0, CNT_BITS), id => x"A", hits => (others => (others => '0')), partition => (others => '0'), strip => (others => '0'));
+    variable ply1 : segment_t := (cnt => to_unsigned(1, CNT_BITS), id => x"9", hits => (others => (others => '0')), partition => (others => '0'), strip => (others => '0'));
+    variable ply2 : segment_t := (cnt => to_unsigned(2, CNT_BITS), id => x"8", hits => (others => (others => '0')), partition => (others => '0'), strip => (others => '0'));
 
-    variable pat0 : pattern_t := (cnt => to_unsigned(1, CNT_BITS), id => x"0", hits => (others => (others => '0')));
-    variable pat1 : pattern_t := (cnt => to_unsigned(1, CNT_BITS), id => x"1", hits => (others => (others => '0')));
-    variable pat2 : pattern_t := (cnt => to_unsigned(1, CNT_BITS), id => x"2", hits => (others => (others => '0')));
+    variable pat0 : segment_t := (cnt => to_unsigned(1, CNT_BITS), id => x"0", hits => (others => (others => '0')), partition => (others => '0'), strip => (others => '0'));
+    variable pat1 : segment_t := (cnt => to_unsigned(1, CNT_BITS), id => x"1", hits => (others => (others => '0')), partition => (others => '0'), strip => (others => '0'));
+    variable pat2 : segment_t := (cnt => to_unsigned(1, CNT_BITS), id => x"2", hits => (others => (others => '0')), partition => (others => '0'), strip => (others => '0'));
   begin
 
     report "===========================" severity note;
