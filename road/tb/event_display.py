@@ -53,7 +53,10 @@ def event_display(hits=None, fits=None, pats=None, width=192, max_span=37):
 
     plt.xlabel('strip', fontsize=12)
     plt.ylabel('layer', fontsize=12)
-    plt.xlim([0, width])
+    plt.xlim([0, width+2])
+    plt.ylim(-1, 6)
+    plt.xticks([x*16 for x in range(0,int(width/16)+1)])
+    plt.yticks([0,1,2,3,4,5])
 
     # plot pattern masks
     if pats is not None:
@@ -63,12 +66,12 @@ def event_display(hits=None, fits=None, pats=None, width=192, max_span=37):
             mask = get_ly_mask(pat)
             print(mask)
             (x, y) = int2_xy(mask.mask, strip-math.floor(max_span/2.0))
-            plt.scatter(x, y, marker='s', facecolors='cyan',  alpha=0.5, edgecolors='gray')
+            plt.scatter(x, y, s=60, marker='s', facecolors='cyan',  alpha=0.5, edgecolors='gray')
 
     # plot raw hits
     if hits is not None:
         (x, y) = int2_xy(hits, 0)
-        plt.scatter(x, y, marker="x", facecolors='black')
+        plt.scatter(x, y, marker="x", facecolors='#888')
 
     # plot fitted lines
     if fits is not None:
