@@ -54,6 +54,10 @@ class Segment:
 
         self.quality=quality
 
+    def fit(self):
+        self.bend_ang = 0
+        self.substrip = 0
+
     def __eq__(self, other):
         if (self.lc == 0 and other.lc == 0):
             return True
