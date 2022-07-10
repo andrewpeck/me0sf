@@ -6,6 +6,7 @@ from datadev import datadev
 import random
 import math
 from linear_reg_table import *
+from matplotlib.patches import Rectangle
 
 def int2_xy(masks, offset):
 
@@ -48,8 +49,14 @@ def event_display(hits=None, fits=None, pats=None, width=192, max_span=37):
     # then throw on the hits with black o's 'ko'
     # then connect the dots with black lines--> fits come last
 
-    _, ax = plt.subplots()
-    ax.set_aspect(5)
+    # f = plt.figure()
+    # f.set_figwidth(4)
+    # ax.set_aspect(5)
+
+    fig, ax = plt.subplots()
+
+    fig.set_figheight(3.0)
+    fig.set_figwidth(width*0.1)
 
     plt.xlabel('strip', fontsize=12)
     plt.ylabel('layer', fontsize=12)
@@ -57,6 +64,9 @@ def event_display(hits=None, fits=None, pats=None, width=192, max_span=37):
     plt.ylim(-1, 6)
     plt.xticks([x*16 for x in range(0,int(width/16)+1)])
     plt.yticks([0,1,2,3,4,5])
+
+    width = 1
+    height = 0.25
 
     # plot pattern masks
     if pats is not None:
@@ -66,12 +76,19 @@ def event_display(hits=None, fits=None, pats=None, width=192, max_span=37):
             mask = get_ly_mask(pat)
             print(mask)
             (x, y) = int2_xy(mask.mask, strip-math.floor(max_span/2.0))
-            plt.scatter(x, y, s=60, marker='s', facecolors='cyan',  alpha=0.5, edgecolors='gray')
+            # plt.scatter(x, y, s=60, marker='s', facecolors='cyan',  alpha=0.5, edgecolors='gray')
+            for (px, py) in zip(x,y):
+                ax.add_patch(Rectangle(
+                    xy=(px-width/2, py-height/2) ,width=width, height=height,
+                    linewidth=1, color='teal', fill=False))
 
     # plot raw hits
     if hits is not None:
         (x, y) = int2_xy(hits, 0)
-        plt.scatter(x, y, marker="x", facecolors='#888')
+        for (px, py) in zip(x,y):
+            ax.add_patch(Rectangle(
+                xy=(px-width/2, py-height/2) ,width=width, height=height,
+                linewidth=1, color='#666', fill=True))
 
     # plot fitted lines
     if fits is not None:
@@ -91,7 +108,7 @@ def event_display(hits=None, fits=None, pats=None, width=192, max_span=37):
 # testing with pat_unit.vhd
 if __name__ == '__main__':
 
-    #random.seed(56)
+    random.seed(56)
 
     MAX_SPAN = 37
     hits = datadev(MAX_SPAN=MAX_SPAN)
@@ -99,6 +116,6 @@ if __name__ == '__main__':
     strip = MAX_SPAN // 2
 
     pats = [[PATLIST_LUT[segment.id], 18]]
-    fits = [[0, 0, 18]] # (m, b, strip)
-    fits = None
-    event_display(hits=hits, fits=fits, pats=pats, width=37, max_span=MAX_SPAN)
+    fits = [[-0.25, 1, 20]] # (m, b, strip)
+    # fits = None
+    event_display(hits=hits, fits=fits, pats=pats, width=192, max_span=MAX_SPAN)
