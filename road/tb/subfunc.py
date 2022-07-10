@@ -70,6 +70,9 @@ class Segment:
             self.quality==other.quality
 
     def __str__(self):
+        if (self.id==0):
+            return "n/a"
+
         return f"id={self.id}, lc={self.lc}, strip={self.strip}, quality={self.quality}"
 
     def __repr__(self):
