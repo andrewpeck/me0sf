@@ -15,7 +15,8 @@ types:
 
   # - PATTERN_SORTB_HI: {qualifier: constant, type: integer, value: CNT_BITS + PID_BITS + CENTROID_BITS*6, comment: ""}
   # - PATTERN_SORTB_LO: {qualifier: constant, type: integer, value: CENTROID_BITS*6, comment: ""}
-  - PATTERN_SORTB : {qualifier: constant, type: integer, value: CNT_BITS+PID_BITS, comment: ""}
+
+  - PATTERN_SORTB: {qualifier: constant, type: integer, value: CNT_BITS+PID_BITS+STRIP_BITS, comment: ""}
 
   - STRIP_BITS: {qualifier: constant, type: integer, value: 8, comment: "8 bits to count 0-191"}
   - PARTITION_BITS: {qualifier: constant, type: integer, value: 3, comment: "3 bits to count 0-7"}
@@ -48,11 +49,11 @@ types:
       # Ignore:
       - hits: {type: centroid_array_t}
       - partition: {type: unsigned, range: [2, 0]}
-      - strip: {type: unsigned, range: [7, 0]}
 
-      # Sort:
+      # Always Sort:
       - cnt: {type: unsigned, range: [CNT_BITS-1, 0]}
       - id: {type: unsigned, range: [PID_BITS-1, 0]}
+      - strip: {type: unsigned, range: [7, 0]}
 
   - segment_list_t: {array: open, type: segment_t}
 

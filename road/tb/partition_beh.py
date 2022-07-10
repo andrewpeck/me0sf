@@ -63,7 +63,7 @@ def test_cancel_edges():
     assert cancelled2[7].id == 14
     assert cancelled2[8].id == 11
 
-def work_partition(partition_data, max_span=37, width=192, group_width=8, ghost_width=4, enable_gcl=True):
+def work_partition(partition_data, max_span=37, width=192, group_width=8, ghost_width=4, enable_gcl=True, partition=0):
 
     """
 
@@ -78,7 +78,7 @@ def work_partition(partition_data, max_span=37, width=192, group_width=8, ghost_
 
     """
 
-    segments = pat_mux(partition_data, max_span, width)
+    segments = pat_mux(partition_data, max_span, width, partition=partition)
 
     if (enable_gcl):
         segments = cancel_edges(partition_data, group_width, ghost_width, width)

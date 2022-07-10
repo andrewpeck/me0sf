@@ -10,6 +10,9 @@ use work.priority_encoder_pkg.all;
 
 entity partition is
   generic(
+
+    LATENCY : integer := 7;
+
     NUM_SEGMENTS  : integer := 4;
     PARTITION_NUM : integer := 0;          -- just assign a number (e.g. 0-7) to each
                                            -- partition so we can look it up later
@@ -166,10 +169,6 @@ begin
 
     strips_s0(region) <= convert(best, strips_s0(region));
 
-    davassign : if (region = 0) generate
-      dav_o <= dav;
-    end generate;
-
   end generate;
 
   --------------------------------------------------------------------------------
@@ -181,5 +180,20 @@ begin
     segments_o(I)           <= strips_s0(I);
     segments_o(I).partition <= to_unsigned(PARTITION_NUM, segments_o(I).partition'length);
   end generate;
+
+  --------------------------------------------------------------------------------
+  -- Latency Data Valid
+  --------------------------------------------------------------------------------
+
+  dav_delay: entity work.fixed_delay
+    generic map (
+      DELAY => LATENCY,
+      WIDTH => 1
+      )
+    port map (
+      clock     => clock,
+      data_i(0) => dav_i,
+      data_o(0) => dav_o
+      );
 
 end behavioral;

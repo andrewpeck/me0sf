@@ -63,8 +63,7 @@ async def partition_test(
 
         queue.append(new_data)
 
-        for i in range(6):
-            dut.partition_i[i].value = new_data[i]
+        dut.partition_i.value = new_data
 
         # set neighbor_i to 0 for now
         # dut.neighbor_i.value = [0]*6

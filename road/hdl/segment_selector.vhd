@@ -13,7 +13,8 @@ entity segment_selector is
   generic(
     MODE        : string  := "BITONIC";
     NUM_INPUTS  : natural := 32;
-    NUM_OUTPUTS : natural := 32
+    NUM_OUTPUTS : natural := 32;
+    SORTB       : natural := 1
     );
   port(
     clock  : in  std_logic;
@@ -71,7 +72,7 @@ begin
         INPUTS               => CLOG_WIDTH,
         OUTPUTS              => NUM_OUTPUTS,
         DATA_BITS            => BITS,
-        KEY_BITS             => PATTERN_SORTB,
+        KEY_BITS             => SORTB,
         META_BITS            => 1,
         PIPELINE_STAGE_AFTER => 1,
         ADD_INPUT_REGISTERS  => true,
