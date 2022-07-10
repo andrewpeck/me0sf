@@ -27,13 +27,13 @@ def test_extract_data_window():
     assert extract_data_window([0b100000000000000000, 0b1000100000000000000, 0b1000000000000000000, 0b1000000000000000000, 0b1000000000000000000, 0b1000000000000000000], 8) == [134217728, 285212672, 268435456, 268435456, 268435456, 268435456]
     assert extract_data_window([0b100000000000000000, 0b1000100000000000000, 0b1000000000000000000, 0b1000000000000000000, 0b1000000000000000000, 0b1000000000000000000], 20) == [32768, 69632, 65536, 65536, 65536, 65536]
 
-def pat_mux(partition_data, MAX_SPAN=37, WIDTH=192):
+def pat_mux(partition_data, MAX_SPAN=37, WIDTH=192, partition=0):
     """
     takes in a list of integers for the partition data in each layer, 
     the MAX_SPAN of each pat_unit, and the partition width to return a list of the
     segments the pat_unit_mux.vhd would find 
     """
-    return [get_best_seg(extract_data_window(partition_data, strip, MAX_SPAN), strip) for strip in range(WIDTH)] 
+    return [get_best_seg(extract_data_window(partition_data, strip, MAX_SPAN), strip, partition) for strip in range(WIDTH)]
     
 def test_pat_mux():
     data = [0b1, 0b1, 0b1, 0b1, 0b1, 0b1]
