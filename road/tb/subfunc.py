@@ -55,6 +55,9 @@ class Segment:
         self.quality=quality
 
     def __eq__(self, other):
+        if (self.lc == 0 and other.lc == 0):
+            return True
+
         return self.id==other.id and self.lc==other.lc and self.strip==other.strip and \
             self.partition==other.partition and  \
             self.centroid==other.centroid and  \
