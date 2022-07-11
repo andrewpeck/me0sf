@@ -5,7 +5,7 @@ from pat_unit_beh import get_best_seg, get_ly_mask
 from datadev import datadev
 import random
 import math
-from linear_reg_table import *
+from centroid_finding import *
 from matplotlib.patches import Rectangle
 
 def int2_xy(masks, offset):

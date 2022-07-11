@@ -49,8 +49,8 @@ class Segment:
 
         quality = 0
         if (lc > 0):
-            quality = prt  | (id << 12) | (lc << 17)
-           #quality = prt | (strip << 4) | (id << 12) | (lc << 17)
+            #quality = prt  | (id << 12) | (lc << 17)
+            quality = (lc << 17) | (id << 12) | ((192-strip) << 4) | prt
 
         self.quality=quality
 
@@ -63,11 +63,11 @@ class Segment:
             return True
 
         return self.id==other.id and self.lc==other.lc and self.strip==other.strip and \
-            self.partition==other.partition and  \
-            self.centroid==other.centroid and  \
-            self.substrip==other.substrip and \
-            self.bend_ang==other.bend_ang and \
             self.quality==other.quality
+            # self.partition==other.partition and  \
+            # self.centroid==other.centroid and  \
+            # self.substrip==other.substrip and \
+            # self.bend_ang==other.bend_ang and \
 
     def __str__(self):
         if (self.id==0):
@@ -222,15 +222,14 @@ PATLIST_LUT = {
 }
 
 
-def count_ones(int_ones):
+def count_ones(x):
     """takes in an integer and counts how many ones are in that integer's binary form"""
-    n_ones = 0
-    iterable = bin(int_ones)[2:]
-    for i in range(len(iterable)):
-        if iterable[i] == "1":
-            n_ones = n_ones + 1
-    return n_ones
-
+    cnt = 0
+    while (x > 0):
+        if (x&1)==1:
+            cnt += 1
+        x = x>>1
+    return cnt
 
 def set_bit(index, num1=0):
     """takes in an integer index to set a one within a binary number; if num1 parameter is filled
@@ -238,7 +237,6 @@ def set_bit(index, num1=0):
     num2 = 1 << index
     final_v = num1 | num2
     return final_v
-
 
 def clear_bit(num, index):
     """takes in an integer num and an integer index; clears the value of the index within the binary
@@ -274,3 +272,36 @@ def test_find_ones():
     assert find_ones(0b100) == [3]
     assert find_ones(0b111) == [1,2,3]
     assert find_ones(0b001) == [1]
+
+def test_find_centroid():
+    assert find_centroid(0b001) == 1
+    assert find_centroid(0b010) == 2
+    assert find_centroid(0b100) == 3
+    assert find_centroid(0b101) == 2
+    assert find_centroid(0b110) == 2.5
+    assert find_centroid(0b111) == 2
+
+def find_centroid(data):
+    """get the centroid for some given binary hitmask"""
+
+    ones = find_ones(data)
+
+    if len(ones)==0:
+        return 0
+
+    return (1.0 * sum(ones)) / len(ones)
+
+def generate_combinations(nbits):
+    return (nbits, tuple(range(2**nbits)))
+
+def get_centroids(max_width):
+    # set widths to current and anticipated pattern sizes
+    all_widths = range(1, max_width)
+    all_masks = tuple(map(generate_combinations, all_widths))
+
+    centroids = []
+    for (length,masks) in all_masks:
+        y = (length, tuple(map (lambda x : (x, round(find_centroid(x))), masks)))
+        centroids.append(y)
+
+    return centroids

@@ -3,7 +3,7 @@ import random
 import cocotb
 from cocotb.triggers import RisingEdge
 from datadev import datadev
-from pat_unit_beh import get_best_seg, calculate_global_layer_mask
+from pat_unit_beh import find_best_seg, calculate_global_layer_mask
 from subfunc import *
 import os
 from cocotb_test.simulator import run
@@ -58,7 +58,7 @@ async def pat_unit_test(dut):
         # (1) pop old data from the head of the queue
         # (2) run the emulator on the old data
         data = queue.pop(0)
-        sw_segment = get_best_seg(data=data, strip=0, max_span=MAX_SPAN)
+        sw_segment = find_best_seg(data=data, strip=0, max_span=MAX_SPAN)
         fw_segment = get_segment_from_dut(dut)
 
         # apply count threshold conditions to emulator pattern assignment

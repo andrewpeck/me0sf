@@ -1,23 +1,5 @@
 # generates the look up table for our linear regression software
-from subfunc import find_ones
-
-def test_find_centroid():
-    assert find_centroid(0b001) == 1
-    assert find_centroid(0b010) == 2
-    assert find_centroid(0b100) == 3
-    assert find_centroid(0b101) == 2
-    assert find_centroid(0b110) == 2.5
-    assert find_centroid(0b111) == 2
-
-def find_centroid(data):
-    """get the centroid for some given binary hitmask"""
-
-    ones = find_ones(data)
-
-    if len(ones)==0:
-        return 0
-
-    return (1.0 * sum(ones)) / len(ones)
+from subfunc import *
 
 def generate_vhdl_lines(centroids):
     """convert final centroid, data, and width pairings into vhdl lines to write to find_centoid.vhd file"""
@@ -43,21 +25,6 @@ def generate_vhdl_lines(centroids):
         lines.append("\n")
 
     return lines
-
-def generate_combinations(nbits):
-    return (nbits, tuple(range(2**nbits)))
-
-def get_centroids(max_width):
-    # set widths to current and anticipated pattern sizes
-    all_widths = range(1, max_width)
-    all_masks = tuple(map(generate_combinations, all_widths))
-
-    centroids = []
-    for (length,masks) in all_masks:
-        y = (length, tuple(map (lambda x : (x, round(find_centroid(x))), masks)))
-        centroids.append(y)
-
-    return centroids
 
 if __name__ == "__main__":
 
