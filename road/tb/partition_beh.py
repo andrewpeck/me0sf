@@ -29,12 +29,12 @@ def test_compare_ghosts():
     assert compare_ghosts(seg2, seg_list).id == 0
     assert compare_ghosts(seg3, seg_list).id == 0
 
-def cancel_edges(pat_mux_dat, group_width=8, ghost_width=4, WIDTH=192):
+def cancel_edges(pat_mux_dat, group_width=8, ghost_width=4, width=192):
 
     """takes in pat_unit_mux_data, finds edges of groups w/given group width, and performs edge
     cancellation by checking ghosts around each edge within given ghost width"""
 
-    for edge in range((WIDTH // group_width)-1): 
+    for edge in range((width // group_width)-1):
         lo_index = group_width*(edge+1) - (ghost_width//2)
         hi_index = lo_index + ghost_width
         for j in range(lo_index, hi_index): 
