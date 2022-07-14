@@ -1,6 +1,8 @@
 #!/usr/bin/env python3
 import uproot
 import event_display as disp
+from subfunc import *
+from chamber_beh import process_chamber
 
 with uproot.open("MuonGE0Segments.root:ge0/segments") as segments:
     print(segments.keys())
@@ -14,13 +16,16 @@ with uproot.open("MuonGE0Segments.root:ge0/segments") as segments:
                                       })
 
     for (ievent, event) in enumerate(events):
-
-        layers = [[0]*6]*8
-
+        print(ievent)
+        layers = [[0]*6 for n in range(8)]
         for (ly, strip, partition, chamber) in zip(event["ly"], event["strip"], event["partition"], event["chamber"]):
-            print(f'{partition=}')
+            #print(f'{partition=}')
+        
             if (chamber==4):
                 layers[partition][int(ly)] |= 1 << int(strip)
 
-        for layer in layers:
-            disp.event_display(hits=layer)
+        pats = [(PATLIST[15-seg.id], seg.strip, seg.partition) for seg in process_chamber(layers) if seg.id !=0]
+        
+        for i in range(len(layers)):
+            pat = [(p[0], p[1]) for p in pats if p[2] == i]
+            disp.event_display(hits=layers[i], pats=pat)
