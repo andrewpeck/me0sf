@@ -51,20 +51,16 @@ def mask_layer_data (data, mask):
     mask is a 6 layer collection of masks
 
     """
-    return list(map(lambda ly_dat, ly_mask: ly_dat & ly_mask , data, mask))
+    return tuple(map(lambda ly_dat, ly_mask: ly_dat & ly_mask , data, mask))
 
 def calculate_centroids(masked_data):
+    # print(masked_data)
     """takes in a []*6 list of pre-masked data and gives the found centroids"""
-    return list(map(find_centroid, masked_data))
+    return tuple(map(find_centroid, masked_data))
 
 def calculate_layer_count(masked_data):
     """takes in a []*6 list of pre-masked data and gives the layer count"""
     return sum(map(lambda x : x > 0, masked_data))
-
-def get_seg(lc_id_pair, strip):
-    """creates segment object for a given pair of layer count and pattern id"""
-    seg = Segment(lc_id_pair[0], lc_id_pair[1], strip)
-    return seg
 
 def find_best_seg(data, strip=None, max_span=37, ly_thresh=LY_THRESH, partition=-1):
     """
@@ -76,8 +72,9 @@ def find_best_seg(data, strip=None, max_span=37, ly_thresh=LY_THRESH, partition=
     (2) for the X (~16) patterns available, AND together the raw data with the respective pattern masks
     (3) count the # of hits in each pattern
     (4) calculate the centroids for each pattern
-    (5) choose the max of all patterns
-    (6) apply a layer threshold
+    (5) process segments
+    (6) choose the max of all patterns
+    (7) apply a layer threshold
     """
 
     # and the layer data with the respective layer mask to
@@ -85,21 +82,26 @@ def find_best_seg(data, strip=None, max_span=37, ly_thresh=LY_THRESH, partition=
     # this yields a map object that can be iterated over to get,
     #    for each of the N patterns, the masked []*6 layer data
     # (2)
-    masked_data = map(lambda mask : mask_layer_data(mask.mask, data), LAYER_MASK)
+    masked_data = tuple(map(lambda mask : mask_layer_data(mask.mask, data), LAYER_MASK))
 
-    # (3)
-    lycs = map(lambda pattern_data : calculate_layer_count(pattern_data), masked_data)
-    pids = map(lambda mask : mask.id, LAYER_MASK);
-    lycs_pids = zip(lycs, pids)
+    # (3) count # of hits
 
-    # (4)
+    lycs = tuple(map(lambda pattern_data : calculate_layer_count(pattern_data), masked_data))
+    pids = tuple(map(lambda mask : mask.id, LAYER_MASK))
 
-    seg_list = map(lambda lyc_pid : get_seg(lyc_pid, strip), lycs_pids)
+    # (4) process centroids
+    centroids = tuple(map(calculate_centroids, masked_data))
 
-    # (5) choose the max of all patterns
+    # (5) process segments
+
+    seg_list = [Segment(lc, pid, strip=strip, centroid=centroid)
+                for (lc,pid,centroid) in
+                zip(lycs, pids, centroids)]
+
+    # (6) choose the max of all patterns
     best = max(seg_list)
 
-    # (6) apply a layer threshold
+    # (7) apply a layer threshold
     if (best.lc < ly_thresh):
         best.reset()
 
