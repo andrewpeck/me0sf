@@ -256,7 +256,7 @@ def ones_bit_mask(num):
     return o_mask
 
 def find_ones(data):
-    """return a list with the positions of '1's in a string"""
+    """return a list with the positions of '1's in a number"""
     ones = []
     cnt = 0
 
