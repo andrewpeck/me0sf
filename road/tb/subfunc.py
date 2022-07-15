@@ -57,6 +57,14 @@ class Segment:
     def fit(self):
         self.bend_ang = 0
         self.substrip = 0
+        if self.id !=0:
+            #print(self.centroid)
+            centroids = [cent for cent in self.centroid if cent !=0]
+            #print(centroids)
+            x = [i for (i, cent) in enumerate(centroids)] #need to improve for lc<6
+            fit = llse_fit(x, centroids)
+            self.bend_ang = fit[0] #m
+            self.substrip = fit[1] #b
 
     def __eq__(self, other):
         if (self.lc == 0 and other.lc == 0):
@@ -305,3 +313,22 @@ def get_centroids(max_width):
         centroids.append(y)
 
     return centroids
+
+def llse_fit(x, y):
+    x_sum = sum(x)
+    y_sum = sum(y)
+    n = len(x)
+
+    products = 0
+    squares = 0
+    for i in range(len(x)):
+        #print("to be added to products", (n * x[i] - x_sum) * (n * y[i] - y_sum))
+        products += (n * x[i] - x_sum) * (n * y[i] - y_sum)
+        squares += (n * x[i] - x_sum) ** 2
+    #print(products)
+    m = 1.0 * products / squares
+    #print("slope is", m)
+    b = 1.0 / n * (y_sum - m * x_sum)
+    #print("b is", b)
+
+    return m, b

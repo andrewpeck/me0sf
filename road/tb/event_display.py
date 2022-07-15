@@ -37,7 +37,7 @@ def llse_fit(x, y):
 
     return m, b
 
-def event_display(hits=None, fits=None, pats=None, width=192, max_span=37):
+def event_display(hits=None, fits=None, pats=None, width=192, max_span=37, event=None, chamber=None):
 
     # hits come in as a list of 6 integers
     # fits should come in as a m and a b --> might have to have info
@@ -65,6 +65,8 @@ def event_display(hits=None, fits=None, pats=None, width=192, max_span=37):
     plt.xticks([x*16 for x in range(0,int(width/16)+1)])
     plt.yticks([0,1,2,3,4,5])
 
+    if event is not None and chamber is not None:
+        plt.title("Event " + str(event) + " , Chamber "+ str(chamber))
     width = 1
     height = 0.25
 
@@ -99,7 +101,9 @@ def event_display(hits=None, fits=None, pats=None, width=192, max_span=37):
             strip = fit[2]
 
             y = (0, 5)
-            x = (strip+0*m+b, strip+5*m+b)
+            x = (strip + b-18, strip+5*m + b-18)
+            
+
 
             plt.plot(x,y)
 
