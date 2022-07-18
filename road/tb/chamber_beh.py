@@ -20,7 +20,7 @@ def process_chamber(
             width=width,
             group_width=group_width,
             ghost_width=ghost_width,
-            enable_gcl=False,
+            enable_gcl=True,
             partition=partition
         ) for (partition, data) in enumerate(chamber_data)
     ]
