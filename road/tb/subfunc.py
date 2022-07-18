@@ -322,13 +322,9 @@ def llse_fit(x, y):
     products = 0
     squares = 0
     for i in range(len(x)):
-        #print("to be added to products", (n * x[i] - x_sum) * (n * y[i] - y_sum))
         products += (n * x[i] - x_sum) * (n * y[i] - y_sum)
         squares += (n * x[i] - x_sum) ** 2
-    #print(products)
     m = 1.0 * products / squares
-    #print("slope is", m)
     b = 1.0 / n * (y_sum - m * x_sum)
-    #print("b is", b)
 
     return m, b
