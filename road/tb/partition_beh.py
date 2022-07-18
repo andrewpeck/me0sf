@@ -8,15 +8,20 @@ def compare_ghosts(seg, comp_list):
     """takes in a segment and a list of segments to ensure that there aren't copies of the same data (ID value identical) or mirrors (ID value +2 or -2 from each other)"""
     comp_list = [x for x in comp_list if x.id != 0 ]
     if len(comp_list) != 0:
-        for i in range(len(comp_list)):
+        for comp in comp_list:
             if seg.id == 0 and seg.lc == 0:
                 break
-            if (
-                seg.id == comp_list[i].id
-                or seg.id + 2 == comp_list[i].id
-                or seg.id - 2 == comp_list[i].id
-            ):
+            if seg.quality < comp.quality:
                 seg.reset()
+            else:
+                comp.reset()
+        #FIXME very basic ghost cancelling, just takes best of compared segments
+        #     if (
+        #         seg.id == comp_list[i].id
+        #         or seg.id + 2 == comp_list[i].id
+        #         or seg.id - 2 == comp_list[i].id
+        #     ):
+        #         seg.reset()
     return seg
 
 def test_compare_ghosts():
@@ -33,7 +38,6 @@ def cancel_edges(pat_mux_dat, group_width=8, ghost_width=4, width=192):
 
     """takes in pat_unit_mux_data, finds edges of groups w/given group width, and performs edge
     cancellation by checking ghosts around each edge within given ghost width"""
-
     for edge in range((width // group_width)-1):
         lo_index = group_width*(edge+1) - (ghost_width//2)
         hi_index = lo_index + ghost_width
@@ -79,9 +83,8 @@ def work_partition(partition_data, max_span=37, width=192, group_width=8, ghost_
     """
 
     segments = pat_mux(partition_data, max_span, width, partition=partition)
-
     if (enable_gcl):
-        segments = cancel_edges(partition_data, group_width, ghost_width, width)
+        segments = cancel_edges(segments, group_width, ghost_width, width)
 
     #divide partition into pieces and take best segment from each piece
 
@@ -93,6 +96,7 @@ def work_partition(partition_data, max_span=37, width=192, group_width=8, ghost_
 
     #final_dat = list(map(max, chunked, group_width))
     final_dat = list(map(max, np.array(segments).reshape(width//group_width, group_width)))
+    
 
     return final_dat
 
