@@ -10,9 +10,10 @@ use work.priority_encoder_pkg.all;
 entity partition is
   generic(
     NUM_SEGMENTS  : integer := 4;
-    PARTITION_NUM : integer := 0;
-    PRT_WIDTH     : natural := PRT_WIDTH;
-    S0_WIDTH      : natural := 8 ---CHANGE ME BACK CHLOE 
+    PARTITION_NUM : integer := 0;          -- just assign a number (e.g. 0-7) to each
+                                           -- partition so we can look it up later
+    PRT_WIDTH     : natural := PRT_WIDTH;  -- width of the partition (192)
+    S0_WIDTH      : natural := 8           -- width of the pre-sorting regions
     );
   port(
 
