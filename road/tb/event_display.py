@@ -2,7 +2,7 @@
 import matplotlib.pyplot as plt
 from subfunc import *
 from pat_unit_beh import find_best_seg, get_ly_mask
-from datadev import datadev
+from datagen import datagen
 import random
 import math
 from centroid_finding import *
@@ -76,7 +76,7 @@ def event_display(hits=None, fits=None, pats=None, width=192, max_span=37, event
         for pat in pats:
             (pat, strip) = pat
             mask = get_ly_mask(pat)
-            print(mask)
+            # print(mask)
             (x, y) = int2_xy(mask.mask, strip-math.floor(max_span/2.0))
             # plt.scatter(x, y, s=60, marker='s', facecolors='cyan',  alpha=0.5, edgecolors='gray')
             for (px, py) in zip(x,y):
@@ -115,7 +115,7 @@ if __name__ == '__main__':
     random.seed(56)
 
     MAX_SPAN = 37
-    hits = datadev(MAX_SPAN=MAX_SPAN)
+    hits = datagen(MAX_SPAN=MAX_SPAN)
     segment = find_best_seg(hits, max_span=MAX_SPAN)
     strip = MAX_SPAN // 2
 
