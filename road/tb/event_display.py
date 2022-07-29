@@ -101,7 +101,7 @@ def event_display(hits=None, fits=None, pats=None, width=192, max_span=37, event
             strip = fit[2]
 
             y = (0, 5)
-            x = (strip + b-18, strip+5*m + b-18)
+            x = (strip+b -2.5*m , strip+b +2.5*m  )
             
 
 
