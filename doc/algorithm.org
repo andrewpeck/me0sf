@@ -47,7 +47,7 @@ digraph {
   edge [fontname = "Roboto Mono"];
   node [shape=box]
   rankdir=LR
-  "Input\nSbits" -> "Segment\nIdentification" -> "Sorting" -> "Fitting" -> "Output"
+  "Input\nSbits" -> "Centroid\nFiltering" -> "Segment\nIdentification" -> "Sorting" -> "Fitting" -> "Output"
 }
 #+end_src
 
@@ -59,7 +59,7 @@ digraph {
 This segment finder is designed to find multi-layer segments in ME0.
 
 The pattern finder works by looking at the chamber in two dimensional slices,
-where bending in the eta direction can be observed. Each slice corresponds to 6
+where bending in the phi direction can be observed. Each slice corresponds to 6
 layers of the ME0 chamber for a given eta partition.
 
 For example, a cross-sectional view of a muon track may look something like this
@@ -82,13 +82,29 @@ Our goal in segment finding is to:
  2. Measure the position of the segment
  3. Measure the bending angle of the segment
 
-
 *** Cross-partition data sharing
 How to look at eta ??
 *** Chamber staggering
 Are the chambers staggered? if so we need de-staggering
 *** Alignment ??
 Are alignment corrections required?
+*** Centroid Identification
+GEM hits are read out as individual strips, and produce clusters with a fairly large distribution.
+
+The center of this cluster corresponds to the center of the charge distribution.
+
+Because the road based pattern finder prefers straighter patterns (higher pT), performing pattern
+finding on the raw GEM hits produces a bias which truncates the outer edges of the clusters and
+incorrectly assigns narrower patterns than should be found.
+
+To prevent this, a first processing stage of the GEM data is to convert the clusters into individual
+strip hits. This is currently done using a simple average within a moving window.
+
+: to be described in detail....
+
+When the centroid lies between strips, this filtering stage leaves two strips on at once. This is
+taken into account in later processing stages.
+
 ** Segment Candidate Identification
 
 Centered around each strip is a pattern identification block called a "pattern unit".

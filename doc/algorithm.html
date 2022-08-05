@@ -3,7 +3,7 @@
 "http://www.w3.org/TR/xhtml1/DTD/xhtml1-strict.dtd">
 <html xmlns="http://www.w3.org/1999/xhtml" lang="en" xml:lang="en">
 <head>
-<!-- 2022-06-09 Thu 23:41 -->
+<!-- 2022-08-05 Fri 19:34 -->
 <meta http-equiv="Content-Type" content="text/html;charset=utf-8" />
 <meta name="viewport" content="width=device-width, initial-scale=1" />
 <title>ME0 Segment Finding</title>
@@ -222,73 +222,74 @@
 <h2>Table of Contents</h2>
 <div id="text-table-of-contents" role="doc-toc">
 <ul>
-<li><a href="#org665bfc7">Segment Finding Algorithm</a>
+<li><a href="#org1aff28c">Segment Finding Algorithm</a>
 <ul>
-<li><a href="#org93252c4">Input Hits Processing</a>
+<li><a href="#org6a03147">Input Hits Processing</a>
 <ul>
-<li><a href="#org4449f05">Cross-partition data sharing</a></li>
-<li><a href="#orgc697355">Chamber staggering</a></li>
-<li><a href="#orge7d3ab1">Alignment ??</a></li>
+<li><a href="#orgdea7959">Cross-partition data sharing</a></li>
+<li><a href="#org13b4c79">Chamber staggering</a></li>
+<li><a href="#org78b68c4">Alignment ??</a></li>
+<li><a href="#org4d3acfa">Centroid Identification</a></li>
 </ul>
 </li>
-<li><a href="#orgacc8741">Segment Candidate Identification</a>
+<li><a href="#orgce7ca0c">Segment Candidate Identification</a>
 <ul>
-<li><a href="#org7cabac4">Centroid finding</a></li>
-<li><a href="#org355059a">Edge Padding</a></li>
+<li><a href="#org7e9a04f">Centroid finding</a></li>
+<li><a href="#org1836f5d">Edge Padding</a></li>
 </ul>
 </li>
-<li><a href="#org6f48a06">Ghost Cancellation</a></li>
-<li><a href="#org82a476e">Partition Pre-Sorting</a></li>
-<li><a href="#org935b994">Chamber Segment Selection</a></li>
-<li><a href="#orgc656c25">Centroid Coordinate Transformation</a></li>
-<li><a href="#org24ec320">Fitting</a>
+<li><a href="#org9e654e6">Ghost Cancellation</a></li>
+<li><a href="#org842d6bd">Partition Pre-Sorting</a></li>
+<li><a href="#org9c51f7f">Chamber Segment Selection</a></li>
+<li><a href="#orgc7383af">Centroid Coordinate Transformation</a></li>
+<li><a href="#org8fc50eb">Fitting</a>
 <ul>
-<li><a href="#org4503bec">Quality of Fit</a></li>
-<li><a href="#org65cb56e">Pipelined Multiplication</a></li>
-<li><a href="#orgfaab14a">Reciprocal</a></li>
+<li><a href="#org647abfa">Quality of Fit</a></li>
+<li><a href="#orgd93c620">Pipelined Multiplication</a></li>
+<li><a href="#orgfdd8ea0">Reciprocal</a></li>
 </ul>
 </li>
-<li><a href="#org4e575ac">Post-Fit Coordinate Transformation</a></li>
-<li><a href="#org153c027">Output Data Format</a>
+<li><a href="#orga741308">Post-Fit Coordinate Transformation</a></li>
+<li><a href="#org6a2bc70">Output Data Format</a>
 <ul>
-<li><a href="#org920266f">Eta</a></li>
-<li><a href="#orgbbf1b58">Phi</a></li>
-<li><a href="#org72d1e82">Bend</a></li>
-<li><a href="#orgf27af27">Quality</a></li>
-</ul>
-</li>
-</ul>
-</li>
-<li><a href="#org46a1e94">Firmware Implementation</a>
-<ul>
-<li><a href="#org92998d6">Configurable Options</a>
-<ul>
-<li><a href="#org5e9cfe9">Compile Time Options</a></li>
-<li><a href="#orgb610c4d">Runtime Options</a></li>
-</ul>
-</li>
-<li><a href="#orgdc50630">Firmware</a>
-<ul>
-<li><a href="#org87c2be1">pat_unit.vhd</a></li>
-<li><a href="#orgd8675e6">pat_unit_mux.vhd</a></li>
-<li><a href="#org18fea8a">partition.vhd</a></li>
-<li><a href="#org22ec6ab">segment_selector.vhd</a></li>
-<li><a href="#orge199d10">fit.vhd</a></li>
+<li><a href="#org1d308ec">Eta</a></li>
+<li><a href="#orgceb5a37">Phi</a></li>
+<li><a href="#org10cfb51">Bend</a></li>
+<li><a href="#org5bec022">Quality</a></li>
 </ul>
 </li>
 </ul>
 </li>
-<li><a href="#org6d63d27">Testbench</a></li>
-<li><a href="#org5019a68">Resource Utilization</a></li>
-<li><a href="#org2ce54bc">Presentations</a></li>
-<li><a href="#orgb865eeb">Source Code</a></li>
+<li><a href="#orgd03caed">Firmware Implementation</a>
+<ul>
+<li><a href="#org950602d">Configurable Options</a>
+<ul>
+<li><a href="#org68ce93e">Compile Time Options</a></li>
+<li><a href="#orgd5ce02c">Runtime Options</a></li>
+</ul>
+</li>
+<li><a href="#org846ac42">Firmware</a>
+<ul>
+<li><a href="#org2009a27">pat_unit.vhd</a></li>
+<li><a href="#org6e3f322">pat_unit_mux.vhd</a></li>
+<li><a href="#orge1c5f6b">partition.vhd</a></li>
+<li><a href="#orgeb6de65">segment_selector.vhd</a></li>
+<li><a href="#org873cbdd">fit.vhd</a></li>
+</ul>
+</li>
+</ul>
+</li>
+<li><a href="#org4f57d57">Testbench</a></li>
+<li><a href="#orga5f9b82">Resource Utilization</a></li>
+<li><a href="#orgc7e0fa6">Presentations</a></li>
+<li><a href="#org5f2bc8c">Source Code</a></li>
 </ul>
 </div>
 </div>
 
-<div id="outline-container-org665bfc7" class="outline-2">
-<h2 id="org665bfc7">Segment Finding Algorithm</h2>
-<div class="outline-text-2" id="text-org665bfc7">
+<div id="outline-container-org1aff28c" class="outline-2">
+<h2 id="org1aff28c">Segment Finding Algorithm</h2>
+<div class="outline-text-2" id="text-org1aff28c">
 <p>
 Each ME0 chamber is composed of 6 layers of GEMs.
 </p>
@@ -347,22 +348,22 @@ measurement (some kind of fit)</li>
 </ol>
 
 
-<div id="orge9c2092" class="figure">
+<div id="org1bc2f41" class="figure">
 <p><img src="dataflow.svg" alt="dataflow.svg" class="org-svg" />
 </p>
 </div>
 </div>
 
-<div id="outline-container-org93252c4" class="outline-3">
-<h3 id="org93252c4">Input Hits Processing</h3>
-<div class="outline-text-3" id="text-org93252c4">
+<div id="outline-container-org6a03147" class="outline-3">
+<h3 id="org6a03147">Input Hits Processing</h3>
+<div class="outline-text-3" id="text-org6a03147">
 <p>
 This segment finder is designed to find multi-layer segments in ME0.
 </p>
 
 <p>
 The pattern finder works by looking at the chamber in two dimensional slices,
-where bending in the eta direction can be observed. Each slice corresponds to 6
+where bending in the phi direction can be observed. Each slice corresponds to 6
 layers of the ME0 chamber for a given eta partition.
 </p>
 
@@ -371,7 +372,7 @@ For example, a cross-sectional view of a muon track may look something like this
 (chamber is truncated between <code>///</code> marks).
 </p>
 
-<pre class="example" id="org647220a">
+<pre class="example" id="org2528c55">
     0                                          ---&gt;                                              191
 ly0 -------------+-----------------------------------------///--------------------------------------
 ly1 --------------+----------------------------------------///--------------------------------------
@@ -393,35 +394,68 @@ Our goal in segment finding is to:
 </ol>
 </div>
 
-
-<div id="outline-container-org4449f05" class="outline-4">
-<h4 id="org4449f05">Cross-partition data sharing</h4>
-<div class="outline-text-4" id="text-org4449f05">
+<div id="outline-container-orgdea7959" class="outline-4">
+<h4 id="orgdea7959">Cross-partition data sharing</h4>
+<div class="outline-text-4" id="text-orgdea7959">
 <p>
 How to look at eta ??
 </p>
 </div>
 </div>
-<div id="outline-container-orgc697355" class="outline-4">
-<h4 id="orgc697355">Chamber staggering</h4>
-<div class="outline-text-4" id="text-orgc697355">
+<div id="outline-container-org13b4c79" class="outline-4">
+<h4 id="org13b4c79">Chamber staggering</h4>
+<div class="outline-text-4" id="text-org13b4c79">
 <p>
 Are the chambers staggered? if so we need de-staggering
 </p>
 </div>
 </div>
-<div id="outline-container-orge7d3ab1" class="outline-4">
-<h4 id="orge7d3ab1">Alignment ??</h4>
-<div class="outline-text-4" id="text-orge7d3ab1">
+<div id="outline-container-org78b68c4" class="outline-4">
+<h4 id="org78b68c4">Alignment ??</h4>
+<div class="outline-text-4" id="text-org78b68c4">
 <p>
 Are alignment corrections required?
 </p>
 </div>
 </div>
+<div id="outline-container-org4d3acfa" class="outline-4">
+<h4 id="org4d3acfa">Centroid Identification</h4>
+<div class="outline-text-4" id="text-org4d3acfa">
+<p>
+GEM hits are read out as individual strips, and produce clusters with a fairly large distribution.
+</p>
+
+<p>
+The center of this cluster corresponds to the center of the charge distribution.
+</p>
+
+<p>
+Because the road based pattern finder prefers straighter patterns (higher pT), performing pattern
+finding on the raw GEM hits produces a bias which truncates the outer edges of the clusters and
+incorrectly assigns narrower patterns than should be found.
+</p>
+
+<p>
+To prevent this, a first processing stage of the GEM data is to convert the clusters into individual
+strip hits. This is currently done using a simple average within a moving window.
+</p>
+
+<pre class="example">
+to be described in detail....
+</pre>
+
+
+<p>
+When the centroid lies between strips, this filtering stage leaves two strips on at once. This is
+taken into account in later processing stages.
+</p>
 </div>
-<div id="outline-container-orgacc8741" class="outline-3">
-<h3 id="orgacc8741">Segment Candidate Identification</h3>
-<div class="outline-text-3" id="text-orgacc8741">
+</div>
+</div>
+
+<div id="outline-container-orgce7ca0c" class="outline-3">
+<h3 id="orgce7ca0c">Segment Candidate Identification</h3>
+<div class="outline-text-3" id="text-orgce7ca0c">
 <p>
 Centered around each strip is a pattern identification block called a &ldquo;pattern unit&rdquo;.
 </p>
@@ -442,7 +476,7 @@ centered on strip #20 might look at:
 </p>
 
 
-<pre class="example" id="org4d9a1a0">
+<pre class="example" id="org13e5f88">
     0                   20                     ---&gt;                                              191
       ┌────────────────────────────────────┐
 ly0 --│--------------+---------------------│-------------------///--------------------------------------
@@ -461,7 +495,7 @@ at a slice of data ranging within +- some range (the range is determined from
 the width of the maximally wide pattern). Here we use +- 18 as an example.
 </p>
 
-<pre class="example" id="org8ba1f72">
+<pre class="example" id="orgb36e801">
 ┌────────────────────────────────────┐
 │--------------+---------------------│
 │---------------+--------------------│
@@ -486,7 +520,7 @@ like:
 <ul class="org-ul">
 <li>Pattern #14</li>
 </ul>
-<pre class="example" id="org0ad827b">
+<pre class="example" id="orga694d5a">
 ly0 xxxx-----
 ly1 -xxxx----
 ly2 ---xxx---
@@ -499,7 +533,7 @@ ly5 -----xxxx
 <ul class="org-ul">
 <li>Pattern #1</li>
 </ul>
-<pre class="example" id="org2d0335a">
+<pre class="example" id="org25073f0">
 ly0 ----------------------------xxxxxxxxx
 ly1 ------------------------xxxxxxxxx----
 ly2 ----------------xxxxxxxxxxxx---------
@@ -513,7 +547,7 @@ If we were to overlay the above pattern #14 onto the data shown above, we would
 see this:
 </p>
 
-<pre class="example" id="org8535480">
+<pre class="example" id="orgdce78d3">
 ┌─────────────────────────────────────┐
 │-------------xx+x--------------------│
 │--------------xx+x-------------------│
@@ -538,7 +572,7 @@ The high layer count (6) is because this pattern is a good match for the actual 
 If instead we overlay pattern #1 on this data we see
 </p>
 
-<pre class="example" id="orgfc950bb">
+<pre class="example" id="org376e96a">
 ┌─────────────────────────────────────┐
 │---------------+------------xxxxxxxxx│
 │----------------+-------xxxxxxxxx----│
@@ -584,9 +618,9 @@ mask)</li>
 </ol>
 </div>
 
-<div id="outline-container-org7cabac4" class="outline-4">
-<h4 id="org7cabac4">Centroid finding</h4>
-<div class="outline-text-4" id="text-org7cabac4">
+<div id="outline-container-org7e9a04f" class="outline-4">
+<h4 id="org7e9a04f">Centroid finding</h4>
+<div class="outline-text-4" id="text-org7e9a04f">
 <p>
 To minimize resource usage and keep acceptance high, the patterns are defined to
 be fairly wide. To avoid losing resolution in this wide patterns, however, along
@@ -594,7 +628,7 @@ with each layer of a pattern a centroid is found and saved for later stages of
 processing.
 </p>
 
-<pre class="example" id="orge6bc36d">
+<pre class="example" id="orgd670e9e">
 ┌─────────────────────────────────────┐
 │-------------xx+x--------------------│
 │--------------xx+x-------------------│
@@ -654,9 +688,9 @@ for centroid finding.
 </div>
 </div>
 
-<div id="outline-container-org355059a" class="outline-4">
-<h4 id="org355059a">Edge Padding</h4>
-<div class="outline-text-4" id="text-org355059a">
+<div id="outline-container-org1836f5d" class="outline-4">
+<h4 id="org1836f5d">Edge Padding</h4>
+<div class="outline-text-4" id="text-org1836f5d">
 <p>
 (Some pattern units run off the left and right edges of the chamber and need to
 be zero-padded)
@@ -664,18 +698,18 @@ be zero-padded)
 </div>
 </div>
 </div>
-<div id="outline-container-org6f48a06" class="outline-3">
-<h3 id="org6f48a06">Ghost Cancellation</h3>
-<div class="outline-text-3" id="text-org6f48a06">
+<div id="outline-container-org9e654e6" class="outline-3">
+<h3 id="org9e654e6">Ghost Cancellation</h3>
+<div class="outline-text-3" id="text-org9e654e6">
 <p>
 (because of wide patterns, the same hits will produce multiple strips.. cancel
 off these neighboring &ldquo;ghosts&rdquo;)
 </p>
 </div>
 </div>
-<div id="outline-container-org82a476e" class="outline-3">
-<h3 id="org82a476e">Partition Pre-Sorting</h3>
-<div class="outline-text-3" id="text-org82a476e">
+<div id="outline-container-org842d6bd" class="outline-3">
+<h3 id="org842d6bd">Partition Pre-Sorting</h3>
+<div class="outline-text-3" id="text-org842d6bd">
 <p>
 For each partition, every bunch crossing a collection of 192 segments is
 produced in the pattern units.
@@ -700,27 +734,27 @@ reducing the # of segments that need to be sorted by a factor of N.
 </div>
 </div>
 
-<div id="outline-container-org935b994" class="outline-3">
-<h3 id="org935b994">Chamber Segment Selection</h3>
-<div class="outline-text-3" id="text-org935b994">
+<div id="outline-container-org9c51f7f" class="outline-3">
+<h3 id="org9c51f7f">Chamber Segment Selection</h3>
+<div class="outline-text-3" id="text-org9c51f7f">
 <p>
 Choose from (8 partitions * 192/N segments) -&gt; M segments, where N is the
 pre-sorting factor from the previous stage.
 </p>
 </div>
 </div>
-<div id="outline-container-orgc656c25" class="outline-3">
-<h3 id="orgc656c25">Centroid Coordinate Transformation</h3>
-<div class="outline-text-3" id="text-orgc656c25">
+<div id="outline-container-orgc7383af" class="outline-3">
+<h3 id="orgc7383af">Centroid Coordinate Transformation</h3>
+<div class="outline-text-3" id="text-orgc7383af">
 <p>
 <i>f</i> (<code>pattern id</code>, <code>6x centroids</code>) → 6x hit position
 </p>
 </div>
 </div>
 
-<div id="outline-container-org24ec320" class="outline-3">
-<h3 id="org24ec320">Fitting</h3>
-<div class="outline-text-3" id="text-org24ec320">
+<div id="outline-container-org8fc50eb" class="outline-3">
+<h3 id="org8fc50eb">Fitting</h3>
+<div class="outline-text-3" id="text-org8fc50eb">
 <p>
 A standard linear fit follows a formula:
 </p>
@@ -881,18 +915,18 @@ this fit.
 </p>
 </div>
 
-<div id="outline-container-org4503bec" class="outline-4">
-<h4 id="org4503bec">Quality of Fit</h4>
-<div class="outline-text-4" id="text-org4503bec">
+<div id="outline-container-org647abfa" class="outline-4">
+<h4 id="org647abfa">Quality of Fit</h4>
+<div class="outline-text-4" id="text-org647abfa">
 <p>
 how to calculate??
 </p>
 </div>
 </div>
 
-<div id="outline-container-org65cb56e" class="outline-4">
-<h4 id="org65cb56e">Pipelined Multiplication</h4>
-<div class="outline-text-4" id="text-org65cb56e">
+<div id="outline-container-orgd93c620" class="outline-4">
+<h4 id="orgd93c620">Pipelined Multiplication</h4>
+<div class="outline-text-4" id="text-orgd93c620">
 <p>
 Some steps of the fit (multiplications) are pipelined into multiple (2) clock cycles.
 </p>
@@ -926,35 +960,35 @@ timing.
 </div>
 </div>
 
-<div id="outline-container-orgfaab14a" class="outline-4">
-<h4 id="orgfaab14a">Reciprocal</h4>
-<div class="outline-text-4" id="text-orgfaab14a">
+<div id="outline-container-orgfdd8ea0" class="outline-4">
+<h4 id="orgfdd8ea0">Reciprocal</h4>
+<div class="outline-text-4" id="text-orgfdd8ea0">
 <p>
 The lookup table for the reciprocal LUT is calculated through a simple python script:
 </p>
 
 <div class="org-src-container">
 <pre class="src src-python">
-<span class="org-builtin">print</span><span class="org-rainbow-delimiters-depth-1">(</span><span class="org-string">""</span>.join<span class="org-rainbow-delimiters-depth-2">(</span><span class="org-rainbow-delimiters-depth-3">[</span>
+<span class="org-builtin">print</span>(<span class="org-string">""</span>.join([
     <span class="org-string">"  function reciprocal (x : integer; nbits : integer) return sfixed is\n"</span>,
     <span class="org-string">"  begin\n"</span>,
     <span class="org-string">"    if (x&lt;1 or x&gt; 2047) then \n"</span>,
     <span class="org-string">"      assert false report \"invalid reciprocal lookup x=\" &amp; integer\'image(x) severity error;\n"</span>,
     <span class="org-string">"      return to_sfixed(0, 1, -nbits);\n"</span>,
-    <span class="org-string">""</span>.join<span class="org-rainbow-delimiters-depth-4">(</span><span class="org-builtin">list</span><span class="org-rainbow-delimiters-depth-1">(</span><span class="org-builtin">map</span><span class="org-rainbow-delimiters-depth-2">(</span><span class="org-keyword">lambda</span> i :
-                     <span class="org-string">"    elsif (x=%d) then return to_sfixed(%.20f, 1, -nbits);\n"</span> % <span class="org-rainbow-delimiters-depth-3">(</span>i, <span class="org-highlight-numbers-number">1</span>/i<span class="org-rainbow-delimiters-depth-3">)</span>,
-                     <span class="org-builtin">range</span><span class="org-rainbow-delimiters-depth-3">(</span><span class="org-highlight-numbers-number">1</span>, <span class="org-highlight-numbers-number">2048</span><span class="org-rainbow-delimiters-depth-3">)</span><span class="org-rainbow-delimiters-depth-2">)</span><span class="org-rainbow-delimiters-depth-1">)</span><span class="org-rainbow-delimiters-depth-4">)</span>,
+    <span class="org-string">""</span>.join(<span class="org-builtin">list</span>(<span class="org-builtin">map</span>(<span class="org-keyword">lambda</span> i :
+                     <span class="org-string">"    elsif (x=%d) then return to_sfixed(%.20f, 1, -nbits);\n"</span> % (i, <span class="org-highlight-numbers-number">1</span>/i),
+                     <span class="org-builtin">range</span>(<span class="org-highlight-numbers-number">1</span>, <span class="org-highlight-numbers-number">2048</span>)))),
     <span class="org-string">"    end if;\n"</span>,
-    <span class="org-string">"  end;\n"</span><span class="org-rainbow-delimiters-depth-3">]</span><span class="org-rainbow-delimiters-depth-2">)</span><span class="org-rainbow-delimiters-depth-1">)</span>
+    <span class="org-string">"  end;\n"</span>]))
 </pre>
 </div>
 </div>
 </div>
 </div>
 
-<div id="outline-container-org4e575ac" class="outline-3">
-<h3 id="org4e575ac">Post-Fit Coordinate Transformation</h3>
-<div class="outline-text-3" id="text-org4e575ac">
+<div id="outline-container-orga741308" class="outline-3">
+<h3 id="orga741308">Post-Fit Coordinate Transformation</h3>
+<div class="outline-text-3" id="text-orga741308">
 <p>
 Transform from local to global coordinates (this is just addition of strip + fit_offset)
 </p>
@@ -965,9 +999,9 @@ f (pat_unit_strip, fit_offset) -&gt; strip
 </div>
 </div>
 
-<div id="outline-container-org153c027" class="outline-3">
-<h3 id="org153c027">Output Data Format</h3>
-<div class="outline-text-3" id="text-org153c027">
+<div id="outline-container-org6a2bc70" class="outline-3">
+<h3 id="org6a2bc70">Output Data Format</h3>
+<div class="outline-text-3" id="text-org6a2bc70">
 <p>
 The currently proposed output data format is:
 </p>
@@ -1024,12 +1058,12 @@ The currently proposed output data format is:
 </table>
 </div>
 
-<div id="outline-container-org920266f" class="outline-4">
-<h4 id="org920266f">Eta</h4>
+<div id="outline-container-org1d308ec" class="outline-4">
+<h4 id="org1d308ec">Eta</h4>
 </div>
-<div id="outline-container-orgbbf1b58" class="outline-4">
-<h4 id="orgbbf1b58">Phi</h4>
-<div class="outline-text-4" id="text-orgbbf1b58">
+<div id="outline-container-orgceb5a37" class="outline-4">
+<h4 id="orgceb5a37">Phi</h4>
+<div class="outline-text-4" id="text-orgceb5a37">
 <p>
 Phi is encoded as a number from 0-768
 </p>
@@ -1041,9 +1075,9 @@ The resolution of the trigger primitive is in the OR of two adjacent strips
 </div>
 </div>
 
-<div id="outline-container-org72d1e82" class="outline-4">
-<h4 id="org72d1e82">Bend</h4>
-<div class="outline-text-4" id="text-org72d1e82">
+<div id="outline-container-org10cfb51" class="outline-4">
+<h4 id="org10cfb51">Bend</h4>
+<div class="outline-text-4" id="text-org10cfb51">
 <p>
 The bend angle is encoded as a fixed point number
 </p>
@@ -1104,65 +1138,65 @@ The resolution may be reduced later after further studies are done.
 </div>
 </div>
 
-<div id="outline-container-orgf27af27" class="outline-4">
-<h4 id="orgf27af27">Quality</h4>
+<div id="outline-container-org5bec022" class="outline-4">
+<h4 id="org5bec022">Quality</h4>
 </div>
 </div>
 </div>
 
-<div id="outline-container-org46a1e94" class="outline-2">
-<h2 id="org46a1e94">Firmware Implementation</h2>
-<div class="outline-text-2" id="text-org46a1e94">
+<div id="outline-container-orgd03caed" class="outline-2">
+<h2 id="orgd03caed">Firmware Implementation</h2>
+<div class="outline-text-2" id="text-orgd03caed">
 </div>
-<div id="outline-container-org92998d6" class="outline-3">
-<h3 id="org92998d6">Configurable Options</h3>
-<div class="outline-text-3" id="text-org92998d6">
+<div id="outline-container-org950602d" class="outline-3">
+<h3 id="org950602d">Configurable Options</h3>
+<div class="outline-text-3" id="text-org950602d">
 </div>
-<div id="outline-container-org5e9cfe9" class="outline-4">
-<h4 id="org5e9cfe9">Compile Time Options</h4>
-<div class="outline-text-4" id="text-org5e9cfe9">
-</div>
-<ul class="org-ul">
-<li><a id="orge34583f"></a>Pattern definitions<br /></li>
-<li><a id="orgaaac505"></a>Multiplexing factors<br /></li>
-<li><a id="org07c0f2b"></a>Fitting resolution<br /></li>
-<li><a id="orge85d54a"></a>Number of output segments<br /></li>
-</ul>
-</div>
-<div id="outline-container-orgb610c4d" class="outline-4">
-<h4 id="orgb610c4d">Runtime Options</h4>
-<div class="outline-text-4" id="text-orgb610c4d">
+<div id="outline-container-org68ce93e" class="outline-4">
+<h4 id="org68ce93e">Compile Time Options</h4>
+<div class="outline-text-4" id="text-org68ce93e">
 </div>
 <ul class="org-ul">
-<li><a id="org4276b28"></a>Layer threshold<br /></li>
-<li><a id="org76a2e3b"></a>Pattern enables<br /></li>
+<li><a id="org649e164"></a>Pattern definitions<br /></li>
+<li><a id="org5169712"></a>Multiplexing factors<br /></li>
+<li><a id="org1178e26"></a>Fitting resolution<br /></li>
+<li><a id="org6ed1e9b"></a>Number of output segments<br /></li>
+</ul>
+</div>
+<div id="outline-container-orgd5ce02c" class="outline-4">
+<h4 id="orgd5ce02c">Runtime Options</h4>
+<div class="outline-text-4" id="text-orgd5ce02c">
+</div>
+<ul class="org-ul">
+<li><a id="org4748822"></a>Layer threshold<br /></li>
+<li><a id="orgbca82a2"></a>Pattern enables<br /></li>
 </ul>
 </div>
 </div>
-<div id="outline-container-orgdc50630" class="outline-3">
-<h3 id="orgdc50630">Firmware</h3>
-<div class="outline-text-3" id="text-orgdc50630">
+<div id="outline-container-org846ac42" class="outline-3">
+<h3 id="org846ac42">Firmware</h3>
+<div class="outline-text-3" id="text-org846ac42">
 </div>
-<div id="outline-container-org87c2be1" class="outline-4">
-<h4 id="org87c2be1">pat_unit.vhd</h4>
+<div id="outline-container-org2009a27" class="outline-4">
+<h4 id="org2009a27">pat_unit.vhd</h4>
 </div>
-<div id="outline-container-orgd8675e6" class="outline-4">
-<h4 id="orgd8675e6">pat_unit_mux.vhd</h4>
+<div id="outline-container-org6e3f322" class="outline-4">
+<h4 id="org6e3f322">pat_unit_mux.vhd</h4>
 </div>
-<div id="outline-container-org18fea8a" class="outline-4">
-<h4 id="org18fea8a">partition.vhd</h4>
+<div id="outline-container-orge1c5f6b" class="outline-4">
+<h4 id="orge1c5f6b">partition.vhd</h4>
 </div>
-<div id="outline-container-org22ec6ab" class="outline-4">
-<h4 id="org22ec6ab">segment_selector.vhd</h4>
+<div id="outline-container-orgeb6de65" class="outline-4">
+<h4 id="orgeb6de65">segment_selector.vhd</h4>
 </div>
-<div id="outline-container-orge199d10" class="outline-4">
-<h4 id="orge199d10">fit.vhd</h4>
+<div id="outline-container-org873cbdd" class="outline-4">
+<h4 id="org873cbdd">fit.vhd</h4>
 </div>
 </div>
 </div>
-<div id="outline-container-org6d63d27" class="outline-2">
-<h2 id="org6d63d27">Testbench</h2>
-<div class="outline-text-2" id="text-org6d63d27">
+<div id="outline-container-org4f57d57" class="outline-2">
+<h2 id="org4f57d57">Testbench</h2>
+<div class="outline-text-2" id="text-org4f57d57">
 <p>
 The firmware is tested against a standalone Python emulator, using CocoTB as the
 test runner and Questasim (or modelsim, or Aldec Riviera) as the simulator.
@@ -1170,9 +1204,9 @@ test runner and Questasim (or modelsim, or Aldec Riviera) as the simulator.
 </div>
 </div>
 
-<div id="outline-container-org5019a68" class="outline-2">
-<h2 id="org5019a68">Resource Utilization</h2>
-<div class="outline-text-2" id="text-org5019a68">
+<div id="outline-container-orga5f9b82" class="outline-2">
+<h2 id="orga5f9b82">Resource Utilization</h2>
+<div class="outline-text-2" id="text-orga5f9b82">
 <table border="2" cellspacing="0" cellpadding="6" rules="groups" frame="hsides">
 
 
@@ -1209,17 +1243,17 @@ test runner and Questasim (or modelsim, or Aldec Riviera) as the simulator.
 </div>
 </div>
 
-<div id="outline-container-org2ce54bc" class="outline-2">
-<h2 id="org2ce54bc">Presentations</h2>
-<div class="outline-text-2" id="text-org2ce54bc">
+<div id="outline-container-orgc7e0fa6" class="outline-2">
+<h2 id="orgc7e0fa6">Presentations</h2>
+<div class="outline-text-2" id="text-orgc7e0fa6">
 <ul class="org-ul">
 <li><a href="https://docs.google.com/presentation/d/10K-16xrXGUYcb-aZzMEEbbvJrTAYdaBR/edit#slide=id.ga773dc3468_0_22">https://docs.google.com/presentation/d/10K-16xrXGUYcb-aZzMEEbbvJrTAYdaBR/edit#slide=id.ga773dc3468_0_22</a></li>
 </ul>
 </div>
 </div>
-<div id="outline-container-orgb865eeb" class="outline-2">
-<h2 id="orgb865eeb">Source Code</h2>
-<div class="outline-text-2" id="text-orgb865eeb">
+<div id="outline-container-org5f2bc8c" class="outline-2">
+<h2 id="org5f2bc8c">Source Code</h2>
+<div class="outline-text-2" id="text-org5f2bc8c">
 <ul class="org-ul">
 <li>Firmware: <a href="https://github.com/andrewpeck/me0sf/">https://github.com/andrewpeck/me0sf/</a></li>
 </ul>
@@ -1227,7 +1261,7 @@ test runner and Questasim (or modelsim, or Aldec Riviera) as the simulator.
 </div>
 </div>
 <div id="postamble" class="status">
-<p class="date">Created: 2022-06-09 Thu 23:41</p>
+<p class="date">Created: 2022-08-05 Fri 19:34</p>
 </div>
 </body>
 </html>
