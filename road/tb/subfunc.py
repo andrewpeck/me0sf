@@ -1,5 +1,5 @@
 # Functions, global variables, and classes used in multiple files
-from typing import List
+import math
 
 class hi_lo_t:
     def __init__(self, hi, lo):
@@ -58,13 +58,13 @@ class Segment:
         self.bend_ang = 0
         self.substrip = 0
         if self.id !=0:
-            #print(self.centroid)
-            centroids = [cent for cent in self.centroid if cent !=0]
-            #print(centroids)
-            x = [i for (i, cent) in enumerate(centroids)] #need to improve for lc<6
+            centroids = [cent-19 for cent in self.centroid]
+            x = [i-2.5 for (i, cent) in enumerate(centroids) if cent !=-19] #need to improve for lc<6?
+            centroids = [cent for cent in centroids if cent !=-19]
             fit = llse_fit(x, centroids)
             self.bend_ang = fit[0] #m
             self.substrip = fit[1] #b
+            
 
     def __eq__(self, other):
         if (self.lc == 0 and other.lc == 0):
@@ -111,87 +111,56 @@ def mirror_patdef(pat, id):
 
 
 # FIXME: take these globals out of here and bury them somewhere
+def create_pat_ly(lower, upper):
+    """takes in two boundary slopes and returns a list of hi lo pairs for each layer to use when creating patterns"""
+    layer_list = [0]*6
+    for i in range(6):
+        if i < 3:
+            hi = lower*(i-2.5)
+            lo = upper*(i-2.5)
+        else:
+            hi = upper*(i-2.5)
+            lo = lower*(i-2.5)
+
+        layer_list[i] = hi_lo_t(math.ceil(hi), math.floor(lo))
+    return layer_list
 
 # true patlist; only used for testing pat_unit.vhd emulator
-pat_straight = patdef_t(
-    15,
-    (hi_lo_t(1, -1),
-    hi_lo_t(1, -1),
-    hi_lo_t(1, -1),
-    hi_lo_t(0, 0),
-    hi_lo_t(1, -1),
-    hi_lo_t(1, -1))
-)
-pat_l = patdef_t(
-    14,
-    (hi_lo_t(-1, -4),
-    hi_lo_t(0, -3),
-    hi_lo_t(1, -1),
-    hi_lo_t(1, -1),
-    hi_lo_t(3, 0),
-    hi_lo_t(4, 1))
-)
+pat_straight = patdef_t(19, create_pat_ly(-0.4, 0.4))
+pat_l = patdef_t(18, create_pat_ly(0.2, 0.9))
 pat_r = mirror_patdef(pat_l, pat_l.id - 1)
-pat_l2 = patdef_t(
-    12,
-    (hi_lo_t(-2, -5),
-    hi_lo_t(1, -4),
-    hi_lo_t(1, -1),
-    hi_lo_t(1, -1),
-    hi_lo_t(4, 1),
-    hi_lo_t(5, 2))
-)
+pat_l2 = patdef_t(16, create_pat_ly(0.5, 1.2))
 pat_r2 = mirror_patdef(pat_l2, pat_l2.id - 1)
-pat_l3 = patdef_t(
-    10,
-    (hi_lo_t(-5, -8),
-    hi_lo_t(-4, -7),
-    hi_lo_t(0, -3),
-    hi_lo_t(2, -2),
-    hi_lo_t(7, 4),
-    hi_lo_t(8, 5))
-)
+pat_l3 = patdef_t(14, create_pat_ly(0.9, 1.7))
 pat_r3 = mirror_patdef(pat_l3, pat_l3.id - 1)
-pat_l4 = patdef_t(
-    8,
-    (hi_lo_t(-5, -8),
-    hi_lo_t(-4, -7),
-    hi_lo_t(0, -3),
-    hi_lo_t(2, -2),
-    hi_lo_t(7, 4),
-    hi_lo_t(8, 5))
-)
+pat_l4 = patdef_t(12, create_pat_ly(1.4, 2.3))
 pat_r4 = mirror_patdef(pat_l4, pat_l4.id - 1)
-pat_l5 = patdef_t(
-    6,
-    (hi_lo_t(-8, -11),
-    hi_lo_t(-5, -9),
-    hi_lo_t(0, -3),
-    hi_lo_t(3, 0),
-    hi_lo_t(9, 5),
-    hi_lo_t(11, 8))
-)
+pat_l5 = patdef_t(10, create_pat_ly(2.0, 3.0))
 pat_r5 = mirror_patdef(pat_l5, pat_l5.id - 1)
-pat_l6 = patdef_t(
-    4,
-    (hi_lo_t(-11, -15),
-    hi_lo_t(-9, -11),
-    hi_lo_t(4, -9),
-    hi_lo_t(9, 4),
-    hi_lo_t(11, 9),
-    hi_lo_t(15, 11))
-)
+pat_l6 = patdef_t(8, create_pat_ly(2.7, 3.8))
 pat_r6 = mirror_patdef(pat_l6, pat_l6.id - 1)
-pat_l7 = patdef_t(
-    2,
-    (hi_lo_t(-10, -18),
-    hi_lo_t(-6, -14),
-    hi_lo_t(2, -9),
-    hi_lo_t(9, 2),
-    hi_lo_t(14, 6),
-    hi_lo_t(18, 10))
-)
-pat_r7 = mirror_patdef(pat_l7, pat_l7.id - 1)
+pat_l7 = patdef_t(6, create_pat_ly(3.5, 4.7))
+pat_r7 = mirror_patdef(pat_l7, pat_l7.id-1)
+pat_l8 = patdef_t(4, create_pat_ly(4.3, 5.5))
+pat_r8 = mirror_patdef(pat_l8, pat_l8.id-1)
+pat_l9 = patdef_t(2, create_pat_ly(5.4, 7.0))
+pat_r9 = mirror_patdef(pat_l9, pat_l9.id - 1)
+
+# pat_straight = patdef_t(15, create_pat_ly(-0.4, 0.4))
+# pat_l = patdef_t(14, create_pat_ly(0.3, 1.1))
+# pat_r = mirror_patdef(pat_l, pat_l.id - 1)
+# pat_l2 = patdef_t(12, create_pat_ly(0.9, 1.8))
+# pat_r2 = mirror_patdef(pat_l2, pat_l2.id - 1)
+# pat_l3 = patdef_t(10, create_pat_ly(1.5, 2.5))
+# pat_r3 = mirror_patdef(pat_l3, pat_l3.id - 1)
+# pat_l4 = patdef_t(8, create_pat_ly(2.2, 3.3))
+# pat_r4 = mirror_patdef(pat_l4, pat_l4.id - 1)
+# pat_l5 = patdef_t(6, create_pat_ly(2.9, 4.4))
+# pat_r5 = mirror_patdef(pat_l5, pat_l5.id - 1)
+# pat_l6 = patdef_t(4, create_pat_ly(4.3, 5.5))
+# pat_r6 = mirror_patdef(pat_l6, pat_l6.id-1)
+# pat_l7 = patdef_t(2, create_pat_ly(5.4, 7.0))
+# pat_r7 = mirror_patdef(pat_l7, pat_l7.id - 1)
 
 PATLIST = (
     pat_straight,
@@ -209,24 +178,49 @@ PATLIST = (
     pat_r6,
     pat_l7,
     pat_r7,
+    pat_l8,
+    pat_r8,
+    pat_l9,
+    pat_r9
 )
 
+# PATLIST_LUT = {
+#     15: pat_straight,
+#     14: pat_l,
+#     13: pat_r,
+#     12: pat_l2,
+#     11: pat_r2,
+#     10: pat_l3,
+#     9: pat_r3,
+#     8: pat_l4,
+#     7: pat_r4,
+#     6: pat_l5,
+#     5: pat_r5,
+#     4: pat_l6,
+#     3: pat_r6,
+#     2: pat_l7,
+#     1: pat_r7,
 PATLIST_LUT = {
-    15: pat_straight,
-    14: pat_l,
-    13: pat_r,
-    12: pat_l2,
-    11: pat_r2,
-    10: pat_l3,
-    9: pat_r3,
-    8: pat_l4,
-    7: pat_r4,
-    6: pat_l5,
-    5: pat_r5,
-    4: pat_l6,
-    3: pat_r6,
-    2: pat_l7,
-    1: pat_r7,
+    19: pat_straight,
+    18: pat_l,
+    17: pat_r,
+    16: pat_l2,
+    15: pat_r2,
+    14: pat_l3,
+    13: pat_r3,
+    12: pat_l4,
+    11: pat_r4,
+    10: pat_l5,
+    9: pat_r5,
+    8: pat_l6,
+    7: pat_r6,
+    6: pat_l7,
+    5: pat_r7,
+    4: pat_l8,
+    3: pat_r8,
+    2: pat_l9,
+    1: pat_r9,
+
 }
 
 
