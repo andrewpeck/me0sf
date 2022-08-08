@@ -60,9 +60,11 @@ def calculate_centroids(masked_data):
 
 def calculate_layer_count(masked_data):
     """takes in a []*6 list of pre-masked data and gives the layer count"""
-    return sum(map(lambda x : x > 0, masked_data))
+    #WARNING: currently counting total hits/pattern, will cause problems with noise (skew towards patterns with lots of noise)
+    #return sum(map(lambda x : x > 0, masked_data))
+    return sum(map(count_ones, masked_data))
 
-def find_best_seg(data, strip=None, max_span=37, ly_thresh=LY_THRESH, partition=-1):
+def find_best_seg(data, strip=None, max_span=37, ly_thresh=6, partition=-1): #change ly_thresh back to LY_TRESH if doing layer count not hit count
     """
     takes in sample data for each layer and returns best segment
 
