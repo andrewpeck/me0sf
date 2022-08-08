@@ -5,11 +5,11 @@
 # TODO:  lowercase
 
 from subfunc import *
-from datadev import datadev
+from datagen import datagen
 from constants import *
 
 
-def datadev_mux(WIDTH=192, track_num=4, nhit_lo=3, nhit_hi=10, ly_t=6):
+def datagen_mux(WIDTH=192, track_num=4, nhit_lo=3, nhit_hi=10, ly_t=6):
     """takes a given chamber width and a range of hits to generate a random number of tracks for populating data throughout layers
 
     Args:
@@ -33,10 +33,10 @@ def datadev_mux(WIDTH=192, track_num=4, nhit_lo=3, nhit_hi=10, ly_t=6):
 
     # create space for 6 layers of data
     data_store = [0, 0, 0, 0, 0, 0]
-    # create tracks with datadev(); overlay hits from multiple muon tracks onto strip data
+    # create tracks with datagen(); overlay hits from multiple muon tracks onto strip data
     for _ in range(track_num):
         # vary the number of layers for each muon track
-        data = datadev(ly_t=ly_t, MAX_SPAN=WIDTH, nhit_lo=nhit_lo, nhit_hi=nhit_hi)
+        data = datagen(ly_t=ly_t, MAX_SPAN=WIDTH, nhit_lo=nhit_lo, nhit_hi=nhit_hi)
         for j in range(N_LAYERS):
             # ADD track data onto existing layer data
             data_store[j] = data_store[j] | data[j]
