@@ -4,7 +4,7 @@ import random
 import cocotb
 from cocotb.triggers import RisingEdge
 from cocotb.clock import Clock
-from datadev_mux import datadev_mux
+from datagen_mux import datagen_mux
 from subfunc import *
 from cocotb_test.simulator import run
 from chamber_beh import process_chamber
@@ -48,7 +48,7 @@ async def chamber_test(dut, group_size = 8, ghost_width = 2, discrepancy_cnt = 0
         # (3) set the DUT inputs to the new data
 
         if (i % 10 == 0):
-            chamber_data = [datadev_mux(WIDTH=width, track_num=4, nhit_hi=10, nhit_lo=3) for _ in range(8)]
+            chamber_data = [datagen_mux(WIDTH=width, track_num=4, nhit_hi=10, nhit_lo=3) for _ in range(8)]
         else:
             chamber_data = [[0]*6]*8
 

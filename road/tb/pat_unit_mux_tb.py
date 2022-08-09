@@ -3,7 +3,7 @@ import cocotb
 from cocotb.triggers import RisingEdge
 from cocotb.clock import Clock
 from cocotb_test.simulator import run
-from datadev_mux import datadev_mux
+from datagen_mux import datagen_mux
 from pat_unit_mux_beh import pat_mux
 from subfunc import *
 from cocotb_test.simulator import run
@@ -52,7 +52,7 @@ async def pat_unit_mux_test(dut, NLOOPS=1000):
         # align to the dav_i
         await RisingEdge(dut.dav_i)
 
-        ly_data = datadev_mux(width)
+        ly_data = datagen_mux(width)
         queue.append(ly_data)
 
         set_dut_inputs(dut, ly_data)
@@ -70,7 +70,7 @@ async def pat_unit_mux_test(dut, NLOOPS=1000):
         # (2) push it onto the queue
         # (3) set the DUT inputs to the new data
 
-        new_data = datadev_mux(width)
+        new_data = datagen_mux(width)
         queue.append(new_data)
 
         set_dut_inputs(dut, new_data)

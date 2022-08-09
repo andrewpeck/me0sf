@@ -2,7 +2,7 @@
 import random
 import cocotb
 from cocotb.triggers import RisingEdge
-from datadev import datadev
+from datagen import datagen
 from pat_unit_beh import find_best_seg, calculate_global_layer_mask
 from subfunc import *
 import os
@@ -36,7 +36,7 @@ async def pat_unit_test(dut):
     LATENCY = 3
     queue = []
     for _ in range(LATENCY):
-        ly_data = datadev(ly_t, MAX_SPAN)
+        ly_data = datagen(ly_t, MAX_SPAN)
         queue.append(ly_data)
         set_dut_inputs(dut, ly_data)
         await RisingEdge(dut.clock)
@@ -47,7 +47,7 @@ async def pat_unit_test(dut):
         # (2) push it onto the queue
         # (3) set the DUT inputs to the new data
 
-        new_data = datadev(ly_t, MAX_SPAN)
+        new_data = datagen(ly_t, MAX_SPAN)
 
         set_dut_inputs(dut, new_data)
         queue.append(new_data)

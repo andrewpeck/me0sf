@@ -3,7 +3,7 @@ import os
 import random
 import cocotb
 import event_display as disp
-from datadev_mux import datadev_mux
+from datagen_mux import datagen_mux
 from subfunc import *
 from cocotb_test.simulator import run
 from partition_beh import work_partition
@@ -59,7 +59,7 @@ async def partition_test(
         # (2) push it onto the queue
         # (3) set the DUT inputs to the new data
 
-        new_data = datadev_mux(WIDTH=WIDTH, track_num=4, nhit_hi=4, nhit_lo=3)
+        new_data = datagen_mux(WIDTH=WIDTH, track_num=4, nhit_hi=4, nhit_lo=3)
 
         queue.append(new_data)
 
