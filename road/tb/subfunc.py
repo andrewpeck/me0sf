@@ -54,13 +54,13 @@ class Segment:
 
         self.quality=quality
 
-    def fit(self):
+    def fit(self, max_span=37):
         self.bend_ang = 0
         self.substrip = 0
         if self.id !=0:
-            centroids = [cent-19 for cent in self.centroid]
-            x = [i-2.5 for (i, cent) in enumerate(centroids) if cent !=-19] #need to improve for lc<6?
-            centroids = [cent for cent in centroids if cent !=-19]
+            centroids = [cent-(max_span//2+1) for cent in self.centroid]
+            x = [i-2.5 for (i, cent) in enumerate(centroids) if cent !=-(max_span//2+1)] #need to improve for lc<6?
+            centroids = [cent for cent in centroids if cent !=-(max_span//2+1)]
             fit = llse_fit(x, centroids)
             self.bend_ang = fit[0] #m
             self.substrip = fit[1] #b

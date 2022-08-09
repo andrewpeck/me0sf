@@ -39,7 +39,7 @@ def test_pat_mux():
     data = [0b1, 0b1, 0b1, 0b1, 0b1, 0b1]
     mux = pat_mux(data)
     # check for expected pattern
-    assert mux[0].id == 15
+    assert mux[0].id == 19
     assert mux[0].lc == 6
     # check for lack of unexpected pattern
     assert mux[4].lc == 0
