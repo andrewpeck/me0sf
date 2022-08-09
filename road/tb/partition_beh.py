@@ -3,6 +3,7 @@ from itertools import islice
 from pat_unit_mux_beh import pat_mux
 from subfunc import *
 import numpy as np
+from pat_unit_mux_beh import parse_data
 
 def compare_ghosts(seg, comp_list):
     """takes in a segment and a list of segments to ensure that there aren't copies of the same data (ID value identical) or mirrors (ID value +2 or -2 from each other)"""
@@ -67,6 +68,24 @@ def test_cancel_edges():
     assert cancelled2[7].id == 14
     assert cancelled2[8].id == 11
 
+# def determine_if_centroid(strip, width, data, layer):
+#     """for a given strip, look at surrounding strips in given width and determine if the strip is a centroid. 
+#     Round centroid up for even layers, round down for odd layers"""
+#     window = parse_data(data, strip, width+1)
+#     centroid = find_centroid(window) + strip - width//2 -1
+#     if layer%2 == 0:
+#         centroid = math.ceil(centroid)
+#     else:
+#         centroid = math.floor(centroid)
+#     if centroid == strip:
+#         return True
+#     else:
+#         return False
+
+# def process_centroids(data, layer, width=6):
+#     """takes in layer data and filters for centroids"""
+#     return sum([2**strip for strip in range(len(bin(data))-2) if determine_if_centroid(strip, width, data, layer) == True])
+
 def work_partition(partition_data, max_span=37, width=192, group_width=8, ghost_width=4, enable_gcl=True, partition=0):
 
     """
@@ -81,6 +100,7 @@ def work_partition(partition_data, max_span=37, width=192, group_width=8, ghost_
     pieces, take best segment from each piece
 
     """
+    #centroid_masked_data = [process_centroids(dat, ly) for (ly, dat) in enumerate(partition_data)] #add centroid filtering
 
     segments = pat_mux(partition_data, max_span, width, partition=partition)
     if (enable_gcl):
