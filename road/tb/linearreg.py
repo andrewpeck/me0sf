@@ -1,6 +1,6 @@
 import matplotlib.pyplot as plt
 import random
-from datadev import datadev
+from datagen import datagen
 from pat_unit_beh import process_pat
 from printly_dat import printly_dat
 from subfunc import *
@@ -119,7 +119,7 @@ def plot_my_best_fit(slope, b, x_data, y_data, y_fit):
 
 # temporary testing framework
 # for i in range(15):
-#     [ly0_x, ly1_x, ly2_x, ly3_x, ly4_x, ly5_x] = datadev()
+#     [ly0_x, ly1_x, ly2_x, ly3_x, ly4_x, ly5_x] = datagen()
 #     ly_dat = [ly0_x, ly1_x, ly2_x, ly3_x, ly4_x, ly5_x]
 #     [pat_id, ly_c] = process_pat(
 #         patlist, ly0_x, ly1_x, ly2_x, ly3_x, ly4_x, ly5_x, MAX_SPAN=37

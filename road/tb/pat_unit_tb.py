@@ -2,8 +2,8 @@
 import random
 import cocotb
 from cocotb.triggers import RisingEdge
-from datadev import datadev
-from pat_unit_beh import get_best_seg, calculate_global_layer_mask
+from datagen import datagen
+from pat_unit_beh import find_best_seg, calculate_global_layer_mask
 from subfunc import *
 import os
 from cocotb_test.simulator import run
@@ -28,26 +28,27 @@ async def pat_unit_test(dut):
     # zero the inputs
     set_dut_inputs(dut, [0] * 6)
 
-    # flush the buffer
+    # flush the pipeline
     for _ in range(10):
         await RisingEdge(dut.clock)
 
     # setup the FIFO queuing to a fixed latency
-    latency = 3
+    LATENCY = 3
     queue = []
-    for _ in range(latency):
-        ly_data = datadev(ly_t, MAX_SPAN)
+    for _ in range(LATENCY):
+        ly_data = datagen(ly_t, MAX_SPAN)
         queue.append(ly_data)
         set_dut_inputs(dut, ly_data)
         await RisingEdge(dut.clock)
 
-    for _ in range(10000):
+    for i in range(10000):
 
         # (1) generate new random data
         # (2) push it onto the queue
         # (3) set the DUT inputs to the new data
 
-        new_data = datadev(ly_t, MAX_SPAN)
+        new_data = datagen(ly_t, MAX_SPAN)
+
         set_dut_inputs(dut, new_data)
         queue.append(new_data)
 
@@ -57,7 +58,7 @@ async def pat_unit_test(dut):
         # (1) pop old data from the head of the queue
         # (2) run the emulator on the old data
         data = queue.pop(0)
-        sw_segment = get_best_seg(data=data, strip=0, max_span=MAX_SPAN)
+        sw_segment = find_best_seg(data=data, strip=0, max_span=MAX_SPAN)
         fw_segment = get_segment_from_dut(dut)
 
         # apply count threshold conditions to emulator pattern assignment
@@ -67,8 +68,9 @@ async def pat_unit_test(dut):
             sw_segment.lc = 0
 
         if sw_segment != fw_segment:
-            print("sw=%s" % sw_segment)
-            print("fw=%s" % fw_segment)
+            print(f"loop={i}")
+            print("> sw=%s" % sw_segment)
+            print("> fw=%s" % fw_segment)
 
         assert sw_segment == fw_segment
 
@@ -80,6 +82,8 @@ def test_pat_unit():
 
     vhdl_sources = [
         os.path.join(rtl_dir, "priority_encoder/hdl/priority_encoder.vhd"),
+        os.path.join(rtl_dir, "centroid_finding.vhd"),
+        os.path.join(rtl_dir, "pat_types.vhd"),
         os.path.join(rtl_dir, "pat_pkg.vhd"),
         os.path.join(rtl_dir, "patterns.vhd"),
         os.path.join(rtl_dir, "pat_unit.vhd"),

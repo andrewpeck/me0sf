@@ -1,5 +1,3 @@
-from subfunc import get_ly_mask
-
 
 def printly_dat(mask=None, data=None, MAX_SPAN=37):
     """takes in data and/or a mask and returns a visual representation of the info"""
@@ -23,7 +21,7 @@ def printly_dat(mask=None, data=None, MAX_SPAN=37):
     if mask is None and data is None:
         print("Error; need to provide values")
     for i in range(6):
-        print("ly%d " % i, end="")
+        print("ly%d " % (5-i), end="")
         for j in range(MAX_SPAN):
             if data is not None and mask is not None:
                 if iterable_data[i][j] == "1":

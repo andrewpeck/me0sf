@@ -3,7 +3,7 @@ import cocotb
 from cocotb.triggers import RisingEdge
 from cocotb.clock import Clock
 from cocotb_test.simulator import run
-from datadev_mux import datadev_mux
+from datagen_mux import datagen_mux
 from pat_unit_mux_beh import pat_mux
 from subfunc import *
 from cocotb_test.simulator import run
@@ -21,6 +21,7 @@ def set_layer_hits(dut, hits):
     dut.ly0.value = hits[0]
     dut.ly1.value = hits[1]
     dut.ly2.value = hits[2]
+
     dut.ly3.value = hits[3]
     dut.ly4.value = hits[4]
     dut.ly5.value = hits[5]
@@ -51,7 +52,7 @@ async def pat_unit_mux_test(dut, NLOOPS=1000):
         # align to the dav_i
         await RisingEdge(dut.dav_i)
 
-        ly_data = datadev_mux(width)
+        ly_data = datagen_mux(width)
         queue.append(ly_data)
 
         set_dut_inputs(dut, ly_data)
@@ -69,7 +70,7 @@ async def pat_unit_mux_test(dut, NLOOPS=1000):
         # (2) push it onto the queue
         # (3) set the DUT inputs to the new data
 
-        new_data = datadev_mux(width)
+        new_data = datagen_mux(width)
         queue.append(new_data)
 
         set_dut_inputs(dut, new_data)
@@ -100,7 +101,9 @@ def test_pat_unit_mux():
 
     vhdl_sources = [
         os.path.join(rtl_dir, "priority_encoder/hdl/priority_encoder.vhd"),
+        os.path.join(rtl_dir, "pat_types.vhd"),
         os.path.join(rtl_dir, "pat_pkg.vhd"),
+        os.path.join(rtl_dir, "centroid_finding.vhd"),
         os.path.join(rtl_dir, "patterns.vhd"),
         os.path.join(rtl_dir, "pat_unit.vhd"),
         os.path.join(rtl_dir, "dav_to_phase.vhd"),

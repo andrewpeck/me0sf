@@ -10,6 +10,7 @@
 --
 -------------------------------------------------------------------------------
 
+use work.pat_types.all;
 use work.pat_pkg.all;
 use work.patterns.all;
 use work.priority_encoder_pkg.all;
@@ -25,14 +26,26 @@ entity chamber is
     NUM_PARTITIONS : integer := 8;
     NUM_SEGMENTS   : integer := 4;
     S0_WIDTH       : natural := 16;
-    S1_REUSE       : natural := 4       -- 1, 2, or 4
+    S1_REUSE       : natural := 4;      -- 1, 2, or 4
+
+    SELECTOR_LATENCY : natural := 4;
+
+    PATLIST   : patdef_array_t := patdef_array;
+    THRESHOLD : natural        := CNT_THRESH;
+
+    LY0_SPAN : natural := get_max_span(patdef_array);
+    LY1_SPAN : natural := get_max_span(patdef_array);  -- TODO: variably size the other layers instead of using the max
+    LY2_SPAN : natural := get_max_span(patdef_array);  -- TODO: variably size the other layers instead of using the max
+    LY3_SPAN : natural := get_max_span(patdef_array);  -- TODO: variably size the other layers instead of using the max
+    LY4_SPAN : natural := get_max_span(patdef_array);  -- TODO: variably size the other layers instead of using the max
+    LY5_SPAN : natural := get_max_span(patdef_array)  -- TODO: variably size the other layers instead of using the max
     );
   port(
-    clock   : in  std_logic;            -- MUST BE 320MHZ
-    dav_i   : in  std_logic;
-    dav_o   : out std_logic;
-    sbits_i : in  chamber_t;
-    segs_o  : out segment_list_t (NUM_SEGMENTS-1 downto 0)
+    clock      : in  std_logic;         -- MUST BE 320MHZ
+    dav_i      : in  std_logic;
+    dav_o      : out std_logic;
+    sbits_i    : in  chamber_t;
+    segments_o : out segment_list_t (NUM_SEGMENTS-1 downto 0)
     );
 end chamber;
 
@@ -66,7 +79,7 @@ architecture behavioral of chamber is
   signal segs_muxout : segs_muxout_t;
   signal segs_demux  : segs_demux_t;
 
-  signal segs_dav, segs_mux_dav    : std_logic := '0';
+  signal segs_dav, muxout_dav      : std_logic := '0';
   signal muxin_phase, muxout_phase : natural range 0 to S1_REUSE-1;
 
   -- signal pre_gcl_pats     : pat_list_t (PRT_WIDTH-1 downto 0);
@@ -108,9 +121,9 @@ begin
     signal neighbor : partition_t := (others => (others => '0'));
   begin
 
-    p0 : if (I > 0) generate
-      neighbor <= sbits_i(I-1);
-    end generate;
+    -- p0 : if (I > 0) generate
+    --   neighbor <= sbits_i(I-1);
+    -- end generate;
 
     partition_inst : entity work.partition
       generic map (
@@ -153,9 +166,21 @@ begin
   dav_to_phase_muxin_inst : entity work.dav_to_phase
     generic map (MAX => 8, DIV => 8/S1_REUSE)
     port map (clock  => clock, dav => segs_dav, phase_o => muxin_phase);
+
   dav_to_phase_muxout_inst : entity work.dav_to_phase
     generic map (MAX => 8, DIV => 8/S1_REUSE)
-    port map (clock  => clock, dav => segs_dav, phase_o => muxout_phase);  -- FIXME: this input is wrong
+    port map (clock  => clock, dav => muxout_dav, phase_o => muxout_phase);  -- FIXME: this input is wrong
+
+  dav_delay : entity work.fixed_delay
+    generic map (
+      DELAY => SELECTOR_LATENCY,
+      WIDTH => 1
+      )
+    port map (
+      clock     => clock,
+      data_i(0) => segs_dav,
+      data_o(0) => muxout_dav
+      );
 
   s1_sort : for I in 0 to NUM_SELECTORS_S0 - 1 generate
   begin
@@ -167,7 +192,6 @@ begin
     process (clock) is
     begin
       if (rising_edge(clock)) then
-        segs_mux_dav  <= segs_dav;
         segs_muxin(I) <= segs ((S1_REUSE*I+muxin_phase)*2+1)
                          & segs ((S1_REUSE*I+muxin_phase)*2);
       end if;
@@ -177,27 +201,19 @@ begin
     -- Sort
     --------------------------------------------------------------------------------
 
-    -- segs (2*S1_REUSE * I + 2*muxin_phase + 1) &
-    -- segs (2*S1_REUSE * I + 2*muxin_phase);
     segment_selector_neighbor : entity work.segment_selector
 
       generic map (
-        MODE       => "BITONIC",
-        NUM_INPUTS => CHAMBER_WIDTH_S0*2,  -- put in two partitions worth...
-
-        -- FIXME: !!! only need to put out a max of NUM_SEGMENTS...
-        -- any more are useless
-        NUM_OUTPUTS => NUM_SEGMENTS  -- put out half that number
+        MODE        => "BITONIC",
+        NUM_INPUTS  => CHAMBER_WIDTH_S0*2,  -- put in two partitions worth...
+        NUM_OUTPUTS => NUM_SEGMENTS,        -- put out half that number
+        SORTB       => PATTERN_SORTB
         )
 
       port map (
-
-        clock  => clock,
-
         -- take partition I and partition I+1 and choose the best patterns
+        clock  => clock,
         segs_i => segs_muxin(I),
-
-        -- FIXME: !!! this phase needs to be segment_selector dav_o
         segs_o => segs_muxout(I)
         );
 
@@ -215,40 +231,13 @@ begin
 
   end generate;
 
-
-  --------------------------------------------------------------------------------
-  -- Demux
-  --------------------------------------------------------------------------------
-
-  -- segs_demux (I*S1_REUSE+segs_s0_phase) <= segs_s1_muxout;
-
-  -- process (clock) is
-  -- begin
-  --   if (rising_edge(clock)) then
-  --     if (muxout_phase = 0) then
-  --       segs_demux (0) <= segs_muxout(0);
-  --       segs_demux (2) <= segs_muxout(1);
-  --       -- segs_demux (2) <= segs_muxout(1);
-  --       -- segs_demux (4) <= segs_muxout(2);
-  --       -- segs_demux (6) <= segs_muxout(3);
-  --     else
-  --       segs_demux (1) <= segs_muxout(0);
-  --       segs_demux (3) <= segs_muxout(1);
-  --       -- segs_demux (3) <= segs_muxout(1);
-  --       -- segs_demux (5) <= segs_muxout(2);
-  --       -- segs_demux (7) <= segs_muxout(3);
-  --   end if;
-  --   end if;
-  -- end process;
-
-
   --------------------------------------------------------------------------------
   -- Final canidate sorting
   --
   -- sort from 12*4 patterns down to NUM_SEGMENTS
   --------------------------------------------------------------------------------
 
-  -- FIXME: replace with priority encoder... ? the # of outputs is very small...
+  -- TODO?: replace with priority encoder... ? the # of outputs is very small...
 
   segs_s1_flat <= segs_demux(3) & segs_demux(2) & segs_demux(1) & segs_demux(0);
 
@@ -256,12 +245,13 @@ begin
     generic map (
       MODE        => "BITONIC",
       NUM_OUTPUTS => NUM_SEGMENTS,
-      NUM_INPUTS  => CHAMBER_WIDTH_S1
+      NUM_INPUTS  => CHAMBER_WIDTH_S1,
+      SORTB       => PATTERN_SORTB
       )
     port map (
       clock  => clock,
       segs_i => segs_s1_flat,
-      segs_o => segs_o
+      segs_o => segments_o
       );
 
 end behavioral;
