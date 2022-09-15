@@ -10,18 +10,26 @@ def generate_vhdl_lines(centroids):
         length = centroid_group[0]
         data = centroid_group[1]
 
-        lines.append("  if (length = %d) then" % length)
-        lines.append("    case ly%s is" % ("(0)" if length == 1 else ""))
+        lines.append("  gen_%d : if (length = %d) generate" % (length,length))
+        #lines.append("    signal index : natural;")
+        lines.append("  begin")
+        lines.append("    process (clk) is")
+        lines.append("    begin")
+        lines.append("      if (rising_edge(clk)) then")
+        lines.append("        case din%s is" % ("(0)" if length == 1 else ""))
         sep =  "\'" if length==1 else "\""
 
         for centroid in data:
             value = centroid[0]
             centroid = centroid[1]
-            lines.append(f"     when {sep}%s{sep} => index := %d;" % (bin(value)[2:].zfill(length), centroid))
+            lines.append(f"         when {sep}%s{sep} => index <= %d;" % (bin(value)[2:].zfill(length), centroid))
 
-        lines.append("     when others => index := 0;")
-        lines.append("    end case;")
-        lines.append("  end if;")
+        lines.append("         when others => index <= 0;")
+        lines.append("        end case;")
+        lines.append("      end if;")
+        lines.append("    end process;")
+        lines.append("  dout <= to_unsigned(index, NBITS);")
+        lines.append("  end generate;")
         lines.append("\n")
 
     return lines
@@ -42,16 +50,23 @@ if __name__ == "__main__":
         "use ieee.std_logic_1164.all;",
         "use ieee.std_logic_misc.all;",
         "use ieee.numeric_std.all;\n",
-        "package centroid_finding is",
-        "  function centroid (ly : std_logic_vector; length : natural) return natural ;",
-        "end package centroid_finding;\n",
-        "package body centroid_finding is\n",
-        "  function centroid (ly : std_logic_vector; length : natural) return natural is",
-        "    variable index : natural;\n",
-        "  begin\n",
+        "\n",
+        "entity centroid_finder is\n",
+        "  generic(LENGTH : integer; NBITS : integer);\n",
+        "  port(\n",
+        "    clk : in std_logic;\n",
+        "    din : in std_logic_vector(LENGTH-1 downto 0);\n",
+        "    dout : out unsigned(NBITS-1 downto 0)\n",
+        "    );\n",
+        "end centroid_finder;\n",
+        "\n",
+        "architecture behavioral of centroid_finder is\n",
+        "    signal index : natural range 0 to LENGTH;\n",
+        "\n",
+        "begin\n",
     ]
 
-    f = open("../hdl/centroid_finding.vhd", "w")
+    f = open("../hdl/centroid_finder.vhd", "w")
 
     for i in range(len(start)):
         f.write(start[i])
@@ -61,7 +76,7 @@ if __name__ == "__main__":
         f.write(vhdl_lines[j])
         f.write("\n")
 
-    f.write("  return index;\n\n")
-    f.write("  end function;\n\n")
-    f.write("end package body;\n")
+    f.write("\n")
+    f.write("\n")
+    f.write("end behavioral;\n")
     f.close()

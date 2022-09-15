@@ -5,7 +5,6 @@ use ieee.numeric_std.all;
 use ieee.math_real.all;
 
 use work.pat_pkg.all;
-use work.centroid_finding.all;
 use work.patterns.all;
 use work.priority_encoder_pkg.all;
 use work.pat_types.all;
@@ -164,11 +163,57 @@ begin
         -- pattern id
         pats(I).id <= to_unsigned(patlist(I).id, PID_BITS);
 
-        -- centroid finding
-        pats(I).hits(0) <= to_unsigned(centroid(ly0_mask, ly0_size), CENTROID_BITS);
-
       end if;
     end process;
+
+    centroid_finder_0 : entity work.centroid_finder
+      generic map (LENGTH => ly0_size, NBITS => CENTROID_BITS)
+      port map (
+        clk  => clock,
+        din  => ly0_mask,
+        dout => pats(I).hits(0)
+        );
+
+    centroid_finder_1 : entity work.centroid_finder
+      generic map (LENGTH => ly1_size, NBITS => CENTROID_BITS)
+      port map (
+        clk  => clock,
+        din  => ly1_mask,
+        dout => pats(I).hits(1)
+        );
+
+    centroid_finder_2 : entity work.centroid_finder
+      generic map (LENGTH => ly2_size, NBITS => CENTROID_BITS)
+      port map (
+        clk  => clock,
+        din  => ly2_mask,
+        dout => pats(I).hits(2)
+        );
+
+    centroid_finder_3 : entity work.centroid_finder
+      generic map (LENGTH => ly3_size, NBITS => CENTROID_BITS)
+      port map (
+        clk  => clock,
+        din  => ly3_mask,
+        dout => pats(I).hits(3)
+        );
+
+    centroid_finder_4 : entity work.centroid_finder
+      generic map (LENGTH => ly4_size, NBITS => CENTROID_BITS)
+      port map (
+        clk  => clock,
+        din  => ly4_mask,
+        dout => pats(I).hits(4)
+        );
+
+    centroid_finder_5 : entity work.centroid_finder
+      generic map (LENGTH => ly5_size, NBITS => CENTROID_BITS)
+      port map (
+        clk  => clock,
+        din  => ly5_mask,
+        dout => pats(I).hits(5)
+        );
+
   end generate;
 
   cand_to_slv : for I in 0 to NUM_PATTERNS-1 generate
