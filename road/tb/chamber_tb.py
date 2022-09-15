@@ -97,7 +97,7 @@ def test_chamber_1():
         os.path.join(rtl_dir, "bitonic_sort/poc_bitonic_sort.vhd"),
         os.path.join(rtl_dir, "bitonic_sort/bitonic_sort.vhd"),
         os.path.join(rtl_dir, "patterns.vhd"),
-        os.path.join(rtl_dir, "centroid_finding.vhd"),
+        os.path.join(rtl_dir, "centroid_finder.vhd"),
         os.path.join(rtl_dir, "segment_selector.vhd"),
         os.path.join(rtl_dir, "pat_unit.vhd"),
         os.path.join(rtl_dir, "fixed_delay.vhd"),
