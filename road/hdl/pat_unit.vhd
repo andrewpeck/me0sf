@@ -14,7 +14,6 @@ entity pat_unit is
   generic(
     VERBOSE   : boolean        := false;
     PATLIST   : patdef_array_t := patdef_array;
-    THRESHOLD : natural        := CNT_THRESH;
 
     LY0_SPAN : natural := get_max_span(patdef_array);
     LY1_SPAN : natural := get_max_span(patdef_array);  -- TODO: variably size the other layers instead of using the max
@@ -30,6 +29,8 @@ entity pat_unit is
 
     dav_i : in  std_logic;
     dav_o : out std_logic;
+
+    thresh : in  std_logic_vector (2 downto 0);
 
     ly0 : in std_logic_vector (LY0_SPAN-1 downto 0);
     ly1 : in std_logic_vector (LY1_SPAN-1 downto 0);
@@ -198,12 +199,12 @@ begin
 
   --------------------------------------------------------------------------------
   -- Put a threshold, make sure the pattern is above some minimum layer cnt
-  -- TODO: make it programmable from the outside
   --------------------------------------------------------------------------------
+
   process (clock) is
   begin
     if (rising_edge(clock)) then
-      if (best.cnt >= THRESHOLD) then
+      if (best.cnt >= to_integer(unsigned(thresh))) then
         pat_o <= best;
       else
         pat_o <= zero(pat_o);

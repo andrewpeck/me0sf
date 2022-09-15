@@ -16,7 +16,6 @@ package pat_pkg is
   --------------------------------------------------------------------------------
 
   constant S0_REGION_SIZE : positive              := 16;
-  constant CNT_THRESH     : natural               := 4;
   constant PRT_WIDTH      : positive              := 192;
   constant PAT_UNIT_MUX   : positive range 1 to 8 := 8; -- 1, 2, 4, or 8
 

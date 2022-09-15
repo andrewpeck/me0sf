@@ -20,7 +20,6 @@ entity partition is
     S0_WIDTH      : natural := 8;          -- width of the pre-sorting regions
 
     PATLIST   : patdef_array_t := patdef_array;
-    THRESHOLD : natural        := CNT_THRESH;
 
     LY0_SPAN : natural := get_max_span(patdef_array);
     LY1_SPAN : natural := get_max_span(patdef_array);  -- TODO: variably size the other layers instead of using the max
@@ -38,6 +37,8 @@ entity partition is
     clock : in  std_logic;
     dav_i : in  std_logic;
     dav_o : out std_logic;
+
+    thresh : in  std_logic_vector (2 downto 0);
 
     --------------------------------------------------------------------------------
     -- Inputs
@@ -112,6 +113,8 @@ begin
       )
     port map (
       clock => clock,
+
+      thresh => thresh,
 
       dav_i => lyor_dav,
       ly0   => lyor(0),

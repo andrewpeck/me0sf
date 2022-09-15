@@ -31,7 +31,6 @@ entity chamber is
     SELECTOR_LATENCY : natural := 4;
 
     PATLIST   : patdef_array_t := patdef_array;
-    THRESHOLD : natural        := CNT_THRESH;
 
     LY0_SPAN : natural := get_max_span(patdef_array);
     LY1_SPAN : natural := get_max_span(patdef_array);  -- TODO: variably size the other layers instead of using the max
@@ -42,6 +41,7 @@ entity chamber is
     );
   port(
     clock      : in  std_logic;         -- MUST BE 320MHZ
+    thresh     : in  std_logic_vector (2 downto 0);
     dav_i      : in  std_logic;
     dav_o      : out std_logic;
     sbits_i    : in  chamber_t;
@@ -135,6 +135,8 @@ begin
 
         clock => clock,
         dav_i => dav_i,
+
+        thresh => thresh,
 
         -- primary layer
         partition_i => sbits_i(I),

@@ -14,7 +14,6 @@ entity pat_unit_mux is
     VERBOSE    : boolean        := false;
     PATLIST    : patdef_array_t := patdef_array;
     WIDTH      : natural        := 192;
-    THRESHOLD  : natural        := CNT_THRESH;
     -- Need padding for half the width of the pattern this is to handle the edges
     -- of the chamber where some virtual chamber of all zeroes exists... to be
     -- trimmed away by the compiler during optimization
@@ -24,6 +23,9 @@ entity pat_unit_mux is
   port(
 
     clock : in  std_logic;
+
+    thresh : in  std_logic_vector (2 downto 0);
+
     dav_i : in  std_logic;
     dav_o : out std_logic;
 
@@ -146,6 +148,8 @@ begin
       port map (
 
         clock => clock,
+
+        thresh => thresh,
 
         dav_i => lyX_in_dav,
         ly0   => ly0_in,
