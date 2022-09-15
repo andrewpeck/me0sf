@@ -17,8 +17,9 @@ async def pat_unit_test(dut):
     # set the amount of layers the muon traveled through
     ly_t = 6
 
-    # get layer count threshold from firmware
-    cnt_thresh = dut.THRESHOLD.value
+    # set layer count threshold
+    cnt_thresh = 4
+    dut.thresh.value = 4
 
     # set MAX_SPAN from firmware
     MAX_SPAN = get_max_span_from_dut(dut)

@@ -11,8 +11,9 @@ def setup(dut):
 
     calculate_global_layer_mask(get_patlist_from_dut(dut))
 
-    global LY_THRESH
-    LY_THRESH = dut.THRESHOLD.value
+    # set layer count threshold
+    cnt_thresh = 4
+    dut.thresh.value = 4
 
     # start the clock
     c = Clock(dut.clock, 12, "ns")
