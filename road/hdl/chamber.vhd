@@ -175,7 +175,7 @@ begin
     generic map (MAX => 8, DIV => 8/S1_REUSE)
     port map (clock  => clock, dav => muxout_dav, phase_o => muxout_phase);  -- FIXME: this input is wrong
 
-  dav_delay : entity work.fixed_delay
+  dav_delay : entity work.fixed_delay_sf
     generic map (
       DELAY => SELECTOR_LATENCY,
       WIDTH => 1

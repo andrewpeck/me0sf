@@ -188,7 +188,7 @@ begin
   -- Latency Data Valid
   --------------------------------------------------------------------------------
 
-  dav_delay: entity work.fixed_delay
+  dav_delay: entity work.fixed_delay_sf
     generic map (
       DELAY => LATENCY,
       WIDTH => 1
