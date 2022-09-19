@@ -147,7 +147,7 @@ begin
         neighbor_i => neighbor,
 
         -- output patterns
-        dav_o      => segs_dav,
+        dav_o      => segs_dav(I),
         segments_o => segs(I)
 
         -- x-partition ghost cancellation
