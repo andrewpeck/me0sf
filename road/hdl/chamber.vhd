@@ -79,7 +79,9 @@ architecture behavioral of chamber is
   signal segs_muxout : segs_muxout_t;
   signal segs_demux  : segs_demux_t;
 
-  signal segs_dav, muxout_dav      : std_logic := '0';
+  signal segs_dav   : std_logic_vector (NUM_PARTITIONS-1 downto 0);
+  signal muxout_dav : std_logic := '0';
+
   signal muxin_phase, muxout_phase : natural range 0 to S1_REUSE-1;
 
   -- signal pre_gcl_pats     : pat_list_t (PRT_WIDTH-1 downto 0);
@@ -167,7 +169,7 @@ begin
 
   dav_to_phase_muxin_inst : entity work.dav_to_phase
     generic map (MAX => 8, DIV => 8/S1_REUSE)
-    port map (clock  => clock, dav => segs_dav, phase_o => muxin_phase);
+    port map (clock  => clock, dav => segs_dav(0), phase_o => muxin_phase);
 
   dav_to_phase_muxout_inst : entity work.dav_to_phase
     generic map (MAX => 8, DIV => 8/S1_REUSE)
@@ -180,7 +182,7 @@ begin
       )
     port map (
       clock     => clock,
-      data_i(0) => segs_dav,
+      data_i(0) => segs_dav(0),
       data_o(0) => muxout_dav
       );
 
