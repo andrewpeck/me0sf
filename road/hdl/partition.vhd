@@ -43,11 +43,8 @@ entity partition is
     --------------------------------------------------------------------------------
     -- Inputs
     --------------------------------------------------------------------------------
-    --
-    -- take in all hits from the partition and from its neighbor data from
-    -- partition n and n+1 is combined to do cross-partition pattern finding
+
     partition_i : in partition_t;
-    neighbor_i  : in partition_t;
 
     --------------------------------------------------------------------------------
     -- outputs
@@ -60,42 +57,11 @@ end partition;
 
 architecture behavioral of partition is
 
-  -- (partially) or together this partition and its minus neighbor only need the
-  -- minus neighbor since we are only interested in things pointing from the IP
-  signal lyor     : partition_t;
-  signal lyor_dav : std_logic := '0';
-
-  --
   signal strips     : segment_list_t (PRT_WIDTH-1 downto 0);
   signal strips_dav : std_logic := '0';
-
-  signal strips_s0 : segment_list_t (PRT_WIDTH/S0_WIDTH-1 downto 0);
+  signal strips_s0  : segment_list_t (PRT_WIDTH/S0_WIDTH-1 downto 0);
 
 begin
-
-  --------------------------------------------------------------------------------
-  -- Neighbor Partition OR
-  --
-  -- details to come....
-  --------------------------------------------------------------------------------
-
-  process (clock) is
-  begin
-    if (rising_edge(clock)) then
-      -- FIXME: this should be parameterized, and depend on the station matters
-      -- which layer and the orientation of chambers wrt the ip or something
-      -- like that but this stupid approach is ok for now
-
-      lyor_dav <= dav_i;
-
-      lyor(5) <= partition_i(5);
-      lyor(4) <= partition_i(4);
-      lyor(3) <= partition_i(3);
-      lyor(2) <= partition_i(2) or neighbor_i(2);
-      lyor(1) <= partition_i(1) or neighbor_i(1);
-      lyor(0) <= partition_i(0) or neighbor_i(0);
-    end if;
-  end process;
 
   --------------------------------------------------------------------------------
   -- Pattern Unit Mux
@@ -116,13 +82,13 @@ begin
 
       thresh => thresh,
 
-      dav_i => lyor_dav,
-      ly0   => lyor(0),
-      ly1   => lyor(1),
-      ly2   => lyor(2),
-      ly3   => lyor(3),
-      ly4   => lyor(4),
-      ly5   => lyor(5),
+      dav_i => dav_i,
+      ly0   => partition_i(0),
+      ly1   => partition_i(1),
+      ly2   => partition_i(2),
+      ly3   => partition_i(3),
+      ly4   => partition_i(4),
+      ly5   => partition_i(5),
 
       dav_o      => strips_dav,
       segments_o => strips

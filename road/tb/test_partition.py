@@ -24,10 +24,6 @@ async def partition_test(
     # set MAX_SPAN from firmware
     MAX_SPAN = get_max_span_from_dut(dut)
 
-    for i in range(6):
-        dut.partition_i[i].value = 0
-        dut.neighbor_i[i].value = 0
-
     for i in range(4):
         await RisingEdge(dut.dav_i)
 

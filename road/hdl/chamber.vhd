@@ -22,6 +22,8 @@ use ieee.numeric_std.all;
 
 entity chamber is
   generic (
+    EN_NON_POINTING : boolean := false;
+
     FINAL_BITONIC  : boolean := true;
     NUM_PARTITIONS : integer := 8;
     NUM_SEGMENTS   : integer := 4;
@@ -30,7 +32,7 @@ entity chamber is
 
     SELECTOR_LATENCY : natural := 4;
 
-    PATLIST   : patdef_array_t := patdef_array;
+    PATLIST : patdef_array_t := patdef_array;
 
     LY0_SPAN : natural := get_max_span(patdef_array);
     LY1_SPAN : natural := get_max_span(patdef_array);  -- TODO: variably size the other layers instead of using the max
@@ -120,12 +122,44 @@ begin
   -- pre_gcl_pats_i_n (7) <= (others => null_pattern);
 
   partition_gen : for I in 0 to NUM_PARTITIONS-1 generate
-    signal neighbor : partition_t := (others => (others => '0'));
+    signal partition_or : partition_t;
   begin
 
-    -- p0 : if (I > 0) generate
-    --   neighbor <= sbits_i(I-1);
-    -- end generate;
+    single_partitions : if (NUM_PARTITIONS <= 8) generate
+      partition_or <= sbits_i(I);
+    end generate;
+
+    half_partitions : if (NUM_PARTITIONS > 8) generate
+
+      even_gen : if (I mod 2 = 0) generate
+        partition_or <= sbits_i(I);
+      end generate;
+
+      -- look for only straight and pointing segments
+      -- (for cms)
+      pointing : if (not EN_NON_POINTING) generate
+        odd_gen : if (I mod 2 = 1) generate
+          partition_or(5) <= sbits_i(I)(5);
+          partition_or(4) <= sbits_i(I)(4);
+          partition_or(3) <= sbits_i(I)(3);
+          partition_or(2) <= sbits_i(I)(2) or sbits_i(I-1)(2);
+          partition_or(1) <= sbits_i(I)(1) or sbits_i(I-1)(1);
+          partition_or(0) <= sbits_i(I)(0) or sbits_i(I-1)(0);
+        end generate;
+      end generate;
+
+      -- look for both x-partition segments toward the IP and away
+      -- (for cosmic test stand)
+      non_pointing : if (EN_NON_POINTING) generate
+        partition_or(5) <= sbits_i(I)(5);
+        partition_or(4) <= sbits_i(I)(4);
+        partition_or(3) <= sbits_i(I)(3);
+        partition_or(2) <= sbits_i(I)(2) or sbits_i(I-1)(2) or sbits_i(I+1)(2);
+        partition_or(1) <= sbits_i(I)(1) or sbits_i(I-1)(1) or sbits_i(I+1)(1);
+        partition_or(0) <= sbits_i(I)(0) or sbits_i(I-1)(0) or sbits_i(I+1)(0);
+      end generate;
+
+    end generate;
 
     partition_inst : entity work.partition
       generic map (
@@ -141,10 +175,7 @@ begin
         thresh => thresh,
 
         -- primary layer
-        partition_i => sbits_i(I),
-
-        -- neighbor layer
-        neighbor_i => neighbor,
+        partition_i => partition_or,
 
         -- output patterns
         dav_o      => segs_dav(I),
