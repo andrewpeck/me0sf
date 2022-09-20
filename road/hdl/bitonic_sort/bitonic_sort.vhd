@@ -21,7 +21,7 @@ entity bitonic_sort is
     INPUTS  : positive := 32;           -- input  count
     OUTPUTS : positive := 32;           -- output count
 
-    SORTER : string  := "POC"; -- POC or KAWAZOME
+    SORTER : string  := "KAWAZOME"; -- POC or KAWAZOME
 
     KEY_BITS             : positive := 32;    -- the first KEY_BITS of In_Data are used as a sorting critera (key)
     DATA_BITS            : positive := 32;    -- inclusive KEY_BITS

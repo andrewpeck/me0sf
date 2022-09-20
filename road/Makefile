@@ -1,4 +1,4 @@
-.PHONY : build poc road
+.PHONY : build sort road
 
 QUESTA =
 
@@ -23,8 +23,9 @@ endif
 
 build: chamber_tb
 
-BITONIC_SRCS = 	hdl/bitonic_sort/poc_bitonic_sort_pkg.vhd \
-		 						hdl/bitonic_sort/poc_bitonic_sort.vhd \
+BITONIC_SRCS = 	hdl/bitonic_sort/kawazome/bitonic_merge.vhd \
+								hdl/bitonic_sort/kawazome/bitonic_exchange.vhd \
+								hdl/bitonic_sort/kawazome/bitonic_sorter.vhd \
 	  						hdl/bitonic_sort/bitonic_sort.vhd
 
 PRIORITY_SRCS  = hdl/priority_encoder/hdl/priority_encoder.vhd \
