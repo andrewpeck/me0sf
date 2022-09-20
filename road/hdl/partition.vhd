@@ -11,7 +11,7 @@ use work.priority_encoder_pkg.all;
 entity partition is
   generic(
 
-    LATENCY : integer := 7;
+    LATENCY : integer := 8;
 
     NUM_SEGMENTS  : integer := 4;
     PARTITION_NUM : integer := 0;          -- just assign a number (e.g. 0-7) to each
@@ -123,7 +123,7 @@ begin
         DAT_BITS   => best'length,
         QLT_BITS   => PATTERN_SORTB,
         WIDTH      => S0_WIDTH,
-        REG_INPUT  => false,
+        REG_INPUT  => true,
         REG_OUTPUT => true,
         REG_STAGES => 3
         )
