@@ -226,7 +226,7 @@ begin
       WIDTH      => NUM_PATTERNS,
       REG_INPUT  => true,
       REG_OUTPUT => true,
-      REG_STAGES => 0,
+      REG_STAGES => 2,
       DAT_BITS   => best_slv'length,
       QLT_BITS   => CNT_BITS+PID_BITS,
       ADR_BITS_o => integer(ceil(log2(real(NUM_PATTERNS))))
