@@ -1,14 +1,53 @@
 #!/usr/bin/env python3
-# import uproot
+from read_ntuple import *
+import uproot
+import ROOT
+import matplotlib.pyplot as plt
+import numpy as np
 import event_display as disp
 from subfunc import *
 from chamber_beh import process_chamber
-import matplotlib.pyplot as plt
 from datagen import datagen_with_segs
-import numpy as np
 import random
 import boost_histogram as bh
-import ROOT
+import sys
+
+
+# read in the data
+file_path = "/home/uclame0teststand/Documents/Segment_Finder/offline_results/MuonGun_MuonGE0Segments_1.root"
+root_dat = read_ntuple(file_path)
+
+# extract useful data and turn them into np array
+region = root_dat["me0_rec_hit_region"].array(library="np")
+chamber = root_dat["me0_rec_hit_chamber"].array(library="np")
+eta_partition = root_dat["me0_rec_hit_eta_partition"].array(library="np") - 1
+layer = root_dat["me0_rec_hit_layer"].array(library="np") - 1
+sbit = np.floor((root_dat["me0_rec_hit_strip"].array(library="np")) / 2.0)
+
+# loop every event 
+for event in range(len(region)):
+
+    # initialize the dat_list that will be used as input of emulator
+    # 36 * 8 * 2 * [6, 2]
+    dat_list = np.array([[[[0 for i in range(6)], [(0, 0)]] for j in range(8)] for k in range(36)], dtype = object)
+
+    # loop every hit inside an event
+    for hit in range(len(region[event])):
+        if region[event, hit] == 1:
+            chamb_idx = 17 + chamber[event, hit]
+        else:
+            chamb_idx = chamber[event, hit]
+        part_idx = eta_partition[event, hit]
+        layer_idx = layer[event, hit]
+        sbit_idx = sbit[event, hit]
+        # insert the hit
+        dat_list[chamb_idx, part_idx, 0, layer_idx] = (dat_list[chamb_idx, part_idx, 0, layer_idx]) | (1 << sbit_idx)
+
+        print(dat_list)
+        break
+    break
+sys.exit()
+
 # with uproot.open("MuonGE0Segments2.root:ge0/segments") as segments:
 #     print(segments.keys())
 
