@@ -3,7 +3,7 @@ import uproot
 def read_ntuple(file_path):
     with uproot.open(file_path + ":ge0/segments") as segments:
         
-        print("read all: ", segments.keys())
+        #print("read all: ", segments.keys())
 
         events = segments.arrays(
             [   ############# sim ##############
