@@ -26,10 +26,10 @@ def compare_ghosts(seg, comp_list):
     return seg
 
 def test_compare_ghosts():
-    seg_list = [Segment(6, 15), Segment(6, 12), Segment(6,5)]
-    seg1 = Segment(6, 15)
-    seg2 = Segment(6, 10)
-    seg3 = Segment(6, 7)
+    seg_list = [Segment(6, 6, 15), Segment(6, 6, 12), Segment(6, 6,5)]
+    seg1 = Segment(6, 6, 15)
+    seg2 = Segment(6, 6, 10)
+    seg3 = Segment(6, 6, 7)
     #check for reset with copy, ID+2, ID-2
     assert compare_ghosts(seg1, seg_list).id == 15
     assert compare_ghosts(seg2, seg_list).id == 10
@@ -49,7 +49,7 @@ def cancel_edges(pat_mux_dat, group_width=8, ghost_width=4, width=192):
 def test_cancel_edges():
     seg_list1 = []
     for i in range(24):
-        seg_list1.append(Segment(6, 15)) 
+        seg_list1.append(Segment(6, 6, 15)) 
     cancelled1 = cancel_edges(seg_list1, 8, 4, 24)
     #check first edge is cancelled correctly
     assert cancelled1[6].id == 15

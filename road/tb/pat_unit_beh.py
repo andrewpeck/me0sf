@@ -56,15 +56,22 @@ def mask_layer_data (data, mask):
 def calculate_centroids(masked_data):
     # print(masked_data)
     """takes in a []*6 list of pre-masked data and gives the found centroids"""
+    #print (masked_data)
     return tuple(map(find_centroid, masked_data))
 
-def calculate_layer_count(masked_data):
+def calculate_hit_count(masked_data):
     """takes in a []*6 list of pre-masked data and gives the layer count"""
     #WARNING: currently counting total hits/pattern, will cause problems with noise (skew towards patterns with lots of noise)
     #return sum(map(lambda x : x > 0, masked_data))
     return sum(map(count_ones, masked_data))
 
-def find_best_seg(data, strip=None, max_span=37, ly_thresh=6, partition=-1): #change ly_thresh back to LY_TRESH if doing layer count not hit count
+def calculate_layer_count(masked_data):
+    """takes in a []*6 list of pre-masked data and gives the layer count"""
+    #WARNING: currently counting total hits/pattern, will cause problems with noise (skew towards patterns with lots of noise)
+    return sum(map(lambda x : x > 0, masked_data))
+    #return sum(map(count_ones, masked_data))
+
+def find_best_seg(data, strip=None, max_span=37, hit_thresh=4, ly_thresh=4, partition=-1): #change ly_thresh back to LY_TRESH if doing layer count not hit count
     """
     takes in sample data for each layer and returns best segment
 
@@ -78,7 +85,7 @@ def find_best_seg(data, strip=None, max_span=37, ly_thresh=6, partition=-1): #ch
     (6) choose the max of all patterns
     (7) apply a layer threshold
     """
-
+    #print (data)
     # and the layer data with the respective layer mask to
     # determine how many hits are in each layer
     # this yields a map object that can be iterated over to get,
@@ -87,7 +94,7 @@ def find_best_seg(data, strip=None, max_span=37, ly_thresh=6, partition=-1): #ch
     masked_data = tuple(map(lambda mask : mask_layer_data(mask.mask, data), LAYER_MASK))
 
     # (3) count # of hits
-
+    hits = tuple(map(lambda pattern_data : calculate_hit_count(pattern_data), masked_data))
     lycs = tuple(map(lambda pattern_data : calculate_layer_count(pattern_data), masked_data))
     pids = tuple(map(lambda mask : mask.id, LAYER_MASK))
 
@@ -95,15 +102,19 @@ def find_best_seg(data, strip=None, max_span=37, ly_thresh=6, partition=-1): #ch
     centroids = tuple(map(calculate_centroids, masked_data))
 
     # (5) process segments
-
-    seg_list = [Segment(lc, pid, strip=strip, centroid=centroid)
-                for (lc,pid,centroid) in
-                zip(lycs, pids, centroids)]
+    seg_list = [Segment(hc, lc, pid, strip=strip, centroid=centroid)
+                for (hc, lc,pid,centroid) in
+                zip(hits, lycs, pids, centroids)]
 
     # (6) choose the max of all patterns
     best = max(seg_list)
+    #print (best, best.centroid)
+    #if (strip==167 and best.quality==528784) or (strip==181 and best.quality==1257648):
+    #    print (masked_data)
 
     # (7) apply a layer threshold
+    if (best.hc < hit_thresh):
+        best.reset()
     if (best.lc < ly_thresh):
         best.reset()
 

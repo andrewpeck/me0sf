@@ -59,6 +59,7 @@ for (ievent, event) in enumerate(root_dat):
     seg_chamber_nr = []
     seg_eta_partition = []
     seg_nrechits = []
+    seg_nlayers = []
     
     # Find the bending angle
     for i in range(0, n_offline_seg):
@@ -72,6 +73,7 @@ for (ievent, event) in enumerate(root_dat):
         bot_layer_sbit = 0
         bot_layer = 9999
         eta_partition_list = []
+        nlayers_hit = [0,0,0,0,0,0]
         for index in seg_rechit_index[i]:
             sbit = rechit_sbit[index]
             layer = rechit_layer[index]
@@ -82,6 +84,7 @@ for (ievent, event) in enumerate(root_dat):
             if layer < bot_layer:
                 bot_layer = layer
                 bot_layer_sbit = sbit
+            nlayers_hit[layer] += 1
         delta_sbit = top_layer_sbit - bot_layer_sbit
         delta_layer = top_layer - bot_layer
         bending_angle = delta_sbit/delta_layer
@@ -90,6 +93,11 @@ for (ievent, event) in enumerate(root_dat):
         seg_substrip.append(substrip)
         seg_eta_partition.append(max(eta_partition_list,key=eta_partition_list.count))
         seg_nrechits.append(len(seg_rechit_index[i]))
+        nlayers = 0
+        for l in nlayers_hit:
+            if l > 0:
+                nlayers += 1
+        seg_nlayers.append(nlayers)
 
     # initialize the dat_list that will be used as input of emulator
     # 36 * 8 * 2 * [6, 2]
@@ -112,6 +120,7 @@ for (ievent, event) in enumerate(root_dat):
     online_segment_chamber = {}
     for (chamber_nr, dat_w_segs) in enumerate(datlist):
         
+        #print ("  Chamber %d"%chamber_nr)
         seg_m_b = [dat[1] for dat in dat_w_segs]
         data = [dat[0] for dat in dat_w_segs] 
         non_zero_data = 0
@@ -124,23 +133,28 @@ for (ievent, event) in enumerate(root_dat):
                 break
         if not non_zero_data:
             continue
+        #print (data)
 
         seglist = process_chamber(data, ghost_width=10, num_outputs=10)
         seglist_final = []
+        #print (seglist)
         for seg in seglist:
+            #print (seg)
             seg.fit()
+            #seg.substrip = 0
+            #seg.bend_ang = 0
             if seg.id != 0:
                 seglist_final.append(seg)
-            #    print ("  Online Segment in Chamber (0-17 for region -1, 18-35 for region 1) %d: "%chamber_nr)
-            #    print ("    Eta Partition = %d, Center Strip = %.4f, Bending angle = %.4f, ID = %d, Layer count = %d, Quality = %d"%(seg.partition, seg.substrip+seg.strip, seg.bend_ang, seg.id, seg.lc, seg.quality))
-            #    print ("")
+                #print ("  Online Segment in Chamber (0-17 for region -1, 18-35 for region 1) %d: "%chamber_nr)
+                #print ("    Eta Partition = %d, Center Strip = %.4f, Bending angle = %.4f, ID = %d, Hit count = %d, Layer count = %d, Quality = %d"%(seg.partition, seg.substrip+seg.strip, seg.bend_ang, seg.id, seg.hc, seg.lc, seg.quality))
+                #print ("")
         online_segment_chamber[chamber_nr] = seglist_final
 
         #for i in range(0, n_offline_seg):
         #    if seg_chamber_nr[i] != chamber_nr:
         #        continue
         #    print ("  Offline Segment in Chamber (0-17 for region -1, 18-35 for region 1) %d: "%chamber_nr)
-        #    print ("     Eta Partition = %d, Center Strip = %.4f, Bending angle = %.4f, Hit count = %d"%(seg_eta_partition[i], seg_substrip[i], seg_bending_angle[i], seg_nrechits[i]))
+        #    print ("     Eta Partition = %d, Center Strip = %.4f, Bending angle = %.4f, Hit count = %d, Layer_count = %d"%(seg_eta_partition[i], seg_substrip[i], seg_bending_angle[i], seg_nrechits[i], seg_nlayers[i]))
         #    print ("")
 
     # Checking efficiency w.r.t offline segments
@@ -160,12 +174,17 @@ for (ievent, event) in enumerate(root_dat):
             online_substrip = seg.substrip+seg.strip
             online_bending_angle = seg.bend_ang
             if online_eta_partition == offline_eta_partition:
-                if abs(online_substrip - offline_substrip) <= 0.75: # match criteria
-                    offline_effi_passed.Fill(offline_bending_angle)
-                    n_offline_effi_passed += 1
-                    offline_effi_mres.Fill(offline_bending_angle - online_bending_angle)
-                    offline_effi_sres.Fill(offline_substrip - online_substrip)
-                    break
+                if online_bending_angle == 0:
+                    bending_angle_err = offline_bending_angle
+                else:
+                    bending_angle_err = abs((offline_bending_angle - online_bending_angle)/online_bending_angle)
+                if abs(online_substrip - offline_substrip) <= 5: # match criteria for strip
+                    if bending_angle_err < 0.4 or abs(online_bending_angle - offline_bending_angle) <= 0.6: # match criteria for bending angle
+                        offline_effi_passed.Fill(offline_bending_angle)
+                        n_offline_effi_passed += 1
+                        offline_effi_mres.Fill(offline_bending_angle - online_bending_angle)
+                        offline_effi_sres.Fill(offline_substrip - online_substrip)
+                        break
 
 print ("")
 

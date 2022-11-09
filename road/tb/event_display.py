@@ -115,7 +115,8 @@ if __name__ == '__main__':
     random.seed(56)
 
     MAX_SPAN = 37
-    hits = datagen(MAX_SPAN=MAX_SPAN)
+    #hits = datagen(MAX_SPAN=MAX_SPAN)
+    hits = [83751862272, 12884901888, 42949672960, 77309411328, 8589934592, 8589934592]
     segment = find_best_seg(hits, max_span=MAX_SPAN)
     strip = MAX_SPAN // 2
 
