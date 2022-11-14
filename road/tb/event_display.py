@@ -116,8 +116,9 @@ if __name__ == '__main__':
 
     MAX_SPAN = 37
     #hits = datagen(MAX_SPAN=MAX_SPAN)
-    hits = [83751862272, 12884901888, 42949672960, 77309411328, 8589934592, 8589934592]
+    hits = [2113536, 1085440, 2445312, 1183744, 5308416, 4194368]
     segment = find_best_seg(hits, max_span=MAX_SPAN)
+    print (segment)
     strip = MAX_SPAN // 2
 
     pats = [[PATLIST_LUT[segment.id], 18]]
