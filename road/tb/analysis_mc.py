@@ -20,6 +20,7 @@ if __name__ == "__main__":
     parser.add_argument("-f", "--file_path", action="store", dest="file_path", help="file_path = the .root file path to be read")
     parser.add_argument("-t", "--hits", action="store", dest="hits", default="digi", help="hits = digi or rec")
     parser.add_argument("-b", "--bx", action="store", dest="bx", default="all", help="bx = all or nr. of BXs to consider")
+    parser.add_argument("-v", "--verbose", action="store_true", dest="verbose", help="whether to print all track segment matching info")
     args = parser.parse_args()
 
     # read in the data
@@ -43,8 +44,12 @@ if __name__ == "__main__":
         else:
             bx_list = list(range(-(math.floor(n_bx/2)), math.floor(n_bx/2)+1))
 
+    # Output text file
+    file_out = open("output_log_%s_bx%s.txt"%(args.hits, args.bx), "w")
+
     # Nr. of segments per chamber per event
-    num_seg_per_chamber = ROOT.TH1D("num_seg_per_chamber","Fraction of BXs vs Number of Segments per Chamber",13,-0.5,12.5)
+    num_seg_per_chamber = ROOT.TH1D("num_seg_per_chamber","Fraction of Events vs Number of Segments per Chamber",13,-0.5,12.5)
+    num_seg_per_chamber_offline = ROOT.TH1D("num_seg_per_chamber_offline","Fraction of Events vs Number of Segments per Chamber",13,-0.5,12.5)
 
     # defining histograms for offline vs online
     offline_effi_passed = ROOT.TH1F("offline_effi_pass", "offline_effi_pass",14, -7., 7.)
@@ -82,8 +87,9 @@ if __name__ == "__main__":
         if (frac_done - prev_frac_done) >= 0.05:
             print ("%.2f"%(frac_done*100) + "% Events Done")
             prev_frac_done = frac_done
-        #print ("Event number = %d"%ievent)
-    
+        if args.verbose:
+            file_out.write("Event number = %d\n"%ievent)
+
         # read simhit info
         simhit_region = event["me0_sim_hit_region"]
         simhit_chamber = event["me0_sim_hit_chamber"] - 1
@@ -262,6 +268,7 @@ if __name__ == "__main__":
         online_segment_chamber = {}
         for (chamber_nr, dat_w_segs) in enumerate(datlist):
             
+            online_segment_chamber[chamber_nr] = []
             #print ("  Chamber %d"%chamber_nr)
             seg_m_b = [dat[1] for dat in dat_w_segs]
             data = [dat[0] for dat in dat_w_segs] 
@@ -287,11 +294,11 @@ if __name__ == "__main__":
                 #seg.bend_ang = 0
                 if seg.id != 0:
                     seglist_final.append(seg)
-                    #print ("  Online Segment in Chamber (0-17 for region -1, 18-35 for region 1) %d: "%chamber_nr)
-                    #print ("    Eta Partition = %d, Center Strip = %.4f, Bending angle = %.4f, ID = %d, Hit count = %d, Layer count = %d, Quality = %d"%(seg.partition, seg.substrip+seg.strip, seg.bend_ang, seg.id, seg.hc, seg.lc, seg.quality))
-                    #print ("")
+                    if args.verbose:
+                        file_out.write("  Online Segment in Chamber (0-17 for region -1, 18-35 for region 1) %d\n: "%chamber_nr)
+                        file_out.write("    Eta Partition = %d, Center Strip = %.4f, Bending angle = %.4f, ID = %d, Hit count = %d, Layer count = %d, Quality = %d\n"%(seg.partition, seg.substrip+seg.strip, seg.bend_ang, seg.id, seg.hc, seg.lc, seg.quality))
+                        file_out.write("\n")
             online_segment_chamber[chamber_nr] = seglist_final
-            num_seg_per_chamber.Fill(len(seglist_final))
 
             #for i in range(0, n_offline_seg):
             #    if seg_chamber_nr[i] != chamber_nr:
@@ -306,6 +313,17 @@ if __name__ == "__main__":
             #    print ("  Sim Track in Chamber (0-17 for region -1, 18-35 for region 1) %d: "%chamber_nr)
             #    print ("     Eta Partition = %d, Center Strip = %.4f, Bending angle = %.4f, Hit count = %d, Layer_count = %d, pT = %.4f"%(track_eta_partition[i], track_substrip[i], track_bending_angle[i], track_nhits[i], track_nlayers[i], track_pt[i]))
             #    print ("")
+
+        for chamber_nr in online_segment_chamber:
+            num_seg_per_chamber.Fill(len(online_segment_chamber[chamber_nr]))
+
+        for r in [-1,1]:
+            for c in range(0,18):
+                n_seg_chamber = 0
+                for i in range(0, n_offline_seg):
+                    if r==seg_region[i] and c==seg_chamber[i]:
+                        n_seg_chamber += 1
+                num_seg_per_chamber_offline.Fill(n_seg_chamber)
 
         #print ("  Offline - Online Segment Matching: ")
         unmatched_offline_index = []
@@ -323,6 +341,7 @@ if __name__ == "__main__":
             seg_match = 0
             seg_matched_index = []
             if (len(online_segment_chamber[offline_chamber]) == 0):
+
                 unmatched_offline_index.append(i)
                 continue
 
@@ -361,7 +380,8 @@ if __name__ == "__main__":
         #    print ("    Chamber = %d: , Eta Partition = %d, Center Strip = %.4f, Bending angle = %.4f, Hit count = %d, Layer_count = %d"%(seg_chamber_nr[i], seg_eta_partition[i], seg_substrip[i], seg_bending_angle[i], seg_nrechits[i], seg_nlayers[i]))
         #print ("\n")
 
-        #print ("  SimTrack - Online Segment Matching: ")
+        if args.verbose:
+            file_out.write("  SimTrack - Online Segment Matching: \n")
         unmatched_st_index = []
         # Checking efficiency w.r.t sim tracks
         for i in range(0, n_me0_track):
@@ -408,17 +428,19 @@ if __name__ == "__main__":
                         st_effi_sres.Fill(st_substrip - online_substrip)
                         track_match = 1
                         track_matched_index.append(j)
-                        #print ("    Sim Track: Chamber = %d: , Eta Partition = %d, Center Strip = %.4f, Bending angle = %.4f, Hit count = %d, Layer_count = %d, pT = %.4f"%(st_chamber, st_eta_partition, st_substrip, st_bending_angle, st_nrechits, st_nlayers, st_pt))
-                        #print ("    Online segment: Chamber = %d: , Eta Partition = %d, Center Strip = %.4f, Bending angle = %.4f, ID = %d, Hit count = %d, Layer count = %d, Quality = %d"%(st_chamber, online_eta_partition, online_substrip, online_bending_angle, online_id, online_hc, online_lc, online_quality))
-                        #print ("")
+                        if args.verbose:
+                            file_out.write("    Sim Track: Chamber = %d: , Eta Partition = %d, Center Strip = %.4f, Bending angle = %.4f, Hit count = %d, Layer_count = %d, pT = %.4f\n"%(st_chamber, st_eta_partition, st_substrip, st_bending_angle, st_nrechits, st_nlayers, st_pt))
+                            file_out.write("    Online segment: Chamber = %d: , Eta Partition = %d, Center Strip = %.4f, Bending angle = %.4f, ID = %d, Hit count = %d, Layer count = %d, Quality = %d\n"%(st_chamber, online_eta_partition, online_substrip, online_bending_angle, online_id, online_hc, online_lc, online_quality))
+                            file_out.write("\n")
                         break
             if track_match == 0:
                 unmatched_st_index.append(i)
             
-        #print ("  Sim Tracks not matched to online segments:")
-        #for i in unmatched_st_index:
-        #    print ("    Chamber = %d: , Eta Partition = %d, Center Strip = %.4f, Bending angle = %.4f, Hit count = %d, Layer_count = %d, pT = %.4f"%(track_chamber_nr[i], track_eta_partition[i], track_substrip[i], track_bending_angle[i], track_nhits[i], track_nlayers[i], track_pt[i]))
-        #print ("\n")
+        if args.verbose:
+            file_out.write("  Sim Tracks not matched to online segments:\n")
+            for i in unmatched_st_index:
+                file_out.write("    Chamber = %d: , Eta Partition = %d, Center Strip = %.4f, Bending angle = %.4f, Hit count = %d, Layer_count = %d, pT = %.4f\n"%(track_chamber_nr[i], track_eta_partition[i], track_substrip[i], track_bending_angle[i], track_nhits[i], track_nlayers[i], track_pt[i]))
+            file_out.write("\n\n")
 
         # Checking Purity w.r.t sim tracks
         for chamber in online_segment_chamber: 
@@ -426,7 +448,7 @@ if __name__ == "__main__":
                 online_eta_partition = seg.partition
                 online_substrip = seg.substrip+seg.strip
                 online_bending_angle = seg.bend_ang
-                st_purity_total_eta.Fill(st_eta_partition+1)
+                st_purity_total_eta.Fill(online_eta_partition+1)
                 st_purity_total_bending.Fill(online_bending_angle)
                 n_st_purity_total += 1
                 for i in range(0, n_me0_track):
@@ -441,7 +463,7 @@ if __name__ == "__main__":
                         #    bending_angle_err = abs((st_bending_angle - online_bending_angle)/online_bending_angle)
                         if abs(online_substrip - st_substrip) <= 5: # match criteria for strip
                             #if bending_angle_err < 0.4 or abs(online_bending_angle - st_bending_angle) <= 0.6: # match criteria for bending angle
-                            st_purity_passed_eta.Fill(st_eta_partition+1)
+                            st_purity_passed_eta.Fill(online_eta_partition+1)
                             st_purity_passed_bending.Fill(online_bending_angle)
                             n_st_purity_passed += 1
                             break
@@ -451,10 +473,16 @@ if __name__ == "__main__":
     # Overall efficiency
     offline_efficiency =  n_offline_effi_passed/n_offline_effi_total
     print ("Overall efficiency w.r.t offline segments = %.4f\n"%(offline_efficiency))
+    file_out.write("Overall efficiency w.r.t offline segments = %.4f\n\n"%(offline_efficiency))
     st_efficiency =  n_st_effi_passed/n_st_effi_total
     print ("Overall efficiency w.r.t sim tracks = %.4f\n"%(st_efficiency))
+    file_out.write("Overall efficiency w.r.t sim tracks = %.4f\n\n"%(st_efficiency))
     st_purity =  n_st_purity_passed/n_st_purity_total
     print ("Overall purity w.r.t sim tracks = %.4f\n"%(st_purity))
+    file_out.write("Overall purity w.r.t sim tracks = %.4f\n\n"%(st_purity))
+
+    plot_file = ROOT.TFile("output_plots_%s_bx%s.root"%(args.hits, args.bx), "recreate")
+    plot_file.cd()
 
     # Plotting
     c1 = ROOT.TCanvas('', '', 1000, 700)
@@ -466,6 +494,7 @@ if __name__ == "__main__":
     offline_eff.GetPaintedGraph().GetXaxis().SetLabelSize(0.04)
     ROOT.gPad.Update()
     c1.Print("offline_eff_%s_bx%s.pdf"%(args.hits, args.bx))
+    offline_eff.Write()
 
     c2 = ROOT.TCanvas('', '', 700, 700)
     offline_effi_mres.SetTitle("Bending Angle Resolution w.r.t Offline Segments")
@@ -473,6 +502,7 @@ if __name__ == "__main__":
     offline_effi_mres.Fit("gaus")
     offline_effi_mres.Draw("same")
     c2.Print("offline_effi_mres_%s_bx%s.pdf"%(args.hits, args.bx))
+    offline_effi_mres.Write()
 
     c3 = ROOT.TCanvas('', '', 700, 700)
     offline_effi_sres.SetTitle("Sbit Resolution w.r.t Offline Segments")
@@ -480,6 +510,7 @@ if __name__ == "__main__":
     offline_effi_sres.Fit("gaus")
     offline_effi_sres.Draw("same")
     c3.Print("offline_effi_sres_%s_bx%s.pdf"%(args.hits, args.bx))
+    offline_effi_sres.Write()
 
     c4 = ROOT.TCanvas('', '', 1000, 700)
     c4.DrawFrame(-8, 0, 8, 1.1, "Efficiency w.r.t. Sim Tracks; Bending Angle (sbits/layer); #epsilon")
@@ -490,6 +521,7 @@ if __name__ == "__main__":
     st_eff_bending.GetPaintedGraph().GetXaxis().SetLabelSize(0.04)
     ROOT.gPad.Update()
     c4.Print("st_eff_bending_%s_bx%s.pdf"%(args.hits, args.bx))
+    st_eff_bending.Write()
 
     c5 = ROOT.TCanvas('', '', 1000, 700)
     c5.DrawFrame(0, 0, 50, 1.1, "Efficiency w.r.t. Sim Tracks; pT (GeV); #epsilon")
@@ -500,6 +532,7 @@ if __name__ == "__main__":
     st_eff_pt.GetPaintedGraph().GetXaxis().SetLabelSize(0.04)
     ROOT.gPad.Update()
     c5.Print("st_eff_pt_%s_bx%s.pdf"%(args.hits, args.bx))
+    st_eff_pt.Write()
 
     c6 = ROOT.TCanvas('', '', 1000, 700)
     c6.DrawFrame(0, 0, 9, 1.1, "Efficiency w.r.t. Sim Tracks; #eta; #epsilon")
@@ -510,6 +543,7 @@ if __name__ == "__main__":
     st_eff_eta.GetPaintedGraph().GetXaxis().SetLabelSize(0.04)
     ROOT.gPad.Update()
     c6.Print("st_eff_eta_%s_bx%s.pdf"%(args.hits, args.bx))
+    st_eff_eta.Write()
 
     c7 = ROOT.TCanvas('', '', 700, 700)
     st_effi_mres.SetTitle("Bending Angle Resolution w.r.t Sim Tracks")
@@ -517,6 +551,7 @@ if __name__ == "__main__":
     st_effi_mres.Fit("gaus")
     st_effi_mres.Draw("same")
     c7.Print("st_effi_mres_%s_bx%s.pdf"%(args.hits, args.bx))
+    st_effi_mres.Write()
 
     c8 = ROOT.TCanvas('', '', 700, 700)
     st_effi_sres.SetTitle("Sbit Resolution w.r.t Sim Tracks")
@@ -524,6 +559,7 @@ if __name__ == "__main__":
     st_effi_sres.Fit("gaus")
     st_effi_sres.Draw("same")
     c8.Print("st_effi_sres_%s_bx%s.pdf"%(args.hits, args.bx))
+    st_effi_sres.Write()
 
     c9 = ROOT.TCanvas('', '', 1000, 700)
     c9.DrawFrame(0, 0, 9, 1.1, "Purity w.r.t. Sim Tracks; #eta; Purity")
@@ -534,6 +570,7 @@ if __name__ == "__main__":
     st_purity_eta.GetPaintedGraph().GetXaxis().SetLabelSize(0.04)
     ROOT.gPad.Update()
     c9.Print("st_purity_eta_%s_bx%s.pdf"%(args.hits, args.bx))
+    st_purity_eta.Write()
 
     c10 = ROOT.TCanvas('', '', 1000, 700)
     c10.DrawFrame(-8, 0, 8, 1.1, "Purity w.r.t. Sim Tracks; Bending Angle (sbits/layer); Purity")
@@ -544,9 +581,21 @@ if __name__ == "__main__":
     st_purity_bending.GetPaintedGraph().GetXaxis().SetLabelSize(0.04)
     ROOT.gPad.Update()
     c10.Print("st_purity_bending_%s_bx%s.pdf"%(args.hits, args.bx))
+    st_purity_bending.Write()
 
     c11 = ROOT.TCanvas('', '', 700, 700)
     c11.DrawFrame(-0.5, -0.05, 12.5, 1.05, ";Number of Segments per Chamber/Event; Fraction of Events")
     num_seg_per_chamber.Scale(1.0/num_seg_per_chamber.Integral())
     num_seg_per_chamber.Draw("same HIST")
     c11.Print("num_seg_per_chamber_%s_bx%s.pdf"%(args.hits, args.bx))
+    num_seg_per_chamber.Write()
+
+    c12 = ROOT.TCanvas('', '', 700, 700)
+    c12.DrawFrame(-0.5, -0.05, 12.5, 1.05, ";Number of Offline Segments per Chamber/Event; Fraction of Events")
+    num_seg_per_chamber_offline.Scale(1.0/num_seg_per_chamber_offline.Integral())
+    num_seg_per_chamber_offline.Draw("same HIST")
+    c12.Print("num_seg_per_chamber_offline_%s_bx%s.pdf"%(args.hits, args.bx))
+    num_seg_per_chamber_offline.Write()
+
+    file_out.close()
+    plot_file.Close()
