@@ -494,7 +494,7 @@ if __name__ == "__main__":
     if (args.pu == 0):
         plot_text1 = "Muon Gun (0 PU)"
     else:
-        plot_text1 = "L = " + str(Lint) + " Hz/cm^{2} (" + args.pu + " PU)"
+        plot_text1 = "L = %.1f"%(Lint) + " Hz/cm^{2} (" + args.pu + " PU)"
     plot_text2 = "CMS Simulation #sqrt{s}=14 TeV"
 
     c1 = ROOT.TCanvas('', '', 800, 650)
