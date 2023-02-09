@@ -66,7 +66,7 @@ async def pat_unit_test(dut):
         # (1) pop old data from the head of the queue
         # (2) run the emulator on the old data
         data = queue.pop(0)
-        sw_segment = find_best_seg(data=data, strip=0)
+        sw_segment = find_best_seg(data=data, strip=0, ly_thresh=CNT_THRESH)
         fw_segment = get_segment_from_dut(dut)
 
         # apply count threshold conditions to emulator pattern assignment
@@ -77,8 +77,8 @@ async def pat_unit_test(dut):
 
         if sw_segment != fw_segment:
             print(f"loop={i}")
-            print("> sw=%s" % sw_segment)
-            print("> fw=%s" % fw_segment)
+            print("> sw = %s" % sw_segment)
+            print("> fw = %s" % fw_segment)
 
         assert sw_segment == fw_segment
 
@@ -98,7 +98,6 @@ def test_pat_unit():
     ]
 
     parameters = {}
-    parameters["MUX_FACTOR"] = 8
 
     os.environ["SIM"] = "questa"
 

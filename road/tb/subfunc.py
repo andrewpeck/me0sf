@@ -49,7 +49,6 @@ class Segment:
 
         quality = 0
         if (lc > 0):
-            #quality = prt  | (id << 12) | (lc << 17)
             quality = (lc << 17) | (id << 12) | ((192-strip) << 4) | prt
 
         self.quality=quality

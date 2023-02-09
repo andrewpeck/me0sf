@@ -47,7 +47,7 @@ end pat_unit;
 
 architecture behavioral of pat_unit is
 
-  signal pats     : segment_list_t (NUM_PATTERNS-1 downto 0);
+  signal pats     : segment_list_t (NUM_PATTERNS-1 downto 0) := (others => null_pattern);
   signal pats_dav : std_logic := '0';
 
   function count_ones(slv : std_logic_vector) return natural is
@@ -242,7 +242,7 @@ begin
       REG_OUTPUT => true,
       REG_STAGES => 2,
       DAT_BITS   => best_slv'length,
-      QLT_BITS   => CNT_BITS+PID_BITS,
+      QLT_BITS   => PATTERN_SORTB,
       ADR_BITS_o => integer(ceil(log2(real(NUM_PATTERNS))))
       )
     port map (
