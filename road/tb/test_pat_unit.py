@@ -38,8 +38,10 @@ async def pat_unit_test(dut):
     # setup the FIFO queuing to a fixed latency
     LATENCY = 3
     queue = []
+    get_data = lambda : datagen(LY_CNT, N_NOISE, max_span=MAX_SPAN)
+
     for _ in range(LATENCY):
-        ly_data = datagen(LY_CNT, N_NOISE, max_span=MAX_SPAN)
+        ly_data = get_data()
         queue.append(ly_data)
         set_dut_inputs(dut, ly_data)
         await RisingEdge(dut.clock)
@@ -50,7 +52,7 @@ async def pat_unit_test(dut):
         # (2) push it onto the queue
         # (3) set the DUT inputs to the new data
 
-        new_data = datagen(LY_CNT, N_NOISE, max_span=MAX_SPAN)
+        new_data = get_data()
 
         set_dut_inputs(dut, new_data)
         queue.append(new_data)
