@@ -20,7 +20,7 @@ async def pat_unit_test(dut):
 
     # set layer count threshold
     cnt_thresh = 4
-    dut.thresh.value = 4
+    dut.thresh.value = cnt_thresh
 
     # set MAX_SPAN from firmware
     MAX_SPAN = get_max_span_from_dut(dut)
