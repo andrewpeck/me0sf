@@ -16,6 +16,7 @@ async def pat_unit_test(dut):
 
     # set the amount of layers the muon traveled through
     ly_t = 6
+    n_noise = 0
 
     # set layer count threshold
     cnt_thresh = 4
@@ -37,7 +38,7 @@ async def pat_unit_test(dut):
     LATENCY = 3
     queue = []
     for _ in range(LATENCY):
-        ly_data = datagen(ly_t, MAX_SPAN)
+        ly_data = datagen(ly_t, n_noise, max_span=MAX_SPAN)
         queue.append(ly_data)
         set_dut_inputs(dut, ly_data)
         await RisingEdge(dut.clock)
@@ -48,7 +49,7 @@ async def pat_unit_test(dut):
         # (2) push it onto the queue
         # (3) set the DUT inputs to the new data
 
-        new_data = datagen(ly_t, MAX_SPAN)
+        new_data = datagen(ly_t, n_noise, max_span=MAX_SPAN)
 
         set_dut_inputs(dut, new_data)
         queue.append(new_data)
