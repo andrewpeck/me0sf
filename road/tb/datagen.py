@@ -57,18 +57,49 @@ def get_noise(n, max_span=37):
 
 def datagen_with_segs(n_segs, n_noise, max_span=192, bend_angs=None, strips=None):
 
-    """generates data for each layer based on an artificial muon track and noise, returns a list of 6 intgers representing the generated hits on those layers, tuple of bend angles and strips
+    """
 
-    Args: n_segs = # of segments, n_noise = # of background hits, max_span =  width of a pattern window (Default value = 37)
-    bend_angs, strips = lists of bend angles and strips to create given segments """
+    generates data for each layer based on an artificial muon track and
+    noise, returns a list of 6 integers representing the generated hits on those
+    layers, tuple of bend angles and strips
+
+    Args:
+
+    n_segs = # of segments to generate
+
+    n_noise = # of background hits (randomly distributed around the chamber)
+
+    max_span = width of a pattern window (Default value = 37)
+
+    bend_angs, strips = lists of bend angles and strips to create given segments
+
+    """
+
+    SPAN_MASK = 2**max_span - 1
+
+    # if requested, generate noise for each layer
+    if n_noise > 0:
+        noise_mask = get_noise(n_noise, max_span = max_span)
+    else:
+        noise_mask = 6*[0]
+
     if n_segs == 0:
         seg_masks = [[0]*6]
         bend_ang_strip = []
-    elif bend_angs !=None and strips !=None:
-        n_segs = n_segs - len(bend_angs) #need to put in case for if n_segs< # of given bend_angs/strips?
-        segs = list(map(lambda bend_ang, strip: get_seg_hits(bend_ang, strip, eff=1, max_span=max_span), bend_angs, strips))
+
+    elif bend_angs is not None and strips is not None:
+
+        #need to put in case for if n_segs< # of given bend_angs/strips?
+        n_segs = n_segs - len(bend_angs)
+
+        segs = list(map(lambda bend_ang, strip:
+                        get_seg_hits(bend_ang, strip, eff=1, max_span=max_span),
+                        bend_angs, strips))
+
         seg_masks = [seg[0] for seg in segs]
+
         bend_ang_strip = [(bend_ang, strip) for (bend_ang, strip) in zip(bend_angs, strips)]
+
         for _ in range(n_segs):
             rand_seg = get_seg_hits(max_span=max_span, eff=1)
             seg_masks.append(rand_seg[0])
@@ -77,12 +108,13 @@ def datagen_with_segs(n_segs, n_noise, max_span=192, bend_angs=None, strips=None
         segs = [get_seg_hits(max_span=max_span, eff=1) for _ in range(n_segs)]
         seg_masks = [seg[0] for seg in segs]
         bend_ang_strip = [(seg[1], seg[2]) for seg in segs]
-        
+
     noise_mask = get_noise(n_noise, max_span = max_span)
     data_mask = [0]*6
     for mask in seg_masks:
         for i in range(6):
-            data_mask[i] = mask[i] | noise_mask[i] | data_mask[i]
+            data_mask[i] = SPAN_MASK & (mask[i] | noise_mask[i] | data_mask[i])
+
     return data_mask, bend_ang_strip
 
 def datagen(n_segs, n_noise, max_span=192, bend_angs=None, strips=None):

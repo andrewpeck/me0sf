@@ -38,6 +38,7 @@ async def pat_unit_test(dut):
     # setup the FIFO queuing to a fixed latency
     LATENCY = 3
     queue = []
+
     get_data = lambda : datagen(LY_CNT, N_NOISE, max_span=MAX_SPAN)
 
     for _ in range(LATENCY):
