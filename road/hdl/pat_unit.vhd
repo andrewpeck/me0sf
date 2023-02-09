@@ -152,13 +152,13 @@ begin
         pats(I) <= null_pattern;
 
         -- count
-        pats(I).cnt <= to_unsigned(count_ones(
-          or_reduce(ly0_mask) &
-          or_reduce(ly1_mask) &
-          or_reduce(ly2_mask) &
-          or_reduce(ly3_mask) &
-          or_reduce(ly4_mask) &
-          or_reduce(ly5_mask)), CNT_BITS);
+        pats(I).cnt <=
+          to_unsigned(count_ones(ly0_mask) +
+                      count_ones(ly1_mask) +
+                      count_ones(ly2_mask) +
+                      count_ones(ly3_mask) +
+                      count_ones(ly4_mask) +
+                      count_ones(ly5_mask), CNT_BITS);
 
         -- pattern id
         pats(I).id <= to_unsigned(patlist(I).id, PID_BITS);
