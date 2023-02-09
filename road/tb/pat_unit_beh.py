@@ -64,7 +64,10 @@ def calculate_layer_count(masked_data):
     #return sum(map(lambda x : x > 0, masked_data))
     return sum(map(count_ones, masked_data))
 
-def find_best_seg(data, strip=None, max_span=37, ly_thresh=6, partition=-1): #change ly_thresh back to LY_TRESH if doing layer count not hit count
+def find_best_seg(data, strip=None, ly_thresh=6, partition=-1):
+
+    #change ly_thresh back to LY_TRESH if doing layer count not hit count
+    #
     """
     takes in sample data for each layer and returns best segment
 
@@ -84,15 +87,15 @@ def find_best_seg(data, strip=None, max_span=37, ly_thresh=6, partition=-1): #ch
     # this yields a map object that can be iterated over to get,
     #    for each of the N patterns, the masked []*6 layer data
     # (2)
-    masked_data = tuple(map(lambda mask : mask_layer_data(mask.mask, data), LAYER_MASK))
+    masked_data = [mask_layer_data(x.mask, data) for x in LAYER_MASK]
 
     # (3) count # of hits
 
-    lycs = tuple(map(lambda pattern_data : calculate_layer_count(pattern_data), masked_data))
-    pids = tuple(map(lambda mask : mask.id, LAYER_MASK))
+    lycs = [calculate_layer_count(x) for x in masked_data]
+    pids = [x.id for x in LAYER_MASK]
 
     # (4) process centroids
-    centroids = tuple(map(calculate_centroids, masked_data))
+    centroids = [calculate_centroids(x) for x in masked_data]
 
     # (5) process segments
 
@@ -116,14 +119,14 @@ def find_best_seg(data, strip=None, max_span=37, ly_thresh=6, partition=-1): #ch
 ################################################################################
 
 def test_find_best_seg():
-    assert find_best_seg([0b1000000000000000000, 0b1000000000000000000, 0b1000000000000000000, 0b1000000000000000000, 0b1000000000000000000, 0b1000000000000000000], 37).id == 19
-    assert find_best_seg([0b1000000000000000000, 0b1000000000000000000, 0b1000000000000000000, 0b1000000000000000000, 0b1000000000000000000, 0b1000000000000000000], 37).lc == 6
-    assert find_best_seg([0b100000000000000000, 0b100000000000000000, 0b100000000000000000, 0b100000000000000000, 0b100000000000000000, 0b100000000000000000], 37).id == 19
-    assert find_best_seg([0b100000000000000000, 0b100000000000000000, 0b100000000000000000, 0b100000000000000000, 0b100000000000000000, 0b100000000000000000], 37).lc == 6
-    assert find_best_seg([0b100000000000000000, 0b1000000000000000000, 0b10000000000000000000, 0b1000000000000000000, 0b100000000000000000000, 0b100000000000000000000], 37 ).id == 0
-    assert find_best_seg([0b100000000000000000, 0b1000000000000000000, 0b10000000000000000000, 0b1000000000000000000, 0b100000000000000000000, 0b100000000000000000000], 37 ).lc == 0
-    assert find_best_seg([0b100000000000000000, 0b100000000000000000000, 0b100000000000000000000, 0b100000000000000000000, 0b100000000000000000000, 0b100000000000000000000], 37 ).id == 0
-    assert find_best_seg([0b100000000000000000, 0b100000000000000000000, 0b100000000000000000000, 0b100000000000000000000, 0b100000000000000000000, 0b100000000000000000000], 37 ).lc == 0
+    assert find_best_seg([0b1000000000000000000, 0b1000000000000000000, 0b1000000000000000000, 0b1000000000000000000, 0b1000000000000000000, 0b1000000000000000000]).id == 19
+    assert find_best_seg([0b1000000000000000000, 0b1000000000000000000, 0b1000000000000000000, 0b1000000000000000000, 0b1000000000000000000, 0b1000000000000000000]).lc == 6
+    assert find_best_seg([0b100000000000000000, 0b100000000000000000, 0b100000000000000000, 0b100000000000000000, 0b100000000000000000, 0b100000000000000000]).id == 19
+    assert find_best_seg([0b100000000000000000, 0b100000000000000000, 0b100000000000000000, 0b100000000000000000, 0b100000000000000000, 0b100000000000000000]).lc == 6
+    assert find_best_seg([0b100000000000000000, 0b1000000000000000000, 0b10000000000000000000, 0b1000000000000000000, 0b100000000000000000000, 0b100000000000000000000]).id == 0
+    assert find_best_seg([0b100000000000000000, 0b1000000000000000000, 0b10000000000000000000, 0b1000000000000000000, 0b100000000000000000000, 0b100000000000000000000]).lc == 0
+    assert find_best_seg([0b100000000000000000, 0b100000000000000000000, 0b100000000000000000000, 0b100000000000000000000, 0b100000000000000000000, 0b100000000000000000000]).id == 0
+    assert find_best_seg([0b100000000000000000, 0b100000000000000000000, 0b100000000000000000000, 0b100000000000000000000, 0b100000000000000000000, 0b100000000000000000000]).lc == 0
 
 def test_get_ly_mask():
     """ test function for get_ly_mask """

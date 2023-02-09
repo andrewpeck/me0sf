@@ -33,7 +33,7 @@ def pat_mux(partition_data, MAX_SPAN=37, WIDTH=192, partition=0):
     the MAX_SPAN of each pat_unit, and the partition width to return a list of the
     segments the pat_unit_mux.vhd would find 
     """
-    return [find_best_seg(extract_data_window(partition_data, strip, MAX_SPAN), strip=strip, partition=partition) for strip in range(WIDTH)]
+    return [find_best_seg(extract_data_window(partition_data, strip), strip=strip, partition=partition) for strip in range(WIDTH)]
     
 def test_pat_mux():
     data = [0b1, 0b1, 0b1, 0b1, 0b1, 0b1]
