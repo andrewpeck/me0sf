@@ -11,17 +11,17 @@ use work.pat_types.all;
 
 entity pat_unit is
   generic(
-    VERBOSE   : boolean        := false;
-    PATLIST   : patdef_array_t := patdef_array;
+    VERBOSE : boolean        := false;
+    PATLIST : patdef_array_t := patdef_array;
 
-    LATENCY   : natural        := 5;
+    LATENCY : natural := 5;
 
     LY0_SPAN : natural := get_max_span(patdef_array);
-    LY1_SPAN : natural := get_max_span(patdef_array);  -- TODO: variably size the other layers instead of using the max
-    LY2_SPAN : natural := get_max_span(patdef_array);  -- TODO: variably size the other layers instead of using the max
-    LY3_SPAN : natural := get_max_span(patdef_array);  -- TODO: variably size the other layers instead of using the max
-    LY4_SPAN : natural := get_max_span(patdef_array);  -- TODO: variably size the other layers instead of using the max
-    LY5_SPAN : natural := get_max_span(patdef_array)  -- TODO: variably size the other layers instead of using the max
+    LY1_SPAN : natural := get_max_span(patdef_array);
+    LY2_SPAN : natural := get_max_span(patdef_array);
+    LY3_SPAN : natural := get_max_span(patdef_array);
+    LY4_SPAN : natural := get_max_span(patdef_array);
+    LY5_SPAN : natural := get_max_span(patdef_array)
     );
 
   port(
@@ -31,7 +31,7 @@ entity pat_unit is
     dav_i : in  std_logic;
     dav_o : out std_logic;
 
-    thresh : in  std_logic_vector (2 downto 0);
+    thresh : in std_logic_vector (2 downto 0);
 
     ly0 : in std_logic_vector (LY0_SPAN-1 downto 0);
     ly1 : in std_logic_vector (LY1_SPAN-1 downto 0);
@@ -64,31 +64,38 @@ architecture behavioral of pat_unit is
   signal best_slv : std_logic_vector (segment_t'w-1 downto 0);
   signal best     : segment_t;
   signal cand_slv : bus_array (0 to NUM_PATTERNS-1) (segment_t'w-1 downto 0);
+  signal dav_dly  : std_logic_vector (LATENCY-1 downto 0) := (others => '0');
 
 begin
 
   check_pattern_operators(true);
 
-  assert (LY0_SPAN mod 2 = 1)
-    report "Layer Span Must be Odd (span=" & integer'image(LY0_SPAN) & ")" severity error;
-  assert (LY1_SPAN mod 2 = 1)
-    report "Layer Span Must be Odd (span=" & integer'image(LY1_SPAN) & ")" severity error;
-  assert (LY2_SPAN mod 2 = 1)
-    report "Layer Span Must be Odd (span=" & integer'image(LY2_SPAN) & ")" severity error;
-  assert (LY3_SPAN mod 2 = 1)
-    report "Layer Span Must be Odd (span=" & integer'image(LY3_SPAN) & ")" severity error;
-  assert (LY4_SPAN mod 2 = 1)
-    report "Layer Span Must be Odd (span=" & integer'image(LY4_SPAN) & ")" severity error;
-  assert (LY5_SPAN mod 2 = 1)
-    report "Layer Span Must be Odd (span=" & integer'image(LY5_SPAN) & ")" severity error;
+  assert (LY0_SPAN mod 2 = 1) report "Layer Span Must be Odd (span=" & integer'image(LY0_SPAN) & ")" severity error;
+  assert (LY1_SPAN mod 2 = 1) report "Layer Span Must be Odd (span=" & integer'image(LY1_SPAN) & ")" severity error;
+  assert (LY2_SPAN mod 2 = 1) report "Layer Span Must be Odd (span=" & integer'image(LY2_SPAN) & ")" severity error;
+  assert (LY3_SPAN mod 2 = 1) report "Layer Span Must be Odd (span=" & integer'image(LY3_SPAN) & ")" severity error;
+  assert (LY4_SPAN mod 2 = 1) report "Layer Span Must be Odd (span=" & integer'image(LY4_SPAN) & ")" severity error;
+  assert (LY5_SPAN mod 2 = 1) report "Layer Span Must be Odd (span=" & integer'image(LY5_SPAN) & ")" severity error;
+
+  --------------------------------------------------------------------------------
+  -- Data Valid
+  --------------------------------------------------------------------------------
+
+  dav_dly(0) <= dav_i;
+  dav_o      <= dav_dly(LATENCY-1);
 
   process (clock) is
   begin
     if (rising_edge(clock)) then
-      -- FIXME: we need to time this in
-      dav_o <= dav_i;
+      for I in 1 to LATENCY-1 loop
+        dav_dly(I) <= dav_dly(I-1);
+      end loop;
     end if;
   end process;
+
+  --------------------------------------------------------------------------------
+  -- Layer Processing
+  --------------------------------------------------------------------------------
 
   patgen : for I in 0 to patlist'length-1 generate
 
@@ -136,6 +143,7 @@ begin
       assert false report "ly3_size=" & integer'image(ly3_size) severity note;
       assert false report "ly4_size=" & integer'image(ly4_size) severity note;
       assert false report "ly5_size=" & integer'image(ly5_size) severity note;
+
     end generate;
 
     ly0_mask <= get_ly_mask (ly0_size, ly0, patlist(I).ly0);
@@ -167,6 +175,11 @@ begin
 
       end if;
     end process;
+
+    --------------------------------------------------------------------------------
+    -- Centroid Finding
+    -- done in parallel with count ones etc
+    --------------------------------------------------------------------------------
 
     centroid_finder_0 : entity work.centroid_finder
       generic map (LENGTH => ly0_size, NBITS => CENTROID_BITS)
@@ -218,10 +231,9 @@ begin
 
   end generate;
 
-  cand_to_slv : for I in 0 to NUM_PATTERNS-1 generate
-  begin
-    cand_slv(I) <= convert(pats(I), cand_slv(I));
-  end generate;
+  --------------------------------------------------------------------------------
+  -- Choose the best 1 of N possible segments
+  --------------------------------------------------------------------------------
 
   priority_encoder_inst : entity work.priority_encoder
     generic map (
@@ -242,6 +254,13 @@ begin
       adr_o => open
       );
 
+  -- record -> slv for priority encoder
+  cand_to_slv : for I in 0 to NUM_PATTERNS-1 generate
+  begin
+    cand_slv(I) <= convert(pats(I), cand_slv(I));
+  end generate;
+
+  -- slv -> record from priority encoder
   best <= convert(best_slv, best);
 
   --------------------------------------------------------------------------------
@@ -258,6 +277,5 @@ begin
       end if;
     end if;
   end process;
-
 
 end behavioral;
