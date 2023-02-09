@@ -36,7 +36,9 @@ async def pat_unit_test(dut):
         await RisingEdge(dut.clock)
 
     # setup the FIFO queuing to a fixed latency
-    LATENCY = 3
+
+    LATENCY = dut.LATENCY.value
+
     queue = []
 
     get_data = lambda : datagen(LY_CNT, N_NOISE, max_span=MAX_SPAN)

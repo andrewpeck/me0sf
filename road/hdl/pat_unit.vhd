@@ -14,6 +14,8 @@ entity pat_unit is
     VERBOSE   : boolean        := false;
     PATLIST   : patdef_array_t := patdef_array;
 
+    LATENCY   : natural        := 5;
+
     LY0_SPAN : natural := get_max_span(patdef_array);
     LY1_SPAN : natural := get_max_span(patdef_array);  -- TODO: variably size the other layers instead of using the max
     LY2_SPAN : natural := get_max_span(patdef_array);  -- TODO: variably size the other layers instead of using the max
