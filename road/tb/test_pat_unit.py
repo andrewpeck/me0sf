@@ -14,15 +14,16 @@ from constants import *
 async def pat_unit_test(dut):
     random.seed(56)
 
-    # set the amount of layers the muon traveled through
-    ly_t = 6
-    n_noise = 0
+    # constants
+    LY_CNT = 6
+    N_NOISE = 0
+    CNT_THRESH = 4
 
     # set layer count threshold
-    cnt_thresh = 4
-    dut.thresh.value = cnt_thresh
+    dut.thresh.value = CNT_THRESH
 
     # set MAX_SPAN from firmware
+    # should be a number approx 37
     MAX_SPAN = get_max_span_from_dut(dut)
 
     setup(dut)
@@ -38,7 +39,7 @@ async def pat_unit_test(dut):
     LATENCY = 3
     queue = []
     for _ in range(LATENCY):
-        ly_data = datagen(ly_t, n_noise, max_span=MAX_SPAN)
+        ly_data = datagen(LY_CNT, N_NOISE, max_span=MAX_SPAN)
         queue.append(ly_data)
         set_dut_inputs(dut, ly_data)
         await RisingEdge(dut.clock)
@@ -49,7 +50,7 @@ async def pat_unit_test(dut):
         # (2) push it onto the queue
         # (3) set the DUT inputs to the new data
 
-        new_data = datagen(ly_t, n_noise, max_span=MAX_SPAN)
+        new_data = datagen(LY_CNT, N_NOISE, max_span=MAX_SPAN)
 
         set_dut_inputs(dut, new_data)
         queue.append(new_data)
@@ -65,7 +66,7 @@ async def pat_unit_test(dut):
 
         # apply count threshold conditions to emulator pattern assignment
         # TODO: fold this into the segment finding
-        if sw_segment.lc < cnt_thresh:
+        if sw_segment.lc < CNT_THRESH:
             sw_segment.id = 0
             sw_segment.lc = 0
 
