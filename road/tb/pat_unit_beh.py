@@ -66,8 +66,6 @@ def calculate_layer_count(masked_data):
 
 def find_best_seg(data, strip=None, ly_thresh=6, partition=-1):
 
-    #change ly_thresh back to LY_TRESH if doing layer count not hit count
-    #
     """
     takes in sample data for each layer and returns best segment
 

@@ -81,7 +81,7 @@ class Segment:
         if (self.id==0):
             return "n/a"
 
-        return f"id={self.id}, lc={self.lc}, strip={self.strip}, quality={self.quality}"
+        return "id=%2d, lc=%2d, strip=%3d, quality=%07X" % (self.id, self.lc, self.strip, self.quality)
 
     def __repr__(self):
         return f"Seg {self.quality}"
