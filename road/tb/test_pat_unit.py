@@ -3,7 +3,7 @@ import random
 import cocotb
 from cocotb.triggers import RisingEdge
 from datagen import datagen
-from pat_unit_beh import find_best_seg, calculate_global_layer_mask
+from pat_unit_beh import find_best_seg
 from subfunc import *
 import os
 from cocotb_test.simulator import run
