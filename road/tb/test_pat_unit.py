@@ -10,6 +10,17 @@ from cocotb_test.simulator import run
 from test_common import *
 from constants import *
 
+async def monitor_dav(dut, latency):
+    for _ in range(8):
+        await RisingEdge(dut.clock)
+
+    while True:
+        await RisingEdge(dut.dav_i)
+        for _ in range(latency+1):
+            assert dut.dav_o.value == 0
+            await RisingEdge(dut.clock)
+        assert dut.dav_o.value == 1
+
 @cocotb.test()
 async def pat_unit_test(dut):
     random.seed(56)
@@ -18,6 +29,7 @@ async def pat_unit_test(dut):
     LY_CNT = 6
     N_NOISE = 0
     CNT_THRESH = 4
+    LATENCY = dut.LATENCY.value
 
     # set layer count threshold
     dut.thresh.value = CNT_THRESH
@@ -28,6 +40,8 @@ async def pat_unit_test(dut):
 
     setup(dut)
 
+    cocotb.fork(monitor_dav(dut,LATENCY))
+
     # zero the inputs
     set_dut_inputs(dut, [0] * 6)
 
@@ -36,8 +50,6 @@ async def pat_unit_test(dut):
         await RisingEdge(dut.clock)
 
     # setup the FIFO queuing to a fixed latency
-
-    LATENCY = dut.LATENCY.value
 
     queue = []
 

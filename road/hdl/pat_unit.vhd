@@ -81,12 +81,12 @@ begin
   -- Data Valid
   --------------------------------------------------------------------------------
 
-  dav_dly(0) <= dav_i;
-  dav_o      <= dav_dly(LATENCY-1);
+  dav_o <= dav_dly(LATENCY-1);
 
   process (clock) is
   begin
     if (rising_edge(clock)) then
+      dav_dly(0) <= dav_i;
       for I in 1 to LATENCY-1 loop
         dav_dly(I) <= dav_dly(I-1);
       end loop;
