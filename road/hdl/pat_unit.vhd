@@ -14,7 +14,7 @@ entity pat_unit is
     VERBOSE : boolean        := false;
     PATLIST : patdef_array_t := patdef_array;
 
-    LATENCY : natural := 5;
+    LATENCY : natural := PAT_UNIT_LATENCY;
 
     LY0_SPAN : natural := get_max_span(patdef_array);
     LY1_SPAN : natural := get_max_span(patdef_array);

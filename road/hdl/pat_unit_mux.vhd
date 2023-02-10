@@ -11,7 +11,10 @@ use work.priority_encoder_pkg.all;
 
 entity pat_unit_mux is
   generic(
-    VERBOSE    : boolean        := false;
+    VERBOSE : boolean := false;
+
+    LATENCY : natural := PAT_UNIT_MUX_LATENCY;
+
     PATLIST    : patdef_array_t := patdef_array;
     WIDTH      : natural        := 192;
     -- Need padding for half the width of the pattern this is to handle the edges
