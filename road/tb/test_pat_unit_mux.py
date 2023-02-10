@@ -21,7 +21,6 @@ def set_layer_hits(dut, hits):
     dut.ly0.value = hits[0]
     dut.ly1.value = hits[1]
     dut.ly2.value = hits[2]
-
     dut.ly3.value = hits[3]
     dut.ly4.value = hits[4]
     dut.ly5.value = hits[5]
@@ -43,25 +42,27 @@ async def pat_unit_mux_test(dut, NLOOPS=1000):
         await RisingEdge(dut.clock)
 
     # set up a fixed latency queue
-    LATENCY = 2
-    width = dut.WIDTH.value
+    LATENCY = dut.LATENCY.value
+    WIDTH = dut.WIDTH.value
     queue = []
+
+    gen_data = lambda : datagen_mux(n_segs=1, n_noise=0, max_span=WIDTH)
 
     for _ in range(LATENCY):
 
         # align to the dav_i
         await RisingEdge(dut.dav_i)
 
-        ly_data = datagen_mux(width)
+        ly_data = gen_data()
         queue.append(ly_data)
 
         set_dut_inputs(dut, ly_data)
 
     # loop over some number of test cases
-    for j in range(NLOOPS):
+    for i in range(NLOOPS):
 
-        if j % 100 == 0:
-            print("%d loops completed..." % j)
+        if i % 100 == 0:
+            print("%d loops completed..." % i)
 
         # align to the dav_i
         await RisingEdge(dut.dav_i)
@@ -70,7 +71,7 @@ async def pat_unit_mux_test(dut, NLOOPS=1000):
         # (2) push it onto the queue
         # (3) set the DUT inputs to the new data
 
-        new_data = datagen_mux(width)
+        new_data = gen_data()
         queue.append(new_data)
 
         set_dut_inputs(dut, new_data)
@@ -78,20 +79,18 @@ async def pat_unit_mux_test(dut, NLOOPS=1000):
         # (1) pop old data from the head of the queue
         # (2) run the emulator on the old data
 
-        sw_segments = pat_mux(
-            partition_data=queue.pop(0),
-            MAX_SPAN=MAX_SPAN,
-            WIDTH=dut.WIDTH.value,
-        )
+        sw_segments = pat_mux(partition_data=queue.pop(0),
+                              MAX_SPAN=MAX_SPAN,
+                              WIDTH=dut.WIDTH.value)
 
         fw_segments = get_segments_from_dut(dut)
 
-        for i in range(len(sw_segments)):
-            if sw_segments[i] != fw_segments[i]:
+        for j in range(len(sw_segments)):
+            if sw_segments[j] != fw_segments[j]:
                 print(f"{i}:")
-                print(" > sw: " + str(sw_segments[i]))
-                print(" > fw: " + str(fw_segments[i]))
-            assert sw_segments[i] == fw_segments[i]
+                print(" > sw: " + str(sw_segments[j]))
+                print(" > fw: " + str(fw_segments[j]))
+            assert sw_segments[j] == fw_segments[j]
 
 
 def test_pat_unit_mux():
@@ -107,25 +106,21 @@ def test_pat_unit_mux():
         os.path.join(rtl_dir, "patterns.vhd"),
         os.path.join(rtl_dir, "pat_unit.vhd"),
         os.path.join(rtl_dir, "dav_to_phase.vhd"),
-        os.path.join(rtl_dir, "pat_unit_mux.vhd"),
-    ]
+        os.path.join(rtl_dir, "pat_unit_mux.vhd")]
 
     parameters = {}
     parameters["MUX_FACTOR"] = 8
 
     os.environ["SIM"] = "questa"
 
-    run(
-        vhdl_sources=vhdl_sources,
+    run(vhdl_sources=vhdl_sources,
         module=module,  # name of cocotb test module
         compile_args=["-2008"],
         toplevel="pat_unit_mux",  # top level HDL
         toplevel_lang="vhdl",
         # sim_args=["-do", '"set NumericStdNoWarnings 1;"'],
         parameters=parameters,
-        gui=0,
-    )
-
+        gui=0)
 
 if __name__ == "__main__":
     test_pat_unit_mux()
