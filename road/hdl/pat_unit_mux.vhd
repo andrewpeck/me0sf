@@ -25,9 +25,9 @@ entity pat_unit_mux is
     );
   port(
 
-    clock : in  std_logic;
+    clock : in std_logic;
 
-    thresh : in  std_logic_vector (2 downto 0);
+    thresh : in std_logic_vector (2 downto 0);
 
     dav_i : in  std_logic;
     dav_o : out std_logic;
@@ -70,8 +70,7 @@ architecture behavioral of pat_unit_mux is
   signal ly4_padded : std_logic_vector (WIDTH-1 + 2*PADDING downto 0);
   signal ly5_padded : std_logic_vector (WIDTH-1 + 2*PADDING downto 0);
 
-  signal patterns_mux_dav : std_logic := '0';
-  signal patterns_mux     : segment_list_t (NUM_SECTORS-1 downto 0);
+  signal patterns_mux : segment_list_t (NUM_SECTORS-1 downto 0);
 
   -- convert to strip type, appends the strip # to the format
   signal strips_reg : segment_list_t (WIDTH-1 downto 0);
@@ -80,20 +79,32 @@ architecture behavioral of pat_unit_mux is
 
   signal lyX_in_dav : std_logic := '0';
 
-  signal dav_d0, dav_d1, dav_d2, dav_d3, dav_d4, dav_d5 : std_logic;
+  signal dav_reg : std_logic := '0';
+
+  signal pat_unit_dav : std_logic_vector(NUM_SECTORS-1 downto 0);
 
 begin
 
+  --------------------------------------------------------------------------------
+  -- Asserts
+  --------------------------------------------------------------------------------
+
+  assert WIDTH mod MUX_FACTOR = 0
+    report "pat_unit_mux WIDTH must be divisible by MUX_FACTOR"
+    severity error;
+
+  --------------------------------------------------------------------------------
+  -- Padding
+  --------------------------------------------------------------------------------
+
+  -- pad the edges of the chamber with zeroes so that strips at the edges
+  -- can still do pattern finding using the normal machanism
   ly0_padded <= pad_layer(PADDING, ly0);
   ly1_padded <= pad_layer(PADDING, ly1);
   ly2_padded <= pad_layer(PADDING, ly2);
   ly3_padded <= pad_layer(PADDING, ly3);
   ly4_padded <= pad_layer(PADDING, ly4);
   ly5_padded <= pad_layer(PADDING, ly5);
-
-  assert WIDTH mod MUX_FACTOR = 0
-    report "pat_unit_mux WIDTH must be divisible by MUX_FACTOR"
-    severity error;
 
   --------------------------------------------------------------------------------
   -- Pattern Units Input Mux
@@ -112,8 +123,7 @@ begin
 
   dav_to_phase_o_inst : entity work.dav_to_phase
     generic map (DIV => 8/MUX_FACTOR)
-    -- port map (clock  => clock, dav => patterns_mux_dav, phase_o => patterns_mux_phase);
-    port map (clock  => clock, dav => dav_d1, phase_o => patterns_mux_phase);
+    port map (clock  => clock, dav => pat_unit_dav(0), phase_o => patterns_mux_phase);
 
   patgen : for I in 0 to NUM_SECTORS-1 generate
 
@@ -123,8 +133,6 @@ begin
     signal ly3_in : std_logic_vector (LY3_SPAN - 1 downto 0) := (others => '0');
     signal ly4_in : std_logic_vector (LY4_SPAN - 1 downto 0) := (others => '0');
     signal ly5_in : std_logic_vector (LY5_SPAN - 1 downto 0) := (others => '0');
-
-    signal dav : std_logic := '0';
 
   begin
 
@@ -145,9 +153,7 @@ begin
     end process;
 
     pat_unit_inst : entity work.pat_unit
-      generic map (
-        VERBOSE => false
-        )
+      generic map (VERBOSE => verbose)
       port map (
 
         clock => clock,
@@ -162,45 +168,38 @@ begin
         ly4   => ly4_in,
         ly5   => ly5_in,
 
-        dav_o => dav,
+        dav_o => pat_unit_dav(I),
         pat_o => patterns_mux(I)
+
         );
 
-    muxzero : if (I = 0) generate
-      patterns_mux_dav <= dav;
-    end generate;
   end generate;
 
   --------------------------------------------------------------------------------
   -- Pattern Units Outputs Demux
   --------------------------------------------------------------------------------
-  -- FIXME: the mux logic needs to be checked and correctly timed....
-  -- should pass dav flags around
 
   process (clock) is
   begin
     if (rising_edge(clock)) then
 
-      dav_d0 <= patterns_mux_dav;
-      dav_d1 <= dav_d0;
-      dav_d2 <= dav_d1;
-      dav_d3 <= dav_d2;
-      dav_d4 <= dav_d3;
-      dav_d5 <= dav_d4;
+      dav_reg <= pat_unit_dav(0);       -- delay for unfolder
+      dav_o   <= dav_reg;               -- delay for output reg
 
-      dav_o <= patterns_mux_dav;
-
+      -- unfold the pattern unit multiplexer
       for I in 0 to NUM_SECTORS-1 loop
-        strips_reg(I*MUX_FACTOR+patterns_mux_phase)       <= patterns_mux(I);
-        strips_reg(I*MUX_FACTOR+patterns_mux_phase).strip <= to_unsigned(I*MUX_FACTOR+patterns_mux_phase, STRIP_BITS);
+        strips_reg(I*MUX_FACTOR+patterns_mux_phase) <= patterns_mux(I);
+        strips_reg(I*MUX_FACTOR+patterns_mux_phase).strip <=
+          to_unsigned(I*MUX_FACTOR+patterns_mux_phase, STRIP_BITS);
       end loop;
 
+      -- copy the unfolded outputs to be stable for a 25 ns clock period since
+      -- the unfolder changes every clock cycle
       if (patterns_mux_phase = 0) then
         segments_o <= strips_reg;
       end if;
 
     end if;
   end process;
-
 
 end behavioral;
