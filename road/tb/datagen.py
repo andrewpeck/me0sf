@@ -5,7 +5,7 @@ import random
 from subfunc import *
 from constants import *
 
-def get_seg_hits(bend_ang=None, strip=None, eff=.9, max_span=37):
+def get_seg_hits(max_span, bend_ang=None, strip=None, eff=.9):
     """get the hits for given segment, if bend_ang and strip==None, create random slope and strip. eff= efficiency of data aquisition, default of 90%.
      Returns integer mask of the segment hits
      To do: add width to hits --> right now, takes a width of 1, 2 or 3 randomly
@@ -46,7 +46,7 @@ def get_seg_hits(bend_ang=None, strip=None, eff=.9, max_span=37):
     hit_mask.reverse()
     return (hit_mask, slope, strip) 
 
-def get_noise(n, max_span=37):
+def get_noise(n, max_span):
     """generates integer mask for n background hits"""
     noise_mask = [0]*6
     for _ in range(n):
@@ -55,7 +55,7 @@ def get_noise(n, max_span=37):
         noise_mask[ly] = set_bit(strip, noise_mask[ly])
     return noise_mask
 
-def datagen_with_segs(n_segs, n_noise, max_span=192, bend_angs=None, strips=None):
+def datagen_with_segs(n_segs, n_noise, max_span, bend_angs=None, strips=None):
 
     """
 
@@ -93,7 +93,10 @@ def datagen_with_segs(n_segs, n_noise, max_span=192, bend_angs=None, strips=None
         n_segs = n_segs - len(bend_angs)
 
         segs = list(map(lambda bend_ang, strip:
-                        get_seg_hits(bend_ang, strip, eff=1, max_span=max_span),
+                        get_seg_hits(bend_ang=bend_ang,
+                                     strip=strip,
+                                     eff=1,
+                                     max_span=max_span),
                         bend_angs, strips))
 
         seg_masks = [seg[0] for seg in segs]
@@ -117,5 +120,5 @@ def datagen_with_segs(n_segs, n_noise, max_span=192, bend_angs=None, strips=None
 
     return data_mask, bend_ang_strip
 
-def datagen(n_segs, n_noise, max_span=192, bend_angs=None, strips=None):
-    return datagen_with_segs(n_segs, n_noise, max_span=max_span, bend_angs=bend_angs, strips=strips)[0]
+def datagen(n_segs, n_noise, max_span, bend_angs=None, strips=None):
+    return datagen_with_segs(n_segs, n_noise, max_span, bend_angs=bend_angs, strips=strips)[0]
