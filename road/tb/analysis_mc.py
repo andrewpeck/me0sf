@@ -20,12 +20,18 @@ if __name__ == "__main__":
     parser.add_argument("-f", "--file_path", action="store", dest="file_path", help="file_path = the .root file path to be read")
     parser.add_argument("-t", "--hits", action="store", dest="hits", default="digi", help="hits = digi or rec")
     parser.add_argument("-b", "--bx", action="store", dest="bx", default="all", help="bx = all or nr. of BXs to consider")
+    parser.add_argument("-c", "--cross_part", action="store", dest="cross_part", help="cross_part = 'full' or 'partial' or 'none'")
     parser.add_argument("-v", "--verbose", action="store_true", dest="verbose", help="whether to print all track segment matching info")
     parser.add_argument("-p", "--pu", action="store", dest="pu", help="PU")
     args = parser.parse_args()
 
     # read in the data
     root_dat = read_ntuple(args.file_path)
+
+    if args.cross_part not in ["full", "partial", "none"]:
+        print ("Incorrect argument for cross partition")
+        sys.exit()
+
     if args.hits not in ["digi", "rec"]:
         print ("Incorrect argument for hits option")
         sys.exit()
@@ -233,8 +239,25 @@ if __name__ == "__main__":
 
         # initialize the dat_list that will be used as input of emulator
         # 36 * 8 * 2 * [6, 2]
-        datlist = np.array([[[[0 for i in range(6)], [(0, 0)]] for j in range(8)] for k in range(36)], dtype = object)
-        
+        # could be if we use the virtual layers:
+        # 36 * 15 * 2 * [6, 2]
+
+        if args.cross_part == "none":
+            datlist = np.array([[[[0 for i in range(6)], [(0, 0)]] for j in range(8)] for k in range(36)], dtype = object)
+        else:
+            # virtual partitions included
+            datlist = np.array([[[[0 for i in range(6)], [(0, 0)]] for j in range(15)] for k in range(36)], dtype = object)
+            # mapping from part_idx to real array index we want to insert is different
+            # id  virtual real virtual
+            # 0 ->          0     1
+            # 1 ->   1      2     3
+            # 2 ->   3      4     5
+            # 3 ->   5      6     7
+            # 4 ->   7      8     9
+            # 5 ->   9      10    11
+            # 6 ->   11     12    13
+            # 7 ->   13     14
+
         # loop every hit inside an event
         if args.hits == "rec":
             for hit in range(len(rechit_region)):
@@ -249,7 +272,21 @@ if __name__ == "__main__":
                     continue
 
                 # insert the hit
-                datlist[chamb_idx, part_idx, 0][layer_idx] = (datlist[chamb_idx, part_idx, 0][layer_idx]) | (1 << sbit_idx)
+                if args.cross_part == "none":
+                    datlist[chamb_idx, part_idx, 0][layer_idx] = (datlist[chamb_idx, part_idx, 0][layer_idx]) | (1 << sbit_idx)
+                elif args.cross_part == "full":
+                    datlist[chamb_idx, part_idx*2, 0][layer_idx] = (datlist[chamb_idx, part_idx, 0][layer_idx]) | (1 << sbit_idx)
+                    if part_idx != 7:
+                        datlist[chamb_idx, (part_idx*2)+1, 0][layer_idx] = (datlist[chamb_idx, part_idx, 0][layer_idx]) | (1 << sbit_idx)
+                    if part_idx != 0:
+                        datlist[chamb_idx, (part_idx*2)-1, 0][layer_idx] = (datlist[chamb_idx, part_idx, 0][layer_idx]) | (1 << sbit_idx)
+                elif args.cross_part == "partial":
+                    datlist[chamb_idx, part_idx*2, 0][layer_idx] = (datlist[chamb_idx, part_idx, 0][layer_idx]) | (1 << sbit_idx)
+                    if part_idx != 7 and layer_idx >= 2:
+                        datlist[chamb_idx, (part_idx*2)+1, 0][layer_idx] = (datlist[chamb_idx, part_idx, 0][layer_idx]) | (1 << sbit_idx)
+                    if part_idx != 0 and layer_idx <= 3:
+                        datlist[chamb_idx, (part_idx*2)-1, 0][layer_idx] = (datlist[chamb_idx, part_idx, 0][layer_idx]) | (1 << sbit_idx)                
+
         elif args.hits == "digi":
             for hit in range(len(digihit_region)):
                 if digihit_region[hit] == 1:
@@ -261,9 +298,22 @@ if __name__ == "__main__":
                 sbit_idx = int(digihit_sbit[hit])
                 if digihit_bx[hit] not in bx_list:
                     continue
-
+                
                 # insert the hit
-                datlist[chamb_idx, part_idx, 0][layer_idx] = (datlist[chamb_idx, part_idx, 0][layer_idx]) | (1 << sbit_idx)
+                if args.cross_part == "none":
+                    datlist[chamb_idx, part_idx, 0][layer_idx] = (datlist[chamb_idx, part_idx, 0][layer_idx]) | (1 << sbit_idx)
+                elif args.cross_part == "full":
+                    datlist[chamb_idx, part_idx*2, 0][layer_idx] = (datlist[chamb_idx, part_idx, 0][layer_idx]) | (1 << sbit_idx)
+                    if part_idx != 7:
+                        datlist[chamb_idx, (part_idx*2)+1, 0][layer_idx] = (datlist[chamb_idx, part_idx, 0][layer_idx]) | (1 << sbit_idx)
+                    if part_idx != 0:
+                        datlist[chamb_idx, (part_idx*2)-1, 0][layer_idx] = (datlist[chamb_idx, part_idx, 0][layer_idx]) | (1 << sbit_idx)
+                elif args.cross_part == "partial":
+                    datlist[chamb_idx, part_idx*2, 0][layer_idx] = (datlist[chamb_idx, part_idx, 0][layer_idx]) | (1 << sbit_idx)
+                    if part_idx != 7 and layer_idx >= 2:
+                        datlist[chamb_idx, (part_idx*2)+1, 0][layer_idx] = (datlist[chamb_idx, part_idx, 0][layer_idx]) | (1 << sbit_idx)
+                    if part_idx != 0 and layer_idx <= 3:
+                        datlist[chamb_idx, (part_idx*2)-1, 0][layer_idx] = (datlist[chamb_idx, part_idx, 0][layer_idx]) | (1 << sbit_idx)  
         
         # Find segments per chamber
         online_segment_chamber = {}
