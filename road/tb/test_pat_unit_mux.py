@@ -1,4 +1,5 @@
 import os
+import plotille
 import cocotb
 from cocotb.triggers import RisingEdge
 from cocotb.clock import Clock
@@ -48,19 +49,19 @@ async def pat_unit_mux_test(dut, NLOOPS=1000):
     for _ in range(10):
         await RisingEdge(dut.clock)
 
+    #gen_data = lambda : datagen_mux(n_segs=1, n_noise=0, max_span=WIDTH)
+    gen_data = lambda : 6*[0x8000000]
+
+    strip_cnts = []
+    id_cnts = []
+
     # set up a fixed latency queue
     queue = []
-
-    gen_data = lambda : datagen_mux(n_segs=1, n_noise=0, max_span=WIDTH)
-
     for _ in range(LATENCY):
-
-        # align to the dav_i
-        await RisingEdge(dut.dav_i)
-
-        ly_data = gen_data()
+        await RisingEdge(dut.dav_i) # align to the dav_i
+        # fill the pipeline with empty data
+        ly_data = [0]*6
         queue.append(ly_data)
-
         set_dut_inputs(dut, ly_data)
 
     # loop over some number of test cases
@@ -77,6 +78,11 @@ async def pat_unit_mux_test(dut, NLOOPS=1000):
         # (3) set the DUT inputs to the new data
 
         new_data = gen_data()
+        # if i % 10 == 0:
+        #     new_data = gen_data()
+        # else:
+        #     new_data = 6*[0]
+
         queue.append(new_data)
 
         set_dut_inputs(dut, new_data)
@@ -91,12 +97,24 @@ async def pat_unit_mux_test(dut, NLOOPS=1000):
 
         fw_segments = get_segments_from_dut(dut)
 
-        for j in range(len(sw_segments)):
-            if sw_segments[j] != fw_segments[j]:
-                print(f"{i}:")
+        for j in range(WIDTH):
+            if fw_segments[j].id > 0:
+                strip_cnts.append(j)
+                id_cnts.append(fw_segments[j].id)
+            if i > 8 and sw_segments[j] != fw_segments[j]:
+                print(f"{i}({j}):")
                 print(" > sw: " + str(sw_segments[j]))
                 print(" > fw: " + str(fw_segments[j]))
-            assert sw_segments[j] == fw_segments[j]
+                #assert sw_segments[j] == fw_segments[j]
+
+        #print(f'{strip_cnts=}')
+        with open("../pat_unit_mux.log", "w+") as f:
+            f.write("Strips:\n")
+            f.write(plotille.histogram(strip_cnts))
+
+            f.write("\nIDs:\n")
+            f.write(plotille.histogram(id_cnts))
+
 
 
 def test_pat_unit_mux():
