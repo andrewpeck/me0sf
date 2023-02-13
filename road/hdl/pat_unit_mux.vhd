@@ -116,10 +116,11 @@ begin
 
   --------------------------------------------------------------------------------
   -- Padding
-  --------------------------------------------------------------------------------
-
+  --
   -- pad the edges of the chamber with zeroes so that strips at the edges
   -- can still do pattern finding using the normal machanism
+  --------------------------------------------------------------------------------
+
   ly0_padded <= pad_layer(PADDING, ly0);
   ly1_padded <= pad_layer(PADDING, ly1);
   ly2_padded <= pad_layer(PADDING, ly2);
@@ -141,10 +142,6 @@ begin
   dav_to_phase_i_inst : entity work.dav_to_phase
     generic map (DIV => 8/MUX_FACTOR)
     port map (clock  => clock, dav => dav_i, phase_o => phase_i);
-
-  dav_to_phase_o_inst : entity work.dav_to_phase
-    generic map (DIV => 8/MUX_FACTOR)
-    port map (clock  => clock, dav => pat_unit_dav(0), phase_o => patterns_mux_phase);
 
   patgen : for I in 0 to NUM_SECTORS-1 generate
 
@@ -200,6 +197,10 @@ begin
   -- Pattern Units Outputs Demux
   --------------------------------------------------------------------------------
 
+  dav_to_phase_o_inst : entity work.dav_to_phase
+    generic map (DIV => 8/MUX_FACTOR)
+    port map (clock  => clock, dav => pat_unit_dav(0), phase_o => patterns_mux_phase);
+
   process (clock) is
   begin
     if (rising_edge(clock)) then
@@ -207,7 +208,7 @@ begin
       dav_reg <= pat_unit_dav(0);       -- delay for unfolder
       dav_o   <= dav_reg;               -- delay for output reg
 
-      -- unfold the pattern unit multiplexer
+      -- unfold the pattern unit multiplexer and assign the strip number
       for I in 0 to NUM_SECTORS-1 loop
         strips_reg(I*MUX_FACTOR+patterns_mux_phase) <= patterns_mux(I);
         strips_reg(I*MUX_FACTOR+patterns_mux_phase).strip <=
