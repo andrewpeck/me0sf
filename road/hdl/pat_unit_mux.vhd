@@ -217,7 +217,7 @@ begin
 
       -- copy the unfolded outputs to be stable for a 25 ns clock period since
       -- the unfolder changes every clock cycle
-      if (patterns_mux_phase = 0) then
+      if (dav_reg='1') then
         segments_o <= strips_reg;
       end if;
 
