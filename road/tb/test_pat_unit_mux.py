@@ -28,7 +28,7 @@ def set_layer_hits(dut, hits):
 
 
 @cocotb.test()
-async def pat_unit_mux_test(dut, NLOOPS=1000):
+async def pat_unit_mux_test(dut, NLOOPS=500, test="WALKING1"):
 
     "Test the pat_unix_mux.vhd module"
 
@@ -40,7 +40,7 @@ async def pat_unit_mux_test(dut, NLOOPS=1000):
 
     MAX_SPAN = get_max_span_from_dut(dut)
     THRESH = int(dut.thresh.value)
-    LATENCY = dut.LATENCY.value
+    LATENCY = int(math.ceil(dut.LATENCY.value/8.0))
     WIDTH = dut.WIDTH.value
 
     set_dut_inputs(dut, [0] * 6)
@@ -49,72 +49,75 @@ async def pat_unit_mux_test(dut, NLOOPS=1000):
     for _ in range(10):
         await RisingEdge(dut.clock)
 
-    #gen_data = lambda : datagen_mux(n_segs=1, n_noise=0, max_span=WIDTH)
-    gen_data = lambda : 6*[0x8000000]
-
     strip_cnts = []
     id_cnts = []
 
     # set up a fixed latency queue
     queue = []
-    for _ in range(LATENCY):
-        await RisingEdge(dut.dav_i) # align to the dav_i
-        # fill the pipeline with empty data
-        ly_data = [0]*6
-        queue.append(ly_data)
-        set_dut_inputs(dut, ly_data)
+    for _ in range(LATENCY+1):
+        queue.append([0]*6)
 
+    await RisingEdge(dut.dav_i) # align to the dav_i
+
+    i = 0
     # loop over some number of test cases
-    for i in range(NLOOPS):
+    while i < NLOOPS:
 
-        if i % 100 == 0:
-            print("%d loops completed..." % i)
+        # push new data on dav_i
+        if dut.dav_i.value == 1:
 
-        # align to the dav_i
-        await RisingEdge(dut.dav_i)
+            # (1) generate new random data
+            # (2) push it onto the queue
+            # (3) set the DUT inputs to the new data
 
-        # (1) generate new random data
-        # (2) push it onto the queue
-        # (3) set the DUT inputs to the new data
+            if test=="WALKING1":
+                new_data = 6 * [0x1 << (i % 192)]
+            elif test=="SEGMENTS":
+                new_data = datagen_mux(n_segs=1, n_noise=0, max_span=WIDTH)
+            else:
+                new_data = 0*[6]
+                assert "Invalid test selected"
 
-        new_data = gen_data()
-        # if i % 10 == 0:
-        #     new_data = gen_data()
-        # else:
-        #     new_data = 6*[0]
+            queue.append(new_data)
 
-        queue.append(new_data)
+            set_dut_inputs(dut, new_data)
 
-        set_dut_inputs(dut, new_data)
+            i += 1
 
-        # (1) pop old data from the head of the queue
-        # (2) run the emulator on the old data
+        # pop old data on dav_o
+        if dut.dav_o.value == 1:
 
-        sw_segments = pat_mux(partition_data=queue.pop(0),
-                              max_span=MAX_SPAN,
-                              thresh=THRESH,
-                              width=WIDTH)
+            # (1) pop old data from the head of the queue
+            # (2) run the emulator on the old data
 
-        fw_segments = get_segments_from_dut(dut)
+            old_data = queue.pop(0)
+            sw_segments = pat_mux(partition_data=old_data,
+                                  max_span=MAX_SPAN,
+                                  thresh=THRESH,
+                                  width=WIDTH)
 
-        for j in range(WIDTH):
-            if fw_segments[j].id > 0:
-                strip_cnts.append(j)
-                id_cnts.append(fw_segments[j].id)
-            if i > 8 and sw_segments[j] != fw_segments[j]:
-                print(f"{i}({j}):")
-                print(" > sw: " + str(sw_segments[j]))
-                print(" > fw: " + str(fw_segments[j]))
-                #assert sw_segments[j] == fw_segments[j]
+            fw_segments = get_segments_from_dut(dut)
 
-        #print(f'{strip_cnts=}')
-        with open("../pat_unit_mux.log", "w+") as f:
-            f.write("Strips:\n")
-            f.write(plotille.histogram(strip_cnts))
+            if i > LATENCY+2:
+                for j in range(WIDTH):
+                    if fw_segments[j].id > 0:
+                        strip_cnts.append(j)
+                        id_cnts.append(fw_segments[j].id)
+                    if sw_segments[j] != fw_segments[j]:
+                        print(f"loop={i} (strip={j}):")
+                        print(" > sw: " + str(sw_segments[j]))
+                        print(" > fw: " + str(fw_segments[j]))
+                        assert sw_segments[j] == fw_segments[j]
 
-            f.write("\nIDs:\n")
-            f.write(plotille.histogram(id_cnts))
+        await RisingEdge(dut.clock)
 
+    with open("../pat_unit_mux.log", "w+") as f:
+
+        f.write("Strips:\n")
+        f.write(plotille.hist(strip_cnts, bins=int(192/4)))
+
+        f.write("\nIDs:\n")
+        f.write(plotille.hist(id_cnts, bins=16))
 
 
 def test_pat_unit_mux():
