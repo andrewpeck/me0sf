@@ -31,6 +31,8 @@ async def pat_unit_mux_test(dut, NLOOPS=1000):
 
     "Test the pat_unix_mux.vhd module"
 
+    setup(dut)
+
     dut.thresh.value = 4
 
     await RisingEdge(dut.clock)
@@ -39,8 +41,6 @@ async def pat_unit_mux_test(dut, NLOOPS=1000):
     THRESH = int(dut.thresh.value)
     LATENCY = dut.LATENCY.value
     WIDTH = dut.WIDTH.value
-
-    setup(dut)
 
     set_dut_inputs(dut, [0] * 6)
 
