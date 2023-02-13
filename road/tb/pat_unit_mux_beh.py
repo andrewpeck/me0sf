@@ -24,8 +24,8 @@ def extract_data_window(ly_dat, strip, max_span):
 
 def test_extract_data_window():
     """test function for extract_data_window"""
-    assert extract_data_window([0b100000000000000000, 0b1000100000000000000, 0b1000000000000000000, 0b1000000000000000000, 0b1000000000000000000, 0b1000000000000000000], 8) == [134217728, 285212672, 268435456, 268435456, 268435456, 268435456]
-    assert extract_data_window([0b100000000000000000, 0b1000100000000000000, 0b1000000000000000000, 0b1000000000000000000, 0b1000000000000000000, 0b1000000000000000000], 20) == [32768, 69632, 65536, 65536, 65536, 65536]
+    assert extract_data_window(max_span=37, strip=8, ly_dat=[0b100000000000000000, 0b1000100000000000000, 0b1000000000000000000, 0b1000000000000000000, 0b1000000000000000000, 0b1000000000000000000]) == [134217728, 285212672, 268435456, 268435456, 268435456, 268435456]
+    assert extract_data_window(max_span=37, strip=20, ly_dat=[0b100000000000000000, 0b1000100000000000000, 0b1000000000000000000, 0b1000000000000000000, 0b1000000000000000000, 0b1000000000000000000]) == [32768, 69632, 65536, 65536, 65536, 65536]
 
 def pat_mux(partition_data, thresh, max_span, width=192, partition=0):
     """
@@ -38,10 +38,10 @@ def pat_mux(partition_data, thresh, max_span, width=192, partition=0):
                           strip=strip,
                           partition=partition)
             for strip in range(width)]
-    
+
 def test_pat_mux():
     data = [0b1, 0b1, 0b1, 0b1, 0b1, 0b1]
-    mux = pat_mux(data)
+    mux = pat_mux(data, thresh=6, max_span=37)
     # check for expected pattern
     assert mux[0].id == 19
     assert mux[0].lc == 6
