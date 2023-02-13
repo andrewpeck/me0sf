@@ -64,7 +64,7 @@ def calculate_layer_count(masked_data):
     #return sum(map(lambda x : x > 0, masked_data))
     return sum([count_ones(x) for x in masked_data])
 
-def find_best_seg(data, strip=None, ly_thresh=6, partition=-1):
+def find_best_seg(data, strip, ly_thresh, partition=-1):
 
     """
     takes in sample data for each layer and returns best segment

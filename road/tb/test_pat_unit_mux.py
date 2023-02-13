@@ -31,7 +31,14 @@ async def pat_unit_mux_test(dut, NLOOPS=1000):
 
     "Test the pat_unix_mux.vhd module"
 
+    dut.thresh.value = 4
+
+    await RisingEdge(dut.clock)
+
     MAX_SPAN = get_max_span_from_dut(dut)
+    THRESH = int(dut.thresh.value)
+    LATENCY = dut.LATENCY.value
+    WIDTH = dut.WIDTH.value
 
     setup(dut)
 
@@ -42,8 +49,6 @@ async def pat_unit_mux_test(dut, NLOOPS=1000):
         await RisingEdge(dut.clock)
 
     # set up a fixed latency queue
-    LATENCY = dut.LATENCY.value
-    WIDTH = dut.WIDTH.value
     queue = []
 
     gen_data = lambda : datagen_mux(n_segs=1, n_noise=0, max_span=WIDTH)
@@ -80,8 +85,9 @@ async def pat_unit_mux_test(dut, NLOOPS=1000):
         # (2) run the emulator on the old data
 
         sw_segments = pat_mux(partition_data=queue.pop(0),
-                              MAX_SPAN=MAX_SPAN,
-                              WIDTH=dut.WIDTH.value)
+                              max_span=MAX_SPAN,
+                              thresh=THRESH,
+                              width=WIDTH)
 
         fw_segments = get_segments_from_dut(dut)
 
