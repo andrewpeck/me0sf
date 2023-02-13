@@ -1,3 +1,11 @@
+----------------------------------------------------------------------------------
+-- CMS Muon Endcap
+-- GEM Collaboration
+-- ME0 Segment Finder Firmware
+-- A. Peck, C. Grubb, J. Chismar
+----------------------------------------------------------------------------------
+-- Description:
+----------------------------------------------------------------------------------
 -- https://www.varsitytutors.com/hotmath/hotmath_help/topics/line-of-best-fit
 -- https://vhdlguru.blogspot.com/2010/03/fixed-point-operations-in-vhdl-tutorial.html
 -- https://vhdlguru.blogspot.com/2010/03/fixed-point-operations-in-vhdl-tutorial_29.html

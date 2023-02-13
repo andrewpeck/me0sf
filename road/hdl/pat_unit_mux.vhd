@@ -1,3 +1,24 @@
+----------------------------------------------------------------------------------
+-- CMS Muon Endcap
+-- GEM Collaboration
+-- ME0 Segment Finder Firmware
+-- A. Peck, C. Grubb, J. Chismar
+----------------------------------------------------------------------------------
+-- Description:
+--
+-- The pattern unit multiplexer time-multiplexes a pattern unit across a
+-- collection of strips. An individual pattern unit looks at a single strip.
+-- Because of its fully pipelined design, however, it can be time-multiplexed to
+-- process a different strip in every clock cycle.
+--
+-- We run the logic clock at 320MHz (8x the LHC clock), so that we can process
+-- eight strips with a single pattern unit block.
+--
+-- This pat_unit_mux module multiplexes 8 strips into each pattern unit, then
+-- demultiplexes the outputs. So in the end we process 192 strips using
+-- 192/8=24 pattern units, and produce 192 output segments.
+--
+----------------------------------------------------------------------------------
 library ieee;
 use ieee.std_logic_1164.all;
 use ieee.std_logic_misc.all;

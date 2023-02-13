@@ -1,3 +1,11 @@
+----------------------------------------------------------------------------------
+-- CMS Muon Endcap
+-- GEM Collaboration
+-- ME0 Segment Finder Firmware
+-- A. Peck, C. Grubb, J. Chismar
+----------------------------------------------------------------------------------
+-- Description:
+----------------------------------------------------------------------------------
 library ieee;
 use ieee.std_logic_1164.all;
 use ieee.std_logic_misc.all;
