@@ -13,6 +13,22 @@ def parse_data(data, strip, MAX_SPAN=37):
         parsed_data = (data >> shift) & (2**MAX_SPAN - 1)
     return parsed_data
 
+def pat_mux(partition_data, thresh, max_span, width=192, partition=0):
+    """
+    takes in a list of integers for the partition data in each layer,
+    the MAX_SPAN of each pat_unit, and the partition width to return a list of the
+    segments the pat_unit_mux.vhd would find
+    """
+    return [find_best_seg(extract_data_window(partition_data, strip, max_span),
+                          ly_thresh = thresh,
+                          strip=strip,
+                          partition=partition)
+            for strip in range(width)]
+
+#-------------------------------------------------------------------------------
+# Tests
+#-------------------------------------------------------------------------------
+
 def test_parse_data():
     """ test function for parse_data"""
     assert parse_data(0b1000000000000000000, 10) == 0b100000000000000000000000000
@@ -26,18 +42,6 @@ def test_extract_data_window():
     """test function for extract_data_window"""
     assert extract_data_window(max_span=37, strip=8, ly_dat=[0b100000000000000000, 0b1000100000000000000, 0b1000000000000000000, 0b1000000000000000000, 0b1000000000000000000, 0b1000000000000000000]) == [134217728, 285212672, 268435456, 268435456, 268435456, 268435456]
     assert extract_data_window(max_span=37, strip=20, ly_dat=[0b100000000000000000, 0b1000100000000000000, 0b1000000000000000000, 0b1000000000000000000, 0b1000000000000000000, 0b1000000000000000000]) == [32768, 69632, 65536, 65536, 65536, 65536]
-
-def pat_mux(partition_data, thresh, max_span, width=192, partition=0):
-    """
-    takes in a list of integers for the partition data in each layer, 
-    the MAX_SPAN of each pat_unit, and the partition width to return a list of the
-    segments the pat_unit_mux.vhd would find 
-    """
-    return [find_best_seg(extract_data_window(partition_data, strip, max_span),
-                          ly_thresh = thresh,
-                          strip=strip,
-                          partition=partition)
-            for strip in range(width)]
 
 def test_pat_mux():
     data = [0b1, 0b1, 0b1, 0b1, 0b1, 0b1]
