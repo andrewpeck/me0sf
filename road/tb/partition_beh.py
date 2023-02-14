@@ -81,7 +81,14 @@ def test_cancel_edges():
 #     """takes in layer data and filters for centroids"""
 #     return sum([2**strip for strip in range(len(bin(data))-2) if determine_if_centroid(strip, width, data, layer) == True])
 
-def work_partition(partition_data, max_span=37, width=192, group_width=8, ghost_width=4, enable_gcl=True, partition=0):
+def work_partition(partition_data,
+                   thresh,
+                   enable_gcl=True,
+                   max_span=37,
+                   width=192,
+                   group_width=8,
+                   ghost_width=4,
+                   partition=0):
 
     """
 
@@ -97,7 +104,11 @@ def work_partition(partition_data, max_span=37, width=192, group_width=8, ghost_
     """
     #centroid_masked_data = [process_centroids(dat, ly) for (ly, dat) in enumerate(partition_data)] #add centroid filtering
 
-    segments = pat_mux(partition_data, max_span, width, partition=partition)
+    segments = pat_mux(partition_data,
+                       thresh=thresh,
+                       max_span=max_span,
+                       width=width,
+                       partition=partition)
     if (enable_gcl):
         segments = cancel_edges(segments, group_width, ghost_width, width)
 
@@ -107,17 +118,15 @@ def work_partition(partition_data, max_span=37, width=192, group_width=8, ghost_
         it = iter(it)
         return iter(lambda: tuple(islice(it, size)), ())
 
-    chunked = chunk(segments, group_width)
-
+    #chunked = chunk(segments, group_width)
     #final_dat = list(map(max, chunked, group_width))
     final_dat = list(map(max, np.array(segments).reshape(width//group_width, group_width)))
-    
 
     return final_dat
 
 def test_work_partition():
-    data = [0b1, 0b1, 0b1, 0b1, 0b1, 0b1]
-    part = work_partition(data)
+    data = [1]*6
+    part = work_partition(data, thresh=6, enable_gcl=True)
     assert part[0].id == 19
     assert part[0].lc == 6
     assert part[1].id == 0
