@@ -9,8 +9,9 @@ on:
     #   - master
 
 jobs:
-  behaviors:
-    runs-on: self-hosted 
+
+  behavioral:
+    runs-on: self-hosted
     strategy:
       fail-fast: false
       matrix:
@@ -26,6 +27,7 @@ jobs:
 
       - name: Test Behaviors
         run: pytest ${{ matrix.behs }}
+
   cocotb:
     runs-on: self-hosted
     strategy:
