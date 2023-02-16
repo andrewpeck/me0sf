@@ -19,15 +19,14 @@ use work.priority_encoder_pkg.all;
 entity partition is
   generic(
 
-    LATENCY : integer := 8;
+    LATENCY : integer := PARTITION_LATENCY;
 
     NUM_SEGMENTS  : integer := 4;
-    PARTITION_NUM : integer := 0;          -- just assign a number (e.g. 0-7) to each
-                                           -- partition so we can look it up later
+    PARTITION_NUM : integer := 0;  -- just assign a number (e.g. 0-7) to each partition so we can look it up later
     PRT_WIDTH     : natural := PRT_WIDTH;  -- width of the partition (192)
-    S0_WIDTH      : natural := 8;          -- width of the pre-sorting regions
+    S0_WIDTH      : natural := 8;       -- width of the pre-sorting regions
 
-    PATLIST   : patdef_array_t := patdef_array;
+    PATLIST : patdef_array_t := patdef_array;
 
     LY0_SPAN : natural := get_max_span(patdef_array);
     LY1_SPAN : natural := get_max_span(patdef_array);  -- TODO: variably size the other layers instead of using the max
@@ -44,9 +43,9 @@ entity partition is
 
     clock : in  std_logic;
     dav_i : in  std_logic;
-    dav_o : out std_logic;
+    dav_o : out std_logic := '0';
 
-    thresh : in  std_logic_vector (2 downto 0);
+    thresh : in std_logic_vector (2 downto 0);
 
     --------------------------------------------------------------------------------
     -- Inputs
@@ -68,6 +67,8 @@ architecture behavioral of partition is
   signal strips     : segment_list_t (PRT_WIDTH-1 downto 0);
   signal strips_dav : std_logic := '0';
   signal strips_s0  : segment_list_t (PRT_WIDTH/S0_WIDTH-1 downto 0);
+
+  signal dav_priority : std_logic_vector (PRT_WIDTH/S0_WIDTH-1 downto 0) := (others => '0');
 
 begin
 
@@ -116,7 +117,6 @@ begin
   -------------------------------------------------------------------------------
 
   s0_gen : for region in 0 to PRT_WIDTH/S0_WIDTH-1 generate
-    signal dav      : std_logic := '0';
     signal best     : std_logic_vector (segment_t'w - 1 downto 0);
     signal cand_slv : bus_array (0 to S0_WIDTH-1) (segment_t'w - 1 downto 0);
   begin
@@ -138,7 +138,7 @@ begin
       port map (
         clock => clock,
         dav_i => strips_dav,
-        dav_o => dav,
+        dav_o => dav_priority(region),
         dat_i => cand_slv,
         dat_o => best,
         adr_o => open
@@ -158,19 +158,6 @@ begin
     segments_o(I).partition <= to_unsigned(PARTITION_NUM, segments_o(I).partition'length);
   end generate;
 
-  --------------------------------------------------------------------------------
-  -- Latency Data Valid
-  --------------------------------------------------------------------------------
-
-  dav_delay: entity work.fixed_delay_sf
-    generic map (
-      DELAY => LATENCY,
-      WIDTH => 1
-      )
-    port map (
-      clock     => clock,
-      data_i(0) => dav_i,
-      data_o(0) => dav_o
-      );
+  dav_o <= dav_priority(0);
 
 end behavioral;

@@ -2,122 +2,138 @@
 import os
 import random
 import cocotb
-import event_display as disp
 from datagen_mux import datagen_mux
 from subfunc import *
 from cocotb_test.simulator import run
 from partition_beh import work_partition
+from cocotb.triggers import Timer
 from test_common import *
+from cocotb.triggers import RisingEdge, Edge
+
+async def monitor_dav(dut):
+    await RisingEdge(dut.dav_o)
+    await RisingEdge(dut.dav_o)
+    while True:
+        await Edge(dut.segments_o)
+        await Timer(1, units="ns")
+        assert dut.dav_o == 1
+        await RisingEdge(dut.clock)
+
+        for _ in range(7):
+            await RisingEdge(dut.clock)
+            assert dut.dav_o == 0
+
+        await RisingEdge(dut.clock)
+        assert dut.dav_o == 1
+
+        break
 
 @cocotb.test()
-async def partition_test(
-    dut, group_size=8, ghost_width=2, discrepancy_cnt=0, N_LAYERS=6
-):
-    """Test the partition.vhd module"""
+async def partition_test_segs(dut):
+    await partition_test(dut, NLOOPS=2000, test="SEGMENTS")
+
+@cocotb.test()
+async def partition_test_walking(dut):
+    await partition_test(dut, NLOOPS=192, test="WALKING1")
+
+async def partition_test(dut, NLOOPS=1000, test="SEGMENTS"):
+
+    setup(dut)
+    cocotb.fork(monitor_dav(dut))
 
     # random.seed(56)
 
+    THRESH = 6
     WIDTH = dut.pat_unit_mux_inst.WIDTH.value
-
-    setup(dut)
-
-    # set MAX_SPAN from firmware
     MAX_SPAN = get_max_span_from_dut(dut)
+    LATENCY = int(math.ceil(dut.LATENCY.value/8.0))
+
+    # initial inputs
+    dut.thresh.value = THRESH
+    dut.partition_i.value = 6*[0]
 
     for i in range(4):
         await RisingEdge(dut.dav_i)
 
-    # set up a fixed latency queue
-    latency = 2  # FIXME: input the actual latency value; not an exact clock cycle --> 1 dav or 8 clock cycles from the dav_i await above
-
     queue = []
 
-    for j in range(latency):
+    for i in range(LATENCY-1):
+        queue.append([0]*6)
 
-        # align to the dav_i
-        await RisingEdge(dut.dav_i)
+    # loop over some number of test cases
+    i = 0
+    while i < NLOOPS:
 
-        chamber_data = [0]*6
+        # push new data on dav_i
+        if dut.dav_i.value == 1:
 
-        queue.append(chamber_data)
+            i += 1
 
-        for i in range(6):
-            dut.partition_i[i].value = chamber_data[i]
+            # (1) generate new random data
+            # (2) push it onto the queue
+            # (3) set the DUT inputs to the new data
+            if test=="WALKING1":
+                new_data = 6 * [0x1 << (i % 192)]
+            elif test=="SEGMENTS":
+                new_data = datagen_mux(n_segs=1, n_noise=0, max_span=WIDTH)
+            else:
+                new_data = 0*[6]
+                assert "Invalid test selected"
 
-    for j in range(1000):
+            queue.append(new_data)
+            dut.partition_i.value = new_data
 
-        print("loop %d" % j)
 
-        # align to the dav_i
-        await RisingEdge(dut.dav_i)
+        # pop old data on dav_o
+        if dut.dav_o.value == 1:
 
-        # (1) generate new random data
-        # (2) push it onto the queue
-        # (3) set the DUT inputs to the new data
+            popped_data = queue.pop(0)
+            sw_segments = work_partition(partition_data=popped_data,
+                                         thresh=THRESH,
+                                         max_span=MAX_SPAN,
+                                         width=WIDTH,
+                                         enable_gcl=False)
 
-        new_data = datagen_mux(WIDTH=WIDTH, track_num=4, nhit_hi=4, nhit_lo=3)
+            fw_segments = get_segments_from_dut(dut)
 
-        queue.append(new_data)
+            for j in range(len(sw_segments)):
 
-        dut.partition_i.value = new_data
+                if i > 3 and sw_segments[j] != fw_segments[j]:
+                    print(f" loop {i} seg {j}:")
+                    print("   > sw: " + str(sw_segments[j]))
+                    print("   > fw: " + str(fw_segments[j]))
+                    assert sw_segments[j] == fw_segments[j]
 
-        # set neighbor_i to 0 for now
-        # dut.neighbor_i.value = [0]*6
-
-        # latency equals 9 clock cycles
-
-        # gather emulator output
-        popped_data = queue.pop(0)
-
-        sw_segments = work_partition(
-            partition_data=popped_data, max_span=MAX_SPAN, width=WIDTH, enable_gcl=False
-        )
-        fw_segments = get_segments_from_dut(dut)
-
-        for i in range(len(sw_segments)):
-
-            # disp.event_display(hits=popped_data, fits=None, pats=None, width=WIDTH, max_span=MAX_SPAN)
-
-            if True or sw_segments[i] != fw_segments[i]:
-                print(f" seg {i}:")
-                print("   > sw: " + str(sw_segments[i]))
-                print("   > fw: " + str(fw_segments[i]))
-            assert sw_segments[i] == fw_segments[i]
+        # next clock cycle
+        await RisingEdge(dut.clock)
 
 
 def test_partition():
+    """ """
     tests_dir = os.path.abspath(os.path.dirname(__file__))
     rtl_dir = os.path.abspath(os.path.join(tests_dir, "..", "hdl"))
     module = os.path.splitext(os.path.basename(__file__))[0]
 
-    vhdl_sources = [
-        os.path.join(rtl_dir, "priority_encoder/hdl/priority_encoder.vhd"),
-        os.path.join(rtl_dir, "pat_types.vhd"),
-        os.path.join(rtl_dir, "pat_pkg.vhd"),
-        os.path.join(rtl_dir, "patterns.vhd"),
-        os.path.join(rtl_dir, "centroid_finder.vhd"),
-        os.path.join(rtl_dir, "pat_unit.vhd"),
-        os.path.join(rtl_dir, "dav_to_phase.vhd"),
-        os.path.join(rtl_dir, "pat_unit_mux.vhd"),
-        os.path.join(rtl_dir, "partition.vhd"),
-    ]
-
-    parameters = {}
-    parameters["MUX_FACTOR"] = 8
+    vhdl_sources = [os.path.join(rtl_dir, "priority_encoder/hdl/priority_encoder.vhd"),
+                    os.path.join(rtl_dir, "pat_types.vhd"),
+                    os.path.join(rtl_dir, "pat_pkg.vhd"),
+                    os.path.join(rtl_dir, "fixed_delay.vhd"),
+                    os.path.join(rtl_dir, "patterns.vhd"),
+                    os.path.join(rtl_dir, "centroid_finder.vhd"),
+                    os.path.join(rtl_dir, "pat_unit.vhd"),
+                    os.path.join(rtl_dir, "dav_to_phase.vhd"),
+                    os.path.join(rtl_dir, "pat_unit_mux.vhd"),
+                    os.path.join(rtl_dir, "partition.vhd")]
 
     os.environ["SIM"] = "questa"
 
-    run(
-        vhdl_sources=vhdl_sources,
+    run(vhdl_sources=vhdl_sources,
         module=module,  # name of cocotb test module
         compile_args=["-2008"],
         toplevel="partition",  # top level HDL
         toplevel_lang="vhdl",
         sim_args = ['-do "set NumericStdNoWarnings 1;"'],
-        parameters=parameters,
-        gui=0,
-    )
-
+        gui=0)
 
 if __name__ == "__main__":
     test_partition()
