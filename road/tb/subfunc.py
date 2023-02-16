@@ -49,7 +49,7 @@ class Segment:
 
         quality = 0
         if (lc > 0):
-            quality = (lc << 17) | (id << 12) | ((192-strip) << 4) | prt
+            quality = (lc << 17) | (id << 12) | (strip << 4) | prt
 
         self.quality=quality
 
