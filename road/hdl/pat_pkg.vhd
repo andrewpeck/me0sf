@@ -19,6 +19,7 @@ package pat_pkg is
 
   constant PAT_UNIT_LATENCY     : positive := 5;
   constant PAT_UNIT_MUX_LATENCY : positive := PAT_UNIT_LATENCY + 3;
+  constant PARTITION_LATENCY    : positive := PAT_UNIT_MUX_LATENCY + 5;
 
   type chamber_t is array(integer range 0 to 7) of partition_t;
 
