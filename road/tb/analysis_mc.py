@@ -52,7 +52,7 @@ if __name__ == "__main__":
             bx_list = list(range(-(math.floor(n_bx/2)), math.floor(n_bx/2)+1))
 
     # Output text file
-    file_out = open("output_log_%s_bx%s.txt"%(args.hits, args.bx), "w")
+    file_out = open("output_log_%s_bx%s_crosspart_%s.txt"%(args.hits, args.bx, args.cross_part), "w")
 
     # Nr. of segments per chamber per event
     num_seg_per_chamber = ROOT.TH1D("num_seg_per_chamber","Fraction of Events vs Number of Segments per Chamber",13,-0.5,12.5)
@@ -94,6 +94,8 @@ if __name__ == "__main__":
         if (frac_done - prev_frac_done) >= 0.05:
             print ("%.2f"%(frac_done*100) + "% Events Done")
             prev_frac_done = frac_done
+        #if ievent!=15:
+        #    continue
         if args.verbose:
             file_out.write("Event number = %d\n"%ievent)
 
@@ -191,7 +193,9 @@ if __name__ == "__main__":
             track_bending_angle.append(bending_angle)
             track_pt.append(track_sim_pt[i])
             track_substrip.append(substrip)
-            track_eta_partition.append(max(eta_partition_list,key=eta_partition_list.count))
+            eta_partition_list_sorted = eta_partition_list
+            eta_partition_list_sorted.sort(reverse=True)
+            track_eta_partition.append(max(eta_partition_list_sorted,key=eta_partition_list_sorted.count))
             track_nhits.append(len(track_hit_index[i]))
             nlayers = 0
             for l in nlayers_hit:
@@ -229,7 +233,9 @@ if __name__ == "__main__":
             substrip = (top_layer_sbit + bot_layer_sbit)/2.0
             seg_bending_angle.append(bending_angle)
             seg_substrip.append(substrip)
-            seg_eta_partition.append(max(eta_partition_list,key=eta_partition_list.count))
+            eta_partition_list_sorted = eta_partition_list
+            eta_partition_list_sorted.sort(reverse=True)
+            seg_eta_partition.append(max(eta_partition_list_sorted,key=eta_partition_list_sorted.count))
             seg_nrechits.append(len(seg_rechit_index[i]))
             nlayers = 0
             for l in nlayers_hit:
@@ -242,21 +248,18 @@ if __name__ == "__main__":
         # could be if we use the virtual layers:
         # 36 * 15 * 2 * [6, 2]
 
-        if args.cross_part == "none":
-            datlist = np.array([[[[0 for i in range(6)], [(0, 0)]] for j in range(8)] for k in range(36)], dtype = object)
-        else:
-            # virtual partitions included
-            datlist = np.array([[[[0 for i in range(6)], [(0, 0)]] for j in range(15)] for k in range(36)], dtype = object)
-            # mapping from part_idx to real array index we want to insert is different
-            # id  virtual real virtual
-            # 0 ->          0     1
-            # 1 ->   1      2     3
-            # 2 ->   3      4     5
-            # 3 ->   5      6     7
-            # 4 ->   7      8     9
-            # 5 ->   9      10    11
-            # 6 ->   11     12    13
-            # 7 ->   13     14
+        # virtual partitions included
+        datlist = np.array([[[[0 for i in range(6)], [(0, 0)]] for j in range(15)] for k in range(36)], dtype = object)
+        # mapping from part_idx to real array index we want to insert is different
+        # id  virtual real virtual
+        # 0 ->          0     1
+        # 1 ->   1      2     3
+        # 2 ->   3      4     5
+        # 3 ->   5      6     7
+        # 4 ->   7      8     9
+        # 5 ->   9      10    11
+        # 6 ->   11     12    13
+        # 7 ->   13     14
 
         # loop every hit inside an event
         if args.hits == "rec":
@@ -272,20 +275,17 @@ if __name__ == "__main__":
                     continue
 
                 # insert the hit
-                if args.cross_part == "none":
-                    datlist[chamb_idx, part_idx, 0][layer_idx] = (datlist[chamb_idx, part_idx, 0][layer_idx]) | (1 << sbit_idx)
-                elif args.cross_part == "full":
-                    datlist[chamb_idx, part_idx*2, 0][layer_idx] = (datlist[chamb_idx, part_idx, 0][layer_idx]) | (1 << sbit_idx)
+                datlist[chamb_idx, part_idx*2, 0][layer_idx] = (datlist[chamb_idx, part_idx*2, 0][layer_idx]) | (1 << sbit_idx)
+                if args.cross_part == "full":
                     if part_idx != 7:
-                        datlist[chamb_idx, (part_idx*2)+1, 0][layer_idx] = (datlist[chamb_idx, part_idx, 0][layer_idx]) | (1 << sbit_idx)
+                        datlist[chamb_idx, (part_idx*2)+1, 0][layer_idx] = (datlist[chamb_idx, (part_idx*2)+1, 0][layer_idx]) | (1 << sbit_idx)
                     if part_idx != 0:
-                        datlist[chamb_idx, (part_idx*2)-1, 0][layer_idx] = (datlist[chamb_idx, part_idx, 0][layer_idx]) | (1 << sbit_idx)
+                        datlist[chamb_idx, (part_idx*2)-1, 0][layer_idx] = (datlist[chamb_idx, (part_idx*2)-1, 0][layer_idx]) | (1 << sbit_idx)
                 elif args.cross_part == "partial":
-                    datlist[chamb_idx, part_idx*2, 0][layer_idx] = (datlist[chamb_idx, part_idx, 0][layer_idx]) | (1 << sbit_idx)
                     if part_idx != 7 and layer_idx >= 2:
-                        datlist[chamb_idx, (part_idx*2)+1, 0][layer_idx] = (datlist[chamb_idx, part_idx, 0][layer_idx]) | (1 << sbit_idx)
+                        datlist[chamb_idx, (part_idx*2)+1, 0][layer_idx] = (datlist[chamb_idx, (part_idx*2)+1, 0][layer_idx]) | (1 << sbit_idx)
                     if part_idx != 0 and layer_idx <= 3:
-                        datlist[chamb_idx, (part_idx*2)-1, 0][layer_idx] = (datlist[chamb_idx, part_idx, 0][layer_idx]) | (1 << sbit_idx)                
+                        datlist[chamb_idx, (part_idx*2)-1, 0][layer_idx] = (datlist[chamb_idx, (part_idx*2)-1, 0][layer_idx]) | (1 << sbit_idx)                
 
         elif args.hits == "digi":
             for hit in range(len(digihit_region)):
@@ -300,20 +300,17 @@ if __name__ == "__main__":
                     continue
                 
                 # insert the hit
-                if args.cross_part == "none":
-                    datlist[chamb_idx, part_idx, 0][layer_idx] = (datlist[chamb_idx, part_idx, 0][layer_idx]) | (1 << sbit_idx)
-                elif args.cross_part == "full":
-                    datlist[chamb_idx, part_idx*2, 0][layer_idx] = (datlist[chamb_idx, part_idx, 0][layer_idx]) | (1 << sbit_idx)
+                datlist[chamb_idx, part_idx*2, 0][layer_idx] = (datlist[chamb_idx, part_idx*2, 0][layer_idx]) | (1 << sbit_idx)
+                if args.cross_part == "full":
                     if part_idx != 7:
-                        datlist[chamb_idx, (part_idx*2)+1, 0][layer_idx] = (datlist[chamb_idx, part_idx, 0][layer_idx]) | (1 << sbit_idx)
+                        datlist[chamb_idx, (part_idx*2)+1, 0][layer_idx] = (datlist[chamb_idx, (part_idx*2)+1, 0][layer_idx]) | (1 << sbit_idx)
                     if part_idx != 0:
-                        datlist[chamb_idx, (part_idx*2)-1, 0][layer_idx] = (datlist[chamb_idx, part_idx, 0][layer_idx]) | (1 << sbit_idx)
+                        datlist[chamb_idx, (part_idx*2)-1, 0][layer_idx] = (datlist[chamb_idx, (part_idx*2)-1, 0][layer_idx]) | (1 << sbit_idx)
                 elif args.cross_part == "partial":
-                    datlist[chamb_idx, part_idx*2, 0][layer_idx] = (datlist[chamb_idx, part_idx, 0][layer_idx]) | (1 << sbit_idx)
                     if part_idx != 7 and layer_idx >= 2:
-                        datlist[chamb_idx, (part_idx*2)+1, 0][layer_idx] = (datlist[chamb_idx, part_idx, 0][layer_idx]) | (1 << sbit_idx)
+                        datlist[chamb_idx, (part_idx*2)+1, 0][layer_idx] = (datlist[chamb_idx, (part_idx*2)+1, 0][layer_idx]) | (1 << sbit_idx)
                     if part_idx != 0 and layer_idx <= 3:
-                        datlist[chamb_idx, (part_idx*2)-1, 0][layer_idx] = (datlist[chamb_idx, part_idx, 0][layer_idx]) | (1 << sbit_idx)  
+                        datlist[chamb_idx, (part_idx*2)-1, 0][layer_idx] = (datlist[chamb_idx, (part_idx*2)-1, 0][layer_idx]) | (1 << sbit_idx)    
         
         # Find segments per chamber
         online_segment_chamber = {}
@@ -335,7 +332,7 @@ if __name__ == "__main__":
                 continue
             #print (data)
 
-            seglist = process_chamber(data, ghost_width=10, num_outputs=10)
+            seglist = process_chamber(data, ghost_width=10, num_outputs=10, cross_part_seg_width=4)
             seglist_final = []
             #print (seglist)
             for seg in seglist:
@@ -346,7 +343,7 @@ if __name__ == "__main__":
                 if seg.id != 0:
                     seglist_final.append(seg)
                     if args.verbose:
-                        file_out.write("  Online Segment in Chamber (0-17 for region -1, 18-35 for region 1) %d\n: "%chamber_nr)
+                        file_out.write("  Online Segment in Chamber (0-17 for region -1, 18-35 for region 1) %d:\n "%chamber_nr)
                         file_out.write("    Eta Partition = %d, Center Strip = %.4f, Bending angle = %.4f, ID = %d, Hit count = %d, Layer count = %d, Quality = %d\n"%(seg.partition, seg.substrip+seg.strip, seg.bend_ang, seg.id, seg.hc, seg.lc, seg.quality))
                         file_out.write("\n")
             online_segment_chamber[chamber_nr] = seglist_final
@@ -406,7 +403,8 @@ if __name__ == "__main__":
                 online_hc = seg.hc
                 online_lc = seg.lc
                 online_quality = seg.quality
-                if online_eta_partition == offline_eta_partition:
+                if abs(online_eta_partition - offline_eta_partition)<=1:
+                #if online_eta_partition == offline_eta_partition:
                     #if online_bending_angle == 0:
                     #    bending_angle_err = abs(offline_bending_angle)
                     #else:
@@ -419,9 +417,10 @@ if __name__ == "__main__":
                         offline_effi_sres.Fill(offline_substrip - online_substrip)
                         seg_match = 1
                         seg_matched_index.append(j)
-                        #print ("    Offline segment: Chamber = %d: , Eta Partition = %d, Center Strip = %.4f, Bending angle = %.4f, Hit count = %d, Layer_count = %d"%(offline_chamber, offline_eta_partition, offline_substrip, offline_bending_angle, offline_nrechits, offline_nlayers))
-                        #print ("    Online segment: Chamber = %d: , Eta Partition = %d, Center Strip = %.4f, Bending angle = %.4f, ID = %d, Hit count = %d, Layer count = %d, Quality = %d"%(offline_chamber, online_eta_partition, online_substrip, online_bending_angle, online_id, online_hc, online_lc, online_quality))
-                        #print ("")
+                        #if args.verbose:
+                            #print ("    Offline segment: Chamber = %d: , Eta Partition = %d, Center Strip = %.4f, Bending angle = %.4f, Hit count = %d, Layer_count = %d"%(offline_chamber, offline_eta_partition, offline_substrip, offline_bending_angle, offline_nrechits, offline_nlayers))
+                            #file_out.write("    Online segment: Chamber = %d: , Eta Partition = %d, Center Strip = %.4f, Bending angle = %.4f, ID = %d, Hit count = %d, Layer count = %d, Quality = %d\n"%(st_chamber, online_eta_partition, online_substrip, online_bending_angle, online_id, online_hc, online_lc, online_quality))
+                            #print ("")
                         break
             if seg_match == 0:
                 unmatched_offline_index.append(i)
@@ -464,7 +463,8 @@ if __name__ == "__main__":
                 online_hc = seg.hc
                 online_lc = seg.lc
                 online_quality = seg.quality
-                if online_eta_partition == st_eta_partition:
+                if abs(online_eta_partition - st_eta_partition)<=1:
+                #if online_eta_partition == st_eta_partition:
                     #if online_bending_angle == 0:
                     #    bending_angle_err = abs(st_bending_angle)
                     #else:
@@ -507,7 +507,8 @@ if __name__ == "__main__":
                     st_eta_partition = track_eta_partition[i]
                     st_bending_angle = track_bending_angle[i]
                     st_substrip = track_substrip[i]
-                    if (chamber == st_chamber) and (online_eta_partition == st_eta_partition):
+                    if (chamber == st_chamber) and abs(online_eta_partition - st_eta_partition)<=1:
+                    #if (chamber == st_chamber) and (online_eta_partition == st_eta_partition):
                         #if online_bending_angle == 0:
                         #    bending_angle_err = abs(st_bending_angle)
                         #else:
@@ -532,7 +533,7 @@ if __name__ == "__main__":
     print ("Overall purity w.r.t sim tracks = %.4f\n"%(st_purity))
     file_out.write("Overall purity w.r.t sim tracks = %.4f\n\n"%(st_purity))
 
-    plot_file = ROOT.TFile("output_plots_%s_bx%s.root"%(args.hits, args.bx), "recreate")
+    plot_file = ROOT.TFile("output_plots_%s_bx%s_crosspart_%s.root"%(args.hits, args.bx, args.cross_part), "recreate")
     plot_file.cd()
 
     # Plotting
@@ -563,7 +564,7 @@ if __name__ == "__main__":
     ROOT.gPad.Update()
     latex.DrawLatex(0.9, 0.91,plot_text1)
     latex.DrawLatex(0.42, 0.91,plot_text2)
-    c1.Print("offline_eff_%s_bx%s.pdf"%(args.hits, args.bx))
+    c1.Print("offline_eff_%s_bx%s_crosspart_%s.pdf"%(args.hits, args.bx, args.cross_part))
     offline_eff.Write()
 
     c2 = ROOT.TCanvas('', '', 800, 650)
@@ -584,7 +585,7 @@ if __name__ == "__main__":
     offline_effi_mres.SetLineColor(1)
     latex.DrawLatex(0.9, 0.91,plot_text1)
     latex.DrawLatex(0.42, 0.91,plot_text2)
-    c2.Print("offline_effi_mres_%s_bx%s.pdf"%(args.hits, args.bx))
+    c2.Print("offline_effi_mres_%s_bx%s_crosspart_%s.pdf"%(args.hits, args.bx, args.cross_part))
     offline_effi_mres.Write()
 
     c3 = ROOT.TCanvas('', '', 800, 650)
@@ -606,7 +607,7 @@ if __name__ == "__main__":
     offline_effi_sres.SetLineColor(1)
     latex.DrawLatex(0.9, 0.91,plot_text1)
     latex.DrawLatex(0.42, 0.91,plot_text2)
-    c3.Print("offline_effi_sres_%s_bx%s.pdf"%(args.hits, args.bx))
+    c3.Print("offline_effi_sres_%s_bx%s_crosspart_%s.pdf"%(args.hits, args.bx, args.cross_part))
     offline_effi_sres.Write()
 
     c4 = ROOT.TCanvas('', '', 800, 650)
@@ -625,7 +626,7 @@ if __name__ == "__main__":
     ROOT.gPad.Update()
     latex.DrawLatex(0.9, 0.91,plot_text1)
     latex.DrawLatex(0.42, 0.91,plot_text2)
-    c4.Print("st_eff_bending_%s_bx%s.pdf"%(args.hits, args.bx))
+    c4.Print("st_eff_bending_%s_bx%s_crosspart_%s.pdf"%(args.hits, args.bx, args.cross_part))
     st_eff_bending.Write()
 
     c5 = ROOT.TCanvas('', '', 800, 650)
@@ -644,7 +645,7 @@ if __name__ == "__main__":
     ROOT.gPad.Update()
     latex.DrawLatex(0.9, 0.91,plot_text1)
     latex.DrawLatex(0.42, 0.91,plot_text2)
-    c5.Print("st_eff_pt_%s_bx%s.pdf"%(args.hits, args.bx))
+    c5.Print("st_eff_pt_%s_bx%s_crosspart_%s.pdf"%(args.hits, args.bx, args.cross_part))
     st_eff_pt.Write()
 
     c6 = ROOT.TCanvas('', '', 800, 650)
@@ -663,7 +664,7 @@ if __name__ == "__main__":
     ROOT.gPad.Update()
     latex.DrawLatex(0.9, 0.91,plot_text1)
     latex.DrawLatex(0.42, 0.91,plot_text2)
-    c6.Print("st_eff_eta_%s_bx%s.pdf"%(args.hits, args.bx))
+    c6.Print("st_eff_eta_%s_bx%s_crosspart_%s.pdf"%(args.hits, args.bx, args.cross_part))
     st_eff_eta.Write()
 
     c7 = ROOT.TCanvas('', '', 800, 650)
@@ -684,7 +685,7 @@ if __name__ == "__main__":
     st_effi_mres.SetLineColor(1)
     latex.DrawLatex(0.9, 0.91,plot_text1)
     latex.DrawLatex(0.42, 0.91,plot_text2)
-    c7.Print("st_effi_mres_%s_bx%s.pdf"%(args.hits, args.bx))
+    c7.Print("st_effi_mres_%s_bx%s_crosspart_%s.pdf"%(args.hits, args.bx, args.cross_part))
     st_effi_mres.Write()
 
     c8 = ROOT.TCanvas('', '', 800, 650)
@@ -705,7 +706,7 @@ if __name__ == "__main__":
     st_effi_sres.SetLineColor(1)
     latex.DrawLatex(0.9, 0.91,plot_text1)
     latex.DrawLatex(0.42, 0.91,plot_text2)
-    c8.Print("st_effi_sres_%s_bx%s.pdf"%(args.hits, args.bx))
+    c8.Print("st_effi_sres_%s_bx%s_crosspart_%s.pdf"%(args.hits, args.bx, args.cross_part))
     st_effi_sres.Write()
 
     c9 = ROOT.TCanvas('', '', 800, 650)
@@ -724,7 +725,7 @@ if __name__ == "__main__":
     ROOT.gPad.Update()
     latex.DrawLatex(0.9, 0.91,plot_text1)
     latex.DrawLatex(0.42, 0.91,plot_text2)
-    c9.Print("st_purity_eta_%s_bx%s.pdf"%(args.hits, args.bx))
+    c9.Print("st_purity_eta_%s_bx%s_crosspart_%s.pdf"%(args.hits, args.bx, args.cross_part))
     st_purity_eta.Write()
 
     c10 = ROOT.TCanvas('', '', 800, 650)
@@ -743,7 +744,7 @@ if __name__ == "__main__":
     ROOT.gPad.Update()
     latex.DrawLatex(0.9, 0.91,plot_text1)
     latex.DrawLatex(0.42, 0.91,plot_text2)
-    c10.Print("st_purity_bending_%s_bx%s.pdf"%(args.hits, args.bx))
+    c10.Print("st_purity_bending_%s_bx%s_crosspart_%s.pdf"%(args.hits, args.bx, args.cross_part))
     st_purity_bending.Write()
 
     c11 = ROOT.TCanvas('', '', 800, 650)
@@ -758,7 +759,7 @@ if __name__ == "__main__":
     num_seg_per_chamber.SetLineColor(1)
     latex.DrawLatex(0.9, 0.91,plot_text1)
     latex.DrawLatex(0.42, 0.91,plot_text2)
-    c11.Print("num_seg_per_chamber_%s_bx%s.pdf"%(args.hits, args.bx))
+    c11.Print("num_seg_per_chamber_%s_bx%s_crosspart_%s.pdf"%(args.hits, args.bx, args.cross_part))
     num_seg_per_chamber.Write()
 
     c12 = ROOT.TCanvas('', '', 800, 650)
@@ -773,7 +774,7 @@ if __name__ == "__main__":
     num_seg_per_chamber_offline.SetLineColor(1)
     latex.DrawLatex(0.9, 0.91,plot_text1)
     latex.DrawLatex(0.42, 0.91,plot_text2)
-    c12.Print("num_seg_per_chamber_offline_%s_bx%s.pdf"%(args.hits, args.bx))
+    c12.Print("num_seg_per_chamber_offline_%s_bx%s_crosspart_%s.pdf"%(args.hits, args.bx, args.cross_part))
     num_seg_per_chamber_offline.Write()
 
     file_out.close()
