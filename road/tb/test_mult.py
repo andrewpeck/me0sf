@@ -52,7 +52,7 @@ def test_fit(A, B):
         os.path.join(rtl_dir, "pipelined_mult.vhd"),
     ]
 
-    sim = "ghdl"
+    sim = "questa"
     os.environ["SIM"] = sim
 
     opts = []

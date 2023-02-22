@@ -180,11 +180,18 @@ def test_fit():
                     os.path.join(rtl_dir, "pipelined_mult.vhd"),
                     os.path.join(rtl_dir, "fit.vhd")]
 
-    os.environ["SIM"] = "ghdl"
+    sim = "questa"
+    os.environ["SIM"] = sim
+
+    opts = []
+    if sim == "ghdl":
+        opts = ["--std=08"]
+    if sim == "questa":
+        opts = ["-2008"]
 
     run(vhdl_sources=vhdl_sources,
         module=module,  # name of cocotb test module
-        compile_args=["--std=08"],
+        compile_args=opts,
         toplevel="fit",  # top level HDL
         toplevel_lang="vhdl",
         # parameters=parameters,
