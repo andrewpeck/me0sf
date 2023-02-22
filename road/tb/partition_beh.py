@@ -25,16 +25,6 @@ def compare_ghosts(seg, comp_list):
         #         seg.reset()
     return seg
 
-def test_compare_ghosts():
-    seg_list = [Segment(6, 15), Segment(6, 12), Segment(6,5)]
-    seg1 = Segment(6, 15)
-    seg2 = Segment(6, 10)
-    seg3 = Segment(6, 7)
-    #check for reset with copy, ID+2, ID-2
-    assert compare_ghosts(seg1, seg_list).id == 15
-    assert compare_ghosts(seg2, seg_list).id == 10
-    assert compare_ghosts(seg3, seg_list).id == 7
-
 def cancel_edges(pat_mux_dat, group_width=8, ghost_width=4, width=192):
 
     """takes in pat_unit_mux_data, finds edges of groups w/given group width, and performs edge
@@ -46,22 +36,6 @@ def cancel_edges(pat_mux_dat, group_width=8, ghost_width=4, width=192):
             pat_mux_dat[j] = compare_ghosts(pat_mux_dat[j], pat_mux_dat[(j + 1):hi_index])
     return pat_mux_dat
 
-def test_cancel_edges():
-    seg_list1 = []
-    for i in range(24):
-        seg_list1.append(Segment(6, 15)) 
-    cancelled1 = cancel_edges(seg_list1, 8, 4, 24)
-    #check first edge is cancelled correctly
-    assert cancelled1[6].id == 15
-    assert cancelled1[7].id == 0
-    assert cancelled1[8].id == 0
-    assert cancelled1[9].id == 0
-    #check second edge is cancelled correctly 
-    assert cancelled1[14].id == 15 
-    assert cancelled1[15].id == 0
-    assert cancelled1[16].id == 0
-    assert cancelled1[17].id == 0
-    
 
 # def determine_if_centroid(strip, width, data, layer):
 #     """for a given strip, look at surrounding strips in given width and determine if the strip is a centroid. 
@@ -82,13 +56,13 @@ def test_cancel_edges():
 #     return sum([2**strip for strip in range(len(bin(data))-2) if determine_if_centroid(strip, width, data, layer) == True])
 
 def work_partition(partition_data,
-                   thresh,
-                   enable_gcl=True,
-                   max_span=37,
-                   width=192,
-                   group_width=8,
-                   ghost_width=4,
-                   partition=0):
+                   thresh : int,
+                   enable_gcl : bool = True,
+                   max_span : int = 37,
+                   width : int = 192,
+                   group_width : int = 8,
+                   ghost_width : int = 4,
+                   partition : int = 0):
 
     """
 
@@ -124,6 +98,10 @@ def work_partition(partition_data,
 
     return final_dat
 
+#-------------------------------------------------------------------------------
+# Tests
+#-------------------------------------------------------------------------------
+
 def test_work_partition():
     data = [1]*6
     part = work_partition(data, thresh=6, enable_gcl=True)
@@ -131,3 +109,31 @@ def test_work_partition():
     assert part[0].lc == 6
     assert part[1].id == 0
     assert part[1].lc == 0
+
+def test_compare_ghosts():
+    seg_list = [Segment(6, 15, partition=0, strip=0),
+                Segment(6, 12, partition=0, strip=0),
+                Segment(6,5, partition=0, strip=0)]
+    seg1 = Segment(6, 15, partition=0, strip=0)
+    seg2 = Segment(6, 10, partition=0, strip=0)
+    seg3 = Segment(6, 7, partition=0, strip=0)
+    #check for reset with copy, ID+2, ID-2
+    assert compare_ghosts(seg1, seg_list).id == 15
+    assert compare_ghosts(seg2, seg_list).id == 10
+    assert compare_ghosts(seg3, seg_list).id == 7
+
+def test_cancel_edges():
+    seg_list1 = []
+    for _ in range(24):
+        seg_list1.append(Segment(6, 15, partition=0, strip=0))
+    cancelled1 = cancel_edges(seg_list1, 8, 4, 24)
+    #check first edge is cancelled correctly
+    assert cancelled1[6].id == 15
+    assert cancelled1[7].id == 0
+    assert cancelled1[8].id == 0
+    assert cancelled1[9].id == 0
+    #check second edge is cancelled correctly
+    assert cancelled1[14].id == 15
+    assert cancelled1[15].id == 0
+    assert cancelled1[16].id == 0
+    assert cancelled1[17].id == 0
