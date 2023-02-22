@@ -64,6 +64,7 @@ async def chamber_test(dut, group_size = 8, ghost_width = 2, discrepancy_cnt = 0
             width=width,
             group_width=int(dut.S0_WIDTH.value),
             ghost_width=4,
+            cross_part_seg_width = 4,
             num_outputs=int(dut.NUM_SEGMENTS)
         )
 
