@@ -2,7 +2,7 @@
 import os
 import random
 import cocotb
-from datagen_mux import datagen_mux
+from datagen import datagen
 from subfunc import *
 from cocotb_test.simulator import run
 from partition_beh import work_partition
@@ -75,7 +75,7 @@ async def partition_test(dut, NLOOPS=1000, test="SEGMENTS"):
             if test=="WALKING1":
                 new_data = 6 * [0x1 << (i % 192)]
             elif test=="SEGMENTS":
-                new_data = datagen_mux(n_segs=1, n_noise=0, max_span=WIDTH)
+                new_data = datagen(n_segs=1, n_noise=0, max_span=WIDTH)
             else:
                 new_data = 0*[6]
                 assert "Invalid test selected"

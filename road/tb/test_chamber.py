@@ -4,84 +4,98 @@ import random
 import cocotb
 from cocotb.triggers import RisingEdge
 from cocotb.clock import Clock
-from datagen_mux import datagen_mux
+from datagen import datagen
 from subfunc import *
 from cocotb_test.simulator import run
 from chamber_beh import process_chamber
 from test_common import *
 
+
 @cocotb.test()
-async def chamber_test(dut, group_size = 8, ghost_width = 2, discrepancy_cnt = 0, N_LAYERS = 6):
+async def chamber_test(dut, NLOOPS=100):
 
     """Test the chamber.vhd module"""
 
     # set MAX_SPAN from firmware
-    MAX_SPAN = get_max_span_from_dut(dut)
-
     setup(dut)
 
-    # set seed
-    # random.seed(56)
+    await RisingEdge(dut.clock)
 
-    width = int(dut.partition_gen[0].partition_inst.pat_unit_mux_inst.WIDTH.value)
-    num_partitions = int(dut.NUM_PARTITIONS.value)
+    MAX_SPAN = get_max_span_from_dut(dut)
+    WIDTH = int(dut.partition_gen[0].partition_inst.pat_unit_mux_inst.WIDTH.value)
+    THRESH = int(dut.thresh.value)
+    NUM_PARTITIONS = int(dut.NUM_PARTITIONS.value)
+    NULL = [[0] * 6] * 8
+    LATENCY = 4
 
-    dut.sbits_i.value = [[0]*6]*8
+    for _ in range(10):
+        await RisingEdge(dut.clock)
+
+    dut.sbits_i.value = NULL
 
     queue = []
-    LATENCY=6
     for _ in range(LATENCY):
         await RisingEdge(dut.dav_i)
-        chamber_data=[[0]*6]*8
+        chamber_data = NULL
         queue.append(chamber_data)
         dut.sbits_i.value = chamber_data
 
-    for i in range(100):
+    fn_datagen = lambda: datagen(n_segs=1, n_noise=10, max_span=MAX_SPAN)
 
-        print("Case %d" % i)
+    # loop over some number of test cases
+    loop = 0
+    while loop < NLOOPS:
+
+        # push new data on dav_i
+        if dut.dav_i.value == 1:
+
+            print(f"{loop=}")
+
+            # (1) generate new random data
+            # (2) push it onto the queue
+            # (3) set the DUT inputs to the new data
+
+            if loop % 10 == 0:
+                chamber_data = [fn_datagen() for _ in range(NUM_PARTITIONS)]
+            else:
+                chamber_data = NULL
+
+            queue.append(chamber_data)
+            dut.sbits_i.value = chamber_data
+
+            loop += 1
+
+        # pop old data on dav_o
+        if dut.dav_o.value == 1:
+
+            # gather emulator output
+            popped_data = queue.pop(0)
+
+            sw_segments = process_chamber(
+                chamber_data=popped_data,
+                thresh=THRESH,
+                max_span=MAX_SPAN,
+                width=WIDTH,
+                group_width=int(dut.S0_WIDTH.value),
+                ghost_width=4,
+                num_outputs=int(dut.NUM_SEGMENTS),
+            )
+
+            fw_segments = get_segments_from_dut(dut)
+
+            # print(sw_segments[0])
+            # print(fw_segments)
+
+            for i in range(len(sw_segments)):
+
+                if sw_segments[i] != fw_segments[i]:
+                    print(f" seg {i}:")
+                    print("   > sw: " + str(sw_segments[i]))
+                    print("   > fw: " + str(fw_segments[i]))
+                    # assert sw_segments[i] == fw_segments[i]
 
         # align to the dav_i
-        await RisingEdge(dut.dav_i)
-
-        # (1) generate new random data
-        # (2) push it onto the queue
-        # (3) set the DUT inputs to the new data
-
-        if (i % 10 == 0):
-            chamber_data = [datagen_mux(WIDTH=width, track_num=4, nhit_hi=10, nhit_lo=3) for _ in range(8)]
-        else:
-            chamber_data = [[0]*6]*8
-
-        queue.append(chamber_data)
-        dut.sbits_i.value = chamber_data
-
-        # gather emulator output
-        popped_data = queue.pop(0)
-
-        sw_segments = process_chamber(
-            chamber_data=popped_data,
-            max_span=MAX_SPAN,
-            width=width,
-            group_width=int(dut.S0_WIDTH.value),
-            ghost_width=4,
-            num_outputs=int(dut.NUM_SEGMENTS)
-        )
-
-        fw_segments = get_segments_from_dut(dut)
-
-        # print(sw_segments[0])
-        # print(fw_segments)
-
-        for i in range(len(sw_segments)):
-
-            # disp.event_display(hits=popped_data, fits=None, pats=None, width=WIDTH, max_span=MAX_SPAN)
-
-            if sw_segments[i] != fw_segments[i]:
-                print(f" seg {i}:")
-                print("   > sw: " + str(sw_segments[i]))
-                print("   > fw: " + str(fw_segments[i]))
-                # assert sw_segments[i] == fw_segments[i]
-
+        await RisingEdge(dut.clock)
 
 
 def test_chamber_1():
@@ -93,6 +107,8 @@ def test_chamber_1():
         os.path.join(rtl_dir, "priority_encoder/hdl/priority_encoder.vhd"),
         os.path.join(rtl_dir, "pat_types.vhd"),
         os.path.join(rtl_dir, "pat_pkg.vhd"),
+        os.path.join(rtl_dir, "bitonic_sort/poc_bitonic_sort_pkg.vhd"),
+        os.path.join(rtl_dir, "bitonic_sort/poc_bitonic_sort.vhd"),
         os.path.join(rtl_dir, "bitonic_sort/kawazome/bitonic_exchange.vhd"),
         os.path.join(rtl_dir, "bitonic_sort/kawazome/bitonic_merge.vhd"),
         os.path.join(rtl_dir, "bitonic_sort/kawazome/bitonic_sorter.vhd"),
@@ -109,20 +125,17 @@ def test_chamber_1():
     ]
 
     parameters = {}
-    parameters["MUX_FACTOR"] = 8
 
     os.environ["SIM"] = "questa"
 
-    run(
-        vhdl_sources=vhdl_sources,
+    run(vhdl_sources=vhdl_sources,
         module=module,  # name of cocotb test module
         compile_args=["-2008"],
         toplevel="chamber",  # top level HDL
         toplevel_lang="vhdl",
-        # sim_args = ['-do "set NumericStdNoWarnings 1;"'],
+        sim_args=['-do "set NumericStdNoWarnings 1;"'],
         parameters=parameters,
-        gui=0,
-    )
+        gui=0)
 
 
 if __name__ == "__main__":

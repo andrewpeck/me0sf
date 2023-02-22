@@ -41,6 +41,8 @@ entity chamber is
     );
   port(
     clock      : in  std_logic;         -- MUST BE 320MHZ
+    clock40    : in  std_logic;         -- FIXME: have an optional output latch
+                                        -- at 40MHz and an optional input dav extraction
     thresh     : in  std_logic_vector (2 downto 0);
     dav_i      : in  std_logic;
     dav_o      : out std_logic;
@@ -51,47 +53,68 @@ end chamber;
 
 architecture behavioral of chamber is
 
-  constant CHAMBER_WIDTH_S0 : natural := PRT_WIDTH/S0_WIDTH;
-  constant NUM_SELECTORS_S0 : natural := NUM_PARTITIONS/S1_REUSE/2;
-  constant CHAMBER_WIDTH_S1 : natural := NUM_PARTITIONS/S1_REUSE*NUM_SEGMENTS*2;
+  --------------------------------------------------------------------------------
+  -- Constants
+  --------------------------------------------------------------------------------
+
+  -- Number of segments output from each partition, e.g. 24
+  constant NUM_SEGS_PER_PRT : natural := PRT_WIDTH/S0_WIDTH;
+
+  -- number of di-partition segment selectors in the firmware
+  -- at the most basic level, it is 1 for each 2 partitions
+  -- but we can have a time-multiplexing re-use factor that reduces it further
+  --
+  -- include a +1 offset so the 15 case divides to 8, while 8 divides to 4
+  --
+  -- | N_PRT | S1_REUSE | N_SELECTORS |
+  -- |-------+----------+-------------|
+  -- |     8 |        1 |           4 |
+  -- |     8 |        2 |           2 |
+  -- |     8 |        4 |           1 |
+  -- |    15 |        1 |           8 |
+  -- |    15 |        2 |           4 |
+  -- |    15 |        4 |           2 |
+  --
+  constant NUM_SELECTORS_S0 : natural := ((NUM_PARTITIONS+1)/2) / S1_REUSE;
+
+  constant NUM_SEGMENT_SELECTOR_INPUTS : natural := (NUM_PARTITIONS+1)/S1_REUSE*NUM_SEGMENTS*2;
+
+  --------------------------------------------------------------------------------
+  -- Segments
+  --------------------------------------------------------------------------------
 
   type segs_t is array
     (integer range 0 to NUM_PARTITIONS-1) of
-    segment_list_t (CHAMBER_WIDTH_S0-1 downto 0);
+    segment_list_t (NUM_SEGS_PER_PRT-1 downto 0);
 
-  type segs_muxin_t is array
-    (integer range 0 to NUM_PARTITIONS/2-1) of
-    segment_list_t (2*CHAMBER_WIDTH_S0-1 downto 0);
-
-  type segs_muxout_t is array
-    (integer range 0 to NUM_PARTITIONS/2/S1_REUSE-1) of
-    segment_list_t (NUM_SEGMENTS-1 downto 0);
-
-  type segs_demux_t is array
+  type segs_s1_demux_t is array
     (integer range 0 to NUM_PARTITIONS/2-1) of
     segment_list_t (NUM_SEGMENTS-1 downto 0);
 
   signal segs_s1_flat : segment_list_t
-    (NUM_PARTITIONS/2*NUM_SEGMENTS-1 downto 0);
+    ((NUM_PARTITIONS+1)/2*NUM_SEGMENTS-1 downto 0);
 
-  signal segs        : segs_t;
-  signal segs_muxin  : segs_muxin_t;
-  signal segs_muxout : segs_muxout_t;
-  signal segs_demux  : segs_demux_t;
+  signal all_segs      : segs_t;
+  signal segs_s1_demux : segs_s1_demux_t;
+
+  --------------------------------------------------------------------------------
+  -- Data valids
+  --------------------------------------------------------------------------------
 
   signal segs_dav   : std_logic_vector (NUM_PARTITIONS-1 downto 0);
   signal muxout_dav : std_logic := '0';
-
   signal muxin_phase, muxout_phase : natural range 0 to S1_REUSE-1;
 
-  -- signal pre_gcl_pats     : pat_list_t (PRT_WIDTH-1 downto 0);
-  -- type pre_gcl_array_t is array (integer range 0 to 7) of
-  --    pat_list_t (PRT_WIDTH-1 downto 0);
-  -- signal pre_gcl_pats_o   : pre_gcl_array_t;
-  -- signal pre_gcl_pats_i_p : pre_gcl_array_t;
-  -- signal pre_gcl_pats_i_n : pre_gcl_array_t;
-
 begin
+
+  assert
+    (NUM_PARTITIONS = 8 and S1_REUSE = 1 and NUM_SELECTORS_S0 = 4) or
+    (NUM_PARTITIONS = 8 and S1_REUSE = 2 and NUM_SELECTORS_S0 = 2) or
+    (NUM_PARTITIONS = 8 and S1_REUSE = 4 and NUM_SELECTORS_S0 = 1) or
+    (NUM_PARTITIONS = 15 and S1_REUSE = 1 and NUM_SELECTORS_S0 = 8) or
+    (NUM_PARTITIONS = 15 and S1_REUSE = 2 and NUM_SELECTORS_S0 = 4) or
+    (NUM_PARTITIONS = 15 and S1_REUSE = 4 and NUM_SELECTORS_S0 = 2)
+    report "Error in NUM_SELECTORS_S0 calculation" severity error;
 
   assert S1_REUSE = 1 or S1_REUSE = 2 or S1_REUSE = 4
     report "Only allowed values for s1 reuse are 1,2, and 4"
@@ -130,31 +153,39 @@ begin
     half_partitions : if (NUM_PARTITIONS > 8) generate
 
       even_gen : if (I mod 2 = 0) generate
-        partition_or <= sbits_i(I);
+        partition_or <= sbits_i(I/2);
       end generate;
 
       -- look for only straight and pointing segments
       -- (for cms)
       pointing : if (not EN_NON_POINTING) generate
         odd_gen : if (I mod 2 = 1) generate
-          partition_or(5) <= sbits_i(I)(5);
-          partition_or(4) <= sbits_i(I)(4);
-          partition_or(3) <= sbits_i(I)(3);
-          partition_or(2) <= sbits_i(I)(2) or sbits_i(I-1)(2);
-          partition_or(1) <= sbits_i(I)(1) or sbits_i(I-1)(1);
-          partition_or(0) <= sbits_i(I)(0) or sbits_i(I-1)(0);
+          partition_or(5) <= sbits_i((I-1)/2)(5);
+          partition_or(4) <= sbits_i((I-1)/2)(4);
+          partition_or(3) <= sbits_i((I-1)/2)(3);
+          gt_1to15 : if (I > 1) generate
+            partition_or(2) <= sbits_i((I-1)/2)(2) or sbits_i((I-1)/2-1)(2);
+            partition_or(1) <= sbits_i((I-1)/2)(1) or sbits_i((I-1)/2-1)(1);
+            partition_or(0) <= sbits_i((I-1)/2)(0) or sbits_i((I-1)/2-1)(0);
+          end generate;
+          gt0 : if (I = 1) generate
+            partition_or(2) <= sbits_i((I-1)/2)(2);
+            partition_or(1) <= sbits_i((I-1)/2)(1);
+            partition_or(0) <= sbits_i((I-1)/2)(0);
+          end generate;
         end generate;
       end generate;
 
       -- look for both x-partition segments toward the IP and away
       -- (for cosmic test stand)
       non_pointing : if (EN_NON_POINTING) generate
-        partition_or(5) <= sbits_i(I)(5);
-        partition_or(4) <= sbits_i(I)(4);
-        partition_or(3) <= sbits_i(I)(3);
-        partition_or(2) <= sbits_i(I)(2) or sbits_i(I-1)(2) or sbits_i(I+1)(2);
-        partition_or(1) <= sbits_i(I)(1) or sbits_i(I-1)(1) or sbits_i(I+1)(1);
-        partition_or(0) <= sbits_i(I)(0) or sbits_i(I-1)(0) or sbits_i(I+1)(0);
+      begin
+        partition_or(5) <= sbits_i((I-1)/2)(5);
+        partition_or(4) <= sbits_i((I-1)/2)(4);
+        partition_or(3) <= sbits_i((I-1)/2)(3);
+        partition_or(2) <= sbits_i((I-1)/2)(2) or sbits_i((I-1)/2-1)(2) or sbits_i((I-1)/2+1)(2);
+        partition_or(1) <= sbits_i((I-1)/2)(1) or sbits_i((I-1)/2-1)(1) or sbits_i((I-1)/2+1)(1);
+        partition_or(0) <= sbits_i((I-1)/2)(0) or sbits_i((I-1)/2-1)(0) or sbits_i((I-1)/2+1)(0);
       end generate;
 
     end generate;
@@ -177,7 +208,7 @@ begin
 
         -- output patterns
         dav_o      => segs_dav(I),
-        segments_o => segs(I)
+        segments_o => all_segs(I)
 
         -- x-partition ghost cancellation
         -- pre_gcl_pats_o   => pre_gcl_pats_o(I),
@@ -195,6 +226,8 @@ begin
   -- Multiplex together different partition pairs into a single register
   --
   --------------------------------------------------------------------------------
+
+  dav_o <= dav_i;
 
   dav_to_phase_muxin_inst : entity work.dav_to_phase
     generic map (MAX => 8, DIV => 8/S1_REUSE)
@@ -215,30 +248,52 @@ begin
       data_o(0) => muxout_dav
       );
 
-  s1_sort : for I in 0 to NUM_SELECTORS_S0 - 1 generate
+  --------------------------------------------------------------------------------
+  -- MUX
+  --
+  -- concat together two partitions worth of data and choose
+  -- the best N out of N*2 segments
+  --------------------------------------------------------------------------------
+
+  sort_gen_s1 : for I in 0 to NUM_SELECTORS_S0 - 1 generate
+    signal all_segs_muxin  : segment_list_t (2*NUM_SEGS_PER_PRT-1 downto 0);
+    signal all_segs_muxout : segment_list_t (NUM_SEGMENTS-1 downto 0);
   begin
 
-    --------------------------------------------------------------------------------
-    -- MUX
-    --------------------------------------------------------------------------------
-
-    process (clock) is
+    i_lt_7 : if (I < 7) generate
     begin
-      if (rising_edge(clock)) then
-        segs_muxin(I) <= segs ((S1_REUSE*I+muxin_phase)*2+1)
-                         & segs ((S1_REUSE*I+muxin_phase)*2);
-      end if;
-    end process;
+      process (clock) is
+      begin
+        if (rising_edge(clock)) then
+          all_segs_muxin <= all_segs ((S1_REUSE*I+muxin_phase)*2+1) &
+                            all_segs ((S1_REUSE*I+muxin_phase)*2);
+        end if;
+      end process;
+    end generate;
+
+    i_eq_7 : if (I = 7) generate
+      signal nullsegs : segment_list_t(NUM_SEGS_PER_PRT-1 downto 0);
+    begin
+
+      nullsegs <= zero(nullsegs);
+
+      process (clock) is
+      begin
+        if (rising_edge(clock)) then
+          all_segs_muxin <= nullsegs & all_segs ((S1_REUSE*I+muxin_phase)*2);
+        end if;
+      end process;
+    end generate;
 
     --------------------------------------------------------------------------------
-    -- Sort
+    -- Sort from (X segments / partition) to (NUM_SEGMENTS / two partitions)
     --------------------------------------------------------------------------------
 
     segment_selector_neighbor : entity work.segment_selector
 
       generic map (
         MODE        => "BITONIC",
-        NUM_INPUTS  => CHAMBER_WIDTH_S0*2,  -- put in two partitions worth...
+        NUM_INPUTS  => NUM_SEGS_PER_PRT*2,  -- put in two partitions worth...
         NUM_OUTPUTS => NUM_SEGMENTS,        -- put out half that number
         SORTB       => PATTERN_SORTB
         )
@@ -246,9 +301,8 @@ begin
       port map (
         -- take partition I and partition I+1 and choose the best patterns
         clock  => clock,
-        segs_i => segs_muxin(I),
-        segs_o => segs_muxout(I)
-        );
+        segs_i => all_segs_muxin,
+        segs_o => all_segs_muxout);
 
     PH : for SEL in 0 to S1_REUSE-1 generate  -- number of phases
     begin
@@ -256,7 +310,7 @@ begin
       begin
         if (rising_edge(clock)) then
           if (muxout_phase = SEL) then
-            segs_demux (I*S1_REUSE+SEL) <= segs_muxout(I);
+            segs_s1_demux (I*S1_REUSE+SEL) <= all_segs_muxout;
           end if;
         end if;
       end process;
@@ -265,20 +319,27 @@ begin
   end generate;
 
   --------------------------------------------------------------------------------
-  -- Final canidate sorting
+  -- Final candidate sorting
   --
-  -- sort from 12*4 patterns down to NUM_SEGMENTS
+  -- sort from (NUM_PARTITIONS/2)*NUM_SEGMENTS patterns down to NUM_SEGMENTS
   --------------------------------------------------------------------------------
 
   -- TODO?: replace with priority encoder... ? the # of outputs is very small...
 
-  segs_s1_flat <= segs_demux(3) & segs_demux(2) & segs_demux(1) & segs_demux(0);
+  single_partitions_flatten : if (NUM_PARTITIONS <= 8) generate
+    segs_s1_flat <= segs_s1_demux(3) & segs_s1_demux(2) & segs_s1_demux(1) & segs_s1_demux(0);
+  end generate;
+
+  half_partitions_flatten : if (NUM_PARTITIONS > 8) generate
+    segs_s1_flat <= segs_s1_demux(7) & segs_s1_demux(6) & segs_s1_demux(5) & segs_s1_demux(4) &
+                    segs_s1_demux(3) & segs_s1_demux(2) & segs_s1_demux(1) & segs_s1_demux(0);
+  end generate;
 
   segment_selector_final : entity work.segment_selector
     generic map (
       MODE        => "BITONIC",
       NUM_OUTPUTS => NUM_SEGMENTS,
-      NUM_INPUTS  => CHAMBER_WIDTH_S1,
+      NUM_INPUTS  => NUM_SEGMENT_SELECTOR_INPUTS,
       SORTB       => PATTERN_SORTB
       )
     port map (

@@ -4,7 +4,7 @@ import cocotb
 from cocotb.triggers import RisingEdge
 from cocotb.clock import Clock
 from cocotb_test.simulator import run
-from datagen_mux import datagen_mux
+from datagen import datagen
 from pat_unit_mux_beh import pat_mux
 from subfunc import *
 from cocotb_test.simulator import run
@@ -59,8 +59,8 @@ async def pat_unit_mux_test(dut, NLOOPS=500, test="WALKING1"):
 
     await RisingEdge(dut.dav_i) # align to the dav_i
 
-    i = 0
     # loop over some number of test cases
+    i = 0
     while i < NLOOPS:
 
         # push new data on dav_i
@@ -73,7 +73,7 @@ async def pat_unit_mux_test(dut, NLOOPS=500, test="WALKING1"):
             if test=="WALKING1":
                 new_data = 6 * [0x1 << (i % 192)]
             elif test=="SEGMENTS":
-                new_data = datagen_mux(n_segs=1, n_noise=0, max_span=WIDTH)
+                new_data = datagen(n_segs=1, n_noise=0, max_span=WIDTH)
             else:
                 new_data = 0*[6]
                 assert "Invalid test selected"

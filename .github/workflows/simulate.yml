@@ -34,7 +34,7 @@ jobs:
       fail-fast: false
       matrix:
         testbenches:
-          # - road/tb/test_chamber.py
+          - road/tb/test_chamber.py
           - road/tb/test_partition.py
           - road/tb/test_pat_unit.py
           - road/tb/test_pat_unit_mux.py
