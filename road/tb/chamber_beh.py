@@ -31,10 +31,10 @@ def process_chamber(chamber_data, thresh : int,
     # (3) compare partitions 0 & 1, 2 & 3, 4 & 5.. etc
     # return NUM_OUTPUTS segments from each partition pair
 
-    segments = [segments[0] + segments[1],
-                segments[2] + segments[3],
-                segments[4] + segments[5],
-                segments[6] + segments[7]]
+    # segments = [segments[0] + segments[1],
+    #             segments[2] + segments[3],
+    #             segments[4] + segments[5],
+    #             segments[6] + segments[7]]
 
     segments = list(map(lambda x: sorted(x, reverse=True)[:num_outputs], segments))
 

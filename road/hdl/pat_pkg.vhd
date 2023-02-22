@@ -20,6 +20,7 @@ package pat_pkg is
   constant PAT_UNIT_LATENCY     : positive := 5;
   constant PAT_UNIT_MUX_LATENCY : positive := PAT_UNIT_LATENCY + 3;
   constant PARTITION_LATENCY    : positive := PAT_UNIT_MUX_LATENCY + 5;
+  constant SELECTOR_LATENCY     : positive := 4;
 
   type chamber_t is array(integer range 0 to 7) of partition_t;
 
@@ -29,7 +30,7 @@ package pat_pkg is
 
   constant S0_REGION_SIZE : positive              := 16;
   constant PRT_WIDTH      : positive              := 192;
-  constant PAT_UNIT_MUX   : positive range 1 to 8 := 8; -- 1, 2, 4, or 8
+  constant PAT_UNIT_MUX   : positive range 1 to 8 := 8;  -- 1, 2, 4, or 8
 
   --------------------------------------------------------------------------------
   -- Types for patterns
@@ -62,7 +63,7 @@ package pat_pkg is
 
   procedure check_pattern_operators (nil : boolean);
 
-  procedure print_layer (layer : layer_t);
+  procedure print_layer (layer         : layer_t);
   procedure print_partition (partition : partition_t);
 
 end package pat_pkg;
@@ -92,7 +93,7 @@ package body pat_pkg is
   function "=" (L : segment_t; R : segment_t) return boolean is
     variable left, right : std_logic_vector(segment_t'w-1 downto 0);
   begin
-    left := convert(L, left);
+    left  := convert(L, left);
     right := convert(R, right);
     return (unsigned(get_sortb(left)) = unsigned(get_sortb(right)));
   end;
@@ -100,7 +101,7 @@ package body pat_pkg is
   function ">" (L : segment_t; R : segment_t) return boolean is
     variable left, right : std_logic_vector(segment_t'w-1 downto 0);
   begin
-    left := convert(L, left);
+    left  := convert(L, left);
     right := convert(R, right);
     return (unsigned(get_sortb(left)) > unsigned(get_sortb(right)));
   end;
@@ -108,7 +109,7 @@ package body pat_pkg is
   function "<" (L : segment_t; R : segment_t) return boolean is
     variable left, right : std_logic_vector(segment_t'w-1 downto 0);
   begin
-    left := convert(L, left);
+    left  := convert(L, left);
     right := convert(R, right);
 
     -- report "Comparison L < R" & LF & " > left  cnt=" & to_string(get_sortb(left)(6 downto 4))
@@ -122,12 +123,12 @@ package body pat_pkg is
 
   function "<=" (L : segment_t; R : segment_t) return boolean is
   begin
-    return L<R or L=R;
+    return L < R or L = R;
   end;
 
   function ">=" (L : segment_t; R : segment_t) return boolean is
   begin
-    return L>R or L=R;
+    return L > R or L = R;
   end;
 
   -- unit test function to check that the sorting operators are working correctly

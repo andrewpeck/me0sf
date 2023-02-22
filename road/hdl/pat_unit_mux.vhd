@@ -33,6 +33,7 @@ use work.priority_encoder_pkg.all;
 entity pat_unit_mux is
   generic(
     VERBOSE : boolean := false;
+    PARTITION_NUM : integer := 0;
 
     LATENCY : natural := PAT_UNIT_MUX_LATENCY;
 
@@ -213,6 +214,8 @@ begin
         strips_reg(I*MUX_FACTOR+patterns_mux_phase) <= patterns_mux(I);
         strips_reg(I*MUX_FACTOR+patterns_mux_phase).strip <=
           to_unsigned(I*MUX_FACTOR+patterns_mux_phase, STRIP_BITS);
+        strips_reg(I*MUX_FACTOR+patterns_mux_phase).partition <=
+          to_unsigned(PARTITION_NUM, segments_o(I).partition'length);
       end loop;
 
       -- copy the unfolded outputs to be stable for a 25 ns clock period since

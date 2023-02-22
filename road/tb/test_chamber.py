@@ -12,7 +12,7 @@ from tb_common import *
 
 
 @cocotb.test()
-async def chamber_test(dut, NLOOPS=100):
+async def chamber_test(dut, test="WALKING1", NLOOPS=100):
 
     """Test the chamber.vhd module"""
 
@@ -26,7 +26,7 @@ async def chamber_test(dut, NLOOPS=100):
     THRESH = int(dut.thresh.value)
     NUM_PARTITIONS = int(dut.NUM_PARTITIONS.value)
     NULL = [[0] * 6] * 8
-    LATENCY = 4
+    LATENCY = 3
 
     for _ in range(10):
         await RisingEdge(dut.clock)
@@ -55,10 +55,14 @@ async def chamber_test(dut, NLOOPS=100):
             # (2) push it onto the queue
             # (3) set the DUT inputs to the new data
 
-            if loop % 10 == 0:
-                chamber_data = [fn_datagen() for _ in range(NUM_PARTITIONS)]
+
+            if test=="WALKING1":
+                chamber_data = 8 * [6 * [1 << loop]]
             else:
-                chamber_data = NULL
+                if loop % 10 == 0:
+                    chamber_data = [fn_datagen() for _ in range(NUM_PARTITIONS)]
+                else:
+                    chamber_data = NULL
 
             queue.append(chamber_data)
             dut.sbits_i.value = chamber_data
@@ -86,9 +90,9 @@ async def chamber_test(dut, NLOOPS=100):
             # print(sw_segments[0])
             # print(fw_segments)
 
-            for i in range(len(sw_segments)):
+            for i in range(len(fw_segments)):
 
-                if sw_segments[i] != fw_segments[i]:
+                if True or sw_segments[i] != fw_segments[i]:
                     print(f" seg {i}:")
                     print("   > sw: " + str(sw_segments[i]))
                     print("   > fw: " + str(fw_segments[i]))
@@ -133,7 +137,7 @@ def test_chamber():
         compile_args=["-2008"],
         toplevel="chamber",  # top level HDL
         toplevel_lang="vhdl",
-        #sim_args=['-do "set NumericStdNoWarnings 1;"'],
+        #sim_args=["-do set NumericStdNoWarnings 1"],
         parameters=parameters,
         gui=0)
 

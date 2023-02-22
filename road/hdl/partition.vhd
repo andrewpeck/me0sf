@@ -83,8 +83,9 @@ begin
 
   pat_unit_mux_inst : entity work.pat_unit_mux
     generic map (
-      WIDTH      => PRT_WIDTH,
-      MUX_FACTOR => PAT_UNIT_MUX
+      WIDTH         => PRT_WIDTH,
+      MUX_FACTOR    => PAT_UNIT_MUX,
+      PARTITION_NUM => PARTITION_NUM
       )
     port map (
       clock => clock,
@@ -152,12 +153,7 @@ begin
   -- Outputs
   --------------------------------------------------------------------------------
 
-  outputs : for I in 0 to PRT_WIDTH/S0_WIDTH-1 generate
-  begin
-    segments_o(I)           <= strips_s0(I);
-    segments_o(I).partition <= to_unsigned(PARTITION_NUM, segments_o(I).partition'length);
-  end generate;
-
-  dav_o <= dav_priority(0);
+  segments_o <= strips_s0;
+  dav_o      <= dav_priority(0);
 
 end behavioral;
