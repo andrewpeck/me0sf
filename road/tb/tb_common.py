@@ -28,7 +28,8 @@ def get_segments_from_dut(dut):
         pid = segment.id.value.integer
         lyc = segment.cnt.value.integer
         strip = segment.strip.value.integer
-        seg = Segment(lyc, pid, strip=strip)
+        partition = segment.partition.value.integer
+        seg = Segment(lyc, pid, strip=strip, partition=partition)
         return seg
 
     x = list(map(convert_segment, dut.segments_o))
@@ -40,7 +41,8 @@ def get_segments_from_dut(dut):
 def get_segment_from_dut(dut):
     lyc = int(dut.pat_o.cnt.value)
     pid = int(dut.pat_o.id.value)
-    seg = Segment(lyc, pid, strip=0)
+    partition = int(dut.pat_o.partition.value)
+    seg = Segment(lyc, pid, strip=0, partition=partition)
     return seg
 
 

@@ -96,7 +96,7 @@ async def chamber_test(dut, test="WALKING1", NLOOPS=100):
                     print(f" seg {i}:")
                     print("   > sw: " + str(sw_segments[i]))
                     print("   > fw: " + str(fw_segments[i]))
-                    # assert sw_segments[i] == fw_segments[i]
+                    assert sw_segments[i] == fw_segments[i]
 
         # align to the dav_i
         await RisingEdge(dut.clock)

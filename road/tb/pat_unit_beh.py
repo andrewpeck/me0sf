@@ -97,7 +97,11 @@ def pat_unit(data, strip, ly_thresh, partition):
 
     # (5) process segments
 
-    seg_list = [Segment(lc, pid, strip=strip, centroid=centroid)
+    seg_list = [Segment(lc=lc,
+                        id=pid,
+                        partition=partition,
+                        strip=strip,
+                        centroid=centroid)
                 for (lc,pid,centroid) in
                 zip(lycs, pids, centroids)]
 

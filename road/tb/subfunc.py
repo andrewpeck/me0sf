@@ -21,8 +21,12 @@ class Mask:
 
 class Segment:
 
-    def __init__(self, lc, id, strip=None, partition=None, centroid=None,
-                 substrip=None, bend_ang=None):
+    def __init__(self, lc, id,
+                 partition,
+                 strip,
+                 centroid=None,
+                 substrip=None,
+                 bend_ang=None):
         self.lc = lc
         self.id = id
         self.strip = strip
@@ -80,7 +84,8 @@ class Segment:
         if (self.id==0):
             return "n/a"
 
-        return "id=%2d, lc=%2d, strip=%3d, quality=%07X" % (self.id, self.lc, self.strip, self.quality)
+        return "id=%2d, lc=%2d, strip=%3d, prt=%2d, quality=%07X" \
+            % (self.id, self.lc, self.strip, self.partition, self.quality)
 
     def __repr__(self):
         return f"Seg {self.quality}"
