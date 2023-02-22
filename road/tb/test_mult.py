@@ -52,22 +52,26 @@ def test_fit(A, B):
         os.path.join(rtl_dir, "pipelined_mult.vhd"),
     ]
 
-    os.environ["SIM"] = "questa"
+    sim = "ghdl"
+    os.environ["SIM"] = sim
+
+    opts = []
+    if sim == "ghdl":
+        opts = ["--std=08"]
+    if sim == "questa":
+        opts = ["-2008"]
 
     parameters = {}
     parameters['WIDTH_A'] = A
     parameters['WIDTH_B'] = B
 
-    run(
-        vhdl_sources=vhdl_sources,
+    run(vhdl_sources=vhdl_sources,
         module=module,       # name of cocotb test module
-        compile_args=["-2008"],
+        compile_args=opts,
         toplevel="pipelined_smult",            # top level HDL
         toplevel_lang="vhdl",
         # parameters=parameters,
-        gui=0
-    )
-
+        gui=0)
 
 if __name__ == "__main__":
     test_fit(8, 9)
