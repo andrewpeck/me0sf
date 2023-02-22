@@ -54,7 +54,7 @@ def cancel_edges(pat_mux_dat, group_width=8, ghost_width=4, width=192):
 #     """takes in layer data and filters for centroids"""
 #     return sum([2**strip for strip in range(len(bin(data))-2) if determine_if_centroid(strip, width, data, layer) == True])
 
-def work_partition(partition_data,
+def process_partition(partition_data,
                    thresh : int,
                    enable_gcl : bool = True,
                    max_span : int = 37,
@@ -100,9 +100,9 @@ def work_partition(partition_data,
 # Tests
 #-------------------------------------------------------------------------------
 
-def test_work_partition():
+def test_process_partition():
     data = [1]*6
-    part = work_partition(data, thresh=6, enable_gcl=True)
+    part = process_partition(data, thresh=6, enable_gcl=True)
     assert part[0].id == 19
     assert part[0].lc == 6
     assert part[1].id == 0

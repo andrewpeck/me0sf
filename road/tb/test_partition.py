@@ -5,7 +5,7 @@ import cocotb
 from datagen import datagen
 from subfunc import *
 from cocotb_test.simulator import run
-from partition_beh import work_partition
+from partition_beh import process_partition
 from cocotb.triggers import Timer
 from tb_common import *
 from cocotb.triggers import RisingEdge, Edge
@@ -88,7 +88,7 @@ async def partition_test(dut, NLOOPS=1000, test="SEGMENTS"):
         if dut.dav_o.value == 1:
 
             popped_data = queue.pop(0)
-            sw_segments = work_partition(partition_data=popped_data,
+            sw_segments = process_partition(partition_data=popped_data,
                                          thresh=THRESH,
                                          max_span=MAX_SPAN,
                                          width=WIDTH,

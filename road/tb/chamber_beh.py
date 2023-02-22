@@ -2,7 +2,7 @@
 from subfunc import *
 import functools
 import operator
-from partition_beh import work_partition
+from partition_beh import process_partition
 
 def process_chamber(chamber_data, thresh : int,
                     max_span : int = 37,
@@ -14,7 +14,7 @@ def process_chamber(chamber_data, thresh : int,
     # (1) gather segments from each partition
     # this will return a 8 x N list of segments
 
-    fnpartition = lambda partition, data : work_partition(
+    fnpartition = lambda partition, data : process_partition(
         partition_data=data,
         thresh = thresh,
         max_span=max_span,
