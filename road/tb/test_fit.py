@@ -67,7 +67,7 @@ async def fit_tb(dut):
 
     x = range(6)  # layers 0-5, always the same
 
-    dut.valid_i = 0x3F
+    dut.valid_i.value = 0x3F
 
     # flush the pipeline
     dut.ly0.value = 1
