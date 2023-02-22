@@ -13,7 +13,7 @@ def setup(dut):
 
     # set layer count threshold
     cnt_thresh = 4
-    dut.thresh.value = 4
+    dut.thresh.value = cnt_thresh
 
     # start the clock
     c = Clock(dut.clock, 12, "ns")
@@ -73,28 +73,23 @@ def get_patlist_from_dut(dut):
         ly5_lo = dut.PATLIST[i].ly5.lo.value
         pat_o = patdef_t(
             id,
-            [
-                hi_lo_t(ly0_hi, ly0_lo),
-                hi_lo_t(ly1_hi, ly1_lo),
-                hi_lo_t(ly2_hi, ly2_lo),
-                hi_lo_t(ly3_hi, ly3_lo),
-                hi_lo_t(ly4_hi, ly4_lo),
-                hi_lo_t(ly5_hi, ly5_lo),
-            ],
-        )
+            [hi_lo_t(ly0_hi, ly0_lo),
+             hi_lo_t(ly1_hi, ly1_lo),
+             hi_lo_t(ly2_hi, ly2_lo),
+             hi_lo_t(ly3_hi, ly3_lo),
+             hi_lo_t(ly4_hi, ly4_lo),
+             hi_lo_t(ly5_hi, ly5_lo)])
         patlist.append(pat_o)
     return patlist
 
 
 def get_max_span_from_dut(dut):
-    ly_spans = [
-        dut.LY0_SPAN.value,
-        dut.LY1_SPAN.value,
-        dut.LY2_SPAN.value,
-        dut.LY3_SPAN.value,
-        dut.LY4_SPAN.value,
-        dut.LY5_SPAN.value,
-    ]
+    ly_spans = [dut.LY0_SPAN.value,
+                dut.LY1_SPAN.value,
+                dut.LY2_SPAN.value,
+                dut.LY3_SPAN.value,
+                dut.LY4_SPAN.value,
+                dut.LY5_SPAN.value]
     return max(ly_spans)
 
 

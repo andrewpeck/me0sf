@@ -32,14 +32,12 @@ def rand_y():
     rand_m = random.randint(math.floor(-37 / 6), math.floor(37 / 6))
     rand_b = random.randint(-5, 5)
 
-    return [
-        math.floor(rand_m * (0 - 2.5) + rand_b + random.randint(-1, 1)),
-        math.floor(rand_m * (1 - 2.5) + rand_b + random.randint(-1, 1)),
-        math.floor(rand_m * (2 - 2.5) + rand_b + random.randint(-1, 1)),
-        math.floor(rand_m * (3 - 2.5) + rand_b + random.randint(-1, 1)),
-        math.floor(rand_m * (4 - 2.5) + rand_b + random.randint(-1, 1)),
-        math.floor(rand_m * (5 - 2.5) + rand_b + random.randint(-1, 1)),
-    ]
+    return [math.floor(rand_m * (0 - 2.5) + rand_b + random.randint(-1, 1)),
+            math.floor(rand_m * (1 - 2.5) + rand_b + random.randint(-1, 1)),
+            math.floor(rand_m * (2 - 2.5) + rand_b + random.randint(-1, 1)),
+            math.floor(rand_m * (3 - 2.5) + rand_b + random.randint(-1, 1)),
+            math.floor(rand_m * (4 - 2.5) + rand_b + random.randint(-1, 1)),
+            math.floor(rand_m * (5 - 2.5) + rand_b + random.randint(-1, 1))]
 
     # return [random.randint(-15, 15),
     #         random.randint(-15, 15),
@@ -156,17 +154,15 @@ async def fit_tb(dut):
         # print_slope(slope, intercept, key_strip, m, b, key_s)
 
         assert abs(b - intercept) < max_error_intercept, print_slope(
-            slope, intercept, key_strip, m, b, key_s
-        )
+            slope, intercept, key_strip, m, b, key_s)
         assert abs(m - slope) < max_error_strips_per_layer, print_slope(
-            slope, intercept, key_strip, m, b, key_s
-        )
+            slope, intercept, key_strip, m, b, key_s)
         assert abs(key_s - key_strip) < max_error_strips, print_slope(
-            slope, intercept, key_strip, m, b, key_s
-        )
+            slope, intercept, key_strip, m, b, key_s)
 
         if itests % 1000 == 0:
             print("%d fits tested" % itests)
+
         itests += 1
 
     print("="*80)
@@ -180,23 +176,19 @@ def test_fit():
     rtl_dir = os.path.abspath(os.path.join(tests_dir, "..", "hdl"))
     module = os.path.splitext(os.path.basename(__file__))[0]
 
-    vhdl_sources = [
-        os.path.join(rtl_dir, "reciprocal.vhd"),
-        os.path.join(rtl_dir, "pipelined_mult.vhd"),
-        os.path.join(rtl_dir, "fit.vhd"),
-    ]
+    vhdl_sources = [os.path.join(rtl_dir, "reciprocal.vhd"),
+                    os.path.join(rtl_dir, "pipelined_mult.vhd"),
+                    os.path.join(rtl_dir, "fit.vhd")]
 
     os.environ["SIM"] = "questa"
 
-    run(
-        vhdl_sources=vhdl_sources,
+    run(vhdl_sources=vhdl_sources,
         module=module,  # name of cocotb test module
         compile_args=["-2008"],
         toplevel="fit",  # top level HDL
         toplevel_lang="vhdl",
         # parameters=parameters,
-        gui=0,
-    )
+        gui=0)
 
 
 if __name__ == "__main__":
