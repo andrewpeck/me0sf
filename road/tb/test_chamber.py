@@ -98,7 +98,7 @@ async def chamber_test(dut, NLOOPS=100):
         await RisingEdge(dut.clock)
 
 
-def test_chamber_1():
+def test_chamber():
     tests_dir = os.path.abspath(os.path.dirname(__file__))
     rtl_dir = os.path.abspath(os.path.join(tests_dir, "..", "hdl"))
     module = os.path.splitext(os.path.basename(__file__))[0]
@@ -139,4 +139,4 @@ def test_chamber_1():
 
 
 if __name__ == "__main__":
-    test_chamber_1()
+    test_chamber()
