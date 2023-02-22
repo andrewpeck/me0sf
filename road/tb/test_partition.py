@@ -7,7 +7,7 @@ from subfunc import *
 from cocotb_test.simulator import run
 from partition_beh import work_partition
 from cocotb.triggers import Timer
-from test_common import *
+from tb_common import *
 from cocotb.triggers import RisingEdge, Edge
 
 async def monitor_dav(dut):

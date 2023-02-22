@@ -8,7 +8,7 @@ from datagen import datagen
 from subfunc import *
 from cocotb_test.simulator import run
 from chamber_beh import process_chamber
-from test_common import *
+from tb_common import *
 
 
 @cocotb.test()

@@ -8,7 +8,7 @@ from datagen import datagen
 from pat_unit_mux_beh import pat_mux
 from subfunc import *
 from cocotb_test.simulator import run
-from test_common import *
+from tb_common import *
 
 from pat_unit_beh import calculate_global_layer_mask
 

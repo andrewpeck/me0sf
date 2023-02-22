@@ -7,7 +7,7 @@ from pat_unit_beh import find_best_seg
 from subfunc import *
 import os
 from cocotb_test.simulator import run
-from test_common import *
+from tb_common import *
 from constants import *
 
 async def monitor_dav(dut, latency):
