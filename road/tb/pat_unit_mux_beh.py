@@ -1,6 +1,6 @@
 # Emulator for pat_unit_mux.vhd
 from subfunc import *
-from pat_unit_beh import find_best_seg
+from pat_unit_beh import pat_unit
 from constants import *
 
 def parse_data(data, strip, MAX_SPAN=37):
@@ -20,7 +20,7 @@ def pat_mux(partition_data, thresh, max_span, width=192, partition=0):
     segments the pat_unit_mux.vhd would find
     """
 
-    fn = lambda strip : find_best_seg(extract_data_window(partition_data, strip, max_span),
+    fn = lambda strip : pat_unit(extract_data_window(partition_data, strip, max_span),
                                       ly_thresh = thresh,
                                       strip=strip,
                                       partition=partition)

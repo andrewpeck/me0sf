@@ -1,7 +1,7 @@
 # Matplotlib display for different levels of hardware design
 import matplotlib.pyplot as plt
 from subfunc import *
-from pat_unit_beh import find_best_seg, get_ly_mask
+from pat_unit_beh import pat_unit, get_ly_mask
 from datagen import datagen
 import random
 import math
@@ -116,7 +116,7 @@ if __name__ == '__main__':
 
     MAX_SPAN = 37
     hits = datagen(MAX_SPAN=MAX_SPAN)
-    segment = find_best_seg(hits)
+    segment = pat_unit(hits)
     strip = MAX_SPAN // 2
 
     pats = [[PATLIST_LUT[segment.id], 18]]
