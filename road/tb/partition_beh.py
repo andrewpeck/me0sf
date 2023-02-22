@@ -2,7 +2,6 @@
 from itertools import islice
 from pat_unit_mux_beh import pat_mux
 from subfunc import *
-import numpy as np
 from pat_unit_mux_beh import parse_data
 
 def compare_ghosts(seg, comp_list):
@@ -92,9 +91,8 @@ def work_partition(partition_data,
         it = iter(it)
         return iter(lambda: tuple(islice(it, size)), ())
 
-    #chunked = chunk(segments, group_width)
-    #final_dat = list(map(max, chunked, group_width))
-    final_dat = list(map(max, np.array(segments).reshape(width//group_width, group_width)))
+    chunked = chunk(segments, group_width)
+    final_dat = list(map(max, chunked))
 
     return final_dat
 
