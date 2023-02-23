@@ -1,32 +1,11 @@
 # Testbenh for partition.vhd
 import os
-import random
-import cocotb
 from datagen import datagen
 from subfunc import *
 from cocotb_test.simulator import run
 from partition_beh import process_partition
-from cocotb.triggers import Timer
 from tb_common import *
 from cocotb.triggers import RisingEdge, Edge
-
-async def monitor_dav(dut):
-    await RisingEdge(dut.dav_o)
-    await RisingEdge(dut.dav_o)
-    while True:
-        await Edge(dut.segments_o)
-        await Timer(1, units="ns")
-        assert dut.dav_o == 1
-        await RisingEdge(dut.clock)
-
-        for _ in range(7):
-            await RisingEdge(dut.clock)
-            assert dut.dav_o == 0
-
-        await RisingEdge(dut.clock)
-        assert dut.dav_o == 1
-
-        break
 
 @cocotb.test()
 async def partition_test_segs(dut):

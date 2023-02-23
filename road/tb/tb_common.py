@@ -1,9 +1,9 @@
 from subfunc import *
-from cocotb.triggers import RisingEdge
 from constants import *
 
 import cocotb
 from cocotb.clock import Clock
+from cocotb.triggers import RisingEdge, Edge, Timer
 
 from pat_unit_beh import calculate_global_layer_mask
 
@@ -55,6 +55,24 @@ async def generate_dav(dut):
         for _ in range(7):
             await RisingEdge(dut.clock)
 
+async def monitor_dav(dut):
+    await RisingEdge(dut.dav_o)
+    await RisingEdge(dut.dav_o)
+    await RisingEdge(dut.dav_o)
+    while True:
+        await Edge(dut.segments_o)
+        await Timer(1, units="ns")
+        assert dut.dav_o == 1
+        await RisingEdge(dut.clock)
+
+        for _ in range(7):
+            await RisingEdge(dut.clock)
+            assert dut.dav_o == 0
+
+        await RisingEdge(dut.clock)
+        assert dut.dav_o == 1
+
+        break
 
 def get_patlist_from_dut(dut):
     # set patlist from firmware

@@ -18,6 +18,7 @@ async def chamber_test(dut, test="WALKING1", NLOOPS=100):
 
     # set MAX_SPAN from firmware
     setup(dut)
+    cocotb.fork(monitor_dav(dut))
 
     await RisingEdge(dut.clock)
 
@@ -26,7 +27,7 @@ async def chamber_test(dut, test="WALKING1", NLOOPS=100):
     THRESH = int(dut.thresh.value)
     NUM_PARTITIONS = int(dut.NUM_PARTITIONS.value)
     NULL = [[0] * 6] * 8
-    LATENCY = 3
+    LATENCY = 2
 
     for _ in range(10):
         await RisingEdge(dut.clock)
@@ -70,7 +71,7 @@ async def chamber_test(dut, test="WALKING1", NLOOPS=100):
             loop += 1
 
         # pop old data on dav_o
-        if dut.dav_o.value == 1:
+        if loop > LATENCY and dut.dav_o.value == 1:
 
             # gather emulator output
             popped_data = queue.pop(0)
@@ -82,17 +83,13 @@ async def chamber_test(dut, test="WALKING1", NLOOPS=100):
                 width=WIDTH,
                 group_width=int(dut.S0_WIDTH.value),
                 ghost_width=4,
-                num_outputs=int(dut.NUM_SEGMENTS),
-            )
+                num_outputs=int(dut.NUM_SEGMENTS))
 
             fw_segments = get_segments_from_dut(dut)
 
-            # print(sw_segments[0])
-            # print(fw_segments)
-
             for i in range(len(fw_segments)):
 
-                if True or sw_segments[i] != fw_segments[i]:
+                if sw_segments[i] != fw_segments[i]:
                     print(f" seg {i}:")
                     print("   > sw: " + str(sw_segments[i]))
                     print("   > fw: " + str(fw_segments[i]))
@@ -125,8 +122,7 @@ def test_chamber():
         os.path.join(rtl_dir, "dav_to_phase.vhd"),
         os.path.join(rtl_dir, "pat_unit_mux.vhd"),
         os.path.join(rtl_dir, "partition.vhd"),
-        os.path.join(rtl_dir, "chamber.vhd"),
-    ]
+        os.path.join(rtl_dir, "chamber.vhd")]
 
     parameters = {}
 

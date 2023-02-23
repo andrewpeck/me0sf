@@ -39,8 +39,6 @@ entity chamber is
     );
   port(
     clock      : in  std_logic;         -- MUST BE 320MHZ
-    clock40    : in  std_logic;         -- FIXME: have an optional output latch
-    -- at 40MHz and an optional input dav extraction
     thresh     : in  std_logic_vector (2 downto 0);
     dav_i      : in  std_logic;
     dav_o      : out std_logic;
@@ -84,15 +82,18 @@ architecture behavioral of chamber is
   signal segs_to_selector : segment_list_t
     ((NUM_PARTITIONS+1)/2*NUM_SEGMENTS-1 downto 0);
 
-  signal all_segs    : segment_list_t (NUM_PARTITIONS * NUM_SEGS_PER_PRT-1 downto 0);
-  signal sorted_segs : segment_list_t (NUM_PARTITIONS * NUM_SEGMENTS-1 downto 0);
-  signal final_segs  : segment_list_t (NUM_SEGMENTS-1 downto 0);
+  signal all_segs            : segment_list_t (NUM_PARTITIONS * NUM_SEGS_PER_PRT - 1 downto 0);
+  signal one_prt_sorted_segs : segment_list_t (NUM_PARTITIONS * NUM_SEGMENTS - 1 downto 0);
+  signal two_prt_sorted_segs : segment_list_t (NUM_PARTITIONS * NUM_SEGMENTS/2 - 1 downto 0);
+  signal final_segs          : segment_list_t (NUM_SEGMENTS - 1 downto 0);
 
   --------------------------------------------------------------------------------
   -- Data valids
   --------------------------------------------------------------------------------
 
-  signal all_segs_dav : std_logic_vector (NUM_PARTITIONS-1 downto 0) := (others => '0');
+  signal all_segs_dav : std_logic_vector (NUM_PARTITIONS - 1 downto 0) := (others => '0');
+
+  signal dav_sr : std_logic_vector(9 downto 0);
 
   signal muxout_dav : std_logic := '0';
 
@@ -196,7 +197,17 @@ begin
   -- Reduce the # of segments / partition from e.g. 24 to NUM_SEGMENTS by doing
   -- a sort within the partition to choose the NUM_SEGMENTS best outputs
   --
-  -- TODO: should time multiplex this
+  -- Then do a reduction by looking at neighboring partitions and reducing from
+  -- NUM_SEGMENTS*2 -> NUM_SEGMENTS for each 2 partitions
+  --
+  -- after all this,
+  --
+  -- for a 16 partition chamber we would be reduced to
+  -- 8*4 = 32 segments that go into the final sorter
+  --
+  -- for a 8 partition chamber we would be reduced to
+  -- 4*4 = 16 segments that go into the final sorter
+  --
   --------------------------------------------------------------------------------
 
   partition_sorter : for I in 0 to NUM_PARTITIONS-1 generate
@@ -206,12 +217,26 @@ begin
         MODE        => "BITONIC",
         NUM_OUTPUTS => NUM_SEGMENTS,
         NUM_INPUTS  => NUM_SEGS_PER_PRT,
-        SORTB       => PATTERN_SORTB
-        )
+        SORTB       => PATTERN_SORTB)
       port map (
         clock  => clock,
         segs_i => all_segs((I+1)*NUM_SEGS_PER_PRT-1 downto I*NUM_SEGS_PER_PRT),
-        segs_o => sorted_segs((I+1)*NUM_SEGMENTS-1 downto I*NUM_SEGMENTS)
+        segs_o => one_prt_sorted_segs((I+1)*NUM_SEGMENTS-1 downto I*NUM_SEGMENTS)
+        );
+  end generate;
+
+  dipartition_sorter : for I in 0 to NUM_PARTITIONS/2-1 generate
+  begin
+    segment_selector_final : entity work.segment_selector
+      generic map (
+        MODE        => "BITONIC",
+        NUM_INPUTS  => NUM_SEGMENTS*2,
+        NUM_OUTPUTS => NUM_SEGMENTS,
+        SORTB       => PATTERN_SORTB)
+      port map (
+        clock  => clock,
+        segs_i => one_prt_sorted_segs((I+1)*2*NUM_SEGMENTS-1 downto I*2*NUM_SEGMENTS),
+        segs_o => two_prt_sorted_segs((I+1)*NUM_SEGMENTS-1 downto I*NUM_SEGMENTS)
         );
   end generate;
 
@@ -227,12 +252,12 @@ begin
     generic map (
       MODE        => "BITONIC",
       NUM_OUTPUTS => NUM_SEGMENTS,
-      NUM_INPUTS  => sorted_segs'length,
+      NUM_INPUTS  => two_prt_sorted_segs'length,
       SORTB       => PATTERN_SORTB
       )
     port map (
       clock  => clock,
-      segs_i => sorted_segs,
+      segs_i => two_prt_sorted_segs,
       segs_o => final_segs
       );
 
@@ -247,8 +272,15 @@ begin
   process (clock) is
   begin
     if (rising_edge(clock)) then
+
+      -- FIXME: should not have this hardcoded loop...
+      dav_sr(0) <= dav_i     after 1 ns;
+      dav_o     <= dav_sr(8) after 1 ns;
+
       segments_o <= final_segs;
-      dav_o <= dav_i;
+      for I in 1 to dav_sr'length-1 loop
+        dav_sr(I) <= dav_sr(I-1);
+      end loop;
     end if;
   end process;
 
