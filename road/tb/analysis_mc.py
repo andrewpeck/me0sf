@@ -752,15 +752,15 @@ def test_analysis_mc():
     bx_list = list(range(-9999,10000))
     cross_part_list = ["none", "partial", "full"]
     for cross_part in cross_part_list:
+        print ("Comparing cross partition: %s"%cross_part)
         analysis(root_dat, hits, bx, bx_list, cross_part, True, 0)
         
         # checking
-        print ("Comparing cross partition: "%cross_part)
         file_out_name = "output_log_%s_bx%s_crosspart_%s.txt"%(hits, bx, cross_part)
         file_compare_name = "test_data/%s"%file_out_name
         os.system("diff %s %s > out.txt"%(file_out_name, file_compare_name))
         file_out = open("out.txt")
-        assert len(file_out.readlines()) > 0
+        assert len(file_out.readlines()) == 0
         file_out.close()
 
 
