@@ -15,44 +15,9 @@ import sys, os, glob
 import argparse
 from array import array
 
-if __name__ == "__main__":
-    parser = argparse.ArgumentParser(description='Emulator for Online ME0 Segment Finder')
-    parser.add_argument("-f", "--file_path", action="store", dest="file_path", help="file_path = the .root file path to be read")
-    parser.add_argument("-t", "--hits", action="store", dest="hits", default="digi", help="hits = digi or rec")
-    parser.add_argument("-b", "--bx", action="store", dest="bx", default="all", help="bx = all or nr. of BXs to consider")
-    parser.add_argument("-c", "--cross_part", action="store", dest="cross_part", help="cross_part = 'full' or 'partial' or 'none'")
-    parser.add_argument("-v", "--verbose", action="store_true", dest="verbose", help="whether to print all track segment matching info")
-    parser.add_argument("-p", "--pu", action="store", dest="pu", help="PU")
-    args = parser.parse_args()
-
-    # read in the data
-    root_dat = read_ntuple(args.file_path)
-
-    if args.cross_part not in ["full", "partial", "none"]:
-        print ("Incorrect argument for cross partition")
-        sys.exit()
-
-    if args.hits not in ["digi", "rec"]:
-        print ("Incorrect argument for hits option")
-        sys.exit()
-    bx_list = []
-    if args.bx == "all":
-        bx_list = list(range(-9999,10000))
-    else:
-        n_bx = int(args.bx)
-        if n_bx <= 0:
-            print ("N_BX has to be larger than 0 or all")
-            sys.exit()
-        if n_bx%2 == 0:
-            print ("N_BX has to be odd")
-            sys.exit()
-        if n_bx == 1:
-            bx_list.append(0)
-        else:
-            bx_list = list(range(-(math.floor(n_bx/2)), math.floor(n_bx/2)+1))
-
+def analysis(root_dat, hits, bx, bx_list, cross_part, verbose, pu):
     # Output text file
-    file_out = open("output_log_%s_bx%s_crosspart_%s.txt"%(args.hits, args.bx, args.cross_part), "w")
+    file_out = open("output_log_%s_bx%s_crosspart_%s.txt"%(hits, bx, cross_part), "w")
 
     # Nr. of segments per chamber per event
     num_seg_per_chamber = ROOT.TH1D("num_seg_per_chamber","Fraction of Events vs Number of Segments per Chamber",13,-0.5,12.5)
@@ -63,8 +28,6 @@ if __name__ == "__main__":
     offline_effi_total = ROOT.TH1F("offline_effi_total", "offline_effi_total",14, -7., 7.) 
     offline_effi_mres = ROOT.TH1F("offline_effi_Bend_Ang_Res", "offline_effi_Bend_Ang_Res", 20, -0.6, 0.6)
     offline_effi_sres = ROOT.TH1F("offline_effi_Strip_Res", "offline_effi_Strip_Res", 20, -0.9, 0.9)
-    n_offline_effi_total = 0
-    n_offline_effi_passed = 0
 
     # defining histograms for simtrack vs online
     bins = [0.0,1.0,2.0,3.0,4.0,5.0,10.0,15.0,20.0,25.0,30.0,35.0,40.0,45.0,50.0]
@@ -81,6 +44,8 @@ if __name__ == "__main__":
     st_purity_passed_bending = ROOT.TH1F("st_purity_passed_bending", "st_purity_passed_bending",14, -7., 7.)
     st_purity_total_bending = ROOT.TH1F("st_purity_total_bending", "st_purity_total_bending",14, -7., 7.) 
 
+    n_offline_effi_total = 0
+    n_offline_effi_passed = 0
     n_st_effi_total = 0
     n_st_effi_passed = 0
     n_st_purity_total = 0
@@ -96,7 +61,7 @@ if __name__ == "__main__":
             prev_frac_done = frac_done
         #if ievent!=15:
         #    continue
-        if args.verbose:
+        if verbose:
             file_out.write("Event number = %d\n"%ievent)
 
         # read simhit info
@@ -262,7 +227,7 @@ if __name__ == "__main__":
         # 7 ->   13     14
 
         # loop every hit inside an event
-        if args.hits == "rec":
+        if hits == "rec":
             for hit in range(len(rechit_region)):
                 if rechit_region[hit] == 1:
                     chamb_idx = 18 + rechit_chamber[hit]
@@ -276,18 +241,18 @@ if __name__ == "__main__":
 
                 # insert the hit
                 datlist[chamb_idx, part_idx*2, 0][layer_idx] = (datlist[chamb_idx, part_idx*2, 0][layer_idx]) | (1 << sbit_idx)
-                if args.cross_part == "full":
+                if cross_part == "full":
                     if part_idx != 7:
                         datlist[chamb_idx, (part_idx*2)+1, 0][layer_idx] = (datlist[chamb_idx, (part_idx*2)+1, 0][layer_idx]) | (1 << sbit_idx)
                     if part_idx != 0:
                         datlist[chamb_idx, (part_idx*2)-1, 0][layer_idx] = (datlist[chamb_idx, (part_idx*2)-1, 0][layer_idx]) | (1 << sbit_idx)
-                elif args.cross_part == "partial":
+                elif cross_part == "partial":
                     if part_idx != 7 and layer_idx >= 2:
                         datlist[chamb_idx, (part_idx*2)+1, 0][layer_idx] = (datlist[chamb_idx, (part_idx*2)+1, 0][layer_idx]) | (1 << sbit_idx)
                     if part_idx != 0 and layer_idx <= 3:
                         datlist[chamb_idx, (part_idx*2)-1, 0][layer_idx] = (datlist[chamb_idx, (part_idx*2)-1, 0][layer_idx]) | (1 << sbit_idx)                
 
-        elif args.hits == "digi":
+        elif hits == "digi":
             for hit in range(len(digihit_region)):
                 if digihit_region[hit] == 1:
                     chamb_idx = 18 + digihit_chamber[hit]
@@ -301,12 +266,12 @@ if __name__ == "__main__":
                 
                 # insert the hit
                 datlist[chamb_idx, part_idx*2, 0][layer_idx] = (datlist[chamb_idx, part_idx*2, 0][layer_idx]) | (1 << sbit_idx)
-                if args.cross_part == "full":
+                if cross_part == "full":
                     if part_idx != 7:
                         datlist[chamb_idx, (part_idx*2)+1, 0][layer_idx] = (datlist[chamb_idx, (part_idx*2)+1, 0][layer_idx]) | (1 << sbit_idx)
                     if part_idx != 0:
                         datlist[chamb_idx, (part_idx*2)-1, 0][layer_idx] = (datlist[chamb_idx, (part_idx*2)-1, 0][layer_idx]) | (1 << sbit_idx)
-                elif args.cross_part == "partial":
+                elif cross_part == "partial":
                     if part_idx != 7 and layer_idx >= 2:
                         datlist[chamb_idx, (part_idx*2)+1, 0][layer_idx] = (datlist[chamb_idx, (part_idx*2)+1, 0][layer_idx]) | (1 << sbit_idx)
                     if part_idx != 0 and layer_idx <= 3:
@@ -342,7 +307,7 @@ if __name__ == "__main__":
                 #seg.bend_ang = 0
                 if seg.id != 0:
                     seglist_final.append(seg)
-                    if args.verbose:
+                    if verbose:
                         file_out.write("  Online Segment in Chamber (0-17 for region -1, 18-35 for region 1) %d:\n "%chamber_nr)
                         file_out.write("    Eta Partition = %d, Center Strip = %.4f, Bending angle = %.4f, ID = %d, Hit count = %d, Layer count = %d, Quality = %d\n"%(seg.partition, seg.substrip+seg.strip, seg.bend_ang, seg.id, seg.hc, seg.lc, seg.quality))
                         file_out.write("\n")
@@ -417,7 +382,7 @@ if __name__ == "__main__":
                         offline_effi_sres.Fill(offline_substrip - online_substrip)
                         seg_match = 1
                         seg_matched_index.append(j)
-                        #if args.verbose:
+                        #if verbose:
                             #print ("    Offline segment: Chamber = %d: , Eta Partition = %d, Center Strip = %.4f, Bending angle = %.4f, Hit count = %d, Layer_count = %d"%(offline_chamber, offline_eta_partition, offline_substrip, offline_bending_angle, offline_nrechits, offline_nlayers))
                             #file_out.write("    Online segment: Chamber = %d: , Eta Partition = %d, Center Strip = %.4f, Bending angle = %.4f, ID = %d, Hit count = %d, Layer count = %d, Quality = %d\n"%(st_chamber, online_eta_partition, online_substrip, online_bending_angle, online_id, online_hc, online_lc, online_quality))
                             #print ("")
@@ -430,7 +395,7 @@ if __name__ == "__main__":
         #    print ("    Chamber = %d: , Eta Partition = %d, Center Strip = %.4f, Bending angle = %.4f, Hit count = %d, Layer_count = %d"%(seg_chamber_nr[i], seg_eta_partition[i], seg_substrip[i], seg_bending_angle[i], seg_nrechits[i], seg_nlayers[i]))
         #print ("\n")
 
-        if args.verbose:
+        if verbose:
             file_out.write("  SimTrack - Online Segment Matching: \n")
         unmatched_st_index = []
         # Checking efficiency w.r.t sim tracks
@@ -479,7 +444,7 @@ if __name__ == "__main__":
                         st_effi_sres.Fill(st_substrip - online_substrip)
                         track_match = 1
                         track_matched_index.append(j)
-                        if args.verbose:
+                        if verbose:
                             file_out.write("    Sim Track: Chamber = %d: , Eta Partition = %d, Center Strip = %.4f, Bending angle = %.4f, Hit count = %d, Layer_count = %d, pT = %.4f\n"%(st_chamber, st_eta_partition, st_substrip, st_bending_angle, st_nrechits, st_nlayers, st_pt))
                             file_out.write("    Online segment: Chamber = %d: , Eta Partition = %d, Center Strip = %.4f, Bending angle = %.4f, ID = %d, Hit count = %d, Layer count = %d, Quality = %d\n"%(st_chamber, online_eta_partition, online_substrip, online_bending_angle, online_id, online_hc, online_lc, online_quality))
                             file_out.write("\n")
@@ -487,7 +452,7 @@ if __name__ == "__main__":
             if track_match == 0:
                 unmatched_st_index.append(i)
             
-        if args.verbose:
+        if verbose:
             file_out.write("  Sim Tracks not matched to online segments:\n")
             for i in unmatched_st_index:
                 file_out.write("    Chamber = %d: , Eta Partition = %d, Center Strip = %.4f, Bending angle = %.4f, Hit count = %d, Layer_count = %d, pT = %.4f\n"%(track_chamber_nr[i], track_eta_partition[i], track_substrip[i], track_bending_angle[i], track_nhits[i], track_nlayers[i], track_pt[i]))
@@ -533,7 +498,7 @@ if __name__ == "__main__":
     print ("Overall purity w.r.t sim tracks = %.4f\n"%(st_purity))
     file_out.write("Overall purity w.r.t sim tracks = %.4f\n\n"%(st_purity))
 
-    plot_file = ROOT.TFile("output_plots_%s_bx%s_crosspart_%s.root"%(args.hits, args.bx, args.cross_part), "recreate")
+    plot_file = ROOT.TFile("output_plots_%s_bx%s_crosspart_%s.root"%(hits, bx, cross_part), "recreate")
     plot_file.cd()
 
     # Plotting
@@ -541,11 +506,11 @@ if __name__ == "__main__":
     latex.SetNDC()
     latex.SetTextAlign(31)
     latex.SetTextSize(0.035)
-    Lint = (5 * 10 ** 34) * (float(args.pu)/140.0)
-    if (args.pu == 0):
+    Lint = (5 * 10 ** 34) * (float(pu)/140.0)
+    if (pu == 0):
         plot_text1 = "Muon Gun (0 PU)"
     else:
-        plot_text1 = "L = %.1f"%(Lint) + " Hz/cm^{2} (" + args.pu + " PU)"
+        plot_text1 = "L = %.1f"%(Lint) + " Hz/cm^{2} (" + pu + " PU)"
     plot_text2 = "CMS Simulation #sqrt{s}=14 TeV"
 
     c1 = ROOT.TCanvas('', '', 800, 650)
@@ -564,7 +529,7 @@ if __name__ == "__main__":
     ROOT.gPad.Update()
     latex.DrawLatex(0.9, 0.91,plot_text1)
     latex.DrawLatex(0.42, 0.91,plot_text2)
-    c1.Print("offline_eff_%s_bx%s_crosspart_%s.pdf"%(args.hits, args.bx, args.cross_part))
+    c1.Print("offline_eff_%s_bx%s_crosspart_%s.pdf"%(hits, bx, cross_part))
     offline_eff.Write()
 
     c2 = ROOT.TCanvas('', '', 800, 650)
@@ -585,7 +550,7 @@ if __name__ == "__main__":
     offline_effi_mres.SetLineColor(1)
     latex.DrawLatex(0.9, 0.91,plot_text1)
     latex.DrawLatex(0.42, 0.91,plot_text2)
-    c2.Print("offline_effi_mres_%s_bx%s_crosspart_%s.pdf"%(args.hits, args.bx, args.cross_part))
+    c2.Print("offline_effi_mres_%s_bx%s_crosspart_%s.pdf"%(hits, bx, cross_part))
     offline_effi_mres.Write()
 
     c3 = ROOT.TCanvas('', '', 800, 650)
@@ -607,7 +572,7 @@ if __name__ == "__main__":
     offline_effi_sres.SetLineColor(1)
     latex.DrawLatex(0.9, 0.91,plot_text1)
     latex.DrawLatex(0.42, 0.91,plot_text2)
-    c3.Print("offline_effi_sres_%s_bx%s_crosspart_%s.pdf"%(args.hits, args.bx, args.cross_part))
+    c3.Print("offline_effi_sres_%s_bx%s_crosspart_%s.pdf"%(hits, bx, cross_part))
     offline_effi_sres.Write()
 
     c4 = ROOT.TCanvas('', '', 800, 650)
@@ -626,7 +591,7 @@ if __name__ == "__main__":
     ROOT.gPad.Update()
     latex.DrawLatex(0.9, 0.91,plot_text1)
     latex.DrawLatex(0.42, 0.91,plot_text2)
-    c4.Print("st_eff_bending_%s_bx%s_crosspart_%s.pdf"%(args.hits, args.bx, args.cross_part))
+    c4.Print("st_eff_bending_%s_bx%s_crosspart_%s.pdf"%(hits, bx, cross_part))
     st_eff_bending.Write()
 
     c5 = ROOT.TCanvas('', '', 800, 650)
@@ -645,7 +610,7 @@ if __name__ == "__main__":
     ROOT.gPad.Update()
     latex.DrawLatex(0.9, 0.91,plot_text1)
     latex.DrawLatex(0.42, 0.91,plot_text2)
-    c5.Print("st_eff_pt_%s_bx%s_crosspart_%s.pdf"%(args.hits, args.bx, args.cross_part))
+    c5.Print("st_eff_pt_%s_bx%s_crosspart_%s.pdf"%(hits, bx, cross_part))
     st_eff_pt.Write()
 
     c6 = ROOT.TCanvas('', '', 800, 650)
@@ -664,7 +629,7 @@ if __name__ == "__main__":
     ROOT.gPad.Update()
     latex.DrawLatex(0.9, 0.91,plot_text1)
     latex.DrawLatex(0.42, 0.91,plot_text2)
-    c6.Print("st_eff_eta_%s_bx%s_crosspart_%s.pdf"%(args.hits, args.bx, args.cross_part))
+    c6.Print("st_eff_eta_%s_bx%s_crosspart_%s.pdf"%(hits, bx, cross_part))
     st_eff_eta.Write()
 
     c7 = ROOT.TCanvas('', '', 800, 650)
@@ -685,7 +650,7 @@ if __name__ == "__main__":
     st_effi_mres.SetLineColor(1)
     latex.DrawLatex(0.9, 0.91,plot_text1)
     latex.DrawLatex(0.42, 0.91,plot_text2)
-    c7.Print("st_effi_mres_%s_bx%s_crosspart_%s.pdf"%(args.hits, args.bx, args.cross_part))
+    c7.Print("st_effi_mres_%s_bx%s_crosspart_%s.pdf"%(hits, bx, cross_part))
     st_effi_mres.Write()
 
     c8 = ROOT.TCanvas('', '', 800, 650)
@@ -706,7 +671,7 @@ if __name__ == "__main__":
     st_effi_sres.SetLineColor(1)
     latex.DrawLatex(0.9, 0.91,plot_text1)
     latex.DrawLatex(0.42, 0.91,plot_text2)
-    c8.Print("st_effi_sres_%s_bx%s_crosspart_%s.pdf"%(args.hits, args.bx, args.cross_part))
+    c8.Print("st_effi_sres_%s_bx%s_crosspart_%s.pdf"%(hits, bx, cross_part))
     st_effi_sres.Write()
 
     c9 = ROOT.TCanvas('', '', 800, 650)
@@ -725,7 +690,7 @@ if __name__ == "__main__":
     ROOT.gPad.Update()
     latex.DrawLatex(0.9, 0.91,plot_text1)
     latex.DrawLatex(0.42, 0.91,plot_text2)
-    c9.Print("st_purity_eta_%s_bx%s_crosspart_%s.pdf"%(args.hits, args.bx, args.cross_part))
+    c9.Print("st_purity_eta_%s_bx%s_crosspart_%s.pdf"%(hits, bx, cross_part))
     st_purity_eta.Write()
 
     c10 = ROOT.TCanvas('', '', 800, 650)
@@ -744,7 +709,7 @@ if __name__ == "__main__":
     ROOT.gPad.Update()
     latex.DrawLatex(0.9, 0.91,plot_text1)
     latex.DrawLatex(0.42, 0.91,plot_text2)
-    c10.Print("st_purity_bending_%s_bx%s_crosspart_%s.pdf"%(args.hits, args.bx, args.cross_part))
+    c10.Print("st_purity_bending_%s_bx%s_crosspart_%s.pdf"%(hits, bx, cross_part))
     st_purity_bending.Write()
 
     c11 = ROOT.TCanvas('', '', 800, 650)
@@ -759,7 +724,7 @@ if __name__ == "__main__":
     num_seg_per_chamber.SetLineColor(1)
     latex.DrawLatex(0.9, 0.91,plot_text1)
     latex.DrawLatex(0.42, 0.91,plot_text2)
-    c11.Print("num_seg_per_chamber_%s_bx%s_crosspart_%s.pdf"%(args.hits, args.bx, args.cross_part))
+    c11.Print("num_seg_per_chamber_%s_bx%s_crosspart_%s.pdf"%(hits, bx, cross_part))
     num_seg_per_chamber.Write()
 
     c12 = ROOT.TCanvas('', '', 800, 650)
@@ -774,8 +739,65 @@ if __name__ == "__main__":
     num_seg_per_chamber_offline.SetLineColor(1)
     latex.DrawLatex(0.9, 0.91,plot_text1)
     latex.DrawLatex(0.42, 0.91,plot_text2)
-    c12.Print("num_seg_per_chamber_offline_%s_bx%s_crosspart_%s.pdf"%(args.hits, args.bx, args.cross_part))
+    c12.Print("num_seg_per_chamber_offline_%s_bx%s_crosspart_%s.pdf"%(hits, bx, cross_part))
     num_seg_per_chamber_offline.Write()
 
     file_out.close()
     plot_file.Close()
+
+def test_analysis_mc():
+    root_dat = read_ntuple("test_data/mc_ntuple.root")
+    hits = "digi"
+    bx = "all"
+    bx_list = list(range(-9999,10000))
+    cross_part_list = ["none", "partial", "full"]
+    for cross_part in cross_part_list:
+        analysis(root_dat, hits, bx, bx_list, cross_part, True, 0)
+        
+        # checking
+        print ("Comparing cross partition: "%cross_part)
+        file_out_name = "output_log_%s_bx%s_crosspart_%s.txt"%(hits, bx, cross_part)
+        file_compare_name = "test_data/%s"%file_out_name
+        os.system("diff %s %s > out.txt"%(file_out_name, file_compare_name))
+        file_out = open("out.txt")
+        assert len(file_out.readlines()) > 0
+        file_out.close()
+
+
+if __name__ == "__main__":
+    parser = argparse.ArgumentParser(description='Emulator for Online ME0 Segment Finder')
+    parser.add_argument("-f", "--file_path", action="store", dest="file_path", help="file_path = the .root file path to be read")
+    parser.add_argument("-t", "--hits", action="store", dest="hits", default="digi", help="hits = digi or rec")
+    parser.add_argument("-b", "--bx", action="store", dest="bx", default="all", help="bx = all or nr. of BXs to consider")
+    parser.add_argument("-c", "--cross_part", action="store", dest="cross_part", help="cross_part = 'full' or 'partial' or 'none'")
+    parser.add_argument("-v", "--verbose", action="store_true", dest="verbose", help="whether to print all track segment matching info")
+    parser.add_argument("-p", "--pu", action="store", dest="pu", help="PU")
+    args = parser.parse_args()
+
+    # read in the data
+    root_dat = read_ntuple(args.file_path)
+
+    if args.cross_part not in ["full", "partial", "none"]:
+        print ("Incorrect argument for cross partition")
+        sys.exit()
+
+    if args.hits not in ["digi", "rec"]:
+        print ("Incorrect argument for hits option")
+        sys.exit()
+    bx_list = []
+    if args.bx == "all":
+        bx_list = list(range(-9999,10000))
+    else:
+        n_bx = int(args.bx)
+        if n_bx <= 0:
+            print ("N_BX has to be larger than 0 or all")
+            sys.exit()
+        if n_bx%2 == 0:
+            print ("N_BX has to be odd")
+            sys.exit()
+        if n_bx == 1:
+            bx_list.append(0)
+        else:
+            bx_list = list(range(-(math.floor(n_bx/2)), math.floor(n_bx/2)+1))
+
+    analysis(root_dat, args.hits, args.bx, bx_list, args.cross_part, args.verbose, args.pu)
