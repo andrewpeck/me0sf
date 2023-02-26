@@ -746,7 +746,7 @@ def analysis(root_dat, hits, bx, bx_list, cross_part, verbose, pu):
     plot_file.Close()
 
 def test_analysis_mc():
-    root_dat = read_ntuple("test_data/mc_ntuple.root")
+    root_dat = read_ntuple(os.path.abspath(os.path.dirname(__file__)) + "/test_data/mc_ntuple.root")
     hits = "digi"
     bx = "all"
     bx_list = list(range(-9999,10000))
