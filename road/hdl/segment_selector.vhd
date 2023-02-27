@@ -26,6 +26,8 @@ entity segment_selector is
     );
   port(
     clock  : in  std_logic;
+    dav_i  : in  std_logic;
+    dav_o  : out std_logic;
     segs_i : in  segment_list_t (NUM_INPUTS-1 downto 0);
     segs_o : out segment_list_t (NUM_OUTPUTS-1 downto 0)
     );
@@ -51,6 +53,8 @@ begin
 
     signal segs_i_slv : cand_i_array_t := (others => '0');
     signal segs_o_slv : cand_o_array_t;
+    signal dav_i_r : std_logic := '0';
+    signal dav_o_r : std_logic := '0';
   begin
 
     assert NUM_INPUTS >= NUM_OUTPUTS
@@ -61,18 +65,36 @@ begin
     -- assert false report "NUM_INPUTS = " & integer'image(NUM_INPUTS) severity note;
     -- assert false report "NUM_OUTPUTS = " & integer'image(NUM_OUTPUTS) severity note;
 
+    process (clock) is
+    begin
+      if (rising_edge(clock)) then
+        dav_i_r <= dav_i;
+        dav_o   <= dav_o_r;
+      end if;
+    end process;
+
     inloop : for I in 0 to NUM_INPUTS-1 generate
       constant bithi : natural := (I+1)*BITS;
       constant bitlo : natural := I*BITS;
-      signal sl : std_logic_vector (bithi-bitlo -1 downto 0);
+      signal sl      : std_logic_vector (bithi-bitlo - 1 downto 0);
     begin
-      segs_i_slv(bithi-1 downto bitlo) <= convert(segs_i(I), sl);
+      process (clock) is
+      begin
+        if (rising_edge(clock)) then
+          segs_i_slv(bithi-1 downto bitlo) <= convert(segs_i(I), sl);
+        end if;
+      end process;
     end generate;
 
     -- Select a subset of outputs from the sorter
     outloop : for I in 0 to NUM_OUTPUTS-1 generate
     begin
-      segs_o(I) <= convert(segs_o_slv((I+1)*BITS-1 downto I*BITS), segs_o(I));
+      process (clock) is
+      begin
+        if (rising_edge(clock)) then
+          segs_o(I) <= convert(segs_o_slv((I+1)*BITS-1 downto I*BITS), segs_o(I));
+        end if;
+      end process;
     end generate;
 
     bitonic_sort_inst : entity work.bitonic_sort
@@ -87,12 +109,12 @@ begin
         ADD_OUTPUT_REGISTERS => true
         )
       port map (
-        clock  => clock,
-        reset  => '0',
-        data_i => segs_i_slv,
-        data_o => segs_o_slv,
-        meta_i => (others => '0'),
-        meta_o => open
+        clock     => clock,
+        reset     => '0',
+        data_i    => segs_i_slv,
+        data_o    => segs_o_slv,
+        meta_i(0) => dav_i_r,
+        meta_o(0) => dav_o_r
         );
 
   end generate;

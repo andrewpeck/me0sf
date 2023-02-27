@@ -93,6 +93,10 @@ architecture behavioral of chamber is
 
   signal all_segs_dav : std_logic_vector (NUM_PARTITIONS - 1 downto 0) := (others => '0');
 
+  signal one_prt_sorted_dav : std_logic_vector (NUM_PARTITIONS-1 downto 0)   := (others => '0');
+  signal two_prt_sorted_dav : std_logic_vector (NUM_PARTITIONS/2-1 downto 0) := (others => '0');
+  signal final_segs_dav     : std_logic;
+
   signal dav_sr : std_logic_vector(9 downto 0);
 
   signal muxout_dav : std_logic := '0';
@@ -212,7 +216,7 @@ begin
 
   partition_sorter : for I in 0 to NUM_PARTITIONS-1 generate
   begin
-    segment_selector_final : entity work.segment_selector
+    segment_selector_inst : entity work.segment_selector
       generic map (
         MODE        => "BITONIC",
         NUM_OUTPUTS => NUM_SEGMENTS,
@@ -220,6 +224,8 @@ begin
         SORTB       => PATTERN_SORTB)
       port map (
         clock  => clock,
+        dav_i  => all_segs_dav(I),
+        dav_o  => one_prt_sorted_dav(I),
         segs_i => all_segs((I+1)*NUM_SEGS_PER_PRT-1 downto I*NUM_SEGS_PER_PRT),
         segs_o => one_prt_sorted_segs((I+1)*NUM_SEGMENTS-1 downto I*NUM_SEGMENTS)
         );
@@ -227,7 +233,7 @@ begin
 
   dipartition_sorter : for I in 0 to NUM_PARTITIONS/2-1 generate
   begin
-    segment_selector_final : entity work.segment_selector
+    segment_selector_inst : entity work.segment_selector
       generic map (
         MODE        => "BITONIC",
         NUM_INPUTS  => NUM_SEGMENTS*2,
@@ -235,6 +241,8 @@ begin
         SORTB       => PATTERN_SORTB)
       port map (
         clock  => clock,
+        dav_i  => one_prt_sorted_dav(I),
+        dav_o  => two_prt_sorted_dav(I),
         segs_i => one_prt_sorted_segs((I+1)*2*NUM_SEGMENTS-1 downto I*2*NUM_SEGMENTS),
         segs_o => two_prt_sorted_segs((I+1)*NUM_SEGMENTS-1 downto I*NUM_SEGMENTS)
         );
@@ -253,10 +261,11 @@ begin
       MODE        => "BITONIC",
       NUM_OUTPUTS => NUM_SEGMENTS,
       NUM_INPUTS  => two_prt_sorted_segs'length,
-      SORTB       => PATTERN_SORTB
-      )
+      SORTB       => PATTERN_SORTB)
     port map (
       clock  => clock,
+      dav_i  => two_prt_sorted_dav(0),
+      dav_o  => final_segs_dav,
       segs_i => two_prt_sorted_segs,
       segs_o => final_segs
       );
@@ -272,15 +281,8 @@ begin
   process (clock) is
   begin
     if (rising_edge(clock)) then
-
-      -- FIXME: should not have this hardcoded loop...
-      dav_sr(0) <= dav_i     after 1 ns;
-      dav_o     <= dav_sr(8) after 1 ns;
-
+      dav_o      <= final_segs_dav;
       segments_o <= final_segs;
-      for I in 1 to dav_sr'length-1 loop
-        dav_sr(I) <= dav_sr(I-1);
-      end loop;
     end if;
   end process;
 
