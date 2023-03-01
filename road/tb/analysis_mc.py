@@ -510,7 +510,7 @@ def analysis(root_dat, hits, bx, bx_list, cross_part, verbose, pu):
     if (pu == 0):
         plot_text1 = "Muon Gun (0 PU)"
     else:
-        plot_text1 = "L = %.1f"%(Lint) + " Hz/cm^{2} (" + pu + " PU)"
+        plot_text1 = "L = %.1e"%(Lint) + " Hz/cm^{2} (" + pu + " PU)"
     plot_text2 = "CMS Simulation #sqrt{s}=14 TeV"
 
     c1 = ROOT.TCanvas('', '', 800, 650)
@@ -725,6 +725,22 @@ def analysis(root_dat, hits, bx, bx_list, cross_part, verbose, pu):
     latex.DrawLatex(0.9, 0.91,plot_text1)
     latex.DrawLatex(0.42, 0.91,plot_text2)
     c11.Print("num_seg_per_chamber_%s_bx%s_crosspart_%s.pdf"%(hits, bx, cross_part))
+    num_seg_per_chamber.Write()
+
+    c11a = ROOT.TCanvas('', '', 800, 650)
+    c11a.SetLogy()
+    c11a.SetGrid()
+    c11a.DrawFrame(-0.5, 0.000001, 12.5, 1.5, ";Number of Segments per Chamber/Event;Fraction of Events")
+    num_seg_per_chamber.Scale(1.0/num_seg_per_chamber.Integral())
+    num_seg_per_chamber.Draw("same HIST")
+    num_seg_per_chamber.SetMarkerStyle(8)
+    num_seg_per_chamber.SetMarkerSize(1)
+    num_seg_per_chamber.SetMarkerColor(1)
+    num_seg_per_chamber.SetLineWidth(1)
+    num_seg_per_chamber.SetLineColor(1)
+    latex.DrawLatex(0.9, 0.91,plot_text1)
+    latex.DrawLatex(0.42, 0.91,plot_text2)
+    c11a.Print("num_seg_per_chamber_%s_bx%s_crosspart_%s_log.pdf"%(hits, bx, cross_part))
     num_seg_per_chamber.Write()
 
     c12 = ROOT.TCanvas('', '', 800, 650)
