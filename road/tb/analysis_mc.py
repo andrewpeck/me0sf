@@ -758,6 +758,22 @@ def analysis(root_dat, hits, bx, bx_list, cross_part, verbose, pu):
     c12.Print("num_seg_per_chamber_offline_%s_bx%s_crosspart_%s.pdf"%(hits, bx, cross_part))
     num_seg_per_chamber_offline.Write()
 
+    c12a = ROOT.TCanvas('', '', 800, 650)
+    c12a.SetLogy()
+    c12a.SetGrid()
+    c12a.DrawFrame(-0.5, 0.000001, 12.5, 1.5, ";Number of Offline Segments per Chamber/Event;Fraction of Events")
+    num_seg_per_chamber_offline.Scale(1.0/num_seg_per_chamber_offline.Integral())
+    num_seg_per_chamber_offline.Draw("same HIST")
+    num_seg_per_chamber_offline.SetMarkerStyle(8)
+    num_seg_per_chamber_offline.SetMarkerSize(1)
+    num_seg_per_chamber_offline.SetMarkerColor(1)
+    num_seg_per_chamber_offline.SetLineWidth(1)
+    num_seg_per_chamber_offline.SetLineColor(1)
+    latex.DrawLatex(0.9, 0.91,plot_text1)
+    latex.DrawLatex(0.42, 0.91,plot_text2)
+    c12a.Print("num_seg_per_chamber_offline_%s_bx%s_crosspart_%s_log.pdf"%(hits, bx, cross_part))
+    num_seg_per_chamber_offline.Write()
+
     file_out.close()
     plot_file.Close()
 
