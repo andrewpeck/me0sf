@@ -491,12 +491,13 @@ def analysis(root_dat, hits, bx, bx_list, cross_part, verbose, pu):
     offline_efficiency =  n_offline_effi_passed/n_offline_effi_total
     print ("Overall efficiency w.r.t offline segments = %.4f\n"%(offline_efficiency))
     file_out.write("Overall efficiency w.r.t offline segments = %.4f\n\n"%(offline_efficiency))
-    st_efficiency =  n_st_effi_passed/n_st_effi_total
-    print ("Overall efficiency w.r.t sim tracks = %.4f\n"%(st_efficiency))
-    file_out.write("Overall efficiency w.r.t sim tracks = %.4f\n\n"%(st_efficiency))
-    st_purity =  n_st_purity_passed/n_st_purity_total
-    print ("Overall purity w.r.t sim tracks = %.4f\n"%(st_purity))
-    file_out.write("Overall purity w.r.t sim tracks = %.4f\n\n"%(st_purity))
+    if n_st_effi_total != 0:
+        st_efficiency =  n_st_effi_passed/n_st_effi_total
+        print ("Overall efficiency w.r.t sim tracks = %.4f\n"%(st_efficiency))
+        file_out.write("Overall efficiency w.r.t sim tracks = %.4f\n\n"%(st_efficiency))
+        st_purity =  n_st_purity_passed/n_st_purity_total
+        print ("Overall purity w.r.t sim tracks = %.4f\n"%(st_purity))
+        file_out.write("Overall purity w.r.t sim tracks = %.4f\n\n"%(st_purity))
 
     plot_file = ROOT.TFile("output_plots_%s_bx%s_crosspart_%s.root"%(hits, bx, cross_part), "recreate")
     plot_file.cd()
