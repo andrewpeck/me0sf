@@ -60,8 +60,8 @@ def analysis(root_dat, hits, bx, bx_list, cross_part, verbose, pu):
         if (frac_done - prev_frac_done) >= 0.05:
             print ("%.2f"%(frac_done*100) + "% Events Done")
             prev_frac_done = frac_done
-        #if ievent!=15:
-        #    continue
+        if ievent!=1:
+            continue
         if verbose:
             file_out.write("Event number = %d\n"%ievent)
 
@@ -314,19 +314,21 @@ def analysis(root_dat, hits, bx, bx_list, cross_part, verbose, pu):
                         file_out.write("\n")
             online_segment_chamber[chamber_nr] = seglist_final
 
-            #for i in range(0, n_offline_seg):
-            #    if seg_chamber_nr[i] != chamber_nr:
-            #        continue
-            #    print ("  Offline Segment in Chamber (0-17 for region -1, 18-35 for region 1) %d: "%chamber_nr)
-            #    print ("     Eta Partition = %d, Center Strip = %.4f, Bending angle = %.4f, Hit count = %d, Layer_count = %d"%(seg_eta_partition[i], seg_substrip[i], seg_bending_angle[i], seg_nrechits[i], seg_nlayers[i]))
-            #    print ("")
+            for i in range(0, n_offline_seg):
+                if seg_chamber_nr[i] != chamber_nr:
+                    continue
+                #if verbose:
+                #    file_out.write("  Offline Segment in Chamber (0-17 for region -1, 18-35 for region 1) %d\n: "%chamber_nr)
+                #    file_out.write("     Eta Partition = %d, Center Strip = %.4f, Bending angle = %.4f, Hit count = %d, Layer_count = %d\n"%(seg_eta_partition[i], seg_substrip[i], seg_bending_angle[i], seg_nrechits[i], seg_nlayers[i]))
+                #    file_out.write("\n")
 
             #for i in range(0, n_me0_track):
             #    if track_chamber_nr[i] != chamber_nr:
             #        continue
-            #    print ("  Sim Track in Chamber (0-17 for region -1, 18-35 for region 1) %d: "%chamber_nr)
-            #    print ("     Eta Partition = %d, Center Strip = %.4f, Bending angle = %.4f, Hit count = %d, Layer_count = %d, pT = %.4f"%(track_eta_partition[i], track_substrip[i], track_bending_angle[i], track_nhits[i], track_nlayers[i], track_pt[i]))
-            #    print ("")
+            #    if verbose:
+            #       file_out.write("  Sim Track in Chamber (0-17 for region -1, 18-35 for region 1) %d\n: "%chamber_nr)
+            #       file_out.write("     Eta Partition = %d, Center Strip = %.4f, Bending angle = %.4f, Hit count = %d, Layer_count = %d, pT = %.4f\n"%(track_eta_partition[i], track_substrip[i], track_bending_angle[i], track_nhits[i], track_nlayers[i], track_pt[i]))
+            #       file_out.write("\n")
 
         for chamber_nr in online_segment_chamber:
             num_seg_per_chamber.Fill(len(online_segment_chamber[chamber_nr]))
@@ -384,17 +386,18 @@ def analysis(root_dat, hits, bx, bx_list, cross_part, verbose, pu):
                         seg_match = 1
                         seg_matched_index.append(j)
                         #if verbose:
-                            #print ("    Offline segment: Chamber = %d: , Eta Partition = %d, Center Strip = %.4f, Bending angle = %.4f, Hit count = %d, Layer_count = %d"%(offline_chamber, offline_eta_partition, offline_substrip, offline_bending_angle, offline_nrechits, offline_nlayers))
+                            #file_out.write("    Offline segment: Chamber = %d: , Eta Partition = %d, Center Strip = %.4f, Bending angle = %.4f, Hit count = %d, Layer_count = %d\n"%(offline_chamber, offline_eta_partition, offline_substrip, offline_bending_angle, offline_nrechits, offline_nlayers))
                             #file_out.write("    Online segment: Chamber = %d: , Eta Partition = %d, Center Strip = %.4f, Bending angle = %.4f, ID = %d, Hit count = %d, Layer count = %d, Quality = %d\n"%(st_chamber, online_eta_partition, online_substrip, online_bending_angle, online_id, online_hc, online_lc, online_quality))
-                            #print ("")
+                            #file_out.write("\n")
                         break
             if seg_match == 0:
                 unmatched_offline_index.append(i)
             
-        #print ("  Offline segments not matched to online segments:")
-        #for i in unmatched_offline_index:
-        #    print ("    Chamber = %d: , Eta Partition = %d, Center Strip = %.4f, Bending angle = %.4f, Hit count = %d, Layer_count = %d"%(seg_chamber_nr[i], seg_eta_partition[i], seg_substrip[i], seg_bending_angle[i], seg_nrechits[i], seg_nlayers[i]))
-        #print ("\n")
+        if verbose:
+            #file_out.write("  Offline segments not matched to online segments:\n")
+            #for i in unmatched_offline_index:
+            #    file_out.write("    Chamber = %d: , Eta Partition = %d, Center Strip = %.4f, Bending angle = %.4f, Hit count = %d, Layer_count = %d\n"%(seg_chamber_nr[i], seg_eta_partition[i], seg_substrip[i], seg_bending_angle[i], seg_nrechits[i], seg_nlayers[i]))
+            #file_out.write("\n\n")
 
         if verbose:
             file_out.write("  SimTrack - Online Segment Matching: \n")
