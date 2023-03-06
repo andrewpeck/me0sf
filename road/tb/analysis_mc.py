@@ -60,8 +60,8 @@ def analysis(root_dat, hits, bx, bx_list, cross_part, verbose, pu):
         if (frac_done - prev_frac_done) >= 0.05:
             print ("%.2f"%(frac_done*100) + "% Events Done")
             prev_frac_done = frac_done
-        if ievent!=1:
-            continue
+        #if ievent!=1:
+        #    continue
         if verbose:
             file_out.write("Event number = %d\n"%ievent)
 
