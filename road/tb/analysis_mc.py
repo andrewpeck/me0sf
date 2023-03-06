@@ -393,7 +393,7 @@ def analysis(root_dat, hits, bx, bx_list, cross_part, verbose, pu):
             if seg_match == 0:
                 unmatched_offline_index.append(i)
             
-        if verbose:
+        #if verbose:
             #file_out.write("  Offline segments not matched to online segments:\n")
             #for i in unmatched_offline_index:
             #    file_out.write("    Chamber = %d: , Eta Partition = %d, Center Strip = %.4f, Bending angle = %.4f, Hit count = %d, Layer_count = %d\n"%(seg_chamber_nr[i], seg_eta_partition[i], seg_substrip[i], seg_bending_angle[i], seg_nrechits[i], seg_nlayers[i]))
