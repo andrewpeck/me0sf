@@ -34,92 +34,113 @@
 --      OF THIS SOFTWARE, EVEN IF ADVISED OF THE POSSIBILITY OF SUCH DAMAGE.
 --
 -----------------------------------------------------------------------------------
+
 library ieee;
-use     ieee.std_logic_1164.all;
-entity  Bitonic_Sorter is
-    generic (
-        STAGE     :  integer :=  0;
-        REGSTAGES :  integer :=  1;
-        WORDS     :  integer :=  8;
-        WORD_BITS :  integer := 64;
-        COMP_HIGH :  integer := 63;
-        COMP_LOW  :  integer := 32;
-        INFO_BITS :  integer :=  4
+use ieee.std_logic_1164.all;
+
+entity bitonic_sorter is
+  generic (
+    STAGE       : integer := 0;
+    REGSTAGES   : integer := 1;
+    WORDS       : integer := 8;
+    WORD_BITS   : integer := 64;
+    COMP_HIGH   : integer := 63;
+    COMP_LOW    : integer := 32;
+    INFO_BITS   : integer := 4;
+    REG_OUTPUTS : boolean := false;
+    REG_MERGES  : boolean := false
     );
-    port (
-        CLK       :  in  std_logic;
-        RST       :  in  std_logic;
-        CLR       :  in  std_logic;
-        I_SORT    :  in  std_logic;
-        I_UP      :  in  std_logic;
-        I_DATA    :  in  std_logic_vector(WORDS*WORD_BITS-1 downto 0);
-        I_INFO    :  in  std_logic_vector(      INFO_BITS-1 downto 0);
-        O_SORT    :  out std_logic;
-        O_UP      :  out std_logic;
-        O_DATA    :  out std_logic_vector(WORDS*WORD_BITS-1 downto 0);
-        O_INFO    :  out std_logic_vector(      INFO_BITS-1 downto 0)
+  port (
+    clk    : in  std_logic := '0';
+    rst    : in  std_logic := '0';
+    clr    : in  std_logic := '0';
+    i_sort : in  std_logic := '0';
+    i_up   : in  std_logic := '0';
+    i_data : in  std_logic_vector(WORDS*WORD_BITS-1 downto 0) := (others => '0');
+    i_info : in  std_logic_vector(INFO_BITS-1 downto 0) := (others => '0');
+    o_sort : out std_logic;
+    o_up   : out std_logic;
+    o_data : out std_logic_vector(WORDS*WORD_BITS-1 downto 0);
+    o_info : out std_logic_vector(INFO_BITS-1 downto 0)
     );
-end Bitonic_Sorter;
-library ieee;
-use     ieee.std_logic_1164.all;
-architecture RTL of Bitonic_Sorter is
+end bitonic_sorter;
+
+architecture RTL of bitonic_sorter is
 begin
-    ONE: if (WORDS <= 1) generate
-        O_DATA <= I_DATA;
-        O_INFO <= I_INFO;
-        O_SORT <= I_SORT;
-        O_UP   <= I_UP;
-    end generate;
-    ANY: if (WORDS > 1) generate
-        constant UP_POS :  integer := I_INFO'high+1;
-        signal   s_info :  std_logic_vector(    I_INFO'high+1 downto 0);
-        signal   q_info :  std_logic_vector(    I_INFO'high+1 downto 0);
-        signal   q_data :  std_logic_vector(WORDS*WORD_BITS-1 downto 0);
-        signal   q_sort :  std_logic;
+
+  ONE : if (WORDS <= 1) generate
+    process (clk, i_data, i_info, i_sort, i_up) is
     begin
-        s_info(UP_POS      ) <= I_UP;
-        s_info(I_INFO'range) <= I_INFO;
-        FIRST : entity work.Bitonic_Sorter generic map (STAGE+1, REGSTAGES, WORDS/2, WORD_BITS, COMP_HIGH, COMP_LOW, s_info'length)
-            port map (
-                CLK     => CLK,
-                RST     => RST,
-                CLR     => CLR,
-                I_SORT  => I_SORT,
-                I_UP    => '1',
-                I_INFO  => s_info,
-                I_DATA  => I_DATA(WORD_BITS*(WORDS/2)-1 downto WORD_BITS*0),
-                O_SORT  => q_sort,
-                O_UP    => open,
-                O_INFO  => q_info,
-                O_DATA  => q_data(WORD_BITS*(WORDS/2)-1 downto WORD_BITS*0)
-            );
-        SECOND: entity work.Bitonic_Sorter generic map (STAGE+1, REGSTAGES, WORDS/2, WORD_BITS, COMP_HIGH, COMP_LOW, s_info'length)
-            port map (
-                CLK     => CLK,
-                RST     => RST,
-                CLR     => CLR,
-                I_SORT  => I_SORT,
-                I_UP    => '0',
-                I_INFO  => s_info,
-                I_DATA  => I_DATA(WORD_BITS*(WORDS)-1 downto WORD_BITS*(WORDS/2)),
-                O_SORT  => open,
-                O_UP    => open,
-                O_INFO  => open,
-                O_DATA  => q_data(WORD_BITS*(WORDS)-1 downto WORD_BITS*(WORDS/2))
-            );
-        MERGE : entity work.Bitonic_Merge  generic map (STAGE+1, REGSTAGES, WORDS, WORD_BITS, COMP_HIGH, COMP_LOW, INFO_BITS)
-            port map (
-                CLK     => CLK,
-                RST     => RST,
-                CLR     => CLR,
-                I_SORT  => q_sort,
-                I_UP    => q_info(UP_POS),
-                I_INFO  => q_info(I_INFO'range),
-                I_DATA  => q_data,
-                O_SORT  => O_SORT,
-                O_UP    => O_UP  ,
-                O_INFO  => O_INFO,
-                O_DATA  => O_DATA
-            );
-    end generate;
+      if (rising_edge(clk) or not REG_OUTPUTS) then
+        o_data <= i_data;
+        o_info <= i_info;
+        o_sort <= i_sort;
+        o_up   <= i_up;
+      end if;
+    end process;
+  end generate;
+
+  ANY : if (WORDS > 1) generate
+    constant UP_POS : integer := I_INFO'high+1;
+    signal s_info   : std_logic_vector(I_INFO'high+1 downto 0);
+    signal q_info   : std_logic_vector(I_INFO'high+1 downto 0);
+    signal q_data   : std_logic_vector(WORDS*WORD_BITS-1 downto 0);
+    signal q_sort   : std_logic;
+  begin
+
+    s_info(UP_POS)       <= I_UP;
+    s_info(I_INFO'range) <= I_INFO;
+
+    FIRST : entity work.bitonic_sorter
+      generic map (
+        STAGE+1, REGSTAGES, WORDS/2, WORD_BITS, COMP_HIGH, COMP_LOW, s_info'length, REG_OUTPUTS)
+      port map (
+        clk    => clk,
+        rst    => rst,
+        clr    => clr,
+        i_sort => i_sort,
+        i_up   => '1',
+        i_info => s_info,
+        i_data => i_data(WORD_BITS*(WORDS/2)-1 downto WORD_BITS*0),
+        o_sort => q_sort,
+        o_up   => open,
+        o_info => q_info,
+        o_data => q_data(WORD_BITS*(WORDS/2)-1 downto WORD_BITS*0)
+        );
+
+    SECOND : entity work.bitonic_sorter
+      generic map (
+        STAGE+1, REGSTAGES, WORDS/2, WORD_BITS, COMP_HIGH, COMP_LOW, s_info'length, REG_OUTPUTS, REG_MERGES)
+      port map (
+        clk    => clk,
+        rst    => rst,
+        clr    => clr,
+        i_sort => i_sort,
+        i_up   => '0',
+        i_info => s_info,
+        i_data => i_data(WORD_BITS*(WORDS)-1 downto WORD_BITS*(WORDS/2)),
+        o_sort => open,
+        o_up   => open,
+        o_info => open,
+        o_data => q_data(WORD_BITS*(WORDS)-1 downto WORD_BITS*(WORDS/2))
+        );
+
+    MERGE : entity work.Bitonic_Merge
+      generic map (
+        STAGE+1, REGSTAGES, WORDS, WORD_BITS, COMP_HIGH, COMP_LOW, INFO_BITS, REG_MERGES)
+      port map (
+        clk    => clk,
+        rst    => rst,
+        clr    => clr,
+        i_sort => q_sort,
+        i_up   => q_info(UP_POS),
+        i_info => q_info(i_info'range),
+        i_data => q_data,
+        o_sort => o_sort,
+        o_up   => o_up,
+        o_info => o_info,
+        o_data => o_data
+        );
+
+  end generate;
 end RTL;

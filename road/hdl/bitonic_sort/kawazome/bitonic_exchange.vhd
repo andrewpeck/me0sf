@@ -35,43 +35,43 @@
 --
 -----------------------------------------------------------------------------------
 library ieee;
-use     ieee.std_logic_1164.all;
-entity  Bitonic_Exchange is
-    generic (
-        WORD_BITS :  integer := 64;
-        COMP_HIGH :  integer := 63;
-        COMP_LOW  :  integer := 32
+use ieee.std_logic_1164.all;
+entity Bitonic_Exchange is
+  generic (
+    WORD_BITS : integer := 64;
+    COMP_HIGH : integer := 63;
+    COMP_LOW  : integer := 32
     );
-    port (
-        I_SORT    :  in  std_logic;
-        I_UP      :  in  std_logic;
-        I_A       :  in  std_logic_vector(WORD_BITS-1 downto 0);
-        I_B       :  in  std_logic_vector(WORD_BITS-1 downto 0);
-        O_A       :  out std_logic_vector(WORD_BITS-1 downto 0);
-        O_B       :  out std_logic_vector(WORD_BITS-1 downto 0)
+  port (
+    I_SORT : in  std_logic;
+    I_UP   : in  std_logic;
+    I_A    : in  std_logic_vector(WORD_BITS-1 downto 0);
+    I_B    : in  std_logic_vector(WORD_BITS-1 downto 0);
+    O_A    : out std_logic_vector(WORD_BITS-1 downto 0);
+    O_B    : out std_logic_vector(WORD_BITS-1 downto 0)
     );
 end Bitonic_Exchange;
 library ieee;
-use     ieee.std_logic_1164.all;
-use     ieee.numeric_std.all;
+use ieee.std_logic_1164.all;
+use ieee.numeric_std.all;
 architecture RTL of Bitonic_Exchange is
-    
+
 begin
-    process(I_SORT, I_UP, I_A, I_B)
-        variable comp_a  :  unsigned(COMP_HIGH-COMP_LOW downto 0);
-        variable comp_b  :  unsigned(COMP_HIGH-COMP_LOW downto 0);
-        variable a_gt_b  :  boolean;
-    begin
-        comp_a := unsigned(I_A(COMP_HIGH downto COMP_LOW));
-        comp_b := unsigned(I_B(COMP_HIGH downto COMP_LOW));
-        a_gt_b := (comp_a > comp_b);
-        if (I_SORT = '1' and I_UP = '1' and a_gt_b = TRUE ) or
-           (I_SORT = '1' and I_UP = '0' and a_gt_b = FALSE) then
-            O_A <= I_B;
-            O_B <= I_A;
-        else
-            O_A <= I_A;
-            O_B <= I_B;
-        end if;
-    end process;
+  process(I_SORT, I_UP, I_A, I_B)
+    variable comp_a : unsigned(COMP_HIGH-COMP_LOW downto 0);
+    variable comp_b : unsigned(COMP_HIGH-COMP_LOW downto 0);
+    variable a_gt_b : boolean;
+  begin
+    comp_a := unsigned(I_A(COMP_HIGH downto COMP_LOW));
+    comp_b := unsigned(I_B(COMP_HIGH downto COMP_LOW));
+    a_gt_b := (comp_a > comp_b);
+    if (I_SORT = '1' and I_UP = '1' and a_gt_b = true) or
+      (I_SORT = '1' and I_UP = '0' and a_gt_b = false) then
+      O_A <= I_B;
+      O_B <= I_A;
+    else
+      O_A <= I_A;
+      O_B <= I_B;
+    end if;
+  end process;
 end RTL;

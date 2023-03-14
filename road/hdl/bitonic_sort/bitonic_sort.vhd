@@ -21,7 +21,7 @@ entity bitonic_sort is
     INPUTS  : positive := 32;           -- input  count
     OUTPUTS : positive := 32;           -- output count
 
-    SORTER : string  := "KAWAZOME"; -- POC or KAWAZOME
+    SORTER : string := "KAWAZOME";      -- POC or KAWAZOME
 
     KEY_BITS             : positive := 32;    -- the first KEY_BITS of In_Data are used as a sorting critera (key)
     DATA_BITS            : positive := 32;    -- inclusive KEY_BITS
@@ -51,7 +51,7 @@ begin
   -- POC
   --------------------------------------------------------------------------------
 
-  poc_gen : if (SORTER="POC") generate
+  poc_gen : if (SORTER = "POC") generate
     -- types required by the sorter code...
     signal in_data_slm  : t_slm(SORTER_SIZE-1 downto 0, DATA_BITS - 1 downto 0) := (others => (others => '0'));
     signal out_data_slm : t_slm(SORTER_SIZE-1 downto 0, DATA_BITS - 1 downto 0);
@@ -60,7 +60,7 @@ begin
   --type t_slm is array(natural range <>, natural range <>) of std_logic;
   begin
 
-    in_data_slm <= to_slm(data_i, INPUTS, DATA_BITS);
+    in_data_slm  <= to_slm(data_i, INPUTS, DATA_BITS);
     out_data_slv <= to_slv(out_data_slm);
 
     out_reverse : for I in 0 to OUTPUTS-1 generate
@@ -83,15 +83,15 @@ begin
       port map (
         clock     => clock,
         reset     => reset,
-        inverse   => '0',                 -- sl
-        in_valid  => '1',                 -- sl
-        in_iskey  => '1',                 -- sl
-        in_data   => in_data_slm,         -- slm (inputs x databits)
-        in_meta   => meta_i,              -- slv (meta bits)
-        out_valid => open,                -- sl
-        out_iskey => open,                -- sl
-        out_data  => out_data_slm,        -- slm (inputs x databits)
-        out_meta  => meta_o               -- slv (meta bits)
+        inverse   => '0',               -- sl
+        in_valid  => '1',               -- sl
+        in_iskey  => '1',               -- sl
+        in_data   => in_data_slm,       -- slm (inputs x databits)
+        in_meta   => meta_i,            -- slv (meta bits)
+        out_valid => open,              -- sl
+        out_iskey => open,              -- sl
+        out_data  => out_data_slm,      -- slm (inputs x databits)
+        out_meta  => meta_o             -- slv (meta bits)
         );
   end generate;
 
@@ -99,30 +99,32 @@ begin
   -- Kawazome
   --------------------------------------------------------------------------------
 
-  kawazome_gen : if (SORTER="KAWAZOME") generate
+  kawazome_gen : if (SORTER = "KAWAZOME") generate
     signal data_sorted : std_logic_vector (data_i'range);
   begin
     bitonic_sort_inst : entity work.Bitonic_Sorter
       generic map (
-        REGSTAGES => 2,
-        WORDS     => INPUTS,
-        WORD_BITS => DATA_BITS,
-        COMP_HIGH => KEY_BITS-1,      -- This is used directly as a COMP_HIGH downto 0, so you must factor in the -1
-        COMP_LOW  => 0,
-        INFO_BITS => META_BITS
+        WORDS       => INPUTS,
+        WORD_BITS   => DATA_BITS,
+        COMP_HIGH   => KEY_BITS-1,      -- This is used directly as a COMP_HIGH downto 0, so you must factor in the -1
+        COMP_LOW    => 0,
+        INFO_BITS   => META_BITS,
+        REGSTAGES   => PIPELINE_STAGE_AFTER,
+        REG_OUTPUTS => ADD_OUTPUT_REGISTERS,
+        REG_MERGES  => false
         )
       port map (
-        CLK       => clock,
-        RST       => '0',
-        CLR       => '0',
-        I_SORT    => '1',               -- set to 0 and the module won't sort
-        I_UP      => '0',               -- set to 0 to prefer the highest number on the lowest input
-        I_DATA    => data_i,
-        O_DATA    => data_sorted,
-        O_SORT    => open,
-        O_UP      => open,
-        I_INFO    => meta_i,
-        O_INFO    => meta_o
+        CLK    => clock,
+        RST    => '0',                  -- async reset
+        CLR    => '0',                  -- sync clr
+        I_SORT => '1',                  -- set to 0 and the module won't sort
+        I_UP   => '0',                  -- set to 0 to prefer the highest number on the lowest input
+        I_DATA => data_i,
+        O_DATA => data_sorted,
+        O_SORT => open,
+        O_UP   => open,
+        I_INFO => meta_i,
+        O_INFO => meta_o
         );
 
     data_o <= data_sorted(data_o'range);
