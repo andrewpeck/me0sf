@@ -93,7 +93,8 @@ async def pat_unit_mux_test(dut, NLOOPS=500, test="WALKING1"):
             old_data = queue.pop(0)
             sw_segments = pat_mux(partition_data=old_data,
                                   max_span=MAX_SPAN,
-                                  thresh=THRESH,
+                                  hit_thresh=CNT_THRESH, # FIXME
+                                  ly_thresh=CNT_THRESH,
                                   width=WIDTH)
 
             fw_segments = get_segments_from_dut(dut)

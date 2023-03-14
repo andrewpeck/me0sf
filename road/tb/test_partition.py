@@ -68,7 +68,8 @@ async def partition_test(dut, NLOOPS=1000, test="SEGMENTS"):
 
             popped_data = queue.pop(0)
             sw_segments = process_partition(partition_data=popped_data,
-                                         thresh=THRESH,
+                                         ly_thresh=THRESH, # FIXME
+                                         hit_thresh=THRESH,
                                          max_span=MAX_SPAN,
                                          width=WIDTH,
                                          enable_gcl=False)

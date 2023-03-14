@@ -78,7 +78,10 @@ async def pat_unit_test(dut):
         # (1) pop old data from the head of the queue
         # (2) run the emulator on the old data
         data = queue.pop(0)
-        sw_segment = pat_unit(data=data, strip=0, ly_thresh=CNT_THRESH, partition=0)
+        sw_segment = pat_unit(data=data, strip=0,
+                              hit_thresh=CNT_THRESH, # FIXME
+                              ly_thresh=CNT_THRESH,
+                              partition=0)
         fw_segment = get_segment_from_dut(dut)
 
         # apply count threshold conditions to emulator pattern assignment
