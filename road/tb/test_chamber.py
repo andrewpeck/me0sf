@@ -6,7 +6,6 @@ from cocotb.triggers import RisingEdge
 from cocotb.clock import Clock
 from datagen import datagen
 from subfunc import *
-from cocotb_test.simulator import run
 from chamber_beh import process_chamber
 from tb_common import *
 
@@ -136,7 +135,6 @@ def test_chamber():
         #sim_args=["-do set NumericStdNoWarnings 1"],
         parameters=parameters,
         gui=0)
-
 
 if __name__ == "__main__":
     test_chamber()

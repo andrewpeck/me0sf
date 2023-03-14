@@ -4,6 +4,7 @@ from constants import *
 import cocotb
 from cocotb.clock import Clock
 from cocotb.triggers import RisingEdge, Edge, Timer
+from cocotb_test.simulator import run
 
 from pat_unit_beh import calculate_global_layer_mask
 
