@@ -73,7 +73,6 @@ import ROOT
 #                             hpass.fill(given_m)
 #                             break 
 
-
 datlist=[]
 for i in range(1000):
     datlist.append([datagen_with_segs(1,0,bend_angs=[random.uniform(-7,7)], strips=[random.uniform(50, 150)]) for _ in range(8)])
@@ -83,9 +82,12 @@ total = ROOT.TH1F("total", "total",14, -7., 7.)
 mres = ROOT.TH1F("Bend_Ang_Res", "Bend_Ang_Res", 20, -0.6, 0.6)
 sres = ROOT.TH1F("Strip_Res", "Strip_Res", 20, -0.9, 0.9)
 
+
 for dat_w_segs in datlist:
+    
     seg_m_b = [dat[1] for dat in dat_w_segs]
     data = [dat[0] for dat in dat_w_segs] 
+    
     seglist = process_chamber(data, ghost_width=10, num_outputs=10)
     for seg in seglist:
         seg.fit()
@@ -120,6 +122,7 @@ for dat_w_segs in datlist:
             #     print("percent error for m", m_err*100)
             #     print("centroids", [cent-19 for cent in f[4]])
             #     disp.event_display(hits=ly, fits=fitlist, pats=pat)
+
 #Plotting done in ROOT
 c1 = ROOT.TCanvas('', '', 1000, 700)
 eff = ROOT.TEfficiency(passed, total)
@@ -130,18 +133,18 @@ eff.GetPaintedGraph().GetYaxis().SetRangeUser(.9, 1.05)
 eff.GetPaintedGraph().GetYaxis().SetLabelSize(0.04)
 eff.GetPaintedGraph().GetXaxis().SetLabelSize(0.04)
 ROOT.gPad.Update()
-c1.SaveAs("eff.pdf")
+c1.SaveAs("ideal_eff.pdf")
 
 c2 =  ROOT.TCanvas('', '', 700, 700)
 mres.SetTitle("Bending Angle Resolution")
 mres.GetXaxis().SetTitle("Bending Angle (strips/layer)")
 mres.Fit("gaus")
 mres.Draw()
-c2.SaveAs("mres.pdf")
+c2.SaveAs("ideal_mres.pdf")
 
 c3=ROOT.TCanvas('', '', 700, 700)
 sres.SetTitle("Strip Resolution")
 sres.GetXaxis().SetTitle("Strip")
 sres.Fit("gaus")
 sres.Draw()
-c3.SaveAs("sres.pdf")
+c3.SaveAs("ideal_sres.pdf")

@@ -21,12 +21,9 @@ class Mask:
 
 class Segment:
 
-    def __init__(self, lc, id,
-                 partition,
-                 strip,
-                 centroid=None,
-                 substrip=None,
-                 bend_ang=None):
+    def __init__(self, hc, lc, id, strip=None, partition=None, centroid=None,
+                 substrip=None, bend_ang=None):
+        self.hc = hc
         self.lc = lc
         self.id = id
         self.strip = strip
@@ -37,12 +34,14 @@ class Segment:
         self.update_quality()
 
     def reset(self):
+        self.hc = 0
         self.lc = 0
         self.id = 0
         self.update_quality()
 
     def update_quality(self):
         """ create sortable number to compare segments"""
+        hc = self.hc
         lc = self.lc
         id = self.id
         prt = self.partition
@@ -52,28 +51,31 @@ class Segment:
         strip = 0 if strip is None else strip
 
         quality = 0
-        if (lc > 0):
-            quality = (lc << 17) | (id << 12) | (strip << 4) | prt
+        if (hc > 0):
+            quality = (lc << 23 | hc << 17) | (id << 12) | ((192-strip) << 4) | prt
 
         self.quality=quality
 
     def fit(self, max_span=37):
         self.bend_ang = 0
         self.substrip = 0
+        #print (self.centroid)
         if self.id !=0:
             centroids = [cent-(max_span//2+1) for cent in self.centroid]
             x = [i-2.5 for (i, cent) in enumerate(centroids) if cent !=-(max_span//2+1)] #need to improve for lc<6?
             centroids = [cent for cent in centroids if cent !=-(max_span//2+1)]
+            #print (x)
+            #print (centroids)
             fit = llse_fit(x, centroids)
             self.bend_ang = fit[0] #m
             self.substrip = fit[1] #b
             
 
     def __eq__(self, other):
-        if (self.lc == 0 and other.lc == 0):
+        if (self.hc == 0 and other.hc == 0):
             return True
 
-        return self.id==other.id and self.lc==other.lc and self.strip==other.strip and \
+        return self.id==other.id and self.hc==other.hc and self.lc==other.lc and self.strip==other.strip and \
             self.quality==other.quality
             # self.partition==other.partition and  \
             # self.centroid==other.centroid and  \
@@ -84,8 +86,7 @@ class Segment:
         if (self.id==0):
             return "n/a"
 
-        return "id=%2d, lc=%2d, strip=%3d, prt=%2d, quality=%07X" \
-            % (self.id, self.lc, self.strip, self.partition, self.quality)
+        return f"id={self.id}, hc={self.hc}, lc={self.lc}, strip={self.strip}, quality={self.quality}"
 
     def __repr__(self):
         return f"Seg {self.quality}"

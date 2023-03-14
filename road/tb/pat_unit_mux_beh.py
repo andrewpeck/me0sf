@@ -13,7 +13,7 @@ def parse_data(data, strip, MAX_SPAN=37):
         parsed_data = (data >> shift) & (2**MAX_SPAN - 1)
     return parsed_data
 
-def pat_mux(partition_data, thresh, max_span, width=192, partition=0):
+def pat_mux(partition_data, hit_thresh, ly_thresh, max_span, width=192, partition=0):
     """
     takes in a list of integers for the partition data in each layer,
     the MAX_SPAN of each pat_unit, and the partition width to return a list of the
@@ -21,7 +21,8 @@ def pat_mux(partition_data, thresh, max_span, width=192, partition=0):
     """
 
     fn = lambda strip : pat_unit(extract_data_window(partition_data, strip, max_span),
-                                      ly_thresh = thresh,
+                                      hit_thresh = hit_thresh,
+                                      ly_thresh = ly_thresh,
                                       strip=strip,
                                       partition=partition)
 
@@ -49,7 +50,7 @@ def test_extract_data_window():
 
 def test_pat_mux():
     data = [0b1, 0b1, 0b1, 0b1, 0b1, 0b1]
-    mux = pat_mux(data, thresh=6, max_span=37)
+    mux = pat_mux(data, ly_thresh=0, hit_thresh=6, max_span=37)
     # check for expected pattern
     assert mux[0].id == 19
     assert mux[0].lc == 6

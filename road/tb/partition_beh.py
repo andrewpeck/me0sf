@@ -55,13 +55,14 @@ def cancel_edges(pat_mux_dat, group_width=8, ghost_width=4, width=192):
 #     return sum([2**strip for strip in range(len(bin(data))-2) if determine_if_centroid(strip, width, data, layer) == True])
 
 def process_partition(partition_data,
-                   thresh : int,
-                   enable_gcl : bool = True,
-                   max_span : int = 37,
-                   width : int = 192,
-                   group_width : int = 8,
-                   ghost_width : int = 4,
-                   partition : int = 0):
+                      hit_thresh : int=4,
+                      ly_thresh : int=4,
+                      enable_gcl : bool = True,
+                      max_span : int = 37,
+                      width : int = 192,
+                      group_width : int = 8,
+                      ghost_width : int = 4,
+                      partition : int = 0):
 
     """
 
@@ -78,7 +79,8 @@ def process_partition(partition_data,
     #centroid_masked_data = [process_centroids(dat, ly) for (ly, dat) in enumerate(partition_data)] #add centroid filtering
 
     segments = pat_mux(partition_data,
-                       thresh=thresh,
+                       hit_thresh=hit_thresh,
+                       ly_thresh=ly_thresh,
                        max_span=max_span,
                        width=width,
                        partition=partition)
@@ -102,19 +104,19 @@ def process_partition(partition_data,
 
 def test_process_partition():
     data = [1]*6
-    part = process_partition(data, thresh=6, enable_gcl=True)
+    part = process_partition(data, hit_thresh=6, ly_thresh=6, enable_gcl=True)
     assert part[0].id == 19
     assert part[0].lc == 6
     assert part[1].id == 0
     assert part[1].lc == 0
 
 def test_compare_ghosts():
-    seg_list = [Segment(6, 15, partition=0, strip=0),
-                Segment(6, 12, partition=0, strip=0),
-                Segment(6,5, partition=0, strip=0)]
-    seg1 = Segment(6, 15, partition=0, strip=0)
-    seg2 = Segment(6, 10, partition=0, strip=0)
-    seg3 = Segment(6, 7, partition=0, strip=0)
+    seg_list = [Segment(hc=6, lc=6, id=15, partition=0, strip=0),
+                Segment(hc=6, lc=6, id=12, partition=0, strip=0),
+                Segment(hc=6, lc=6, id= 5, partition=0, strip=0)]
+    seg1 = Segment(hc=6, lc=6, id=15, partition=0, strip=0)
+    seg2 = Segment(hc=6, lc=6, id=10, partition=0, strip=0)
+    seg3 = Segment(hc=6, lc=6, id=7, partition=0, strip=0)
     #check for reset with copy, ID+2, ID-2
     assert compare_ghosts(seg1, seg_list).id == 15
     assert compare_ghosts(seg2, seg_list).id == 10
@@ -123,7 +125,7 @@ def test_compare_ghosts():
 def test_cancel_edges():
     seg_list1 = []
     for _ in range(24):
-        seg_list1.append(Segment(6, 15, partition=0, strip=0))
+        seg_list1.append(Segment(hc=6, lc=6, id=15, partition=0, strip=0))
     cancelled1 = cancel_edges(seg_list1, 8, 4, 24)
     #check first edge is cancelled correctly
     assert cancelled1[6].id == 15

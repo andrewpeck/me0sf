@@ -115,8 +115,11 @@ if __name__ == '__main__':
     random.seed(56)
 
     MAX_SPAN = 37
-    hits = datagen(MAX_SPAN=MAX_SPAN)
-    segment = pat_unit(hits)
+    #hits = datagen(MAX_SPAN=MAX_SPAN)
+    #hits = [2113536, 1085440, 2445312, 1183744, 5308416, 4194368]
+    hits = [0b100000000000000000, 0b1000000000000000000, 0b10000000000000000000, 0b1000000000000000000, 0b100000000000000000000, 0b100000000000000000000]
+    segment = find_best_seg(hits, max_span=MAX_SPAN)
+    print (segment)
     strip = MAX_SPAN // 2
 
     pats = [[PATLIST_LUT[segment.id], 18]]

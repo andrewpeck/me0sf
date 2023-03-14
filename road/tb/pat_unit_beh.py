@@ -58,14 +58,19 @@ def calculate_centroids(masked_data):
     """takes in a []*6 list of pre-masked data and gives the found centroids"""
     return [find_centroid(x) for x in masked_data]
 
-def calculate_layer_count(masked_data):
+def calculate_hit_count(masked_data):
     """takes in a []*6 list of pre-masked data and gives the layer count"""
     #WARNING: currently counting total hits/pattern, will cause problems with noise (skew towards patterns with lots of noise)
     #return sum(map(lambda x : x > 0, masked_data))
     return sum([count_ones(x) for x in masked_data])
 
-def pat_unit(data, strip, ly_thresh, partition):
+def calculate_layer_count(masked_data):
+    """takes in a []*6 list of pre-masked data and gives the layer count"""
+    #WARNING: currently counting total hits/pattern, will cause problems with noise (skew towards patterns with lots of noise)
+    return sum(map(lambda x : x > 0, masked_data))
+    #return sum(map(count_ones, masked_data))
 
+def pat_unit(data, strip=None, max_span=37, hit_thresh=4, ly_thresh=4, partition=-1): #change ly_thresh back to LY_TRESH if doing layer count not hit count
     """
     takes in sample data for each layer and returns best segment
 
@@ -79,7 +84,7 @@ def pat_unit(data, strip, ly_thresh, partition):
     (6) choose the max of all patterns
     (7) apply a layer threshold
     """
-
+    #print (data)
     # and the layer data with the respective layer mask to
     # determine how many hits are in each layer
     # this yields a map object that can be iterated over to get,
@@ -88,7 +93,7 @@ def pat_unit(data, strip, ly_thresh, partition):
     masked_data = [mask_layer_data(x.mask, data) for x in LAYER_MASK]
 
     # (3) count # of hits
-
+    hits = [calculate_hit_count(x) for x in masked_data]
     lycs = [calculate_layer_count(x) for x in masked_data]
     pids = [x.id for x in LAYER_MASK]
 
@@ -96,19 +101,24 @@ def pat_unit(data, strip, ly_thresh, partition):
     centroids = [calculate_centroids(x) for x in masked_data]
 
     # (5) process segments
-
-    seg_list = [Segment(lc=lc,
+    seg_list = [Segment(hc=hc,
+                        lc=lc,
                         id=pid,
                         partition=partition,
                         strip=strip,
                         centroid=centroid)
-                for (lc,pid,centroid) in
-                zip(lycs, pids, centroids)]
+                for (hc, lc,pid,centroid) in
+                zip(hits, lycs, pids, centroids)]
 
     # (6) choose the max of all patterns
     best = max(seg_list)
+    #print (best, best.centroid)
+    #if (strip==167 and best.quality==528784) or (strip==181 and best.quality==1257648):
+    #    print (masked_data)
 
     # (7) apply a layer threshold
+    if (best.hc < hit_thresh):
+        best.reset()
     if (best.lc < ly_thresh):
         best.reset()
 
@@ -121,18 +131,21 @@ def pat_unit(data, strip, ly_thresh, partition):
 ################################################################################
 
 def test_pat_unit():
-    assert pat_unit(strip=0, partition=0, ly_thresh=6, data=[0b1000000000000000000, 0b1000000000000000000, 0b1000000000000000000, 0b1000000000000000000, 0b1000000000000000000, 0b1000000000000000000]).id == 19
-    assert pat_unit(strip=0, partition=0, ly_thresh=6, data=[0b1000000000000000000, 0b1000000000000000000, 0b1000000000000000000, 0b1000000000000000000, 0b1000000000000000000, 0b1000000000000000000]).lc == 6
-    assert pat_unit(strip=0, partition=0, ly_thresh=6, data=[0b100000000000000000, 0b100000000000000000, 0b100000000000000000, 0b100000000000000000, 0b100000000000000000, 0b100000000000000000]).id == 19
-    assert pat_unit(strip=0, partition=0, ly_thresh=6, data=[0b100000000000000000, 0b100000000000000000, 0b100000000000000000, 0b100000000000000000, 0b100000000000000000, 0b100000000000000000]).lc == 6
-    assert pat_unit(strip=0, partition=0, ly_thresh=6, data=[0b100000000000000000, 0b1000000000000000000, 0b10000000000000000000, 0b1000000000000000000, 0b100000000000000000000, 0b100000000000000000000]).id == 0
-    assert pat_unit(strip=0, partition=0, ly_thresh=6, data=[0b100000000000000000, 0b1000000000000000000, 0b10000000000000000000, 0b1000000000000000000, 0b100000000000000000000, 0b100000000000000000000]).lc == 0
-    assert pat_unit(strip=0, partition=0, ly_thresh=6, data=[0b100000000000000000, 0b100000000000000000000, 0b100000000000000000000, 0b100000000000000000000, 0b100000000000000000000, 0b100000000000000000000]).id == 0
-    assert pat_unit(strip=0, partition=0, ly_thresh=6, data=[0b100000000000000000, 0b100000000000000000000, 0b100000000000000000000, 0b100000000000000000000, 0b100000000000000000000, 0b100000000000000000000]).lc == 0
+    assert pat_unit(strip=0, partition=0, ly_thresh=4, max_span=37, data=[0b1000000000000000000, 0b1000000000000000000, 0b1000000000000000000, 0b1000000000000000000, 0b1000000000000000000, 0b1000000000000000000]).id == 19
+    assert pat_unit(strip=0, partition=0, ly_thresh=4, max_span=37, data=[0b1000000000000000000, 0b1000000000000000000, 0b1000000000000000000, 0b1000000000000000000, 0b1000000000000000000, 0b1000000000000000000]).lc == 6
+    assert pat_unit(strip=0, partition=0, ly_thresh=4, max_span=37, data=[0b1000000000000000000, 0b1000000000000000000, 0b1000000000000000000, 0b1000000000000000000, 0b1000000000000000000, 0b1000000000000000000]).hc == 6
+    assert pat_unit(strip=0, partition=0, ly_thresh=4, max_span=37, data=[0b100000000000000000, 0b100000000000000000, 0b100000000000000000, 0b100000000000000000, 0b100000000000000000, 0b100000000000000000]).id == 19
+    assert pat_unit(strip=0, partition=0, ly_thresh=4, max_span=37, data=[0b100000000000000000, 0b100000000000000000, 0b100000000000000000, 0b100000000000000000, 0b100000000000000000, 0b100000000000000000]).lc == 6
+    assert pat_unit(strip=0, partition=0, ly_thresh=4, max_span=37, data=[0b100000000000000000, 0b100000000000000000, 0b100000000000000000, 0b100000000000000000, 0b100000000000000000, 0b100000000000000000]).hc == 6
+    assert pat_unit(strip=0, partition=0, ly_thresh=4, max_span=37, data=[0b100000000000000000, 0b1000000000000000000, 0b10000000000000000000, 0b1000000000000000000, 0b100000000000000000000, 0b100000000000000000000] ).id == 18
+    assert pat_unit(strip=0, partition=0, ly_thresh=4, max_span=37, data=[0b100000000000000000, 0b1000000000000000000, 0b10000000000000000000, 0b1000000000000000000, 0b100000000000000000000, 0b100000000000000000000] ).lc == 5
+    assert pat_unit(strip=0, partition=0, ly_thresh=4, max_span=37, data=[0b100000000000000000, 0b1000000000000000000, 0b10000000000000000000, 0b1000000000000000000, 0b100000000000000000000, 0b100000000000000000000] ).hc == 5
+    assert pat_unit(strip=0, partition=0, ly_thresh=4, max_span=37, data=[0b100000000000000000, 0b100000000000000000000, 0b100000000000000000000, 0b100000000000000000000, 0b100000000000000000000, 0b100000000000000000000] ).id == 0
+    assert pat_unit(strip=0, partition=0, ly_thresh=4, max_span=37, data=[0b100000000000000000, 0b100000000000000000000, 0b100000000000000000000, 0b100000000000000000000, 0b100000000000000000000, 0b100000000000000000000] ).lc == 0
+    assert pat_unit(strip=0, partition=0, ly_thresh=4, max_span=37, data=[0b100000000000000000, 0b100000000000000000000, 0b100000000000000000000, 0b100000000000000000000, 0b100000000000000000000, 0b100000000000000000000] ).hc == 0
 
 def test_get_ly_mask():
     """ test function for get_ly_mask """
     assert get_ly_mask(pat_straight).mask == [0b11100000000000000000, 0b11100000000000000000, 0b11100000000000000000, 0b11100000000000000000, 0b11100000000000000000, 0b11100000000000000000]
     assert get_ly_mask(pat_l).mask == [0b1111000000000000000, 0b1110000000000000000,0b1100000000000000000,0b11000000000000000000,0b111000000000000000000, 0b1111000000000000000000]
     assert get_ly_mask(pat_r).mask == [0b1111000000000000000000, 0b111000000000000000000, 0b11000000000000000000, 0b1100000000000000000, 0b1110000000000000000, 0b1111000000000000000]
-

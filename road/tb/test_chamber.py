@@ -77,7 +77,9 @@ async def chamber_test(dut, test="WALKING1", NLOOPS=100):
 
             sw_segments = process_chamber(
                 chamber_data=popped_data,
-                thresh=THRESH,
+                cross_part_seg_width = 0,
+                hit_thresh=THRESH,
+                ly_thresh=0, # FIXME
                 max_span=MAX_SPAN,
                 width=WIDTH,
                 group_width=int(dut.S0_WIDTH.value),

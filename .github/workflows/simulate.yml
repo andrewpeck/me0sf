@@ -20,6 +20,7 @@ jobs:
           - road/tb/pat_unit_beh.py
           - road/tb/pat_unit_mux_beh.py
           - road/tb/partition_beh.py
+          - road/tb/analysis_mc.py
     steps:
 
       - uses: actions/checkout@v2

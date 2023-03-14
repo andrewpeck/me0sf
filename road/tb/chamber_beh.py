@@ -3,46 +3,128 @@ from subfunc import *
 import functools
 import operator
 from partition_beh import process_partition
+import math
 
-def process_chamber(chamber_data, thresh : int,
+def process_chamber(chamber_data,
+                    hit_thresh : int,
+                    ly_thresh : int,
                     max_span : int = 37,
-                    width : int = 102,
-                    group_width : int=8 ,
-                    ghost_width : int=4 ,
-                    num_outputs : int=4 ):
+                    width : int = 192,
+                    group_width : int=8,
+                    ghost_width : int=4,
+                    cross_part_seg_width : int=4,
+                    num_outputs : int=4):
 
-    # (1) gather segments from each partition
+    # gather segments from each partition
     # this will return a 8 x N list of segments
 
-    fnpartition = lambda partition, data : process_partition(
-        partition_data=data,
-        thresh = thresh,
-        max_span=max_span,
-        width=width,
-        group_width=group_width,
-        ghost_width=ghost_width,
-        enable_gcl=True,
-        partition=partition)
+    segments = [
+        process_partition(
+            partition_data=data,
+            max_span=max_span,
+            width=width,
+            group_width=group_width,
+            ghost_width=ghost_width,
+            enable_gcl=True,
+            partition=partition)
+        for (partition, data) in enumerate(chamber_data)]
 
-    # (2) collect segments from each partition
-    segments = [fnpartition(partition, data)
-                 for (partition, data) in enumerate(chamber_data)]
-
-    # (3) compare partitions 0 & 1, 2 & 3, 4 & 5.. etc
+    # compare partitions 0 & 1, 2 & 3, 4 & 5.. etc
     # return NUM_OUTPUTS segments from each partition pair
 
-    # segments = [segments[0] + segments[1],
-    #             segments[2] + segments[3],
-    #             segments[4] + segments[5],
-    #             segments[6] + segments[7]]
+    # Remove redundant segments from cross-partitions and grouping neighbouring eta partitions
+    if (cross_part_seg_width > 0):
+        for i in range(1,15,2):
+            #print (i)
+            for (l,seg) in enumerate(segments[i]):
+                if seg.id == 0:
+                    continue
+                #print ("Seg 0: ", l, seg, seg.strip)
+                strip = seg.strip
+                quality = seg.quality
+                seg1_max_quality = -9999
+                seg2_max_quality = -9999
+                seg1_max_quality_index = -9999
+                seg2_max_quality_index = -9999
+                for (j,seg1) in enumerate(segments[i-1]):
+                    if seg1.id == 0:
+                        continue
+                    #print ("Seg 1: ", l, seg1, seg1.strip)
+                    if abs(strip - seg1.strip) <= cross_part_seg_width:
+                        if seg1.quality > seg1_max_quality:
+                            if seg1_max_quality_index != -9999:
+                                segments[i-1][seg1_max_quality_index].reset()
+                            seg1_max_quality_index = j
+                            seg1_max_quality = seg1.quality
+                for (k,seg2) in enumerate(segments[i+1]):
+                    if seg2.id == 0:
+                        continue
+                    #print ("Seg 2: ", l, seg2, seg2.strip)
+                    if abs(strip - seg2.strip) <= cross_part_seg_width:
+                        if seg2.quality > seg2_max_quality:
+                            if seg2_max_quality_index != -9999:
+                                segments[i+1][seg2_max_quality_index].reset()
+                            seg2_max_quality_index = k
+                            seg2_max_quality = seg2.quality
 
-    segments = list(map(lambda x: sorted(x, reverse=True)[:num_outputs], segments))
+                if seg1_max_quality_index != -9999 and seg2_max_quality_index != -9999:
+                    segments[i-1][seg1_max_quality_index].reset()
+                    segments[i+1][seg2_max_quality_index].reset()
+                elif seg1_max_quality_index != -9999:
+                    segments[i][l].reset()
+                elif seg2_max_quality_index != -9999:
+                    segments[i][l].reset()
 
-    # (4) reduce N lists of segments into a single list,
-    # i.e. segments[0] + segments[1] + segments[2] + segments[3]
-    segments = functools.reduce(operator.iconcat, segments, [])
+                '''
+                if seg1_max_quality_index != -9999 and seg2_max_quality_index != -9999:
+                    seg1 = segments[i-1][seg1_max_quality_index]
+                    seg2 = segments[i+1][seg2_max_quality_index]
+                    if quality > seg1.quality:
+                        segments[i-1][seg1_max_quality_index].reset()
+                        if quality > seg2.quality:
+                            segments[i+1][seg2_max_quality_index].reset()
+                        else:
+                            segments[i][l].reset()
+                    else:
+                        segments[i][l].reset()
+                        if seg1.quality > seg2.quality:
+                            segments[i+1][seg2_max_quality_index].reset()
+                        else:
+                            segments[i-1][seg1_max_quality_index].reset()
+                elif seg1_max_quality_index != -9999:
+                    seg1 = segments[i-1][seg1_max_quality_index]
+                    if quality > seg1.quality:
+                        segments[i-1][seg1_max_quality_index].reset()
+                    else:
+                        segments[i][l].reset()
+                elif seg2_max_quality_index != -9999:
+                    seg2 = segments[i+1][seg2_max_quality_index]
+                    if quality > seg2.quality:
+                        segments[i+1][seg2_max_quality_index].reset()
+                    else:
+                        segments[i][l].reset()
+                '''
 
-    # (5) reverse the list and pick the first N outputs
-    segments.sort(reverse=True)
-    segments = segments[:num_outputs]
-    return segments
+    segments_reduced = []
+    for i in range(0,8):
+        segments_reduced.append([])
+    for (i,seg_list) in enumerate(segments):
+        for seg in seg_list:
+            seg.partition = math.ceil(seg.partition/2)
+            segments_reduced[math.ceil(i/2)].append(seg)
+
+    segments_reduced = [segments_reduced[0] + segments_reduced[1],
+                        segments_reduced[2] + segments_reduced[3],
+                        segments_reduced[4] + segments_reduced[5],
+                        segments_reduced[6] + segments_reduced[7]]
+
+    segments_reduced = list(map(lambda x: sorted(x, reverse=True)[:num_outputs], segments_reduced))
+
+    # equivalent to segments_reduced[0] + segments_reduced[1] + segments_reduced[2] + etc
+    segments_reduced = functools.reduce(operator.iconcat, segments_reduced, [])
+
+    segments_reduced.sort(reverse=True)
+
+    segments_reduced = segments_reduced[:num_outputs]
+
+    return segments_reduced

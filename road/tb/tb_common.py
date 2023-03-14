@@ -28,9 +28,10 @@ def get_segments_from_dut(dut):
     def convert_segment(segment):
         pid = segment.id.value.integer
         lyc = segment.cnt.value.integer
+        hitc = segment.cnt.value.integer # FIXME
         strip = segment.strip.value.integer
         partition = segment.partition.value.integer
-        seg = Segment(lyc, pid, strip=strip, partition=partition)
+        seg = Segment(lc=lyc, hc=hitc, id=pid, strip=strip, partition=partition)
         return seg
 
     x = list(map(convert_segment, dut.segments_o))
