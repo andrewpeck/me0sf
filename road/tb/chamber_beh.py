@@ -6,8 +6,8 @@ from partition_beh import process_partition
 import math
 
 def process_chamber(chamber_data,
-                    hit_thresh : int,
-                    ly_thresh : int,
+                    hit_thresh : int = 4,
+                    ly_thresh : int = 4,
                     max_span : int = 37,
                     width : int = 192,
                     group_width : int=8,
