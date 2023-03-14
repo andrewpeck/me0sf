@@ -2,7 +2,7 @@
 -- CMS Muon Endcap
 -- GEM Collaboration
 -- ME0 Segment Finder Firmware
--- A. Peck, C. Grubb, J. Chismar
+-- A. Peck, A. Datta, C. Grubb, J. Chismar
 ----------------------------------------------------------------------------------
 -- Description:
 --
