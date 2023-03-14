@@ -6,6 +6,19 @@
 ----------------------------------------------------------------------------------
 -- Description:
 --   Segment finding for a single ME0 chamber
+--
+-- Notes:
+--
+-- + Only apply threshold at the end.. there is no reason to have a choke point
+-- anywhere in early in segment finding if we need to do a full sort anyway..
+-- might as well just output the raw segments and for the final N outputs apply
+-- the layer etc thresholds-- or rather, we can have two different thresholds:
+--
+--      pretrigger threshold would be applied at the segment creation level and
+--      would determine whether a segment forms at all. This could be a lower
+--      threshold which would be used for the pretrigger. the full trigger
+--      threshold would be applied at the end and can be higher
+--
 ----------------------------------------------------------------------------------
 
 use work.pat_types.all;
@@ -35,15 +48,17 @@ entity chamber is
     LY2_SPAN : natural := get_max_span(patdef_array);  -- TODO: variably size the other layers instead of using the max
     LY3_SPAN : natural := get_max_span(patdef_array);  -- TODO: variably size the other layers instead of using the max
     LY4_SPAN : natural := get_max_span(patdef_array);  -- TODO: variably size the other layers instead of using the max
-    LY5_SPAN : natural := get_max_span(patdef_array)  -- TODO: variably size the other layers instead of using the max
+    LY5_SPAN : natural := get_max_span(patdef_array)   -- TODO: variably size the other layers instead of using the max
     );
   port(
-    clock      : in  std_logic;         -- MUST BE 320MHZ
-    thresh     : in  std_logic_vector (2 downto 0);
-    dav_i      : in  std_logic;
-    dav_o      : out std_logic;
-    sbits_i    : in  chamber_t;
-    segments_o : out segment_list_t (NUM_SEGMENTS-1 downto 0)
+    clock             : in  std_logic;                 -- MUST BE 320MHZ
+    thresh            : in  std_logic_vector (2 downto 0);
+    dav_i             : in  std_logic;
+    dav_o             : out std_logic;
+    sbits_i           : in  chamber_t;
+    vfat_pretrigger_o : out std_logic_vector (23 downto 0);
+    pretrigger_o      : out std_logic;
+    segments_o        : out segment_list_t (NUM_SEGMENTS-1 downto 0)
     );
 end chamber;
 
@@ -86,6 +101,8 @@ architecture behavioral of chamber is
   signal one_prt_sorted_segs : segment_list_t (NUM_PARTITIONS * NUM_SEGMENTS - 1 downto 0);
   signal two_prt_sorted_segs : segment_list_t (NUM_PARTITIONS * NUM_SEGMENTS/2 - 1 downto 0);
   signal final_segs          : segment_list_t (NUM_SEGMENTS - 1 downto 0);
+
+  signal vfat_pretrigger : std_logic_vector (3*NUM_PARTITIONS-1 downto 0);
 
   --------------------------------------------------------------------------------
   -- Data valids
@@ -193,7 +210,37 @@ begin
         segments_o => all_segs((I+1)*NUM_SEGS_PER_PRT-1 downto I*NUM_SEGS_PER_PRT)
 
         );
+
   end generate;
+
+  --------------------------------------------------------------------------------
+  -- Pretrigger
+  --------------------------------------------------------------------------------
+
+  process (clock) is
+  begin
+    if (rising_edge(clock)) then
+
+      for iprt in 0 to NUM_PARTITIONS-1 loop
+        for ivfat in 0 to 2 loop
+
+          vfat_pretrigger(iprt*3+ivfat) <= '0';
+
+          for iseg in 0 to NUM_SEGS_PER_PRT/3-1 loop
+            if (all_segs(iprt*NUM_SEGS_PER_PRT +
+                         ivfat * NUM_SEGS_PER_PRT/3 +
+                         iseg).cnt /= 0) then
+              vfat_pretrigger(iprt*3+ivfat) <= '1';
+            end if;
+          end loop;
+        end loop;
+      end loop;
+
+      vfat_pretrigger_o <= vfat_pretrigger;
+      pretrigger_o      <= or_reduce(vfat_pretrigger);
+
+    end if;
+  end process;
 
   --------------------------------------------------------------------------------
   -- Partition Sorting
