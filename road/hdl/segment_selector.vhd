@@ -15,7 +15,6 @@ use ieee.math_real.all;
 use work.pat_types.all;
 use work.pat_pkg.all;
 use work.patterns.all;
-use work.priority_encoder_pkg.all;
 
 entity segment_selector is
   generic(
@@ -116,43 +115,6 @@ begin
         meta_i(0) => dav_i_r,
         meta_o(0) => dav_o_r
         );
-
-  end generate;
-
-  PRIORITY_GEN : if (MODE = "PRIORITY") generate
-
-    -- inloop : for I in 0 to NUM_INPUTS-1 generate
-    --   constant bithi : natural := (I+1)*BITS;
-    --   constant bitlo : natural := I*BITS;
-    -- begin
-    --   segs_i_slv(bithi-1 downto bitlo) <= to_slv(segs_i(I));
-    -- end generate;
-
-    -- -- Select a subset of outputs from the sorter
-    -- outloop : for I in 0 to NUM_OUTPUTS-1 generate
-    -- begin
-    --   segs_o(I) <=
-    --     to_segment(segs_o_slv((I+1)*BITS-1 downto I*BITS));
-    -- end generate;
-
-    -- priority_encoder_inst : entity work.priority_encoder
-    --   generic map (
-    --     WIDTH      => NUM_PATTERNS,
-    --     REG_INPUT  => true,
-    --     REG_OUTPUT => true,
-    --     REG_STAGES => 0,
-    --     DAT_BITS   => PATTERN_LENGTH,
-    --     QLT_BITS   => 1+CNT_BITS+PID_BITS,
-    --     ADR_BITS_o => integer(ceil(log2(real(NUM_PATTERNS))))
-    --     )
-    --   port map (
-    --     clock => clock,
-    --     dav_i => cand_dav,
-    --     dat_i => cand_slv,
-    --     dav_o => best_dav,
-    --     dat_o => best_slv,
-    --     adr_o => open
-    --     );
 
   end generate;
 
