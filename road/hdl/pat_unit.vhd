@@ -39,7 +39,7 @@ entity pat_unit is
     dav_i : in  std_logic;
     dav_o : out std_logic;
 
-    thresh : in std_logic_vector (2 downto 0);
+    ly_thresh : in std_logic_vector (2 downto 0);
 
     ly0 : in std_logic_vector (LY0_SPAN-1 downto 0);
     ly1 : in std_logic_vector (LY1_SPAN-1 downto 0);
@@ -170,13 +170,21 @@ begin
         pats(I) <= null_pattern;
 
         -- count
-        pats(I).cnt <=
+        pats(I).hc <=
           to_unsigned(count_ones(ly0_mask) +
                       count_ones(ly1_mask) +
                       count_ones(ly2_mask) +
                       count_ones(ly3_mask) +
                       count_ones(ly4_mask) +
-                      count_ones(ly5_mask), CNT_BITS);
+                      count_ones(ly5_mask), HC_BITS);
+
+        pats(I).lc <=
+          to_unsigned(count_ones(or_reduce(ly0_mask) &
+                                 or_reduce(ly1_mask) &
+                                 or_reduce(ly2_mask) &
+                                 or_reduce(ly3_mask) &
+                                 or_reduce(ly4_mask) &
+                                 or_reduce(ly5_mask)), LC_BITS);
 
         -- pattern id
         pats(I).id <= to_unsigned(patlist(I).id, PID_BITS);
@@ -278,7 +286,7 @@ begin
   process (clock) is
   begin
     if (rising_edge(clock)) then
-      if (best.cnt >= to_integer(unsigned(thresh))) then
+      if (best.lc >= to_integer(unsigned(ly_thresh))) then
         pat_o <= best;
       else
         pat_o <= zero(pat_o);

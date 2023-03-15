@@ -52,7 +52,7 @@ entity chamber is
     );
   port(
     clock             : in  std_logic;                 -- MUST BE 320MHZ
-    thresh            : in  std_logic_vector (2 downto 0);
+    ly_thresh         : in  std_logic_vector (2 downto 0);
     dav_i             : in  std_logic;
     dav_o             : out std_logic;
     sbits_i           : in  chamber_t;
@@ -200,7 +200,7 @@ begin
         clock => clock,
         dav_i => dav_i,
 
-        thresh => thresh,
+        ly_thresh => ly_thresh,
 
         -- primary layer
         partition_i => partition_or,
@@ -229,7 +229,7 @@ begin
           for iseg in 0 to NUM_SEGS_PER_PRT/3-1 loop
             if (all_segs(iprt*NUM_SEGS_PER_PRT +
                          ivfat * NUM_SEGS_PER_PRT/3 +
-                         iseg).cnt /= 0) then
+                         iseg).lc /= 0) then
               vfat_pretrigger(iprt*3+ivfat) <= '1';
             end if;
           end loop;

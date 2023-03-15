@@ -22,13 +22,14 @@ async def partition_test(dut, NLOOPS=1000, test="SEGMENTS"):
 
     # random.seed(56)
 
-    THRESH = 6
+    LY_THRESH = 6
+    HIT_THRESH = 0
     WIDTH = dut.pat_unit_mux_inst.WIDTH.value
     MAX_SPAN = get_max_span_from_dut(dut)
     LATENCY = int(math.ceil(dut.LATENCY.value/8.0))
 
     # initial inputs
-    dut.thresh.value = THRESH
+    dut.ly_thresh.value = LY_THRESH
     dut.partition_i.value = 6*[0]
 
     for i in range(4):
@@ -68,8 +69,8 @@ async def partition_test(dut, NLOOPS=1000, test="SEGMENTS"):
 
             popped_data = queue.pop(0)
             sw_segments = process_partition(partition_data=popped_data,
-                                         ly_thresh=THRESH, # FIXME
-                                         hit_thresh=THRESH,
+                                         ly_thresh=LY_THRESH,
+                                         hit_thresh=HIT_THRESH,
                                          max_span=MAX_SPAN,
                                          width=WIDTH,
                                          enable_gcl=False)

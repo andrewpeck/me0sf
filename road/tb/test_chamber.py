@@ -36,7 +36,8 @@ async def chamber_test(dut, test, nloops=512):
 
     MAX_SPAN = get_max_span_from_dut(dut)
     WIDTH = int(dut.partition_gen[0].partition_inst.pat_unit_mux_inst.WIDTH.value)
-    THRESH = int(dut.thresh.value)
+    LY_THRESH = int(dut.ly_thresh.value)
+    HIT_THRESH = 0
     NUM_PARTITIONS = int(dut.NUM_PARTITIONS.value)
     NULL = [[0] * 6] * NUM_PARTITIONS
     LATENCY = 5
@@ -51,8 +52,8 @@ async def chamber_test(dut, test, nloops=512):
         # extract latency
         dut.sbits_i.value = [[1]*6]*NUM_PARTITIONS
         await RisingEdge(dut.clock)
-        if dut.segments_o[0].cnt.value.is_resolvable and \
-           dut.segments_o[0].cnt.value.integer > 0:
+        if dut.segments_o[0].lc.value.is_resolvable and \
+           dut.segments_o[0].lc.value.integer > 0:
             print(f"Latency={i} clocks ({i/8.0} bx)")
             break
 
@@ -106,8 +107,8 @@ async def chamber_test(dut, test, nloops=512):
             sw_segments = process_chamber(
                 chamber_data=popped_data,
                 cross_part_seg_width = 0,
-                hit_thresh=THRESH,
-                ly_thresh=0, # FIXME
+                hit_thresh=HIT_THRESH,
+                ly_thresh=LY_THRESH,
                 max_span=MAX_SPAN,
                 width=WIDTH,
                 group_width=int(dut.S0_WIDTH.value),

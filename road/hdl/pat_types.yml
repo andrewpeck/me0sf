@@ -6,7 +6,8 @@ config:
 
 types:
 
-  - CNT_BITS: {qualifier: constant, type: integer, value: 5, comment: "number of bits to count all hits in 6 layers"}
+  - HC_BITS: {qualifier: constant, type: integer, value: 5, comment: "number of bits to count all hits in 6 layers"}
+  - LC_BITS: {qualifier: constant, type: integer, value: 3, comment: "number of bits to count layers hit"}
   - PID_BITS: {qualifier: constant, type: integer, value: 4, comment: "number of bits to cnt the pids"}
   - CENTROID_BITS: {qualifier: constant, type: integer, value: 4, comment: "number of bits to cnt the centroid"}
 
@@ -21,7 +22,7 @@ types:
 
   - PARTITION_BITS: {qualifier: constant, type: integer, value: 3, comment: "3 bits to count 0-7"}
 
-  - PATTERN_SORTB: {qualifier: constant, type: integer, value: CNT_BITS+PID_BITS+STRIP_BITS+PARTITION_BITS, comment: ""}
+  - PATTERN_SORTB: {qualifier: constant, type: integer, value: LC_BITS+HC_BITS+PID_BITS+STRIP_BITS+PARTITION_BITS, comment: ""}
 
   - hi_lo_t:
       - hi: {type: integer}
@@ -52,7 +53,8 @@ types:
       - hits: {type: centroid_array_t}
 
       # Always Sort:
-      - cnt: {type: unsigned, range: [CNT_BITS-1, 0]}
+      - lc: {type: unsigned, range: [LC_BITS-1, 0]}
+      - hc: {type: unsigned, range: [HC_BITS-1, 0]}
       - id: {type: unsigned, range: [PID_BITS-1, 0]}
       - strip: {type: unsigned, range: [7, 0]}
       - partition: {type: unsigned, range: [2, 0]}

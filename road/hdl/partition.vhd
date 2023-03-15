@@ -45,7 +45,7 @@ entity partition is
     dav_i : in  std_logic;
     dav_o : out std_logic := '0';
 
-    thresh : in std_logic_vector (2 downto 0);
+    ly_thresh : in std_logic_vector (2 downto 0);
 
     --------------------------------------------------------------------------------
     -- Inputs
@@ -90,7 +90,7 @@ begin
     port map (
       clock => clock,
 
-      thresh => thresh,
+      ly_thresh => ly_thresh,
 
       dav_i => dav_i,
       ly0   => partition_i(0),
@@ -108,7 +108,7 @@ begin
   -- Pre-filter the patterns to limit to 1 segment in every N strips using a
   -- priority encoded sorting tree...
   --
-  -- FIXME: this will make ghosts at the sorting boundaries... need to add in
+  -- TODO: this will make ghosts at the sorting boundaries... need to add in
   -- some ghost cancellation (also need to cancel ghosts in time)
   --
   -- 0   1   2   3   4   5   6   7   8   9   A   B   C   D   E   F

@@ -13,8 +13,7 @@ def setup(dut):
     calculate_global_layer_mask(get_patlist_from_dut(dut))
 
     # set layer count threshold
-    cnt_thresh = 4
-    dut.thresh.value = cnt_thresh
+    dut.ly_thresh.value = 4
 
     # start the clock
     c = Clock(dut.clock, 12, "ns")
@@ -27,8 +26,8 @@ def get_segments_from_dut(dut):
 
     def convert_segment(segment):
         pid = segment.id.value.integer
-        lyc = segment.cnt.value.integer
-        hitc = segment.cnt.value.integer # FIXME
+        lyc = segment.lc.value.integer
+        hitc = segment.hc.value.integer
         strip = segment.strip.value.integer
         partition = segment.partition.value.integer
         seg = Segment(lc=lyc, hc=hitc, id=pid, strip=strip, partition=partition)
@@ -41,8 +40,8 @@ def get_segments_from_dut(dut):
 
 
 def get_segment_from_dut(dut):
-    lc = int(dut.pat_o.cnt.value)
-    hc  = int(dut.pat_o.cnt.value) # FIXME
+    lc = int(dut.pat_o.lc.value)
+    hc  = int(dut.pat_o.hc.value)
     id = int(dut.pat_o.id.value)
     partition = int(dut.pat_o.partition.value)
     seg = Segment(hc=hc, lc=lc, id=id, strip=0, partition=partition)

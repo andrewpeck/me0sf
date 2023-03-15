@@ -34,12 +34,13 @@ async def pat_unit_mux_test(dut, NLOOPS=500, test="WALKING1"):
 
     setup(dut)
 
-    dut.thresh.value = 4
+    dut.ly_thresh.value = 4
 
     await RisingEdge(dut.clock)
 
     MAX_SPAN = get_max_span_from_dut(dut)
-    THRESH = int(dut.thresh.value)
+    LY_THRESH = int(dut.ly_thresh.value)
+    HIT_THRESH = 0
     LATENCY = int(math.ceil(dut.LATENCY.value/8.0))
     WIDTH = dut.WIDTH.value
 
@@ -93,8 +94,8 @@ async def pat_unit_mux_test(dut, NLOOPS=500, test="WALKING1"):
             old_data = queue.pop(0)
             sw_segments = pat_mux(partition_data=old_data,
                                   max_span=MAX_SPAN,
-                                  hit_thresh=CNT_THRESH, # FIXME
-                                  ly_thresh=CNT_THRESH,
+                                  hit_thresh=HIT_THRESH,
+                                  ly_thresh=LY_THRESH,
                                   width=WIDTH)
 
             fw_segments = get_segments_from_dut(dut)

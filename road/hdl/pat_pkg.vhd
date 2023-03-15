@@ -38,7 +38,8 @@ package pat_pkg is
 
   constant null_pattern : segment_t :=
     (
-      cnt       => (others => '0'),
+      lc        => (others => '0'),
+      hc        => (others => '0'),
       id        => (others => '0'),
       hits      => (others => (others => '0')),
       partition => (others => '0'),
@@ -133,13 +134,13 @@ package body pat_pkg is
 
   -- unit test function to check that the sorting operators are working correctly
   procedure check_pattern_operators (nil : boolean) is
-    variable ply0 : segment_t := (cnt => to_unsigned(0, CNT_BITS), id => x"A", hits => (others => (others => '0')), partition => (others => '0'), strip => (others => '0'));
-    variable ply1 : segment_t := (cnt => to_unsigned(1, CNT_BITS), id => x"9", hits => (others => (others => '0')), partition => (others => '0'), strip => (others => '0'));
-    variable ply2 : segment_t := (cnt => to_unsigned(2, CNT_BITS), id => x"8", hits => (others => (others => '0')), partition => (others => '0'), strip => (others => '0'));
+    variable ply0 : segment_t := (lc => to_unsigned(0, LC_BITS), hc => to_unsigned(0, HC_BITS), id => x"A", hits => (others => (others => '0')), partition => (others => '0'), strip => (others => '0'));
+    variable ply1 : segment_t := (lc => to_unsigned(1, LC_BITS), hc => to_unsigned(1, HC_BITS), id => x"9", hits => (others => (others => '0')), partition => (others => '0'), strip => (others => '0'));
+    variable ply2 : segment_t := (lc => to_unsigned(2, LC_BITS), hc => to_unsigned(2, HC_BITS), id => x"8", hits => (others => (others => '0')), partition => (others => '0'), strip => (others => '0'));
 
-    variable pat0 : segment_t := (cnt => to_unsigned(1, CNT_BITS), id => x"0", hits => (others => (others => '0')), partition => (others => '0'), strip => (others => '0'));
-    variable pat1 : segment_t := (cnt => to_unsigned(1, CNT_BITS), id => x"1", hits => (others => (others => '0')), partition => (others => '0'), strip => (others => '0'));
-    variable pat2 : segment_t := (cnt => to_unsigned(1, CNT_BITS), id => x"2", hits => (others => (others => '0')), partition => (others => '0'), strip => (others => '0'));
+    variable pat0 : segment_t := (lc => to_unsigned(1, LC_BITS), hc => to_unsigned(1, HC_BITS), id => x"0", hits => (others => (others => '0')), partition => (others => '0'), strip => (others => '0'));
+    variable pat1 : segment_t := (lc => to_unsigned(1, LC_BITS), hc => to_unsigned(1, HC_BITS), id => x"1", hits => (others => (others => '0')), partition => (others => '0'), strip => (others => '0'));
+    variable pat2 : segment_t := (lc => to_unsigned(1, LC_BITS), hc => to_unsigned(1, HC_BITS), id => x"2", hits => (others => (others => '0')), partition => (others => '0'), strip => (others => '0'));
   begin
 
     -- > testing
