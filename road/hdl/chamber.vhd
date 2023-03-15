@@ -41,6 +41,8 @@ entity chamber is
     S0_WIDTH       : natural := 16;
     S1_REUSE       : natural := 4;      -- 1, 2, or 4
 
+    REG_OUTPUTS  : boolean := false;
+
     PATLIST : patdef_array_t := patdef_array;
 
     LY0_SPAN : natural := get_max_span(patdef_array);
@@ -52,6 +54,7 @@ entity chamber is
     );
   port(
     clock             : in  std_logic;                 -- MUST BE 320MHZ
+    clock40           : in  std_logic;                 -- MUST BE  40MHZ
     ly_thresh         : in  std_logic_vector (2 downto 0);
     dav_i             : in  std_logic;
     dav_o             : out std_logic;
@@ -117,6 +120,8 @@ architecture behavioral of chamber is
   signal dav_sr : std_logic_vector(9 downto 0);
 
   signal muxout_dav : std_logic := '0';
+
+  signal outclk : std_logic := '0';
 
 begin
 
@@ -236,9 +241,6 @@ begin
         end loop;
       end loop;
 
-      vfat_pretrigger_o <= vfat_pretrigger;
-      pretrigger_o      <= or_reduce(vfat_pretrigger);
-
     end if;
   end process;
 
@@ -325,11 +327,20 @@ begin
   -- Outputs
   --------------------------------------------------------------------------------
 
-  process (clock) is
+  clk40gen : if (REG_OUTPUTS) generate
+    outclk <= clock40;
+  end generate;
+  clk320 : if (not REG_OUTPUTS) generate
+    outclk <= clock;
+  end generate;
+
+  process (outclk) is
   begin
-    if (rising_edge(clock)) then
-      dav_o      <= final_segs_dav;
-      segments_o <= final_segs;
+    if (rising_edge(outclk)) then
+      dav_o             <= final_segs_dav;
+      segments_o        <= final_segs;
+      vfat_pretrigger_o <= vfat_pretrigger;
+      pretrigger_o      <= or_reduce(vfat_pretrigger);
     end if;
   end process;
 
