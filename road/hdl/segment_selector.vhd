@@ -104,7 +104,7 @@ begin
         DATA_BITS            => BITS,
         KEY_BITS             => SORTB,
         META_BITS            => 1,
-        PIPELINE_STAGE_AFTER => 2,
+        PIPELINE_STAGE_AFTER => 1,
         ADD_INPUT_REGISTERS  => true,
         ADD_OUTPUT_REGISTERS => true
         )

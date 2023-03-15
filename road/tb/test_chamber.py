@@ -1,4 +1,8 @@
 # Testbench for chamber.vhd
+# NOTES:
+#   - measure latency
+#   - verify selector latency parameter
+
 import os
 import random
 import cocotb
@@ -9,13 +13,22 @@ from subfunc import *
 from chamber_beh import process_chamber
 from tb_common import *
 
+# @cocotb.test()
+# async def random_test(dut, nloops=100):
+#     await chamber_test(dut, "RANDOM", nloops)
 
 @cocotb.test()
-async def chamber_test(dut, test="WALKING1", NLOOPS=100):
+async def walking1_test(dut, nloops=100):
+    await chamber_test(dut, "WALKING1", nloops)
 
-    """Test the chamber.vhd module"""
+async def chamber_test(dut, test, nloops=512):
 
-    # set MAX_SPAN from firmware
+    """
+    Test the chamber.vhd module
+    """
+
+    # setup the dut and extract constants from it
+
     setup(dut)
     cocotb.fork(monitor_dav(dut))
 
@@ -25,13 +38,28 @@ async def chamber_test(dut, test="WALKING1", NLOOPS=100):
     WIDTH = int(dut.partition_gen[0].partition_inst.pat_unit_mux_inst.WIDTH.value)
     THRESH = int(dut.thresh.value)
     NUM_PARTITIONS = int(dut.NUM_PARTITIONS.value)
-    NULL = [[0] * 6] * 8
-    LATENCY = 2
+    NULL = [[0] * 6] * NUM_PARTITIONS
+    LATENCY = 5
+    dut.sbits_i.value = NULL
 
-    for _ in range(10):
+    # flush the bufers
+    for _ in range(32):
         await RisingEdge(dut.clock)
 
+    # measure latency
+    for i in range(128):
+        # extract latency
+        dut.sbits_i.value = [[1]*6]*NUM_PARTITIONS
+        await RisingEdge(dut.clock)
+        if dut.segments_o[0].cnt.value.is_resolvable and \
+           dut.segments_o[0].cnt.value.integer > 0:
+            print(f"Latency={i} clocks ({i/8.0} bx)")
+            break
+
+    # flush the bufers
     dut.sbits_i.value = NULL
+    for _ in range(32):
+        await RisingEdge(dut.clock)
 
     queue = []
     for _ in range(LATENCY):
@@ -44,7 +72,7 @@ async def chamber_test(dut, test="WALKING1", NLOOPS=100):
 
     # loop over some number of test cases
     loop = 0
-    while loop < NLOOPS:
+    while loop < nloops:
 
         # push new data on dav_i
         if dut.dav_i.value == 1:
@@ -70,7 +98,7 @@ async def chamber_test(dut, test="WALKING1", NLOOPS=100):
             loop += 1
 
         # pop old data on dav_o
-        if loop > LATENCY and dut.dav_o.value == 1:
+        if dut.dav_o.value == 1:
 
             # gather emulator output
             popped_data = queue.pop(0)
@@ -96,7 +124,6 @@ async def chamber_test(dut, test="WALKING1", NLOOPS=100):
                     print("   > fw: " + str(fw_segments[i]))
                     assert sw_segments[i] == fw_segments[i]
 
-        # align to the dav_i
         await RisingEdge(dut.clock)
 
 

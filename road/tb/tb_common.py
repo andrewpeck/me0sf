@@ -41,10 +41,11 @@ def get_segments_from_dut(dut):
 
 
 def get_segment_from_dut(dut):
-    lyc = int(dut.pat_o.cnt.value)
-    pid = int(dut.pat_o.id.value)
+    lc = int(dut.pat_o.cnt.value)
+    hc  = int(dut.pat_o.cnt.value) # FIXME
+    id = int(dut.pat_o.id.value)
     partition = int(dut.pat_o.partition.value)
-    seg = Segment(lyc, pid, strip=0, partition=partition)
+    seg = Segment(hc=hc, lc=lc, id=id, strip=0, partition=partition)
     return seg
 
 
