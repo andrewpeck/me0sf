@@ -10,10 +10,10 @@ def process_chamber(chamber_data,
                     ly_thresh : int = 4,
                     max_span : int = 37,
                     width : int = 192,
-                    group_width : int=8,
-                    ghost_width : int=4,
-                    cross_part_seg_width : int=4,
-                    num_outputs : int=4):
+                    group_width : int = 8,
+                    ghost_width : int = 4,
+                    cross_part_seg_width : int = 4,
+                    num_outputs : int = 4):
 
     # gather segments from each partition
     # this will return a 8 x N list of segments
@@ -21,12 +21,14 @@ def process_chamber(chamber_data,
     segments = [
         process_partition(
             partition_data=data,
-            max_span=max_span,
-            width=width,
-            group_width=group_width,
-            ghost_width=ghost_width,
-            enable_gcl=True,
-            partition=partition)
+            hit_thresh = hit_thresh,
+            ly_thresh = ly_thresh,
+            max_span = max_span,
+            width = width,
+            group_width = group_width,
+            ghost_width = ghost_width,
+            enable_gcl = True,
+            partition = partition)
         for (partition, data) in enumerate(chamber_data)]
 
     # compare partitions 0 & 1, 2 & 3, 4 & 5.. etc
