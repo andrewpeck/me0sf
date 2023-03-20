@@ -31,6 +31,8 @@ def process_chamber(chamber_data,
             partition = partition)
         for (partition, data) in enumerate(chamber_data)]
 
+    NUM_PARTITIONS = len(segments)
+
     # compare partitions 0 & 1, 2 & 3, 4 & 5.. etc
     # return NUM_OUTPUTS segments from each partition pair
 
@@ -107,26 +109,24 @@ def process_chamber(chamber_data,
                         segments[i][l].reset()
                 '''
 
-    segments_reduced = []
-    for i in range(0,8):
-        segments_reduced.append([])
-    for (i,seg_list) in enumerate(segments):
-        for seg in seg_list:
-            seg.partition = math.ceil(seg.partition/2)
-            segments_reduced[math.ceil(i/2)].append(seg)
+    if NUM_PARTITIONS > 8:
+        segments_reduced = []
+        for i in range(0,8):
+            segments_reduced.append([])
+        for (i,seg_list) in enumerate(segments):
+            for seg in seg_list:
+                seg.partition = math.ceil(seg.partition/2)
+                segments_reduced[math.ceil(i/2)].append(seg)
+    else:
+        segments_reduced = segments
 
-    segments_reduced = [segments_reduced[0] + segments_reduced[1],
-                        segments_reduced[2] + segments_reduced[3],
-                        segments_reduced[4] + segments_reduced[5],
-                        segments_reduced[6] + segments_reduced[7]]
 
-    segments_reduced = list(map(lambda x: sorted(x, reverse=True)[:num_outputs], segments_reduced))
+    # sort each partition and pick the best N outputs
+    # pick the best N outputs from each partition
+    segments_reduced = [ sorted(x, reverse=True)[:num_outputs] for x in segments_reduced]
 
-    # equivalent to segments_reduced[0] + segments_reduced[1] + segments_reduced[2] + etc
-    segments_reduced = functools.reduce(operator.iconcat, segments_reduced, [])
-
-    segments_reduced.sort(reverse=True)
-
-    segments_reduced = segments_reduced[:num_outputs]
+    # concatenate together all of the segments, sort them, and pick the best N outputs
+    segments_reduced = functools.reduce(operator.iconcat, segments_reduced, []) # equivalent to segments_reduced[0] + segments_reduced[1] + segments_reduced[2] + etc
+    segments_reduced = sorted(segments_reduced, reverse=True)[:num_outputs]
 
     return segments_reduced
