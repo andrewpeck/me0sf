@@ -75,9 +75,11 @@ class Segment:
         if (self.hc == 0 and other.hc == 0):
             return True
 
-        return self.id==other.id and self.hc==other.hc and self.lc==other.lc and self.strip==other.strip and \
-            self.quality==other.quality
-            # self.partition==other.partition and  \
+        return self.id==other.id and \
+            self.hc==other.hc and self.lc==other.lc and \
+            self.strip==other.strip and \
+            self.quality==other.quality and \
+            self.partition==other.partition
             # self.centroid==other.centroid and  \
             # self.substrip==other.substrip and \
             # self.bend_ang==other.bend_ang and \
@@ -86,7 +88,7 @@ class Segment:
         if (self.id==0):
             return "n/a"
 
-        return f"id={self.id}, hc={self.hc}, lc={self.lc}, strip={self.strip}, quality={self.quality}"
+        return f"id={self.id}, hc={self.hc}, lc={self.lc}, strip={self.strip}, prt={self.partition}, quality={self.quality}"
 
     def __repr__(self):
         return f"Seg {self.quality}"
