@@ -27,7 +27,7 @@ async def pat_unit_test(dut):
 
     # constants
     LY_CNT = 6
-    N_NOISE = 0
+    N_NOISE = 10
     LY_THRESH = 4
     HIT_THRESH = 0
     LATENCY = dut.LATENCY.value
