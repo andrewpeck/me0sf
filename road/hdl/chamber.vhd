@@ -270,7 +270,8 @@ begin
         MODE        => "BITONIC",
         NUM_OUTPUTS => NUM_SEGMENTS,
         NUM_INPUTS  => NUM_SEGS_PER_PRT,
-        SORTB       => PATTERN_SORTB)
+        SORTB       => PATTERN_SORTB,
+        IGNOREB     => PARTITION_BITS)
       port map (
         clock  => clock,
         dav_i  => all_segs_dav(I),

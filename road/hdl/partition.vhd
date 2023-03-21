@@ -129,12 +129,13 @@ begin
 
     priority_encoder_inst : entity work.priority_encoder
       generic map (
-        DAT_BITS   => best'length,
-        QLT_BITS   => PATTERN_SORTB,
-        WIDTH      => S0_WIDTH,
-        REG_INPUT  => true,
-        REG_OUTPUT => true,
-        REG_STAGES => 3
+        DAT_BITS     => best'length,
+        QLT_BITS     => PATTERN_SORTB,
+        IGNORE_BITS  => PARTITION_BITS, -- everything is the same partition here, ignore them
+        WIDTH        => S0_WIDTH,
+        REG_INPUT    => true,
+        REG_OUTPUT   => true,
+        REG_STAGES   => 3
         )
       port map (
         clock => clock,
