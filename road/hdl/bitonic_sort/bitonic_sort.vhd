@@ -24,6 +24,7 @@ entity bitonic_sort is
     SORTER : string := "KAWAZOME";      -- POC or KAWAZOME
 
     KEY_BITS             : positive := 32;    -- the first KEY_BITS of In_Data are used as a sorting critera (key)
+    IGNORE_BITS          : natural  := 0;     --
     DATA_BITS            : positive := 32;    -- inclusive KEY_BITS
     META_BITS            : natural  := 0;     -- additional bits, not sorted but delayed as long as In_Data
     PIPELINE_STAGE_AFTER : natural  := 2;     -- add a pipline stage after n sorting stages
@@ -107,7 +108,7 @@ begin
         WORDS       => INPUTS,
         WORD_BITS   => DATA_BITS,
         COMP_HIGH   => KEY_BITS-1,      -- This is used directly as a COMP_HIGH downto 0, so you must factor in the -1
-        COMP_LOW    => 0,
+        COMP_LOW    => IGNORE_BITS,
         INFO_BITS   => META_BITS,
         REGSTAGES   => PIPELINE_STAGE_AFTER,
         REG_OUTPUTS => ADD_OUTPUT_REGISTERS,
