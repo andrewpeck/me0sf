@@ -28,6 +28,13 @@ def set_layer_hits(dut, hits):
 
 
 @cocotb.test()
+async def pat_unit_mux_walking(dut):
+    await pat_unit_mux_test(dut, NLOOPS=500, test="WALKING1")
+
+@cocotb.test()
+async def pat_unit_mux_segments(dut):
+    await pat_unit_mux_test(dut, NLOOPS=1000, test="SEGMENTS")
+
 async def pat_unit_mux_test(dut, NLOOPS=500, test="WALKING1"):
 
     "Test the pat_unix_mux.vhd module"
@@ -74,7 +81,7 @@ async def pat_unit_mux_test(dut, NLOOPS=500, test="WALKING1"):
             if test=="WALKING1":
                 new_data = 6 * [0x1 << (i % 192)]
             elif test=="SEGMENTS":
-                new_data = datagen(n_segs=1, n_noise=0, max_span=WIDTH)
+                new_data = datagen(n_segs=2, n_noise=10, max_span=WIDTH)
             else:
                 new_data = 0*[6]
                 assert "Invalid test selected"
@@ -113,7 +120,7 @@ async def pat_unit_mux_test(dut, NLOOPS=500, test="WALKING1"):
 
         await RisingEdge(dut.clock)
 
-    with open("../pat_unit_mux.log", "w+") as f:
+    with open("../log/pat_unit_mux_%s.log" % test, "w+") as f:
 
         f.write("Strips:\n")
         f.write(plotille.hist(strip_cnts, bins=int(192/4)))
