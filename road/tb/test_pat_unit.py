@@ -26,13 +26,20 @@ async def monitor_dav(dut, latency):
         assert dut.dav_o.value == 1, f"Is the latency setting wrong? did not find dav w/ latency={latency}"
 
 @cocotb.test()
+async def pat_unit_test_segments(dut):
+    await pat_unit_test(dut, test="SEGMENTS")
+
+@cocotb.test()
+async def pat_unit_test_noise(dut):
+    await pat_unit_test(dut, test="NOISE")
+
 async def pat_unit_test(dut, test="SEGMENTS"):
 
     random.seed(56)
 
     # constants
     LY_CNT = 6
-    N_NOISE = 10
+    N_NOISE = 1
     LY_THRESH = 4
     HIT_THRESH = 0
     LATENCY = dut.LATENCY.value
@@ -59,7 +66,19 @@ async def pat_unit_test(dut, test="SEGMENTS"):
 
     queue = []
 
-    get_data = lambda : datagen(LY_CNT, N_NOISE, max_span=MAX_SPAN)
+    if test=="SEGMENTS": 
+        get_data = lambda : datagen(LY_CNT, N_NOISE, max_span=MAX_SPAN)
+    if test=="NOISE":
+        def get_data() -> list[int]:
+            hits = [0]*6
+            for _ in range(30):
+                ly = random.randint(0,5)
+                strp = random.randint(0,37)
+                clust = 2**(random.randint(0,3))-1
+                hits[ly] |= clust << strp
+            hits = [x & 2**37-1 for x in hits]
+            return hits
+        
 
     for _ in range(LATENCY):
         ly_data = get_data()
