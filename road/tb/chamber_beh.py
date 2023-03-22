@@ -45,7 +45,7 @@ def process_chamber(chamber_data,
                     continue
                 #print ("Seg 0: ", l, seg, seg.strip)
                 strip = seg.strip
-                quality = seg.quality
+                #quality = seg.quality
                 seg1_max_quality = -9999
                 seg2_max_quality = -9999
                 seg1_max_quality_index = -9999
@@ -120,9 +120,12 @@ def process_chamber(chamber_data,
     else:
         segments_reduced = segments
 
-
     # sort each partition and pick the best N outputs
     # pick the best N outputs from each partition
+    segments_reduced = [ sorted(x, reverse=True)[:num_outputs] for x in segments_reduced]
+
+    # join each 2 partitions and pick the best N outputs from them
+    segments_reduced = [ x[0]+x[1] for x in zip(*[iter(segments_reduced)] * 2)]
     segments_reduced = [ sorted(x, reverse=True)[:num_outputs] for x in segments_reduced]
 
     # concatenate together all of the segments, sort them, and pick the best N outputs
