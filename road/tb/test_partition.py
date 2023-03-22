@@ -1,12 +1,15 @@
 # Testbenh for partition.vhd
 import os
 import random
-from datagen import datagen
-from subfunc import *
+
+import plotille
+from cocotb.triggers import RisingEdge
 from cocotb_test.simulator import run
+
+from datagen import datagen
 from partition_beh import process_partition
+from subfunc import *
 from tb_common import *
-from cocotb.triggers import RisingEdge, Edge
 
 # @cocotb.test()
 # async def partition_test_walking(dut):
@@ -36,6 +39,9 @@ async def partition_test(dut, NLOOPS=1000, test="SEGMENTS"):
 
     for i in range(4):
         await RisingEdge(dut.dav_i)
+
+    strip_cnts = []
+    id_cnts = []
 
     queue = []
 
@@ -84,6 +90,10 @@ async def partition_test(dut, NLOOPS=1000, test="SEGMENTS"):
 
             for j in range(len(sw_segments)):
 
+                if fw_segments[j].id > 0:
+                    strip_cnts.append(j)
+                    id_cnts.append(fw_segments[j].id)
+
                 if i > 3 and sw_segments[j] != fw_segments[j]:
                     print(f" loop {i} seg {j}:")
                     print("   > sw: " + str(sw_segments[j]))
@@ -92,6 +102,14 @@ async def partition_test(dut, NLOOPS=1000, test="SEGMENTS"):
 
         # next clock cycle
         await RisingEdge(dut.clock)
+
+    with open("../log/partition_%s.log" % test, "w+") as f:
+
+        f.write("Strips:\n")
+        f.write(plotille.hist(strip_cnts, bins=int(192/4)))
+
+        f.write("\nIDs:\n")
+        f.write(plotille.hist(id_cnts, bins=16))
 
 
 def test_partition():
