@@ -1,11 +1,17 @@
 """ Emulator that processes a single partition (6 layers x 192 strips) and returns a collection of segments"""
 from itertools import islice
+
 from pat_unit_mux_beh import pat_mux
 from subfunc import *
-from pat_unit_mux_beh import parse_data
 
-def compare_ghosts(seg, comp_list):
-    """takes in a segment and a list of segments to ensure that there aren't copies of the same data (ID value identical) or mirrors (ID value +2 or -2 from each other)"""
+def compare_ghosts(seg : Segment, comp_list : list[Segment]):
+
+    """
+    takes in a segment and a list of segments to ensure that there aren't
+    copies of the same data (ID value identical) or mirrors (ID value +2 or -2
+    from each other)
+    """
+
     comp_list = [x for x in comp_list if x.id != 0 ]
     if len(comp_list) != 0:
         for comp in comp_list:
@@ -26,8 +32,12 @@ def compare_ghosts(seg, comp_list):
 
 def cancel_edges(pat_mux_dat, group_width=8, ghost_width=4, width=192):
 
-    """takes in pat_unit_mux_data, finds edges of groups w/given group width, and performs edge
-    cancellation by checking ghosts around each edge within given ghost width"""
+    """
+    takes in pat_unit_mux_data, finds edges of groups w/given group width,
+    and performs edge cancellation by checking ghosts around each edge within
+    given ghost width
+    """
+
     for edge in range((width // group_width)-1):
         lo_index = group_width*(edge+1) - (ghost_width//2)
         hi_index = lo_index + ghost_width
@@ -84,6 +94,7 @@ def process_partition(partition_data,
                        max_span=max_span,
                        width=width,
                        partition=partition)
+
     if (enable_gcl):
         segments = cancel_edges(segments, group_width, ghost_width, width)
 

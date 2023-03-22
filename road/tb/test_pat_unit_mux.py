@@ -1,16 +1,14 @@
 import os
-import plotille
+
 import cocotb
+import plotille
 from cocotb.triggers import RisingEdge
-from cocotb.clock import Clock
 from cocotb_test.simulator import run
+
 from datagen import datagen
 from pat_unit_mux_beh import pat_mux
 from subfunc import *
-from cocotb_test.simulator import run
 from tb_common import *
-
-from pat_unit_beh import calculate_global_layer_mask
 
 def set_layer_hits(dut, hits):
 
