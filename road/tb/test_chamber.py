@@ -7,6 +7,7 @@ import os
 import random
 
 import cocotb
+import plotille
 from cocotb.clock import Clock
 from cocotb.triggers import RisingEdge
 
@@ -15,18 +16,17 @@ from datagen import datagen
 from subfunc import *
 from tb_common import *
 
-
-@cocotb.test()
-async def segments_test(dut, nloops=1000):
-    await chamber_test(dut, "SEGMENTS", nloops)
+# @cocotb.test()
+# async def segments_test(dut, nloops=1000):
+#     await chamber_test(dut, "SEGMENTS", nloops)
 
 # @cocotb.test()
 # async def random_test(dut, nloops=1000):
 #     await chamber_test(dut, "RANDOM", nloops)
 
-# @cocotb.test()
-# async def walking1_test(dut, nloops=192):
-#     await chamber_test(dut, "WALKING1", nloops)
+@cocotb.test()
+async def walking1_test(dut, nloops=192):
+    await chamber_test(dut, "WALKING1", nloops)
 
 async def chamber_test(dut, test, nloops=512):
 
@@ -69,14 +69,16 @@ async def chamber_test(dut, test, nloops=512):
     for _ in range(32):
         await RisingEdge(dut.clock)
 
+    strip_cnts = []
+    id_cnts = []
+    partition_cnts = []
+
     queue = []
     for _ in range(LATENCY):
         await RisingEdge(dut.dav_i)
         chamber_data = NULL
         queue.append(chamber_data)
         dut.sbits_i.value = chamber_data
-
-    fn_datagen = lambda: datagen(n_segs=1, n_noise=10, max_span=MAX_SPAN)
 
     # loop over some number of test cases
     loop = 0
@@ -94,11 +96,20 @@ async def chamber_test(dut, test, nloops=512):
 
             if test=="WALKING1":
                 chamber_data = 8 * [6 * [1 << loop]]
-            else:
-                if loop % 10 == 0:
-                    chamber_data = [fn_datagen() for _ in range(NUM_PARTITIONS)]
-                else:
-                    chamber_data = NULL
+            if test=="SEGMENTS":
+                prt   = random.randint(0,7)
+                chamber_data = NULL
+                #if loop % 10 == 0:
+                chamber_data[prt] = datagen(n_segs=1, n_noise=0, max_span=MAX_SPAN)
+                #chamber_data = [datagen(n_segs=1, n_noise=0, max_span=MAX_SPAN)
+                #for _ in range(NUM_PARTITIONS)]
+            if test=="RANDOM":
+                chamber_data = NULL
+                for _ in range(1000):
+                    prt   = random.randint(0,7)
+                    ly    = random.randint(0,5)
+                    strp  = random.randint(0,191)
+                    chamber_data[prt][ly] |= (1 << strp)
 
             queue.append(chamber_data)
             dut.sbits_i.value = chamber_data
@@ -126,16 +137,36 @@ async def chamber_test(dut, test, nloops=512):
 
             for i in range(len(fw_segments)):
 
+                if fw_segments[i].id > 0:
+                    strip_cnts.append(i)
+                    id_cnts.append(fw_segments[i].id)
+                    partition_cnts.append(fw_segments[i].partition)
+
+                err = "   "
                 if sw_segments[i] != fw_segments[i]:
-                    print(f" seg {i}:")
+                    err = "ERR"
+                    print(f" {err} seg {i}:")
                     print("   > sw: " + str(sw_segments[i]))
                     print("   > fw: " + str(fw_segments[i]))
+                if loop > 10:
                     assert sw_segments[i] == fw_segments[i]
 
         await RisingEdge(dut.clock)
 
+    with open("../log/chamber_%s.log" % test, "w+") as f:
+
+        f.write("Strips:\n")
+        f.write(plotille.hist(strip_cnts, bins=int(192/4)))
+
+        f.write("Partitions:\n")
+        f.write(plotille.hist(partition_cnts, bins=16))
+
+        f.write("\nIDs:\n")
+        f.write(plotille.hist(id_cnts, bins=16))
+
 
 def test_chamber():
+
     tests_dir = os.path.abspath(os.path.dirname(__file__))
     rtl_dir = os.path.abspath(os.path.join(tests_dir, "..", "hdl"))
     module = os.path.splitext(os.path.basename(__file__))[0]
