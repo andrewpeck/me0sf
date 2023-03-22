@@ -11,13 +11,17 @@ from partition_beh import process_partition
 from subfunc import *
 from tb_common import *
 
-# @cocotb.test()
-# async def partition_test_walking(dut):
-#     await partition_test(dut, NLOOPS=192, test="WALKING1")
+@cocotb.test()
+async def partition_test_walking(dut):
+    await partition_test(dut, NLOOPS=192, test="WALKING1")
 
 @cocotb.test()
 async def partition_test_segs(dut):
     await partition_test(dut, NLOOPS=2000, test="SEGMENTS")
+
+@cocotb.test()
+async def partition_test_random(dut):
+    await partition_test(dut, NLOOPS=2000, test="RANDOM")
 
 async def partition_test(dut, NLOOPS=1000, test="SEGMENTS"):
 
@@ -61,15 +65,23 @@ async def partition_test(dut, NLOOPS=1000, test="SEGMENTS"):
             # (2) push it onto the queue
             # (3) set the DUT inputs to the new data
             if test=="WALKING1":
-                new_data = 6 * [0x1 << (i % 192)]
+                hits = 6 * [0x1 << (i % 192)]
             elif test=="SEGMENTS":
-                new_data = datagen(n_segs=4, n_noise=8, max_span=WIDTH)
+                hits = datagen(n_segs=4, n_noise=8, max_span=WIDTH)
+            elif test=="RANDOM":
+                hits = [0]*6
+                for _ in range(30):
+                    ly = random.randint(0,5)
+                    strp = random.randint(0,37)
+                    clust = 2**(random.randint(0,3))-1
+                    hits[ly] |= clust << strp
+                
             else:
-                new_data = 0*[6]
+                hits = 0*[6]
                 assert "Invalid test selected"
 
-            queue.append(new_data)
-            dut.partition_i.value = new_data
+            queue.append(hits)
+            dut.partition_i.value = hits
 
 
         # pop old data on dav_o
