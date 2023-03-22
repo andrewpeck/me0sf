@@ -1,5 +1,6 @@
 # Testbenh for partition.vhd
 import os
+import random
 from datagen import datagen
 from subfunc import *
 from cocotb_test.simulator import run
@@ -7,13 +8,13 @@ from partition_beh import process_partition
 from tb_common import *
 from cocotb.triggers import RisingEdge, Edge
 
+# @cocotb.test()
+# async def partition_test_walking(dut):
+#     await partition_test(dut, NLOOPS=192, test="WALKING1")
+
 @cocotb.test()
 async def partition_test_segs(dut):
     await partition_test(dut, NLOOPS=2000, test="SEGMENTS")
-
-@cocotb.test()
-async def partition_test_walking(dut):
-    await partition_test(dut, NLOOPS=192, test="WALKING1")
 
 async def partition_test(dut, NLOOPS=1000, test="SEGMENTS"):
 
@@ -25,6 +26,7 @@ async def partition_test(dut, NLOOPS=1000, test="SEGMENTS"):
     LY_THRESH = 6
     HIT_THRESH = 0
     WIDTH = dut.pat_unit_mux_inst.WIDTH.value
+    GROUP_WIDTH = dut.S0_WIDTH.value
     MAX_SPAN = get_max_span_from_dut(dut)
     LATENCY = int(math.ceil(dut.LATENCY.value/8.0))
 
@@ -55,7 +57,7 @@ async def partition_test(dut, NLOOPS=1000, test="SEGMENTS"):
             if test=="WALKING1":
                 new_data = 6 * [0x1 << (i % 192)]
             elif test=="SEGMENTS":
-                new_data = datagen(n_segs=1, n_noise=0, max_span=WIDTH)
+                new_data = datagen(n_segs=4, n_noise=8, max_span=WIDTH)
             else:
                 new_data = 0*[6]
                 assert "Invalid test selected"
@@ -68,12 +70,15 @@ async def partition_test(dut, NLOOPS=1000, test="SEGMENTS"):
         if dut.dav_o.value == 1:
 
             popped_data = queue.pop(0)
-            sw_segments = process_partition(partition_data=popped_data,
-                                         ly_thresh=LY_THRESH,
-                                         hit_thresh=HIT_THRESH,
-                                         max_span=MAX_SPAN,
-                                         width=WIDTH,
-                                         enable_gcl=False)
+
+            sw_segments = process_partition(
+                partition_data=popped_data,
+                ly_thresh=LY_THRESH,
+                hit_thresh=HIT_THRESH,
+                max_span=MAX_SPAN,
+                width=WIDTH,
+                group_width=GROUP_WIDTH,
+                enable_gcl=False)
 
             fw_segments = get_segments_from_dut(dut)
 
