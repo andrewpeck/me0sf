@@ -1,14 +1,17 @@
 # Testbench for pat_unit.vhd
+import os
 import random
+
 import cocotb
+import plotille
 from cocotb.triggers import RisingEdge
+from cocotb_test.simulator import run
+
+from constants import *
 from datagen import datagen
 from pat_unit_beh import pat_unit
 from subfunc import *
-import os
-from cocotb_test.simulator import run
 from tb_common import *
-from constants import *
 
 async def monitor_dav(dut, latency):
     for _ in range(8):
@@ -19,10 +22,10 @@ async def monitor_dav(dut, latency):
         for _ in range(latency+1):
             assert dut.dav_o.value == 0
             await RisingEdge(dut.clock)
-        assert dut.dav_o.value == 1
+            assert dut.dav_o.value == 1
 
 @cocotb.test()
-async def pat_unit_test(dut):
+async def pat_unit_test(dut, test="SEGMENTS"):
     random.seed(56)
 
     # constants
@@ -62,6 +65,7 @@ async def pat_unit_test(dut):
         set_dut_inputs(dut, ly_data)
         await RisingEdge(dut.clock)
 
+    id_cnts = []
     for i in range(10000):
 
         # (1) generate new random data
@@ -96,7 +100,14 @@ async def pat_unit_test(dut):
             print("> sw = %s" % sw_segment)
             print("> fw = %s" % fw_segment)
 
+        id_cnts.append(fw_segment.id)
+
         assert sw_segment == fw_segment
+
+    with open("../log/pat_unit_%s.log" % test, "w+") as f:
+
+        f.write("\nIDs:\n")
+        f.write(plotille.hist(id_cnts, bins=16))
 
 
 def test_pat_unit():
@@ -110,23 +121,20 @@ def test_pat_unit():
         os.path.join(rtl_dir, "pat_types.vhd"),
         os.path.join(rtl_dir, "pat_pkg.vhd"),
         os.path.join(rtl_dir, "patterns.vhd"),
-        os.path.join(rtl_dir, "pat_unit.vhd"),
-    ]
+        os.path.join(rtl_dir, "pat_unit.vhd")]
 
     parameters = {}
 
     os.environ["SIM"] = "questa"
 
-    run(
-        vhdl_sources=vhdl_sources,
+    run(vhdl_sources=vhdl_sources,
         module=module,  # name of cocotb test module
         compile_args=["-2008"],
         toplevel="pat_unit",  # top level HDL
         toplevel_lang="vhdl",
         # sim_args=["-do", '"set NumericStdNoWarnings 1;"'],
         parameters=parameters,
-        gui=0,
-    )
+        gui=0)
 
 
 if __name__ == "__main__":
