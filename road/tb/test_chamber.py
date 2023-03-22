@@ -5,27 +5,34 @@
 
 import os
 import random
+
 import cocotb
-from cocotb.triggers import RisingEdge
 from cocotb.clock import Clock
+from cocotb.triggers import RisingEdge
+
+from chamber_beh import process_chamber
 from datagen import datagen
 from subfunc import *
-from chamber_beh import process_chamber
 from tb_common import *
 
-# @cocotb.test()
-# async def random_test(dut, nloops=100):
-#     await chamber_test(dut, "RANDOM", nloops)
 
 @cocotb.test()
-async def walking1_test(dut, nloops=100):
-    await chamber_test(dut, "WALKING1", nloops)
+async def segments_test(dut, nloops=1000):
+    await chamber_test(dut, "SEGMENTS", nloops)
+
+# @cocotb.test()
+# async def random_test(dut, nloops=1000):
+#     await chamber_test(dut, "RANDOM", nloops)
+
+# @cocotb.test()
+# async def walking1_test(dut, nloops=192):
+#     await chamber_test(dut, "WALKING1", nloops)
 
 async def chamber_test(dut, test, nloops=512):
 
-    """
+    '''
     Test the chamber.vhd module
-    """
+    '''
 
     # setup the dut and extract constants from it
 
