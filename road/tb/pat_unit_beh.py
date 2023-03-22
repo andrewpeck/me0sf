@@ -27,22 +27,32 @@ def set_high_bits(lo_hi_pair):
     lo = lo_hi_pair[0]
     return 2**(hi-lo+1)-1 << lo
 
-def get_ly_mask(ly_pat, max_span=37):
-    """takes in a given layer pattern and returns a list of integer bit masks for each layer"""
-    #for each layer, shift the provided hi and lo values for each layer from pattern definition by center
+def get_ly_mask(ly_pat : patdef_t,
+                max_span : int = 37) -> Mask:
+
+    '''
+    takes in a given layer pattern and returns a list of integer bit masks
+    for each layer
+    '''
+
+    #for each layer, shift the provided hi and lo values for each layer from
+    #pattern definition by center
     m_vals = [shift_center(ly, max_span) for ly in ly_pat.layers]
-    # use the high and low indices to determine where the high bits must go for each layer
-    m_vec = list(map(set_high_bits, m_vals))
+
+    # use the high and low indices to determine where the high bits must go for
+    # each layer
+    m_vec = [set_high_bits(x) for x in m_vals]
     return Mask(m_vec, ly_pat.id)
 
 def calculate_global_layer_mask(patlist):
     """create layer masks for patterns in patlist"""
     global LAYER_MASK
     LAYER_MASK = [get_ly_mask(pat) for pat in patlist]
-    
+
+# FIXME: ugh this is not nice
 calculate_global_layer_mask(PATLIST)
 
-def mask_layer_data (data, mask):
+def mask_layer_data (data : list[int], mask):
     """
     AND together a list of layer masks with a list of layers
 
@@ -53,24 +63,26 @@ def mask_layer_data (data, mask):
     """
     return tuple(map(lambda ly_dat, ly_mask: ly_dat & ly_mask , data, mask))
 
-def calculate_centroids(masked_data):
+def calculate_centroids(masked_data : list[int]) -> list[float]:
     # print(masked_data)
     """takes in a []*6 list of pre-masked data and gives the found centroids"""
     return [find_centroid(x) for x in masked_data]
 
-def calculate_hit_count(masked_data):
-    """takes in a []*6 list of pre-masked data and gives the layer count"""
-    #WARNING: currently counting total hits/pattern, will cause problems with noise (skew towards patterns with lots of noise)
-    #return sum(map(lambda x : x > 0, masked_data))
+def calculate_hit_count(masked_data : list[int]) -> int:
+    """takes in a []*6 list of pre-masked data and gives the number of hits"""
     return sum([count_ones(x) for x in masked_data])
 
-def calculate_layer_count(masked_data):
+def calculate_layer_count(masked_data : list[int]) -> int:
     """takes in a []*6 list of pre-masked data and gives the layer count"""
-    #WARNING: currently counting total hits/pattern, will cause problems with noise (skew towards patterns with lots of noise)
     return sum(map(lambda x : x > 0, masked_data))
-    #return sum(map(count_ones, masked_data))
 
-def pat_unit(data, strip=None, max_span=37, hit_thresh=4, ly_thresh=4, partition=-1): #change ly_thresh back to LY_TRESH if doing layer count not hit count
+def pat_unit(data,
+             strip : int = 0,
+             hit_thresh : int = 4,
+             ly_thresh : int = 4,
+             partition : int = -1,
+             verbose : bool = False):
+
     """
     takes in sample data for each layer and returns best segment
 
@@ -84,12 +96,12 @@ def pat_unit(data, strip=None, max_span=37, hit_thresh=4, ly_thresh=4, partition
     (6) choose the max of all patterns
     (7) apply a layer threshold
     """
-    #print (data)
+
+    # (2)
     # and the layer data with the respective layer mask to
     # determine how many hits are in each layer
     # this yields a map object that can be iterated over to get,
     #    for each of the N patterns, the masked []*6 layer data
-    # (2)
     masked_data = [mask_layer_data(x.mask, data) for x in LAYER_MASK]
 
     # (3) count # of hits
@@ -101,20 +113,15 @@ def pat_unit(data, strip=None, max_span=37, hit_thresh=4, ly_thresh=4, partition
     centroids = [calculate_centroids(x) for x in masked_data]
 
     # (5) process segments
-    seg_list = [Segment(hc=hc,
-                        lc=lc,
-                        id=pid,
+    seg_list = [Segment(hc=hc, lc=lc, id=pid,
                         partition=partition,
                         strip=strip,
                         centroid=centroid)
-                for (hc, lc,pid,centroid) in
+                for (hc, lc, pid, centroid) in
                 zip(hits, lycs, pids, centroids)]
 
     # (6) choose the max of all patterns
     best = max(seg_list)
-    #print (best, best.centroid)
-    #if (strip==167 and best.quality==528784) or (strip==181 and best.quality==1257648):
-    #    print (masked_data)
 
     # (7) apply a layer threshold
     if (best.hc < hit_thresh):
@@ -123,6 +130,26 @@ def pat_unit(data, strip=None, max_span=37, hit_thresh=4, ly_thresh=4, partition
         best.reset()
 
     best.partition=partition
+
+    # debug output
+    if verbose:
+        for ly in range(6):
+            for bit in range(37):
+                print(0x1 & (data[ly] >> bit), end="")
+            print("\n", end="")
+        print("\n", end="")
+
+        for (i,id) in enumerate(masked_data):
+            print(f"id={i+1}")
+            for ly in range(6):
+                for bit in range(37):
+                    print(0x1 & (id[ly] >> bit), end="")
+                print("\n", end="")
+            print("\n", end="")
+
+        for seg in seg_list:
+            print(seg)
+
 
     return best
 
