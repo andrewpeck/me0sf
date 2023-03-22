@@ -14,18 +14,20 @@ from subfunc import *
 from tb_common import *
 
 async def monitor_dav(dut, latency):
-    for _ in range(8):
-        await RisingEdge(dut.clock)
+
+    # wait for the first edge to start monitoring
+    await RisingEdge(dut.dav_o)
 
     while True:
         await RisingEdge(dut.dav_i)
-        for _ in range(latency+1):
-            assert dut.dav_o.value == 0
+        for i in range(latency+1):
+            assert dut.dav_o.value == 0, f"Is the latency setting wrong? found dav when we didn't expect it in clock {i} latency={latency}"
             await RisingEdge(dut.clock)
-            assert dut.dav_o.value == 1
+        assert dut.dav_o.value == 1, f"Is the latency setting wrong? did not find dav w/ latency={latency}"
 
 @cocotb.test()
 async def pat_unit_test(dut, test="SEGMENTS"):
+
     random.seed(56)
 
     # constants
