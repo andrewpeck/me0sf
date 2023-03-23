@@ -127,6 +127,7 @@ async def chamber_test(dut, test, nloops=512):
                 cross_part_seg_width = 0,
                 hit_thresh=HIT_THRESH,
                 ly_thresh=LY_THRESH,
+                enable_gcl=False,
                 max_span=MAX_SPAN,
                 width=WIDTH,
                 group_width=int(dut.S0_WIDTH.value),
@@ -138,7 +139,7 @@ async def chamber_test(dut, test, nloops=512):
             for i in range(len(fw_segments)):
 
                 if fw_segments[i].id > 0:
-                    strip_cnts.append(i)
+                    strip_cnts.append(fw_segments[i].strip)
                     id_cnts.append(fw_segments[i].id)
                     partition_cnts.append(fw_segments[i].partition)
 
