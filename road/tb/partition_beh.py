@@ -1,9 +1,11 @@
 """ Emulator that processes a single partition (6 layers x 192 strips) and returns a collection of segments"""
+from typing import List
+
 from pat_unit_mux_beh import pat_mux
 from subfunc import *
 
 
-def compare_ghosts(seg : Segment, comp_list : list[Segment]):
+def compare_ghosts(seg : Segment, comp_list : List[Segment]):
 
     """
     takes in a segment and a list of segments to ensure that there aren't

@@ -1,6 +1,7 @@
 # Testbench for pat_unit.vhd
 import os
 import random
+from typing import List
 
 import cocotb
 import plotille
@@ -12,6 +13,7 @@ from datagen import datagen
 from pat_unit_beh import pat_unit
 from subfunc import *
 from tb_common import *
+
 
 async def monitor_dav(dut, latency):
 
@@ -69,7 +71,7 @@ async def pat_unit_test(dut, test="SEGMENTS"):
     if test=="SEGMENTS": 
         get_data = lambda : datagen(LY_CNT, N_NOISE, max_span=MAX_SPAN)
     if test=="NOISE":
-        def get_data() -> list[int]:
+        def get_data() -> List[int]:
             hits = [0]*6
             for _ in range(30):
                 ly = random.randint(0,5)

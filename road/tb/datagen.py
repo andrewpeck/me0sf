@@ -1,11 +1,12 @@
 # Test case generator for pat_unit.vhd
 import random
+from typing import List
 
 from constants import *
 from subfunc import *
 
 
-def get_noise(n: int, max_span: int) -> list[int]:
+def get_noise(n: int, max_span: int) -> List[int]:
     """generates integer mask for n background hits"""
     noise_mask = [0] * 6
     for _ in range(n):
@@ -18,9 +19,9 @@ def get_noise(n: int, max_span: int) -> list[int]:
 def datagen(n_segs: int,
             n_noise: int,
             max_span: int,
-            bend_angs: list[float] = [],
-            strips: list[int] = [],
-            efficiency: float = 0.9) -> list[int]:
+            bend_angs: List[float] = [],
+            strips: List[int] = [],
+            efficiency: float = 0.9) -> List[int]:
 
     """
     generates data for each layer based on an artificial muon track and noise,
