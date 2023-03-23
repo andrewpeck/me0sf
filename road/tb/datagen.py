@@ -1,5 +1,5 @@
 # Test case generator for pat_unit.vhd
-import random
+from random import randint, uniform
 from typing import List
 
 from constants import *
@@ -10,8 +10,8 @@ def get_noise(n: int, max_span: int) -> List[int]:
     """generates integer mask for n background hits"""
     noise_mask = [0] * 6
     for _ in range(n):
-        ly = random.randint(0, 5)
-        strip = random.randint(0, max_span)
+        ly = randint(0, 5)
+        strip = randint(0, max_span)
         noise_mask[ly] = set_bit(strip, noise_mask[ly])
     return noise_mask
 
@@ -52,17 +52,17 @@ def datagen(n_segs: int,
     # we choose a collection of segments within the limits of the chamber
     if not bend_angs and not strips:
         max_slope = 37 / (N_LAYERS - 1)
-        bend_angs = [random.uniform(-max_slope, max_slope) for _ in range(n_segs)]
-        strips = [random.randint(0, max_span - 1) for _ in range(n_segs)]
+        bend_angs = [uniform(-max_slope, max_slope) for _ in range(n_segs)]
+        strips = [randint(0, max_span - 1) for _ in range(n_segs)]
 
     segments = zip(strips, bend_angs)
 
     for segment in segments:
         (strip, slope) = segment
         for ly in range(6):
-            if random.uniform(0, 1) < efficiency:
+            if uniform(0, 1) < efficiency:
 
-                cluster_width = random.randint(1, 3)
+                cluster_width = randint(1, 3)
                 cluster_mask = 2**cluster_width - 1
 
                 center = round(strip + slope * (2.5 - ly))
