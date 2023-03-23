@@ -1,4 +1,5 @@
 import os
+from math import ceil
 
 import cocotb
 import plotille
@@ -9,6 +10,7 @@ from datagen import datagen
 from pat_unit_mux_beh import pat_mux
 from subfunc import *
 from tb_common import *
+
 
 def set_layer_hits(dut, hits):
 
@@ -46,7 +48,7 @@ async def pat_unit_mux_test(dut, NLOOPS=500, test="WALKING1"):
     MAX_SPAN = get_max_span_from_dut(dut)
     LY_THRESH = int(dut.ly_thresh.value)
     HIT_THRESH = 0
-    LATENCY = int(math.ceil(dut.LATENCY.value/8.0))
+    LATENCY = int(ceil(dut.LATENCY.value/8.0))
     WIDTH = dut.WIDTH.value
 
     set_dut_inputs(dut, [0] * 6)
