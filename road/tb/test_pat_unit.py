@@ -127,7 +127,9 @@ async def pat_unit_test(dut, test="SEGMENTS"):
 
         assert sw_segment == fw_segment
 
-    with open("../log/pat_unit_%s.log" % test, "w+") as f:
+    filename = "../log/pat_unit_%s.log" % test
+    os.makedirs(os.path.dirname(filename), exist_ok=True)
+    with open(filename, "w+") as f:
 
         f.write("\nIDs:\n")
         f.write(plotille.hist(id_cnts, bins=16))

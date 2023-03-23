@@ -177,7 +177,9 @@ async def chamber_test(dut, test, nloops=512):
 
         await RisingEdge(dut.clock)
 
-    with open("../log/chamber_%s.log" % test, "w+") as f:
+    filename = "../log/chamber_%s.log" % test
+    os.makedirs(os.path.dirname(filename), exist_ok=True)
+    with open(filename, "w+") as f:
 
         f.write("Strips:\n")
         f.write(plotille.hist(strip_cnts, bins=int(192/4)))
