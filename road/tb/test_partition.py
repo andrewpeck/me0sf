@@ -1,6 +1,7 @@
 # Testbenh for partition.vhd
 import os
 import random
+from math import ceil
 
 import plotille
 from cocotb.triggers import RisingEdge
@@ -10,6 +11,7 @@ from datagen import datagen
 from partition_beh import process_partition
 from subfunc import *
 from tb_common import *
+
 
 @cocotb.test()
 async def partition_test_walking(dut):
@@ -35,7 +37,7 @@ async def partition_test(dut, NLOOPS=1000, test="SEGMENTS"):
     WIDTH = dut.pat_unit_mux_inst.WIDTH.value
     GROUP_WIDTH = dut.S0_WIDTH.value
     MAX_SPAN = get_max_span_from_dut(dut)
-    LATENCY = int(math.ceil(dut.LATENCY.value/8.0))
+    LATENCY = int(ceil(dut.LATENCY.value/8.0))
 
     # initial inputs
     dut.ly_thresh.value = LY_THRESH

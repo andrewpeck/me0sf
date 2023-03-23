@@ -1,5 +1,7 @@
 # Functions, global variables, and classes used in multiple files
-import math
+from itertools import islice
+from math import ceil, floor
+
 
 class hi_lo_t:
     def __init__(self, hi, lo):
@@ -116,12 +118,17 @@ def mirror_patdef(pat, id):
     return mirrored_pat
     
 
-
-# FIXME: take these globals out of here and bury them somewhere
 def create_pat_ly(lower, upper):
-    """takes in two boundary slopes and returns a list of hi lo pairs for each layer to use when creating patterns"""
-    layer_list = [0]*6
+
+    """
+    takes in two boundary slopes and returns a list of hi lo pairs for each
+    layer to use when creating patterns
+    """
+
+    layer_list = [hi_lo_t(-1,-1)]*6
+
     for i in range(6):
+
         if i < 3:
             hi = lower*(i-2.5)
             lo = upper*(i-2.5)
@@ -129,7 +136,8 @@ def create_pat_ly(lower, upper):
             hi = upper*(i-2.5)
             lo = lower*(i-2.5)
 
-        layer_list[i] = hi_lo_t(math.ceil(hi), math.floor(lo))
+        layer_list[i] = hi_lo_t(ceil(hi), floor(lo))
+
     return layer_list
 
 # true patlist; only used for testing pat_unit.vhd emulator
@@ -153,22 +161,6 @@ pat_r8 = mirror_patdef(pat_l8, pat_l8.id-1)
 pat_l9 = patdef_t(2, create_pat_ly(5.4, 7.0))
 pat_r9 = mirror_patdef(pat_l9, pat_l9.id - 1)
 
-# pat_straight = patdef_t(15, create_pat_ly(-0.4, 0.4))
-# pat_l = patdef_t(14, create_pat_ly(0.3, 1.1))
-# pat_r = mirror_patdef(pat_l, pat_l.id - 1)
-# pat_l2 = patdef_t(12, create_pat_ly(0.9, 1.8))
-# pat_r2 = mirror_patdef(pat_l2, pat_l2.id - 1)
-# pat_l3 = patdef_t(10, create_pat_ly(1.5, 2.5))
-# pat_r3 = mirror_patdef(pat_l3, pat_l3.id - 1)
-# pat_l4 = patdef_t(8, create_pat_ly(2.2, 3.3))
-# pat_r4 = mirror_patdef(pat_l4, pat_l4.id - 1)
-# pat_l5 = patdef_t(6, create_pat_ly(2.9, 4.4))
-# pat_r5 = mirror_patdef(pat_l5, pat_l5.id - 1)
-# pat_l6 = patdef_t(4, create_pat_ly(4.3, 5.5))
-# pat_r6 = mirror_patdef(pat_l6, pat_l6.id-1)
-# pat_l7 = patdef_t(2, create_pat_ly(5.4, 7.0))
-# pat_r7 = mirror_patdef(pat_l7, pat_l7.id - 1)
-
 PATLIST = (
     pat_straight,
     pat_l,
@@ -188,25 +180,8 @@ PATLIST = (
     pat_l8,
     pat_r8,
     pat_l9,
-    pat_r9
-)
+    pat_r9)
 
-# PATLIST_LUT = {
-#     15: pat_straight,
-#     14: pat_l,
-#     13: pat_r,
-#     12: pat_l2,
-#     11: pat_r2,
-#     10: pat_l3,
-#     9: pat_r3,
-#     8: pat_l4,
-#     7: pat_r4,
-#     6: pat_l5,
-#     5: pat_r5,
-#     4: pat_l6,
-#     3: pat_r6,
-#     2: pat_l7,
-#     1: pat_r7,
 PATLIST_LUT = {
     19: pat_straight,
     18: pat_l,
@@ -226,10 +201,7 @@ PATLIST_LUT = {
     4: pat_l8,
     3: pat_r8,
     2: pat_l9,
-    1: pat_r9,
-
-}
-
+    1: pat_r}
 
 def count_ones(x):
     """takes in an integer and counts how many ones are in that integer's binary form"""
@@ -316,6 +288,10 @@ def llse_fit(x, y):
     b = 1.0 / n * (y_sum - m * x_sum)
 
     return m, b
+
+def chunk(it, size):
+    it = iter(it)
+    return iter(lambda: tuple(islice(it, size)), ())
 
 #-------------------------------------------------------------------------------
 # Tests
