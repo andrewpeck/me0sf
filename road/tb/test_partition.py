@@ -117,7 +117,9 @@ async def partition_test(dut, NLOOPS=1000, test="SEGMENTS"):
         # next clock cycle
         await RisingEdge(dut.clock)
 
-    with open("../log/partition_%s.log" % test, "w+") as f:
+    filename = "../log/partition_%s.log" % test
+    os.makedirs(os.path.dirname(filename), exist_ok=True)
+    with open(filename, "w+") as f:
 
         f.write("Strips:\n")
         f.write(plotille.hist(strip_cnts, bins=int(192/4)))
