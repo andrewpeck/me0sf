@@ -70,9 +70,9 @@ async def partition_test(dut, NLOOPS=1000, test="SEGMENTS"):
                 hits = datagen(n_segs=4, n_noise=8, max_span=WIDTH)
             elif test=="RANDOM":
                 hits = [0]*6
-                for _ in range(30):
+                for _ in range(400):
                     ly = random.randint(0,5)
-                    strp = random.randint(0,37)
+                    strp = random.randint(0,191)
                     clust = 2**(random.randint(0,3))-1
                     hits[ly] |= clust << strp
                 
