@@ -121,12 +121,18 @@ async def chamber_test(dut, test, nloops=512):
                 chamber_data = [datagen(n_segs=2, n_noise=8, max_span=MAX_SPAN)
                                 for _ in range(NUM_PARTITIONS)]
             if test=="RANDOM":
+
                 chamber_data = NULL()
+
                 for _ in range(1000):
                     prt   = random.randint(0,7)
                     ly    = random.randint(0,5)
                     strp  = random.randint(0,191)
                     chamber_data[prt][ly] |= (1 << strp)
+
+                for prt in range(8):
+                    for ly in range(6):
+                        chamber_data[prt][ly] &= 2**192-1
 
             queue.append(chamber_data.copy())
             dut.sbits_i.value = chamber_data
