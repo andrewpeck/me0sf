@@ -1,11 +1,13 @@
 # Emulator for chamber.vhd
-from subfunc import *
 import functools
-import operator
-from partition_beh import process_partition
 import math
+import operator
 
-def cross_partition_cancellation(segments):
+from partition_beh import process_partition
+from subfunc import *
+
+
+def cross_partition_cancellation(segments, cross_part_seg_width):
 
     for i in range(1,15,2):
 
@@ -86,7 +88,7 @@ def process_chamber(chamber_data,
 
     # Remove redundant segments from cross-partitions and grouping neighbouring eta partitions
     if (cross_part_seg_width > 0):
-        segments = cross_partition_cancellation(segments)
+        segments = cross_partition_cancellation(segments, cross_part_seg_width)
 
     if NUM_PARTITIONS > 8:
         segments_reduced = []
