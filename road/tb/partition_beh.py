@@ -1,8 +1,7 @@
 """ Emulator that processes a single partition (6 layers x 192 strips) and returns a collection of segments"""
-from itertools import islice
-
 from pat_unit_mux_beh import pat_mux
 from subfunc import *
+
 
 def compare_ghosts(seg : Segment, comp_list : list[Segment]):
 
@@ -99,10 +98,6 @@ def process_partition(partition_data,
         segments = cancel_edges(segments, group_width, ghost_width, width)
 
     #divide partition into pieces and take best segment from each piece
-
-    def chunk(it, size):
-        it = iter(it)
-        return iter(lambda: tuple(islice(it, size)), ())
 
     chunked = chunk(segments, group_width)
     final_dat = list(map(max, chunked))
