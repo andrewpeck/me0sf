@@ -1,6 +1,9 @@
 # Python implementation of the pat_unit.vhd behavior
-from subfunc import *
+
+from typing import List
+
 from constants import *
+from subfunc import *
 
 def shift_center(ly, max_span=37):
     """
@@ -52,7 +55,7 @@ def calculate_global_layer_mask(patlist):
 # FIXME: ugh this is not nice
 calculate_global_layer_mask(PATLIST)
 
-def mask_layer_data (data : list[int], mask):
+def mask_layer_data (data : List[int], mask):
     """
     AND together a list of layer masks with a list of layers
 
@@ -63,16 +66,16 @@ def mask_layer_data (data : list[int], mask):
     """
     return tuple(map(lambda ly_dat, ly_mask: ly_dat & ly_mask , data, mask))
 
-def calculate_centroids(masked_data : list[int]) -> list[float]:
+def calculate_centroids(masked_data : List[int]) -> List[float]:
     # print(masked_data)
     """takes in a []*6 list of pre-masked data and gives the found centroids"""
     return [find_centroid(x) for x in masked_data]
 
-def calculate_hit_count(masked_data : list[int]) -> int:
+def calculate_hit_count(masked_data : List[int]) -> int:
     """takes in a []*6 list of pre-masked data and gives the number of hits"""
     return sum([count_ones(x) for x in masked_data])
 
-def calculate_layer_count(masked_data : list[int]) -> int:
+def calculate_layer_count(masked_data : List[int]) -> int:
     """takes in a []*6 list of pre-masked data and gives the layer count"""
     return sum(map(lambda x : x > 0, masked_data))
 
