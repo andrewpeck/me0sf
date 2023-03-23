@@ -1,20 +1,23 @@
-
 #!/usr/bin/env python3
-import uproot
-import math
-import event_display as disp
-from subfunc import *
-from chamber_beh import process_chamber
-import matplotlib.pyplot as plt
-from datagen import datagen_with_segs
-import numpy as np
-import random
-import boost_histogram as bh
-from read_ntuple import *
-import ROOT
-import sys, os, glob
 import argparse
+import glob
+import math
+import os
+import random
+import sys
 from array import array
+
+import boost_histogram as bh
+import matplotlib.pyplot as plt
+import numpy as np
+import ROOT
+import uproot
+
+import event_display as disp
+from chamber_beh import process_chamber
+from read_ntuple import *
+from subfunc import *
+
 
 def analysis(root_dat, hits, bx, bx_list, cross_part, verbose, pu):
     # Output text file
