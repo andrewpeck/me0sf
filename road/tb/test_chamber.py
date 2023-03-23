@@ -16,16 +16,16 @@ from datagen import datagen
 from subfunc import *
 from tb_common import *
 
-# @cocotb.test()
-# async def segments_test(dut, nloops=1000):
-#     await chamber_test(dut, "SEGMENTS", nloops)
-
-# @cocotb.test()
-# async def random_test(dut, nloops=1000):
-#     await chamber_test(dut, "RANDOM", nloops)
+@cocotb.test()
+async def segments_test(dut, nloops=1000):
+    await chamber_test(dut, "SEGMENTS", nloops)
 
 @cocotb.test()
-async def walking1_test(dut, nloops=192):
+async def random_test(dut, nloops=1000):
+    await chamber_test(dut, "RANDOM", nloops)
+
+@cocotb.test()
+async def walking1_test(dut, nloops=192*8):
     await chamber_test(dut, "WALKING1", nloops)
 
 async def chamber_test(dut, test, nloops=512):
@@ -33,6 +33,8 @@ async def chamber_test(dut, test, nloops=512):
     '''
     Test the chamber.vhd module
     '''
+
+    random.seed(56) # chloe's favorite number
 
     # setup the dut and extract constants from it
 
@@ -46,9 +48,9 @@ async def chamber_test(dut, test, nloops=512):
     LY_THRESH = int(dut.ly_thresh.value)
     HIT_THRESH = 0
     NUM_PARTITIONS = int(dut.NUM_PARTITIONS.value)
-    NULL = [[0] * 6] * NUM_PARTITIONS
+    NULL = lambda : [[0 for _ in range(6)] for _ in range(8)]
     LATENCY = 5
-    dut.sbits_i.value = NULL
+    dut.sbits_i.value = NULL()
 
     # flush the bufers
     for _ in range(32):
@@ -65,7 +67,7 @@ async def chamber_test(dut, test, nloops=512):
             break
 
     # flush the bufers
-    dut.sbits_i.value = NULL
+    dut.sbits_i.value = NULL()
     for _ in range(32):
         await RisingEdge(dut.clock)
 
@@ -74,11 +76,10 @@ async def chamber_test(dut, test, nloops=512):
     partition_cnts = []
 
     queue = []
+    dut.sbits_i.value = NULL()
     for _ in range(LATENCY):
         await RisingEdge(dut.dav_i)
-        chamber_data = NULL
-        queue.append(chamber_data)
-        dut.sbits_i.value = chamber_data
+        queue.append(NULL())
 
     # loop over some number of test cases
     loop = 0
@@ -93,25 +94,41 @@ async def chamber_test(dut, test, nloops=512):
             # (2) push it onto the queue
             # (3) set the DUT inputs to the new data
 
-
             if test=="WALKING1":
-                chamber_data = 8 * [6 * [1 << loop]]
+
+                if loop == 0:
+                    istrip = 0
+                    iprt = 0
+
+                if istrip == 191:
+                    istrip = 0
+                    if iprt == 8:
+                        iprt = 0
+                    else:
+                        iprt += 1
+                else:
+                    istrip += 1
+
+                # print(f'{iprt=} {istrip=}')
+                chamber_data=NULL()
+                for ily in range(6):
+                    chamber_data[iprt][ily] = 1 << istrip
+
             if test=="SEGMENTS":
                 prt   = random.randint(0,7)
-                chamber_data = NULL
-                #if loop % 10 == 0:
-                chamber_data[prt] = datagen(n_segs=1, n_noise=0, max_span=MAX_SPAN)
-                #chamber_data = [datagen(n_segs=1, n_noise=0, max_span=MAX_SPAN)
-                #for _ in range(NUM_PARTITIONS)]
+                chamber_data = NULL()
+                #chamber_data[prt] = datagen(n_segs=1, n_noise=0, max_span=MAX_SPAN)
+                chamber_data = [datagen(n_segs=2, n_noise=8, max_span=MAX_SPAN)
+                                for _ in range(NUM_PARTITIONS)]
             if test=="RANDOM":
-                chamber_data = NULL
+                chamber_data = NULL()
                 for _ in range(1000):
                     prt   = random.randint(0,7)
                     ly    = random.randint(0,5)
                     strp  = random.randint(0,191)
                     chamber_data[prt][ly] |= (1 << strp)
 
-            queue.append(chamber_data)
+            queue.append(chamber_data.copy())
             dut.sbits_i.value = chamber_data
 
             loop += 1
@@ -159,7 +176,7 @@ async def chamber_test(dut, test, nloops=512):
         f.write("Strips:\n")
         f.write(plotille.hist(strip_cnts, bins=int(192/4)))
 
-        f.write("Partitions:\n")
+        f.write("\nPartitions:\n")
         f.write(plotille.hist(partition_cnts, bins=16))
 
         f.write("\nIDs:\n")
