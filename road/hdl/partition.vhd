@@ -22,9 +22,12 @@ entity partition is
     LATENCY : integer := PARTITION_LATENCY;
 
     NUM_SEGMENTS  : integer := 4;
-    PARTITION_NUM : integer := 0;  -- just assign a number (e.g. 0-7) to each partition so we can look it up later
+    PARTITION_NUM : integer := 0;          -- just assign a number (e.g. 0-7) to each partition so we can look it up later
     PRT_WIDTH     : natural := PRT_WIDTH;  -- width of the partition (192)
-    S0_WIDTH      : natural := 8;       -- width of the pre-sorting regions
+    S0_WIDTH      : natural := 8;          -- width of the pre-sorting regions
+
+    DEGHOST_PRE  : boolean := true;      -- perform intra-partition ghost cancellation BEFORE sorting
+    DEGHOST_POST : boolean := false;     -- perform intra-partition ghost cancellation AFTER sorting
 
     PATLIST : patdef_array_t := patdef_array;
 
@@ -33,7 +36,7 @@ entity partition is
     LY2_SPAN : natural := get_max_span(patdef_array);  -- TODO: variably size the other layers instead of using the max
     LY3_SPAN : natural := get_max_span(patdef_array);  -- TODO: variably size the other layers instead of using the max
     LY4_SPAN : natural := get_max_span(patdef_array);  -- TODO: variably size the other layers instead of using the max
-    LY5_SPAN : natural := get_max_span(patdef_array)  -- TODO: variably size the other layers instead of using the max
+    LY5_SPAN : natural := get_max_span(patdef_array)   -- TODO: variably size the other layers instead of using the max
     );
   port(
 
@@ -64,9 +67,11 @@ end partition;
 
 architecture behavioral of partition is
 
-  signal strips     : segment_list_t (PRT_WIDTH-1 downto 0);
-  signal strips_dav : std_logic := '0';
-  signal strips_s0  : segment_list_t (PRT_WIDTH/S0_WIDTH-1 downto 0);
+  signal strips             : segment_list_t (PRT_WIDTH-1 downto 0);
+  signal strips_deghost     : segment_list_t (PRT_WIDTH-1 downto 0);
+  signal strips_dav         : std_logic := '0';
+  signal strips_dav_deghost : std_logic := '0';
+  signal strips_s0          : segment_list_t (PRT_WIDTH/S0_WIDTH-1 downto 0);
 
   signal dav_priority : std_logic_vector (PRT_WIDTH/S0_WIDTH-1 downto 0) := (others => '0');
 
@@ -104,17 +109,45 @@ begin
       segments_o => strips
       );
 
+  --------------------------------------------------------------------------------
+  -- Deghost
+  --------------------------------------------------------------------------------
+
+  pre_filter_deghost_gen : if (DEGHOST_PRE) generate
+    deghost_pre : entity work.deghost
+      generic map (
+        WIDTH       => strips'length,
+        EDGE_DIST   => 2,
+        GROUP_WIDTH => S0_WIDTH
+        )
+      port map (
+        clock      => clock,
+        dav_i      => strips_dav,
+        dav_o      => strips_dav_deghost,
+        segments_i => strips,
+        segments_o => strips_deghost
+        );
+  end generate;
+
+  not_pre_filter_deghost_gen : if (not DEGHOST_PRE) generate
+    strips_dav_deghost <= strips_dav;
+    strips_deghost     <= strips;
+  end generate;
+
   -------------------------------------------------------------------------------
   -- Pre-filter the patterns to limit to 1 segment in every N strips using a
   -- priority encoded sorting tree...
   --
-  -- TODO: this will make ghosts at the sorting boundaries... need to add in
+  -- this will make ghosts at the sorting boundaries... need to add in
   -- some ghost cancellation (also need to cancel ghosts in time)
   --
   -- 0   1   2   3   4   5   6   7   8   9   A   B   C   D   E   F
   -- └───┴─┬─┴───┘   └───┴─┬─┴───┘   └───┴─┬─┴───┘   └───┴─┬─┴───┘
   --       └───────┬───────┘               └───────┬───────┘
   --              OUT                             OUT
+  --
+  -- TODO: this can probably be time-multiplexed?
+  --
   -------------------------------------------------------------------------------
 
   s0_gen : for region in 0 to PRT_WIDTH/S0_WIDTH-1 generate
@@ -124,22 +157,22 @@ begin
 
     cand_to_slv : for I in 0 to S0_WIDTH-1 generate
     begin
-      cand_slv(I) <= convert(strips(REGION*S0_WIDTH+I), cand_slv(I));
+      cand_slv(I) <= convert(strips_deghost(REGION*S0_WIDTH+I), cand_slv(I));
     end generate;
 
     priority_encoder_inst : entity work.priority_encoder
       generic map (
-        DAT_BITS     => best'length,
-        QLT_BITS     => PATTERN_SORTB,
-        IGNORE_BITS  => PARTITION_BITS, -- everything is the same partition here, ignore them
-        WIDTH        => S0_WIDTH,
-        REG_INPUT    => true,
-        REG_OUTPUT   => true,
-        REG_STAGES   => 3
+        DAT_BITS    => best'length,
+        QLT_BITS    => PATTERN_SORTB,
+        IGNORE_BITS => PARTITION_BITS,  -- everything is the same partition here, ignore them
+        WIDTH       => S0_WIDTH,
+        REG_INPUT   => true,
+        REG_OUTPUT  => true,
+        REG_STAGES  => 3
         )
       port map (
         clock => clock,
-        dav_i => strips_dav,
+        dav_i => strips_dav_deghost,
         dav_o => dav_priority(region),
         dat_i => cand_slv,
         dat_o => best,
@@ -151,10 +184,30 @@ begin
   end generate;
 
   --------------------------------------------------------------------------------
-  -- Outputs
+  -- Post Filter De-ghosting
+  --
+  -- should use this OR the pre-filter deghosting, not both
+  -- pre-filter deghosting is more expensive but more effective
+  -- the improvement and cost should be quantified
   --------------------------------------------------------------------------------
 
-  segments_o <= strips_s0;
-  dav_o      <= dav_priority(0);
+  post_filter_deghost_gen : if (DEGHOST_POST) generate
+    deghost_post : entity work.deghost
+      generic map (
+        WIDTH        => segments_o'length,
+        CHECK_STRIPS => true)
+      port map (
+        clock      => clock,
+        dav_i      => dav_priority(0),
+        dav_o      => dav_o,
+        segments_i => strips_s0,
+        segments_o => segments_o
+        );
+  end generate;
+
+  not_post_filter_deghost_gen : if (not DEGHOST_POST) generate
+    segments_o <= strips_s0;
+    dav_o      <= dav_priority(0);
+  end generate;
 
 end behavioral;

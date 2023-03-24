@@ -12,18 +12,26 @@ from partition_beh import process_partition
 from subfunc import *
 from tb_common import *
 
+@cocotb.test()
+async def partition_test_5A(dut):
+    await partition_test(dut, NLOOPS=20, test="5A")
+
+@cocotb.test()
+async def partition_test_FF(dut):
+    await partition_test(dut, NLOOPS=20, test="FF")
 
 @cocotb.test()
 async def partition_test_walking(dut):
     await partition_test(dut, NLOOPS=192, test="WALKING1")
 
 @cocotb.test()
+async def partition_test_random(dut):
+    await partition_test(dut, NLOOPS=2000, test="RANDOM")
+
+@cocotb.test()
 async def partition_test_segs(dut):
     await partition_test(dut, NLOOPS=2000, test="SEGMENTS")
 
-@cocotb.test()
-async def partition_test_random(dut):
-    await partition_test(dut, NLOOPS=2000, test="RANDOM")
 
 async def partition_test(dut, NLOOPS=1000, test="SEGMENTS"):
 
@@ -38,6 +46,8 @@ async def partition_test(dut, NLOOPS=1000, test="SEGMENTS"):
     GROUP_WIDTH = dut.S0_WIDTH.value
     MAX_SPAN = get_max_span_from_dut(dut)
     LATENCY = int(ceil(dut.LATENCY.value/8.0))
+    DEGHOST_PRE = dut.DEGHOST_PRE.value
+    DEGHOST_POST = dut.DEGHOST_POST.value
 
     # initial inputs
     dut.ly_thresh.value = LY_THRESH
@@ -63,20 +73,37 @@ async def partition_test(dut, NLOOPS=1000, test="SEGMENTS"):
 
             i += 1
 
-            # (1) generate new random data
+            # (1) generate new data
             # (2) push it onto the queue
             # (3) set the DUT inputs to the new data
+
             if test=="WALKING1":
-                hits = 6 * [0x1 << (i % 192)]
+                hits = [(0x1 << (i % 192)) for _ in range(6)]
+
+            elif test=="5A":
+                if i % 2 == 0:
+                    hits = [0x555555555555555555555555555555555555555555555555 for _ in range(6)]
+                else:
+                    hits = [0xaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaa for _ in range(6)]
+
+            elif test=="FF":
+                if i % 2 == 0:
+                    hits = [0xFFFFFFFFFFFFFFFFFFFFFFFFFFFFFFFFFFFFFFFFFFFFFFFF for _ in range(6)]
+                else:
+                    hits = [0x000000000000000000000000000000000000000000000000 for _ in range(6)]
+
             elif test=="SEGMENTS":
                 hits = datagen(n_segs=4, n_noise=8, max_span=WIDTH)
+
             elif test=="RANDOM":
                 hits = [0]*6
                 for _ in range(400):
                     ly = random.randint(0,5)
                     strp = random.randint(0,191)
-                    clust = 2**(random.randint(0,3))-1
+                    clust = 2**(random.randint(0,7))-1
                     hits[ly] |= clust << strp
+                for ly in range(6):
+                    hits[ly] &= 2**192-1
                 
             else:
                 hits = 0*[6]
@@ -98,7 +125,10 @@ async def partition_test(dut, NLOOPS=1000, test="SEGMENTS"):
                 max_span=MAX_SPAN,
                 width=WIDTH,
                 group_width=GROUP_WIDTH,
-                enable_gcl=False)
+                deghost_pre=DEGHOST_PRE,
+                deghost_post=DEGHOST_POST,
+                ghost_width=1,
+                check_ids = False)
 
             fw_segments = get_segments_from_dut(dut)
 
@@ -143,6 +173,7 @@ def test_partition():
                     os.path.join(rtl_dir, "pat_unit.vhd"),
                     os.path.join(rtl_dir, "dav_to_phase.vhd"),
                     os.path.join(rtl_dir, "pat_unit_mux.vhd"),
+                    os.path.join(rtl_dir, "deghost.vhd"),
                     os.path.join(rtl_dir, "partition.vhd")]
 
     os.environ["SIM"] = "questa"

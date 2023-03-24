@@ -17,15 +17,23 @@ from subfunc import *
 from tb_common import *
 
 @cocotb.test()
-async def segments_test(dut, nloops=1000):
+async def chamber_test_segs(dut, nloops=1000):
     await chamber_test(dut, "SEGMENTS", nloops)
 
 @cocotb.test()
-async def random_test(dut, nloops=1000):
+async def chamber_test_random(dut, nloops=1000):
     await chamber_test(dut, "RANDOM", nloops)
 
 @cocotb.test()
-async def walking1_test(dut, nloops=192*8):
+async def chamber_test_ff(dut, nloops=20):
+    await chamber_test(dut, "FF", nloops)
+
+@cocotb.test()
+async def chamber_test_5a(dut, nloops=20):
+    await chamber_test(dut, "5A", nloops)
+
+@cocotb.test()
+async def chamber_test_walking1(dut, nloops=192*8):
     await chamber_test(dut, "WALKING1", nloops)
 
 async def chamber_test(dut, test, nloops=512):
@@ -120,6 +128,19 @@ async def chamber_test(dut, test, nloops=512):
                 #chamber_data[prt] = datagen(n_segs=1, n_noise=0, max_span=MAX_SPAN)
                 chamber_data = [datagen(n_segs=2, n_noise=8, max_span=MAX_SPAN)
                                 for _ in range(NUM_PARTITIONS)]
+
+            if test=="FF":
+                if i % 2 == 0:
+                    chamber_data = [[0xFFFFFFFFFFFFFFFFFFFFFFFFFFFFFFFFFFFFFFFFFFFFFFFF for _ in range(6)] for _ in range(8)]
+                else:
+                    chamber_data = [[0x000000000000000000000000000000000000000000000000 for _ in range(6)] for _ in range(8)]
+
+            if test=="5A":
+                if i % 2 == 0:
+                    chamber_data = [[0x555555555555555555555555555555555555555555555555 for _ in range(6)] for _ in range(8)]
+                else:
+                    chamber_data = [[0xAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAA for _ in range(6)] for _ in range(8)]
+
             if test=="RANDOM":
 
                 chamber_data = NULL()
@@ -150,11 +171,11 @@ async def chamber_test(dut, test, nloops=512):
                 cross_part_seg_width = 0,
                 hit_thresh=HIT_THRESH,
                 ly_thresh=LY_THRESH,
-                enable_gcl=False,
+                enable_gcl=True,
+                ghost_width=2,
                 max_span=MAX_SPAN,
                 width=WIDTH,
                 group_width=int(dut.S0_WIDTH.value),
-                ghost_width=4,
                 num_outputs=int(dut.NUM_SEGMENTS))
 
             fw_segments = get_segments_from_dut(dut)
@@ -167,12 +188,12 @@ async def chamber_test(dut, test, nloops=512):
                     partition_cnts.append(fw_segments[i].partition)
 
                 err = "   "
-                if sw_segments[i] != fw_segments[i]:
-                    err = "ERR"
-                    print(f" {err} seg {i}:")
-                    print("   > sw: " + str(sw_segments[i]))
-                    print("   > fw: " + str(fw_segments[i]))
                 if loop > 10:
+                    if sw_segments[i] != fw_segments[i]:
+                        err = "ERR"
+                        print(f" {err} seg {i}:")
+                        print("   > sw: " + str(sw_segments[i]))
+                        print("   > fw: " + str(fw_segments[i]))
                     assert sw_segments[i] == fw_segments[i]
 
         await RisingEdge(dut.clock)
@@ -214,6 +235,7 @@ def test_chamber():
         os.path.join(rtl_dir, "fixed_delay.vhd"),
         os.path.join(rtl_dir, "dav_to_phase.vhd"),
         os.path.join(rtl_dir, "pat_unit_mux.vhd"),
+        os.path.join(rtl_dir, "deghost.vhd"),
         os.path.join(rtl_dir, "partition.vhd"),
         os.path.join(rtl_dir, "chamber.vhd")]
 
