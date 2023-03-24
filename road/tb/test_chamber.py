@@ -102,7 +102,7 @@ async def chamber_test(dut, test, nloops=512):
 
                 if istrip == 191:
                     istrip = 0
-                    if iprt == 8:
+                    if iprt == 7:
                         iprt = 0
                     else:
                         iprt += 1
