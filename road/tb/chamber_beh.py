@@ -2,6 +2,7 @@
 import functools
 import math
 import operator
+from typing import List
 
 from partition_beh import process_partition
 from subfunc import *
@@ -54,14 +55,14 @@ def cross_partition_cancellation(segments, cross_part_seg_width):
 
     return segments
 
-def process_chamber(chamber_data,
+def process_chamber(chamber_data : List[List[int]],
                     hit_thresh : int = 4,
                     ly_thresh : int = 4,
                     max_span : int = 37,
                     width : int = 192,
                     enable_gcl : bool = True,
                     group_width : int = 8,
-                    ghost_width : int = 4,
+                    ghost_width : int = 1,
                     cross_part_seg_width : int = 4,
                     num_outputs : int = 4):
 
@@ -74,7 +75,7 @@ def process_chamber(chamber_data,
             hit_thresh = hit_thresh,
             ly_thresh = ly_thresh,
             max_span = max_span,
-            enable_gcl = enable_gcl,
+            deghost_pre = enable_gcl,
             width = width,
             group_width = group_width,
             ghost_width = ghost_width,

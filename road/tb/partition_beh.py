@@ -5,89 +5,117 @@ from pat_unit_mux_beh import pat_mux
 from subfunc import *
 
 
-def compare_ghosts(seg : Segment, comp_list : List[Segment]):
+def is_ghost(seg : Segment,
+             comp : Segment,
+             check_ids : bool = False,
+             check_strips : bool = False):
 
-    """
-    takes in a segment and a list of segments to ensure that there aren't
-    copies of the same data (ID value identical) or mirrors (ID value +2 or -2
+    '''takes in a segment and a list of segments to ensure that there aren't
+    copies of the same data (ID value identical) or mirrors (ID value + 2 or - 2
     from each other)
-    """
 
-    comp_list = [x for x in comp_list if x.id != 0 ]
-    if len(comp_list) != 0:
-        for comp in comp_list:
-            if seg.id == 0 and seg.lc == 0:
-                break
-            if seg.quality < comp.quality:
-                seg.reset()
-            else:
-                comp.reset()
-        #FIXME very basic ghost cancelling, just takes best of compared segments
-        #     if (
-        #         seg.id == comp_list[i].id
-        #         or seg.id + 2 == comp_list[i].id
-        #         or seg.id - 2 == comp_list[i].id
-        #     ):
-        #         seg.reset()
-    return seg
+    '''
 
-def cancel_edges(pat_mux_dat, group_width=8, ghost_width=4, width=192):
+    ghost = seg.quality < comp.quality \
+        and (not check_strips or abs(seg.strip - comp.strip) < 2) and \
+        (not check_ids or (seg.id == comp.id or seg.id + 2 == comp.id or seg.id == comp.id + 2))
 
-    """
-    takes in pat_unit_mux_data, finds edges of groups w/given group width,
-    and performs edge cancellation by checking ghosts around each edge within
-    given ghost width
-    """
-
-    for edge in range((width // group_width)-1):
-        lo_index = group_width*(edge+1) - (ghost_width//2)
-        hi_index = lo_index + ghost_width
-        for j in range(lo_index, hi_index): 
-            pat_mux_dat[j] = compare_ghosts(pat_mux_dat[j], pat_mux_dat[(j + 1):hi_index])
-    return pat_mux_dat
+    return ghost
 
 
-# def determine_if_centroid(strip, width, data, layer):
-#     """for a given strip, look at surrounding strips in given width and determine if the strip is a centroid. 
-#     Round centroid up for even layers, round down for odd layers"""
-#     window = parse_data(data, strip, width+1)
-#     centroid = find_centroid(window) + strip - width//2 -1
-#     if layer%2 == 0:
-#         centroid = math.ceil(centroid)
-#     else:
-#         centroid = math.floor(centroid)
-#     if centroid == strip:
-#         return True
-#     else:
-#         return False
+def cancel_edges(segments : List[Segment],
+                 group_width : int = 8,
+                 ghost_width : int = 2,
+                 edge_distance : int = 2,
+                 width : int = 192,
+                 check_ids : bool = False,
+                 check_strips : bool = False,
+                 verbose : bool = False):
 
-# def process_centroids(data, layer, width=6):
-#     """takes in layer data and filters for centroids"""
-#     return sum([2**strip for strip in range(len(bin(data))-2) if determine_if_centroid(strip, width, data, layer) == True])
+    '''Takes in a list of SEGMENTS and is designed to perform ghost
+    cancellation on the edges of the "groups".
 
-def process_partition(partition_data,
+    during segment sorting, an initial step is that the partition is chunked into
+    groups of width GROUP_WIDTH. The firmware selects just one segment from each group.
+
+    Since segments can ghost (produce duplicates of the same segment on
+    different strips), we do a ghost cancellation before this group filtering process.
+
+    This is done by looking at the edges of the group and zeroing off a segment
+    if it is of lower quality than its neighbors. Segments away from the edges
+    of the group will not need to be de-duplicated since this is handled by the
+    group filtering process itself. This is only needed to prevent duplicates
+    from appearing in different groups.
+
+    An implementation that cancels after the filtering is much simpler and less
+    resource intensive but comes with the downside that we may lose segments.
+
+    ghost_width = 0 means do not compare
+    ghost_width = 1 means look 1 to the left and right
+    ghost_width = 2 means look 2 to the left and right
+
+    edge_distance specifies which strips will have ghost cancellation done on them
+    edge_distance = 0 means to only look at strips directly on the edges (0 7 8 15 etc)
+    edge_distance = 1 means to look one away from the edge (0 1 6 7 8 9 14 15 16 17 etc)
+
+    etc
+
+    '''
+
+    num_edges = round(width / group_width) # nominally 24
+    edges = [group_width * i for i in range(num_edges+1)]
+
+    cancelled_segments = segments.copy()
+
+    def is_at_edge(x):
+        return x % group_width < edge_distance or (x % group_width) >= (group_width-edge_distance)
+
+    for i in range(len(segments)):
+        if is_at_edge(i):
+
+            # for a given strip N, create a list of indexes to which the current
+            # strip should be compared e.g. [N-2, N-1, N+1, N+2]
+            #
+            comps = \
+                [x for x in range(i-ghost_width, i, 1) if x >= 0] + \
+                [x for x in range(i+1,i+ghost_width+1,  1) if x < 192]
+
+            if verbose:
+                print(f"Comparing strip {i} to strips %s" % str(comps))
+
+            for comp in comps:
+                ghost = is_ghost(segments[i], segments[comp], check_strips = False)
+                if ghost:
+                    cancelled_segments[i] = Segment(0,0,0)
+
+    return cancelled_segments
+
+
+def process_partition(partition_data : List[int],
                       hit_thresh : int=4,
                       ly_thresh : int=4,
-                      enable_gcl : bool = True,
+                      deghost_pre : bool = True,
+                      deghost_post : bool = False,
+                      ghost_width : int = 1,
                       max_span : int = 37,
                       width : int = 192,
                       group_width : int = 8,
-                      ghost_width : int = 4,
-                      partition : int = 0):
+                      partition : int = 0,
+                      check_ids : bool = False,
+                      edge_distance : int = 2
+                      ):
 
-    """
+    '''takes in partition data, a group size, and a ghost width to return a
+    smaller data set, using ghost edge cancellation and segment quality
+    filtering
 
-    takes in partition data, a group size, and a ghost width to return a smaller data set, using
-    ghost edge cancellation and segment quality filtering
+    NOTE: ghost width denotes the width where we can likely see copies of the
+    same segment in the data
 
-    NOTE: ghost width denotes the width where we can likely see copies of the same segment in the
-    data
+    steps: process partition data with pat_mux, perfom edge cancellations,
+    divide partition into pieces, take best segment from each piece
 
-    steps: process partition data with pat_mux, perfom edge cancellations, divide partition into
-    pieces, take best segment from each piece
-
-    """
-    #centroid_masked_data = [process_centroids(dat, ly) for (ly, dat) in enumerate(partition_data)] #add centroid filtering
+    '''
 
     segments = pat_mux(partition_data,
                        hit_thresh=hit_thresh,
@@ -96,13 +124,26 @@ def process_partition(partition_data,
                        width=width,
                        partition=partition)
 
-    if (enable_gcl):
-        segments = cancel_edges(segments, group_width, ghost_width, width)
+    if (deghost_pre):
+        segments = cancel_edges(segments=segments,
+                                edge_distance=2,
+                                group_width=group_width,
+                                ghost_width=ghost_width,
+                                width=width,
+                                check_ids=check_ids)
 
-    #divide partition into pieces and take best segment from each piece
-
+    # divide partition into pieces and take best segment from each piece
     chunked = chunk(segments, group_width)
     final_dat = list(map(max, chunked))
+
+    if (deghost_post):
+        segments = cancel_edges(segments=segments,
+                                group_width=0,
+                                ghost_width=ghost_width,
+                                edge_distance=1,
+                                width=192,
+                                check_ids=check_ids,
+                                check_strips=True)
 
     return final_dat
 
@@ -112,36 +153,46 @@ def process_partition(partition_data,
 
 def test_process_partition():
     data = [1]*6
-    part = process_partition(data, hit_thresh=6, ly_thresh=6, enable_gcl=True)
+    part = process_partition(data, hit_thresh=6, ly_thresh=6, deghost_pre=True)
     assert part[0].id == 19
     assert part[0].lc == 6
     assert part[1].id == 0
     assert part[1].lc == 0
 
 def test_compare_ghosts():
+
     seg_list = [Segment(hc=6, lc=6, id=15, partition=0, strip=0),
                 Segment(hc=6, lc=6, id=12, partition=0, strip=0),
                 Segment(hc=6, lc=6, id= 5, partition=0, strip=0)]
+
     seg1 = Segment(hc=6, lc=6, id=15, partition=0, strip=0)
     seg2 = Segment(hc=6, lc=6, id=10, partition=0, strip=0)
     seg3 = Segment(hc=6, lc=6, id=7, partition=0, strip=0)
+
     #check for reset with copy, ID+2, ID-2
-    assert compare_ghosts(seg1, seg_list).id == 15
-    assert compare_ghosts(seg2, seg_list).id == 10
-    assert compare_ghosts(seg3, seg_list).id == 7
+    assert is_ghost(seg1, seg1) == False
+    assert is_ghost(seg2, seg1) == True
+    assert is_ghost(seg3, seg1) == True
+    assert is_ghost(seg1, seg3) == False
 
 def test_cancel_edges():
-    seg_list1 = []
-    for _ in range(24):
-        seg_list1.append(Segment(hc=6, lc=6, id=15, partition=0, strip=0))
-    cancelled1 = cancel_edges(seg_list1, 8, 4, 24)
+
+    cancelled = cancel_edges(
+        [Segment(hc=6, lc=6, id=15, partition=0, strip=i) for i in range(24)],
+        group_width = 8,
+        ghost_width = 2,
+        width = 24,
+        verbose = True)
+
+    print(cancelled)
+
     #check first edge is cancelled correctly
-    assert cancelled1[6].id == 15
-    assert cancelled1[7].id == 0
-    assert cancelled1[8].id == 0
-    assert cancelled1[9].id == 0
+    assert cancelled[6].id == 15
+    assert cancelled[7].id == 0
+    assert cancelled[8].id == 0
+
     #check second edge is cancelled correctly
-    assert cancelled1[14].id == 15
-    assert cancelled1[15].id == 0
-    assert cancelled1[16].id == 0
-    assert cancelled1[17].id == 0
+    assert cancelled[14].id == 15
+    assert cancelled[15].id == 0
+    assert cancelled[16].id == 0
+    assert cancelled[17].id == 0
