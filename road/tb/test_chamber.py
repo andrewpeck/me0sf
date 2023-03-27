@@ -51,14 +51,23 @@ async def chamber_test(dut, test, nloops=512):
 
     await RisingEdge(dut.clock)
 
-    MAX_SPAN = get_max_span_from_dut(dut)
-    WIDTH = int(dut.partition_gen[0].partition_inst.pat_unit_mux_inst.WIDTH.value)
-    LY_THRESH = int(dut.ly_thresh.value)
-    HIT_THRESH = 0
+    config = Config()
+
+    config.max_span = get_max_span_from_dut(dut)
+    config.width = int(dut.partition_gen[0].partition_inst.pat_unit_mux_inst.WIDTH.value)
+    config.deghost_pre = dut.partition_gen[0].partition_inst.DEGHOST_PRE.value
+    config.deghost_post = dut.partition_gen[0].partition_inst.DEGHOST_POST.value
+    config.group_width = dut.partition_gen[0].partition_inst.S0_WIDTH.value
+    config.hit_thresh = 0
+    config.num_outputs=int(dut.NUM_SEGMENTS)
+    config.cross_part_seg_width=0
+
     NUM_PARTITIONS = int(dut.NUM_PARTITIONS.value)
     NULL = lambda : [[0 for _ in range(6)] for _ in range(8)]
     LATENCY = 5
     dut.sbits_i.value = NULL()
+
+    dut.ly_thresh.value = config.ly_thresh
 
     # flush the bufers
     for _ in range(32):
@@ -168,15 +177,7 @@ async def chamber_test(dut, test, nloops=512):
 
             sw_segments = process_chamber(
                 chamber_data=popped_data,
-                cross_part_seg_width = 0,
-                hit_thresh=HIT_THRESH,
-                ly_thresh=LY_THRESH,
-                enable_gcl=True,
-                ghost_width=2,
-                max_span=MAX_SPAN,
-                width=WIDTH,
-                group_width=int(dut.S0_WIDTH.value),
-                num_outputs=int(dut.NUM_SEGMENTS))
+                config=config)
 
             fw_segments = get_segments_from_dut(dut)
 

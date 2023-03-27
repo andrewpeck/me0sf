@@ -40,17 +40,18 @@ async def partition_test(dut, NLOOPS=1000, test="SEGMENTS"):
 
     # random.seed(56)
 
-    LY_THRESH = 6
-    HIT_THRESH = 0
-    WIDTH = dut.pat_unit_mux_inst.WIDTH.value
-    GROUP_WIDTH = dut.S0_WIDTH.value
-    MAX_SPAN = get_max_span_from_dut(dut)
     LATENCY = int(ceil(dut.LATENCY.value/8.0))
-    DEGHOST_PRE = dut.DEGHOST_PRE.value
-    DEGHOST_POST = dut.DEGHOST_POST.value
+
+    config = Config()
+    config.width = 192
+    config.max_span = get_max_span_from_dut(dut)
+    config.width = dut.pat_unit_mux_inst.WIDTH.value
+    config.group_width = dut.S0_WIDTH.value
+    config.deghost_pre = dut.DEGHOST_PRE.value
+    config.deghost_post = dut.DEGHOST_POST.value
 
     # initial inputs
-    dut.ly_thresh.value = LY_THRESH
+    dut.ly_thresh.value = config.ly_thresh
     dut.partition_i.value = 6*[0]
 
     for i in range(4):
@@ -93,7 +94,7 @@ async def partition_test(dut, NLOOPS=1000, test="SEGMENTS"):
                     hits = [0x000000000000000000000000000000000000000000000000 for _ in range(6)]
 
             elif test=="SEGMENTS":
-                hits = datagen(n_segs=4, n_noise=8, max_span=WIDTH)
+                hits = datagen(n_segs=4, n_noise=8, max_span=config.width)
 
             elif test=="RANDOM":
                 hits = [0]*6
@@ -118,17 +119,9 @@ async def partition_test(dut, NLOOPS=1000, test="SEGMENTS"):
 
             popped_data = queue.pop(0)
 
-            sw_segments = process_partition(
-                partition_data=popped_data,
-                ly_thresh=LY_THRESH,
-                hit_thresh=HIT_THRESH,
-                max_span=MAX_SPAN,
-                width=WIDTH,
-                group_width=GROUP_WIDTH,
-                deghost_pre=DEGHOST_PRE,
-                deghost_post=DEGHOST_POST,
-                ghost_width=1,
-                check_ids = False)
+            sw_segments = process_partition(partition_data=popped_data,
+                                            partition=dut.PARTITION_NUM.value,
+                                            config=config)
 
             fw_segments = get_segments_from_dut(dut)
 

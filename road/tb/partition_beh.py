@@ -62,13 +62,18 @@ def cancel_edges(segments : List[Segment],
 
     '''
 
-    num_edges = round(width / group_width) # nominally 24
-    edges = [group_width * i for i in range(num_edges+1)]
+    if group_width > 0:
+        num_edges = round(width / group_width) # nominally 24
+        edges = [group_width * i for i in range(num_edges+1)]
+        def is_at_edge(x):
+            return x % group_width < edge_distance or (x % group_width) >= (group_width-edge_distance)
+    else:
+        edges = range(width)
+        def is_at_edge(x):
+            return True
 
     cancelled_segments = segments.copy()
 
-    def is_at_edge(x):
-        return x % group_width < edge_distance or (x % group_width) >= (group_width-edge_distance)
 
     for i in range(len(segments)):
         if is_at_edge(i):
@@ -92,18 +97,8 @@ def cancel_edges(segments : List[Segment],
 
 
 def process_partition(partition_data : List[int],
-                      hit_thresh : int=4,
-                      ly_thresh : int=4,
-                      deghost_pre : bool = True,
-                      deghost_post : bool = False,
-                      ghost_width : int = 1,
-                      max_span : int = 37,
-                      width : int = 192,
-                      group_width : int = 8,
-                      partition : int = 0,
-                      check_ids : bool = False,
-                      edge_distance : int = 2
-                      ):
+                      partition : int,
+                      config : Config):
 
     '''takes in partition data, a group size, and a ghost width to return a
     smaller data set, using ghost edge cancellation and segment quality
@@ -117,35 +112,30 @@ def process_partition(partition_data : List[int],
 
     '''
 
-    segments = pat_mux(partition_data,
-                       hit_thresh=hit_thresh,
-                       ly_thresh=ly_thresh,
-                       max_span=max_span,
-                       width=width,
-                       partition=partition)
+    segments = pat_mux(partition_data, partition=partition, config=config)
 
-    if (deghost_pre):
+    if (config.deghost_pre):
         segments = cancel_edges(segments=segments,
-                                edge_distance=2,
-                                group_width=group_width,
-                                ghost_width=ghost_width,
-                                width=width,
-                                check_ids=check_ids)
+                                edge_distance=config.edge_distance,
+                                group_width=config.group_width,
+                                ghost_width=config.ghost_width,
+                                width=config.width,
+                                check_ids=config.check_ids)
 
     # divide partition into pieces and take best segment from each piece
-    chunked = chunk(segments, group_width)
-    final_dat = list(map(max, chunked))
+    chunked = chunk(segments, config.group_width)
+    segments = list(map(max, chunked))
 
-    if (deghost_post):
+    if (config.deghost_post):
         segments = cancel_edges(segments=segments,
                                 group_width=0,
-                                ghost_width=ghost_width,
+                                check_strips=True,
+                                width=config.width,
+                                ghost_width=1,
                                 edge_distance=1,
-                                width=192,
-                                check_ids=check_ids,
-                                check_strips=True)
+                                check_ids=config.check_ids)
 
-    return final_dat
+    return segments
 
 #-------------------------------------------------------------------------------
 # Tests
