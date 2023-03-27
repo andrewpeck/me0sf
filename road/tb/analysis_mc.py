@@ -301,7 +301,11 @@ def analysis(root_dat, hits, bx, bx_list, cross_part, verbose, pu):
                 continue
             #print (data)
 
-            seglist = process_chamber(data, ghost_width=10, num_outputs=10, cross_part_seg_width=4)
+            config = Config()
+            config.num_outputs = 10
+            config.cross_part_seg_width = 4
+            config.ghost_width = 10
+            seglist = process_chamber(data, config)
             seglist_final = []
             #print (seglist)
             for seg in seglist:

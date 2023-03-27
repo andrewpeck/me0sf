@@ -45,11 +45,13 @@ async def pat_unit_mux_test(dut, NLOOPS=500, test="WALKING1"):
 
     await RisingEdge(dut.clock)
 
-    MAX_SPAN = get_max_span_from_dut(dut)
-    LY_THRESH = int(dut.ly_thresh.value)
-    HIT_THRESH = 0
     LATENCY = int(ceil(dut.LATENCY.value/8.0))
-    WIDTH = dut.WIDTH.value
+
+    config = Config()
+    config.max_span=get_max_span_from_dut(dut)
+    config.hit_thresh=0
+    config.ly_thresh=int(dut.ly_thresh.value)
+    config.width=dut.WIDTH.value
 
     set_dut_inputs(dut, [0] * 6)
 
@@ -81,7 +83,7 @@ async def pat_unit_mux_test(dut, NLOOPS=500, test="WALKING1"):
             if test=="WALKING1":
                 new_data = 6 * [0x1 << (i % 192)]
             elif test=="SEGMENTS":
-                new_data = datagen(n_segs=2, n_noise=10, max_span=WIDTH)
+                new_data = datagen(n_segs=2, n_noise=10, max_span=config.width)
             else:
                 new_data = 0*[6]
                 assert "Invalid test selected"
@@ -95,20 +97,19 @@ async def pat_unit_mux_test(dut, NLOOPS=500, test="WALKING1"):
         # pop old data on dav_o
         if dut.dav_o.value == 1:
 
+
             # (1) pop old data from the head of the queue
             # (2) run the emulator on the old data
 
             old_data = queue.pop(0)
             sw_segments = pat_mux(partition_data=old_data,
-                                  max_span=MAX_SPAN,
-                                  hit_thresh=HIT_THRESH,
-                                  ly_thresh=LY_THRESH,
-                                  width=WIDTH)
+                                  partition=0,
+                                  config=config)
 
             fw_segments = get_segments_from_dut(dut)
 
             if i > LATENCY+2:
-                for j in range(WIDTH):
+                for j in range(config.width):
                     if fw_segments[j].id > 0:
                         strip_cnts.append(j)
                         id_cnts.append(fw_segments[j].id)

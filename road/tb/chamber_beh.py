@@ -1,7 +1,7 @@
 # Emulator for chamber.vhd
 import functools
-import math
 import operator
+from math import ceil
 from typing import List
 
 from partition_beh import process_partition
@@ -55,31 +55,13 @@ def cross_partition_cancellation(segments, cross_part_seg_width):
 
     return segments
 
-def process_chamber(chamber_data : List[List[int]],
-                    hit_thresh : int = 4,
-                    ly_thresh : int = 4,
-                    max_span : int = 37,
-                    width : int = 192,
-                    enable_gcl : bool = True,
-                    group_width : int = 8,
-                    ghost_width : int = 1,
-                    cross_part_seg_width : int = 4,
-                    num_outputs : int = 4):
+def process_chamber(chamber_data : List[List[int]], config : Config):
 
     # gather segments from each partition
     # this will return a 8 x N list of segments
 
     segments = [
-        process_partition(
-            partition_data=data,
-            hit_thresh = hit_thresh,
-            ly_thresh = ly_thresh,
-            max_span = max_span,
-            deghost_pre = enable_gcl,
-            width = width,
-            group_width = group_width,
-            ghost_width = ghost_width,
-            partition = partition)
+        process_partition(partition_data=data, partition = partition, config=config)
         for (partition, data) in enumerate(chamber_data)]
 
     NUM_PARTITIONS = len(segments)
@@ -88,8 +70,8 @@ def process_chamber(chamber_data : List[List[int]],
     # return NUM_OUTPUTS segments from each partition pair
 
     # Remove redundant segments from cross-partitions and grouping neighbouring eta partitions
-    if (cross_part_seg_width > 0):
-        segments = cross_partition_cancellation(segments, cross_part_seg_width)
+    if (config.cross_part_seg_width > 0):
+        segments = cross_partition_cancellation(segments, config.cross_part_seg_width)
 
     if NUM_PARTITIONS > 8:
         segments_reduced = []
@@ -97,21 +79,21 @@ def process_chamber(chamber_data : List[List[int]],
             segments_reduced.append([])
         for (i,seg_list) in enumerate(segments):
             for seg in seg_list:
-                seg.partition = math.ceil(seg.partition/2)
-                segments_reduced[math.ceil(i/2)].append(seg)
+                seg.partition = ceil(seg.partition/2)
+                segments_reduced[ceil(i/2)].append(seg)
     else:
         segments_reduced = segments
 
     # sort each partition and pick the best N outputs
     # pick the best N outputs from each partition
-    segments_reduced = [ sorted(x, reverse=True)[:num_outputs] for x in segments_reduced]
+    segments_reduced = [ sorted(x, reverse=True)[:config.num_outputs] for x in segments_reduced]
 
     # join each 2 partitions and pick the best N outputs from them
     segments_reduced = [ x[0]+x[1] for x in zip(*[iter(segments_reduced)] * 2)]
-    segments_reduced = [ sorted(x, reverse=True)[:num_outputs] for x in segments_reduced]
+    segments_reduced = [ sorted(x, reverse=True)[:config.num_outputs] for x in segments_reduced]
 
     # concatenate together all of the segments, sort them, and pick the best N outputs
     segments_reduced = functools.reduce(operator.iconcat, segments_reduced, []) # equivalent to segments_reduced[0] + segments_reduced[1] + segments_reduced[2] + etc
-    segments_reduced = sorted(segments_reduced, reverse=True)[:num_outputs]
+    segments_reduced = sorted(segments_reduced, reverse=True)[:config.num_outputs]
 
     return segments_reduced

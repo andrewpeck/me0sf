@@ -1,6 +1,21 @@
 # Functions, global variables, and classes used in multiple files
 from itertools import islice
 from math import ceil, floor
+from typing import List
+
+class Config:
+    hit_thresh : int = 4
+    ly_thresh : int = 4
+    max_span : int = 37
+    width : int = 192
+    deghost_pre : bool = True
+    deghost_post : bool = True
+    group_width : int = 8
+    ghost_width : int = 1
+    cross_part_seg_width : int = 4
+    num_outputs : int = 4
+    check_ids : bool = False
+    edge_distance : int = 2
 
 
 class hi_lo_t:
@@ -103,11 +118,11 @@ class Segment:
         if isinstance(other, Segment):
             return self.quality < other.quality
 
-def mirror_hi_lo(ly):
+def mirror_hi_lo(ly : hi_lo_t):
     """"helper function for mirror_patdef, mirrors the hi and lo values"""
     return hi_lo_t(ly.lo * (-1), ly.hi * (-1))
 
-def mirror_patdef(pat, id):
+def mirror_patdef(pat : patdef_t, id : int):
     """takes in a pattern definition and an id and returns a mirrored pattern definition associated with that id"""
     assert type(pat) == patdef_t, "pat input must be of the class patdef_t"
     assert type(pat.layers[0]) == hi_lo_t, "each layer of pat must be of the class hi_lo_t"
@@ -118,7 +133,7 @@ def mirror_patdef(pat, id):
     return mirrored_pat
     
 
-def create_pat_ly(lower, upper):
+def create_pat_ly(lower : float, upper : float):
 
     """
     takes in two boundary slopes and returns a list of hi lo pairs for each
@@ -249,7 +264,7 @@ def find_ones(data):
 
     return ones
 
-def find_centroid(data):
+def find_centroid(data : int):
     """get the centroid for some given binary hitmask"""
 
     ones = find_ones(data)
@@ -259,10 +274,10 @@ def find_centroid(data):
 
     return (1.0 * sum(ones)) / len(ones)
 
-def generate_combinations(nbits):
+def generate_combinations(nbits : int):
     return (nbits, tuple(range(2**nbits)))
 
-def get_centroids(max_width):
+def get_centroids(max_width : int):
     # set widths to current and anticipated pattern sizes
     all_widths = range(1, max_width)
     all_masks = tuple(map(generate_combinations, all_widths))
@@ -292,6 +307,9 @@ def llse_fit(x, y):
 def chunk(it, size):
     it = iter(it)
     return iter(lambda: tuple(islice(it, size)), ())
+
+Partition = List[Segment]
+Chamber = List[Partition]
 
 #-------------------------------------------------------------------------------
 # Tests
