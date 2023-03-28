@@ -38,7 +38,7 @@ class Mask:
 
 class Segment:
 
-    def __init__(self, hc, lc, id, strip=None, partition=None, centroid=None,
+    def __init__(self, hc, lc, id, strip=0, partition=0, centroid=None,
                  substrip=None, bend_ang=None):
         self.hc = hc
         self.lc = lc

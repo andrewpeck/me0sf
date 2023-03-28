@@ -35,6 +35,14 @@ async def pat_unit_mux_walking(dut):
 async def pat_unit_mux_segments(dut):
     await pat_unit_mux_test(dut, NLOOPS=1000, test="SEGMENTS")
 
+@cocotb.test()
+async def pat_unit_mux_5s(dut):
+    await pat_unit_mux_test(dut, NLOOPS=20, test="5A")
+
+@cocotb.test()
+async def pat_unit_mux_ff(dut):
+    await pat_unit_mux_test(dut, NLOOPS=20, test="FF")
+
 async def pat_unit_mux_test(dut, NLOOPS=500, test="WALKING1"):
 
     "Test the pat_unix_mux.vhd module"
@@ -82,6 +90,16 @@ async def pat_unit_mux_test(dut, NLOOPS=500, test="WALKING1"):
 
             if test=="WALKING1":
                 new_data = 6 * [0x1 << (i % 192)]
+            elif test=="5A":
+                if i % 2 == 0:
+                    new_data = [0x555555555555555555555555555555555555555555555555 for _ in range(6)]
+                else:
+                    new_data = [0xaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaa for _ in range(6)]
+            elif test=="FF":
+                if i % 2 == 0:
+                    new_data = [0xFFFFFFFFFFFFFFFFFFFFFFFFFFFFFFFFFFFFFFFFFFFFFFFF for _ in range(6)]
+                else:
+                    new_data = [0xaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaa for _ in range(6)]
             elif test=="SEGMENTS":
                 new_data = datagen(n_segs=2, n_noise=10, max_span=config.width)
             else:
