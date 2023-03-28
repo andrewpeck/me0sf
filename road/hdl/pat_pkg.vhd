@@ -17,6 +17,15 @@ use work.pat_types.all;
 
 package pat_pkg is
 
+  function if_then_else (bool : boolean; a : integer; b : integer)
+    return integer;
+  function if_then_else (bool : boolean; a : boolean; b : boolean)
+    return boolean;
+  function if_then_else (bool : boolean; a : std_logic; b : std_logic)
+    return std_logic;
+  function if_then_else (bool : boolean; a : std_logic_vector; b : std_logic_vector)
+    return std_logic_vector;
+
   constant PAT_UNIT_LATENCY     : positive := 5;
   constant PAT_UNIT_MUX_LATENCY : positive := PAT_UNIT_LATENCY + 3;
   constant PARTITION_LATENCY    : positive := PAT_UNIT_MUX_LATENCY + 5;
@@ -70,6 +79,42 @@ package pat_pkg is
 end package pat_pkg;
 
 package body pat_pkg is
+
+  function if_then_else (bool : boolean; a : std_logic; b : std_logic) return std_logic is
+  begin
+    if (bool) then
+      return a;
+    else
+      return b;
+    end if;
+  end if_then_else;
+
+  function if_then_else (bool : boolean; a : integer; b : integer) return integer is
+  begin
+    if (bool) then
+      return a;
+    else
+      return b;
+    end if;
+  end if_then_else;
+
+  function if_then_else (bool : boolean; a : boolean; b : boolean) return boolean is
+  begin
+    if (bool) then
+      return a;
+    else
+      return b;
+    end if;
+  end if_then_else;
+
+  function if_then_else (bool : boolean; a : std_logic_vector; b : std_logic_vector) return std_logic_vector is
+  begin
+    if (bool) then
+      return a;
+    else
+      return b;
+    end if;
+  end if_then_else;
 
   function get_sortb (x : std_logic_vector) return std_logic_vector is
     variable y : std_logic_vector(PATTERN_SORTB-1 downto 0);

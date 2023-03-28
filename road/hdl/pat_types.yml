@@ -20,7 +20,7 @@ types:
 
   - STRIP_BITS: {qualifier: constant, type: integer, value: 8, comment: "8 bits to count 0-191"}
 
-  - PARTITION_BITS: {qualifier: constant, type: integer, value: 3, comment: "3 bits to count 0-7"}
+  - PARTITION_BITS: {qualifier: constant, type: integer, value: 4, comment: "4 bits to count 0-15"}
 
   - PATTERN_SORTB: {qualifier: constant, type: integer, value: LC_BITS+HC_BITS+PID_BITS+STRIP_BITS+PARTITION_BITS, comment: ""}
 
@@ -57,7 +57,7 @@ types:
       - hc: {type: unsigned, range: [HC_BITS-1, 0]}
       - id: {type: unsigned, range: [PID_BITS-1, 0]}
       - strip: {type: unsigned, range: [7, 0]}
-      - partition: {type: unsigned, range: [2, 0]}
+      - partition: {type: unsigned, range: [PARTITION_BITS-1, 0]}
 
   - segment_list_t: {array: open, type: segment_t}
 

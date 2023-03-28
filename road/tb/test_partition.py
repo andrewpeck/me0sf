@@ -176,7 +176,7 @@ def test_partition():
         compile_args=["-2008"],
         toplevel="partition",  # top level HDL
         toplevel_lang="vhdl",
-        # sim_args = ['-do "set NumericStdNoWarnings 1;"'],
+        sim_args=["-do", "set NumericStdNoWarnings 1;"],
         gui=0)
 
 if __name__ == "__main__":

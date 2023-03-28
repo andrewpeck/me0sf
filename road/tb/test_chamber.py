@@ -18,14 +18,6 @@ from datagen import datagen
 from subfunc import *
 from tb_common import *
 
-# @cocotb.test()
-# async def chamber_test_segs(dut, nloops=1000):
-#     await chamber_test(dut, "SEGMENTS", nloops)
-
-@cocotb.test()
-async def chamber_test_random(dut, nloops=100):
-    await chamber_test(dut, "RANDOM", nloops)
-
 @cocotb.test()
 async def chamber_test_ff(dut, nloops=20):
     await chamber_test(dut, "FF", nloops)
@@ -41,6 +33,14 @@ async def chamber_test_walking1(dut, nloops=192*2):
 @cocotb.test()
 async def chamber_test_walkingf(dut, nloops=192*2):
     await chamber_test(dut, "WALKINGF", nloops)
+
+@cocotb.test()
+async def chamber_test_segs(dut, nloops=1000):
+    await chamber_test(dut, "SEGMENTS", nloops)
+
+@cocotb.test()
+async def chamber_test_random(dut, nloops=100):
+    await chamber_test(dut, "RANDOM", nloops)
 
 async def chamber_test(dut, test, nloops=512, verbose=False):
 
@@ -59,6 +59,9 @@ async def chamber_test(dut, test, nloops=512, verbose=False):
 
     config = Config()
 
+    config.x_prt_en = dut.X_PRT_EN.value
+    config.en_non_pointing = dut.EN_NON_POINTING.value
+    config.max_span = get_max_span_from_dut(dut)
     config.max_span = get_max_span_from_dut(dut)
     config.width = int(dut.partition_gen[0].partition_inst.pat_unit_mux_inst.WIDTH.value)
     config.deghost_pre = dut.partition_gen[0].partition_inst.DEGHOST_PRE.value
@@ -69,9 +72,9 @@ async def chamber_test(dut, test, nloops=512, verbose=False):
     config.hit_thresh = 0 # set to zero to disable until implmented in fw
     config.cross_part_seg_width=0 # set to zero to disable until implmented in fw
 
-    NUM_PARTITIONS = int(dut.NUM_PARTITIONS.value)
+    NUM_PARTITIONS = 8
     NULL = lambda : [[0 for _ in range(6)] for _ in range(8)]
-    LATENCY = 5
+    LATENCY = 6
     dut.sbits_i.value = NULL()
 
     dut.ly_thresh.value = config.ly_thresh
@@ -123,15 +126,15 @@ async def chamber_test(dut, test, nloops=512, verbose=False):
                 if loop == 0:
                     istrip = 0
                     iprt = 0
-
-                if istrip == 191:
-                    istrip = 0
-                    if iprt == 7:
-                        iprt = 0
-                    else:
-                        iprt += 1
                 else:
-                    istrip += 1
+                    if istrip == 191:
+                        istrip = 0
+                        if iprt == 7:
+                            iprt = 0
+                        else:
+                            iprt += 1
+                    else:
+                        istrip += 1
 
                 dat = 0x1 if test=="WALKING1" else 0xffff
                 chamber_data=NULL()
@@ -210,7 +213,7 @@ async def chamber_test(dut, test, nloops=512, verbose=False):
                     partition_cnts.append(fw_segments[i].partition)
 
                 err = "   "
-                if loop > 7:
+                if loop > LATENCY+2:
                     if sw_segments[i] != fw_segments[i]:
                         err = "ERR"
                         print(f" {err} seg {i}:")
@@ -270,7 +273,7 @@ def test_chamber():
         compile_args=["-2008"],
         toplevel="chamber",  # top level HDL
         toplevel_lang="vhdl",
-        # sim_args=["-do", "set NumericStdNoWarnings 1;"],
+        sim_args=["-do", "set NumericStdNoWarnings 1;"],
         parameters=parameters,
         gui=0)
 

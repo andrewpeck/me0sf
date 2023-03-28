@@ -8,7 +8,8 @@ from partition_beh import process_partition
 from subfunc import *
 
 
-def cross_partition_cancellation(segments, cross_part_seg_width):
+def cross_partition_cancellation(segments : List[List[Segment]],
+                                 cross_part_seg_width : int) -> List[List[Segment]]:
 
     for i in range(1,15,2):
 
@@ -60,11 +61,54 @@ def process_chamber(chamber_data : List[List[int]], config : Config):
     # gather segments from each partition
     # this will return a 8 x N list of segments
 
-    segments = [
-        process_partition(partition_data=data, partition = partition, config=config)
-        for (partition, data) in enumerate(chamber_data)]
 
-    NUM_PARTITIONS = len(segments)
+    if config.x_prt_en:
+
+        num_finders = 15
+
+        data = [[0 for _ in range(6)] for _ in range(num_finders)]
+
+        for finder in range(num_finders):
+
+            # even finders are simple, just take the partition
+            if finder % 2 == 0:
+                data[finder] = chamber_data[finder//2]
+
+            # odd finders are the OR of two adjacent partitions
+            else:
+
+                # for non-pointing, look both in +1 and -1 partitions
+                if config.en_non_pointing:
+
+                    raise Exception("Non pointing not supported yet...")
+
+                # otherwise look only in the +1 partition
+                else:
+                    data[finder][0] =                                 chamber_data[finder//2][0]
+                    data[finder][1] =                                 chamber_data[finder//2][1]
+                    data[finder][2] = chamber_data[finder//2+1][2] or chamber_data[finder//2][2]
+                    data[finder][3] = chamber_data[finder//2+1][3] or chamber_data[finder//2][3]
+                    data[finder][4] = chamber_data[finder//2+1][4]
+                    data[finder][5] = chamber_data[finder//2+1][5]
+
+    else:
+
+        data = chamber_data
+
+    # for (i,prt) in enumerate(data):
+    #     print(f"{i}" + str(prt))
+
+    segments = [process_partition(partition_data = prt_data,
+                                  partition = partition,
+                                  config = config)
+        for (partition, prt_data) in enumerate(data)]
+
+    # print("Outputs from process partition (raw)")
+    # for prt in segments:
+    #     print(f'{prt=}')
+    #     for seg in prt:
+    #         if (seg.lc > 0):
+    #             print(seg)
 
     # compare partitions 0 & 1, 2 & 3, 4 & 5.. etc
     # return NUM_OUTPUTS segments from each partition pair
@@ -73,27 +117,20 @@ def process_chamber(chamber_data : List[List[int]], config : Config):
     if (config.cross_part_seg_width > 0):
         segments = cross_partition_cancellation(segments, config.cross_part_seg_width)
 
-    if NUM_PARTITIONS > 8:
-        segments_reduced = []
-        for i in range(0,8):
-            segments_reduced.append([])
-        for (i,seg_list) in enumerate(segments):
-            for seg in seg_list:
-                seg.partition = ceil(seg.partition/2)
-                segments_reduced[ceil(i/2)].append(seg)
-    else:
-        segments_reduced = segments
+    # for prt in segments:
+    #     for segment in prt:
+    #         print(segment)
 
     # sort each partition and pick the best N outputs
     # pick the best N outputs from each partition
-    segments_reduced = [ sorted(x, reverse=True)[:config.num_outputs] for x in segments_reduced]
+    segments = [ sorted(x, reverse=True)[:config.num_outputs] for x in segments]
 
     # join each 2 partitions and pick the best N outputs from them
-    segments_reduced = [ x[0]+x[1] for x in zip(*[iter(segments_reduced)] * 2)]
-    segments_reduced = [ sorted(x, reverse=True)[:config.num_outputs] for x in segments_reduced]
+    segments = [ x[0]+x[1] for x in zip(*[iter(segments)] * 2)]
+    segments = [ sorted(x, reverse=True)[:config.num_outputs] for x in segments]
 
     # concatenate together all of the segments, sort them, and pick the best N outputs
-    segments_reduced = functools.reduce(operator.iconcat, segments_reduced, []) # equivalent to segments_reduced[0] + segments_reduced[1] + segments_reduced[2] + etc
-    segments_reduced = sorted(segments_reduced, reverse=True)[:config.num_outputs]
+    segments = functools.reduce(operator.iconcat, segments, []) # equivalent to segments[0] + segments[1] + segments[2] + etc
+    segments = sorted(segments, reverse=True)[:config.num_outputs]
 
-    return segments_reduced
+    return segments

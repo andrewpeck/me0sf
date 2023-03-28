@@ -12,6 +12,8 @@ class Config:
     deghost_post : bool = True
     group_width : int = 8
     ghost_width : int = 1
+    x_prt_en : bool = True
+    en_non_pointing : bool = False
     cross_part_seg_width : int = 4
     num_outputs : int = 4
     check_ids : bool = False
