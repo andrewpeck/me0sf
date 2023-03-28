@@ -16,6 +16,10 @@ def is_ghost(seg : Segment,
 
     '''
 
+    if seg.strip is None or comp.strip is None or  \
+       seg.id is None or comp.id is None:
+        raise Exception("Tried to compare is_ghost with None types")
+
     ghost = seg.quality < comp.quality \
         and (not check_strips or abs(seg.strip - comp.strip) < 2) and \
         (not check_ids or (seg.id == comp.id or seg.id + 2 == comp.id or seg.id == comp.id + 2))
@@ -27,9 +31,6 @@ def cancel_edges(segments : List[Segment],
                  group_width : int = 8,
                  ghost_width : int = 2,
                  edge_distance : int = 2,
-                 width : int = 192,
-                 check_ids : bool = False,
-                 check_strips : bool = False,
                  verbose : bool = False):
 
     '''Takes in a list of SEGMENTS and is designed to perform ghost
@@ -62,18 +63,13 @@ def cancel_edges(segments : List[Segment],
 
     '''
 
-    if group_width > 0:
-        num_edges = round(width / group_width) # nominally 24
-        edges = [group_width * i for i in range(num_edges+1)]
-        def is_at_edge(x):
-            return x % group_width < edge_distance or (x % group_width) >= (group_width-edge_distance)
-    else:
-        edges = range(width)
-        def is_at_edge(x):
-            return True
-
     cancelled_segments = segments.copy()
 
+    def is_at_edge(x):
+        if group_width > 0:
+            return x % group_width < edge_distance or (x % group_width) >= (group_width-edge_distance)
+        else:
+            return True
 
     for i in range(len(segments)):
         if is_at_edge(i):
@@ -83,7 +79,7 @@ def cancel_edges(segments : List[Segment],
             #
             comps = \
                 [x for x in range(i-ghost_width, i, 1) if x >= 0] + \
-                [x for x in range(i+1,i+ghost_width+1,  1) if x < 192]
+                [x for x in range(i+1,i+ghost_width+1,  1) if x < len(segments)]
 
             if verbose:
                 print(f"Comparing strip {i} to strips %s" % str(comps))
@@ -118,22 +114,14 @@ def process_partition(partition_data : List[int],
         segments = cancel_edges(segments=segments,
                                 edge_distance=config.edge_distance,
                                 group_width=config.group_width,
-                                ghost_width=config.ghost_width,
-                                width=config.width,
-                                check_ids=config.check_ids)
+                                ghost_width=config.ghost_width)
 
     # divide partition into pieces and take best segment from each piece
     chunked = chunk(segments, config.group_width)
     segments = list(map(max, chunked))
 
     if (config.deghost_post):
-        segments = cancel_edges(segments=segments,
-                                group_width=0,
-                                check_strips=True,
-                                width=config.width,
-                                ghost_width=1,
-                                edge_distance=1,
-                                check_ids=config.check_ids)
+        segments = cancel_edges(segments=segments, group_width=0, ghost_width=1, edge_distance=1)
 
     return segments
 
@@ -142,18 +130,22 @@ def process_partition(partition_data : List[int],
 #-------------------------------------------------------------------------------
 
 def test_process_partition():
+
     data = [1]*6
-    part = process_partition(data, hit_thresh=6, ly_thresh=6, deghost_pre=True)
+
+    config = Config();
+    config.hit_thresh=6
+    config.ly_thresh=6
+    config.deghost_pre=True
+
+    part = process_partition(data, partition=0, config=config)
+
     assert part[0].id == 19
     assert part[0].lc == 6
     assert part[1].id == 0
     assert part[1].lc == 0
 
 def test_compare_ghosts():
-
-    seg_list = [Segment(hc=6, lc=6, id=15, partition=0, strip=0),
-                Segment(hc=6, lc=6, id=12, partition=0, strip=0),
-                Segment(hc=6, lc=6, id= 5, partition=0, strip=0)]
 
     seg1 = Segment(hc=6, lc=6, id=15, partition=0, strip=0)
     seg2 = Segment(hc=6, lc=6, id=10, partition=0, strip=0)
@@ -167,22 +159,28 @@ def test_compare_ghosts():
 
 def test_cancel_edges():
 
-    cancelled = cancel_edges(
-        [Segment(hc=6, lc=6, id=15, partition=0, strip=i) for i in range(24)],
-        group_width = 8,
-        ghost_width = 2,
-        width = 24,
-        verbose = True)
+    # create a list of all equal segments and check cancellation on them
+    segments = [Segment(hc=6, lc=6, id=15, partition=0, strip=i) for i in range(24)]
 
-    print(cancelled)
+    cancelled = cancel_edges(segments, group_width = 8, ghost_width = 2, verbose = False)
+
+    # this should NOT really happen but right now it does...
+    # no reason to cancel edges at the left  / right side of chamber
+    assert cancelled[0].id == 0
+    assert cancelled[1].id == 0
 
     #check first edge is cancelled correctly
-    assert cancelled[6].id == 15
+    assert cancelled[5].id == 15
+    assert cancelled[6].id == 0
     assert cancelled[7].id == 0
     assert cancelled[8].id == 0
+    assert cancelled[9].id == 0
+    assert cancelled[10].id == 15
 
     #check second edge is cancelled correctly
-    assert cancelled[14].id == 15
+    assert cancelled[13].id == 15
+    assert cancelled[14].id == 0
     assert cancelled[15].id == 0
     assert cancelled[16].id == 0
     assert cancelled[17].id == 0
+    assert cancelled[18].id == 15

@@ -1,12 +1,12 @@
-from subfunc import *
-from constants import *
-
 import cocotb
 from cocotb.clock import Clock
-from cocotb.triggers import RisingEdge, Edge, Timer
+from cocotb.triggers import Edge, RisingEdge, Timer
 from cocotb_test.simulator import run
 
+from constants import *
 from pat_unit_beh import calculate_global_layer_mask
+from subfunc import *
+
 
 def setup(dut):
 
@@ -17,10 +17,10 @@ def setup(dut):
 
     # start the clock
     c = Clock(dut.clock, 12, "ns")
-    cocotb.fork(c.start())
+    cocotb.start_soon(c.start())
 
     # start the dav signal (high every 8th clock cycle)
-    cocotb.fork(generate_dav(dut))
+    cocotb.start_soon(generate_dav(dut))
 
 def get_segments_from_dut(dut):
 
@@ -33,10 +33,10 @@ def get_segments_from_dut(dut):
         seg = Segment(lc=lyc, hc=hitc, id=pid, strip=strip, partition=partition)
         return seg
 
-    x = list(map(convert_segment, dut.segments_o))
-    x.reverse()
+    segs = [convert_segment(x) for x in dut.segments_o]
+    segs.reverse()
 
-    return x
+    return segs
 
 
 def get_segment_from_dut(dut):

@@ -36,7 +36,7 @@ async def partition_test_segs(dut):
 async def partition_test(dut, NLOOPS=1000, test="SEGMENTS"):
 
     setup(dut)
-    cocotb.fork(monitor_dav(dut))
+    cocotb.start_soon(monitor_dav(dut))
 
     # random.seed(56)
 

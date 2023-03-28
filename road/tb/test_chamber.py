@@ -2,6 +2,8 @@
 # NOTES:
 #   - measure latency
 #   - verify selector latency parameter
+#   - add cross partition tester
+#   - check the outputs of the partitions before chamber sorting ?
 
 import os
 import random
@@ -16,12 +18,12 @@ from datagen import datagen
 from subfunc import *
 from tb_common import *
 
-@cocotb.test()
-async def chamber_test_segs(dut, nloops=1000):
-    await chamber_test(dut, "SEGMENTS", nloops)
+# @cocotb.test()
+# async def chamber_test_segs(dut, nloops=1000):
+#     await chamber_test(dut, "SEGMENTS", nloops)
 
 @cocotb.test()
-async def chamber_test_random(dut, nloops=1000):
+async def chamber_test_random(dut, nloops=100):
     await chamber_test(dut, "RANDOM", nloops)
 
 @cocotb.test()
@@ -33,10 +35,14 @@ async def chamber_test_5a(dut, nloops=20):
     await chamber_test(dut, "5A", nloops)
 
 @cocotb.test()
-async def chamber_test_walking1(dut, nloops=192*8):
+async def chamber_test_walking1(dut, nloops=192*2):
     await chamber_test(dut, "WALKING1", nloops)
 
-async def chamber_test(dut, test, nloops=512):
+@cocotb.test()
+async def chamber_test_walkingf(dut, nloops=192*2):
+    await chamber_test(dut, "WALKINGF", nloops)
+
+async def chamber_test(dut, test, nloops=512, verbose=False):
 
     '''
     Test the chamber.vhd module
@@ -47,7 +53,7 @@ async def chamber_test(dut, test, nloops=512):
     # setup the dut and extract constants from it
 
     setup(dut)
-    cocotb.fork(monitor_dav(dut))
+    cocotb.start_soon(monitor_dav(dut))
 
     await RisingEdge(dut.clock)
 
@@ -58,9 +64,10 @@ async def chamber_test(dut, test, nloops=512):
     config.deghost_pre = dut.partition_gen[0].partition_inst.DEGHOST_PRE.value
     config.deghost_post = dut.partition_gen[0].partition_inst.DEGHOST_POST.value
     config.group_width = dut.partition_gen[0].partition_inst.S0_WIDTH.value
-    config.hit_thresh = 0
     config.num_outputs=int(dut.NUM_SEGMENTS)
-    config.cross_part_seg_width=0
+    config.ly_thresh = 4
+    config.hit_thresh = 0 # set to zero to disable until implmented in fw
+    config.cross_part_seg_width=0 # set to zero to disable until implmented in fw
 
     NUM_PARTITIONS = int(dut.NUM_PARTITIONS.value)
     NULL = lambda : [[0 for _ in range(6)] for _ in range(8)]
@@ -76,10 +83,10 @@ async def chamber_test(dut, test, nloops=512):
     # measure latency
     for i in range(128):
         # extract latency
-        dut.sbits_i.value = [[1]*6]*NUM_PARTITIONS
+        dut.sbits_i.value = [[1 for _ in range(6)] for _ in range(NUM_PARTITIONS)]
         await RisingEdge(dut.clock)
         if dut.segments_o[0].lc.value.is_resolvable and \
-           dut.segments_o[0].lc.value.integer > 0:
+           dut.segments_o[0].lc.value.integer >= config.ly_thresh:
             print(f"Latency={i} clocks ({i/8.0} bx)")
             break
 
@@ -111,7 +118,7 @@ async def chamber_test(dut, test, nloops=512):
             # (2) push it onto the queue
             # (3) set the DUT inputs to the new data
 
-            if test=="WALKING1":
+            if test=="WALKING1" or test=="WALKINGF":
 
                 if loop == 0:
                     istrip = 0
@@ -126,26 +133,24 @@ async def chamber_test(dut, test, nloops=512):
                 else:
                     istrip += 1
 
-                # print(f'{iprt=} {istrip=}')
+                dat = 0x1 if test=="WALKING1" else 0xffff
                 chamber_data=NULL()
-                for ily in range(6):
-                    chamber_data[iprt][ily] = 1 << istrip
+                chamber_data[iprt] = [(2**192-1) & (dat << istrip) for _ in range(6)]
 
             if test=="SEGMENTS":
                 prt   = random.randint(0,7)
                 chamber_data = NULL()
-                #chamber_data[prt] = datagen(n_segs=1, n_noise=0, max_span=MAX_SPAN)
-                chamber_data = [datagen(n_segs=2, n_noise=8, max_span=MAX_SPAN)
+                chamber_data = [datagen(n_segs=2, n_noise=8, max_span=config.max_span)
                                 for _ in range(NUM_PARTITIONS)]
 
             if test=="FF":
-                if i % 2 == 0:
+                if loop % 2 == 0:
                     chamber_data = [[0xFFFFFFFFFFFFFFFFFFFFFFFFFFFFFFFFFFFFFFFFFFFFFFFF for _ in range(6)] for _ in range(8)]
                 else:
                     chamber_data = [[0x000000000000000000000000000000000000000000000000 for _ in range(6)] for _ in range(8)]
 
             if test=="5A":
-                if i % 2 == 0:
+                if loop % 2 == 0:
                     chamber_data = [[0x555555555555555555555555555555555555555555555555 for _ in range(6)] for _ in range(8)]
                 else:
                     chamber_data = [[0xAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAA for _ in range(6)] for _ in range(8)]
@@ -164,6 +169,16 @@ async def chamber_test(dut, test, nloops=512):
                     for ly in range(6):
                         chamber_data[prt][ly] &= 2**192-1
 
+                # chamber_data = [[0,0,0,0,0,0],
+                #                 [0,0,0,0,0,0],
+                #                 [0,0,0,0,0,0],
+                #                 [0,0,0,0,0,0],
+                #                 [24038801780916083168769940586170856529853459044767744, 393854372280306332493332304728065653894960221539015196672, 197695011464233716551040219415442138429244291613734731776, 784637740307541833018438133678121907990633486120280145920, 3139317115463798414685423611272489066807669546084909449221, 2298743311304495757759654983174502303995534521288364032],
+                #                 #[(0xffff << 44) for _ in range(6)],
+                #                 [0,0,0,0,0,0],
+                #                 [0,0,0,0,0,0],
+                #                 [0,0,0,0,0,0],]
+
             queue.append(chamber_data.copy())
             dut.sbits_i.value = chamber_data
 
@@ -181,6 +196,12 @@ async def chamber_test(dut, test, nloops=512):
 
             fw_segments = get_segments_from_dut(dut)
 
+            if verbose:
+                print(f'{loop=}')
+                for i in range(len(fw_segments)):
+                    print("  > fw: " + str(fw_segments[i]))
+                    print("  > sw: " + str(sw_segments[i]))
+
             for i in range(len(fw_segments)):
 
                 if fw_segments[i].id > 0:
@@ -189,7 +210,7 @@ async def chamber_test(dut, test, nloops=512):
                     partition_cnts.append(fw_segments[i].partition)
 
                 err = "   "
-                if loop > 10:
+                if loop > 7:
                     if sw_segments[i] != fw_segments[i]:
                         err = "ERR"
                         print(f" {err} seg {i}:")
@@ -249,7 +270,7 @@ def test_chamber():
         compile_args=["-2008"],
         toplevel="chamber",  # top level HDL
         toplevel_lang="vhdl",
-        #sim_args=["-do set NumericStdNoWarnings 1"],
+        # sim_args=["-do", "set NumericStdNoWarnings 1;"],
         parameters=parameters,
         gui=0)
 

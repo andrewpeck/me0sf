@@ -50,7 +50,13 @@ def test_extract_data_window():
 
 def test_pat_mux():
     data = [0b1, 0b1, 0b1, 0b1, 0b1, 0b1]
-    mux = pat_mux(data, ly_thresh=0, hit_thresh=6, max_span=37)
+
+    config = Config();
+    config.ly_thresh=6
+    config.hit_thresh=6
+    config.max_span=37
+
+    mux = pat_mux(data, partition=0, config=config)
     # check for expected pattern
     assert mux[0].id == 19
     assert mux[0].lc == 6
