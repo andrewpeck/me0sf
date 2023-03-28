@@ -25,6 +25,10 @@ async def partition_test_walking(dut):
     await partition_test(dut, NLOOPS=192, test="WALKING1")
 
 @cocotb.test()
+async def partition_test_walking(dut):
+    await partition_test(dut, NLOOPS=192, test="WALKINGF")
+
+@cocotb.test()
 async def partition_test_random(dut):
     await partition_test(dut, NLOOPS=2000, test="RANDOM")
 
@@ -80,6 +84,9 @@ async def partition_test(dut, NLOOPS=1000, test="SEGMENTS"):
 
             if test=="WALKING1":
                 hits = [(0x1 << (i % 192)) for _ in range(6)]
+
+            if test=="WALKINGF":
+                hits = [(2**192-1) & (0xffff << (i % 192)) for _ in range(6)]
 
             elif test=="5A":
                 if i % 2 == 0:
