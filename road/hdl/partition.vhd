@@ -67,11 +67,11 @@ end partition;
 
 architecture behavioral of partition is
 
-  signal strips             : segment_list_t (PRT_WIDTH-1 downto 0);
-  signal strips_deghost     : segment_list_t (PRT_WIDTH-1 downto 0);
-  signal strips_dav         : std_logic := '0';
-  signal strips_dav_deghost : std_logic := '0';
-  signal strips_s0          : segment_list_t (PRT_WIDTH/S0_WIDTH-1 downto 0);
+  signal segments             : segment_list_t (PRT_WIDTH-1 downto 0);
+  signal segments_deghost     : segment_list_t (PRT_WIDTH-1 downto 0);
+  signal segments_dav         : std_logic := '0';
+  signal segments_dav_deghost : std_logic := '0';
+  signal segments_s0          : segment_list_t (PRT_WIDTH/S0_WIDTH-1 downto 0);
 
   signal dav_priority : std_logic_vector (PRT_WIDTH/S0_WIDTH-1 downto 0) := (others => '0');
 
@@ -105,8 +105,8 @@ begin
       ly4   => partition_i(4),
       ly5   => partition_i(5),
 
-      dav_o      => strips_dav,
-      segments_o => strips
+      dav_o      => segments_dav,
+      segments_o => segments
       );
 
   --------------------------------------------------------------------------------
@@ -116,22 +116,22 @@ begin
   pre_filter_deghost_gen : if (DEGHOST_PRE) generate
     deghost_pre : entity work.deghost
       generic map (
-        WIDTH       => strips'length,
+        WIDTH       => segments'length,
         EDGE_DIST   => 2,
         GROUP_WIDTH => S0_WIDTH
         )
       port map (
         clock      => clock,
-        dav_i      => strips_dav,
-        dav_o      => strips_dav_deghost,
-        segments_i => strips,
-        segments_o => strips_deghost
+        dav_i      => segments_dav,
+        dav_o      => segments_dav_deghost,
+        segments_i => segments,
+        segments_o => segments_deghost
         );
   end generate;
 
   not_pre_filter_deghost_gen : if (not DEGHOST_PRE) generate
-    strips_dav_deghost <= strips_dav;
-    strips_deghost     <= strips;
+    segments_dav_deghost <= segments_dav;
+    segments_deghost     <= segments;
   end generate;
 
   -------------------------------------------------------------------------------
@@ -157,7 +157,7 @@ begin
 
     cand_to_slv : for I in 0 to S0_WIDTH-1 generate
     begin
-      cand_slv(I) <= convert(strips_deghost(REGION*S0_WIDTH+I), cand_slv(I));
+      cand_slv(I) <= convert(segments_deghost(REGION*S0_WIDTH+I), cand_slv(I));
     end generate;
 
     priority_encoder_inst : entity work.priority_encoder
@@ -172,14 +172,14 @@ begin
         )
       port map (
         clock => clock,
-        dav_i => strips_dav_deghost,
+        dav_i => segments_dav_deghost,
         dav_o => dav_priority(region),
         dat_i => cand_slv,
         dat_o => best,
         adr_o => open
         );
 
-    strips_s0(region) <= convert(best, strips_s0(region));
+    segments_s0(region) <= convert(best, segments_s0(region));
 
   end generate;
 
@@ -200,13 +200,13 @@ begin
         clock      => clock,
         dav_i      => dav_priority(0),
         dav_o      => dav_o,
-        segments_i => strips_s0,
+        segments_i => segments_s0,
         segments_o => segments_o
         );
   end generate;
 
   not_post_filter_deghost_gen : if (not DEGHOST_POST) generate
-    segments_o <= strips_s0;
+    segments_o <= segments_s0;
     dav_o      <= dav_priority(0);
   end generate;
 
