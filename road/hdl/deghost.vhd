@@ -42,53 +42,75 @@ begin
 
       for I in segments_i'range loop
 
-        if (GROUP_WIDTH > 0 and not at_edge(I, GROUP_WIDTH, EDGE_DIST)) then
+        segments_o(I) <= segments_i(I);
 
-          segments_o(I) <= segments_i(I);
+        if not (GROUP_WIDTH > 0 and not at_edge(I, GROUP_WIDTH, EDGE_DIST)) then
 
-        elsif (I /= WIDTH-1 and
+          -- if we aren't at the rightmost edge of the chamber (strip 191),
+          -- then check +1 to the right
+          if (I /= WIDTH-1 and
 
-            -- FIXME: either the I+1 or the I-1 should probably be a <=
-            -- so that they don't all just cancel and get lost?
-            (segments_i(I) < segments_i(I+1))
+              -- NOTE: either the I+1 or the I-1 should perhaps be a <=
+              -- so that they don't all just cancel and get lost?
+              -- this comparator uses strip number though so I guess the bigger
+              -- number should win.. it creates a bias toward the "right" side of
+              -- the chamber.. but oh well :/
+              (segments_i(I) < segments_i(I+1))
 
-            and
+              and
 
-            (not CHECK_STRIPS or
-             (segments_i(I+1).strip - segments_i(I).strip < 2))
+              (not CHECK_STRIPS or
+               (segments_i(I+1).strip - segments_i(I).strip < 2))
 
-            and
+              and
 
-            (not CHECK_IDS or
-             ((segments_i(I).id = segments_i(I+1).id) or
-              segments_i(I).id = segments_i(I+1).id + 2 or
-              segments_i(I).id + 2 = segments_i(I+1).id))) then
+              (not CHECK_IDS or
+               ((segments_i(I).id = segments_i(I+1).id) or
+                segments_i(I).id = segments_i(I+1).id + 2 or
+                segments_i(I).id + 2 = segments_i(I+1).id))) then
 
-          segments_o(I) <= null_pattern;
+            segments_o(I) <= null_pattern;
 
-        elsif (I /= 0 and
+            -- if (segments_i(I).lc > 4) then
+            --   assert false
+            --     report "cancelling segment(" &
+            --     integer'image(I) & " lc=" & integer'image(to_integer(segments_i(I).lc)) &
+            --     ") due to segment I+1" & " lc=" & integer'image(to_integer(segments_i(I+1).lc)) severity note;
+            -- end if;
 
-               (segments_i(I) < segments_i(I-1))
+          end if;
 
-               and
+          -- if we aren't at the leftmost edge of the chamber (strip 0),
+          -- then check -1 to the left
+          if (I /= 0 and
 
-               (not CHECK_STRIPS or
-                (segments_i(I).strip - segments_i(I-1).strip) < 2)
+              (segments_i(I) < segments_i(I-1))
 
-               and
+              and
 
-               (not CHECK_IDS or
-                ((segments_i(I).id = segments_i(I-1).id) or
-                 segments_i(I).id = segments_i(I-1).id - 2 or
-                 segments_i(I).id - 2 = segments_i(I-1).id))) then
+              (not CHECK_STRIPS or
+               (segments_i(I).strip - segments_i(I-1).strip) < 2)
 
-          segments_o(I) <= null_pattern;
+              and
 
-        else
+              (not CHECK_IDS or
+               ((segments_i(I).id = segments_i(I-1).id) or
+                segments_i(I).id = segments_i(I-1).id - 2 or
+                segments_i(I).id - 2 = segments_i(I-1).id))) then
 
-          segments_o(I) <= segments_i(I);
+            segments_o(I) <= null_pattern;
+
+            -- if (segments_i(I).lc > 4) then
+            --   assert false
+            --     report "cancelling segment(" &
+            --     integer'image(I) & " lc=" & integer'image(to_integer(segments_i(I).lc)) &
+            --     ") due to segment I-1" & " lc=" & integer'image(to_integer(segments_i(I-1).lc)) severity note;
+            -- end if;
+
+          end if;
 
         end if;
+
       end loop;
     end if;
   end process;
