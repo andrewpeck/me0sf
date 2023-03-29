@@ -70,17 +70,20 @@ async def pat_unit_test(dut, test="SEGMENTS"):
 
     if test=="SEGMENTS": 
         get_data = lambda : datagen(LY_CNT, N_NOISE, max_span=MAX_SPAN)
-    if test=="NOISE":
+    elif test=="NOISE":
+
         def get_data() -> List[int]:
-            hits = [0]*6
-            for _ in range(30):
+            hits = [0 for _ in range(6)]
+            num_hits = random.randint(0,50)
+            for _ in range(num_hits):
                 ly = random.randint(0,5)
                 strp = random.randint(0,37)
                 clust = 2**(random.randint(0,3))-1
                 hits[ly] |= clust << strp
             hits = [x & 2**37-1 for x in hits]
             return hits
-        
+    else:
+        raise Exception(f"Unknown test {test}")
 
     for _ in range(LATENCY):
         ly_data = get_data()
