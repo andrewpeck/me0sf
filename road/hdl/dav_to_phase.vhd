@@ -72,17 +72,17 @@ begin
       process (clock) is
       begin
         if (rising_edge(clock)) then
-          delay(0) <= dav;
+          delay(0) <= dav after 0.1 ns;
           for I in 1 to DLY-1 loop
-            delay(I) <= delay(I-1);
+            delay(I) <= delay(I-1) after 0.1 ns;
           end loop;
         end if;
       end process;
-      dav_dly <= delay(DLY-1);
+      dav_dly <= delay(DLY-1) after 0.1 ns;
     end generate;
 
     dav_nodly_gen : if (DLY=0) generate
-      dav_dly <= dav;
+      dav_dly <= dav after 0.1 ns;
     end generate;
 
     process (clock) is
