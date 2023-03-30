@@ -53,8 +53,14 @@ entity chamber is
     clock             : in  std_logic;                 -- MUST BE 320MHZ
     clock40           : in  std_logic;                 -- MUST BE  40MHZ
     ly_thresh         : in  std_logic_vector (2 downto 0);
+
     dav_i             : in  std_logic;
     dav_o             : out std_logic;
+    -- synthesis translate_off
+    dav_i_phase       : out natural range 0 to 7;
+    dav_o_phase       : out natural range 0 to 7;
+    -- synthesis translate_on
+
     sbits_i           : in  chamber_t;
     vfat_pretrigger_o : out std_logic_vector (23 downto 0);
     pretrigger_o      : out std_logic;
@@ -117,8 +123,6 @@ architecture behavioral of chamber is
   signal two_prt_sorted_dav : std_logic_vector (NUM_FINDERS/2-1 downto 0) := (others => '0');
   signal final_segs_dav     : std_logic;
 
-  signal dav_sr : std_logic_vector(9 downto 0);
-
   signal muxout_dav : std_logic := '0';
 
   signal outclk : std_logic := '0';
@@ -137,6 +141,15 @@ begin
   assert S1_REUSE = 1 or S1_REUSE = 2 or S1_REUSE = 4
     report "Only allowed values for s1 reuse are 1,2, and 4"
     severity error;
+
+  -- synthesis translate_off
+  dav_to_phase_i_mon : entity work.dav_to_phase
+    generic map (DIV => 1)
+    port map (clock  => clock, dav => dav_i, phase_o => dav_i_phase);
+  dav_to_phase_o_mon : entity work.dav_to_phase
+    generic map (DIV => 1)
+    port map (clock  => clock, dav => dav_o, phase_o => dav_o_phase);
+  -- synthesis translate_on
 
   --------------------------------------------------------------------------------
   -- Input signal assignment
