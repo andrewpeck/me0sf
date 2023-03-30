@@ -21,14 +21,12 @@ def pat_mux(partition_data, partition, config : Config):
     """
 
     fn = lambda strip : pat_unit(extract_data_window(partition_data, strip, config.max_span),
-                                      hit_thresh = config.hit_thresh,
-                                      ly_thresh = config.ly_thresh,
-                                      strip=strip,
-                                      partition=partition)
+                                 hit_thresh = config.hit_thresh,
+                                 ly_thresh = config.ly_thresh,
+                                 strip=strip,
+                                 partition=partition)
 
-    m = map(fn, range(config.width))
-
-    return list(m)
+    return [fn(x) for x in range(config.width)]
 
 #-------------------------------------------------------------------------------
 # Tests
