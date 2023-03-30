@@ -35,6 +35,10 @@ async def chamber_test_walkingf(dut, nloops=192*2):
     await chamber_test(dut, "WALKINGF", nloops)
 
 @cocotb.test()
+async def chamber_test_xprt(dut, nloops=1000):
+    await chamber_test(dut, "XPRT", nloops)
+
+@cocotb.test()
 async def chamber_test_segs(dut, nloops=1000):
     await chamber_test(dut, "SEGMENTS", nloops)
 
@@ -140,29 +144,45 @@ async def chamber_test(dut, test, nloops=512, verbose=False):
                 chamber_data=NULL()
                 chamber_data[iprt] = [(2**192-1) & (dat << istrip) for _ in range(6)]
 
-            if test=="SEGMENTS":
+            elif test=="SEGMENTS":
                 prt   = random.randint(0,7)
                 chamber_data = NULL()
                 chamber_data = [datagen(n_segs=2, n_noise=8, max_span=config.max_span)
                                 for _ in range(NUM_PARTITIONS)]
 
-            if test=="FF":
+            elif test=="FF":
                 if loop % 2 == 0:
                     chamber_data = [[0xFFFFFFFFFFFFFFFFFFFFFFFFFFFFFFFFFFFFFFFFFFFFFFFF for _ in range(6)] for _ in range(8)]
                 else:
                     chamber_data = [[0x000000000000000000000000000000000000000000000000 for _ in range(6)] for _ in range(8)]
 
-            if test=="5A":
+            elif test=="XPRT":
+
+                prt   = random.randint(0,6)
+                strp  = random.randint(0,191)
+
+                # feed in a cross-partition segment
+                chamber_data=NULL()
+                chamber_data[prt+0][0] |= (1 << strp)
+                chamber_data[prt+0][1] |= (1 << strp)
+                chamber_data[prt+0][2] |= (1 << strp)
+                chamber_data[prt+1][3] |= (1 << strp)
+                chamber_data[prt+1][4] |= (1 << strp)
+                chamber_data[prt+1][5] |= (1 << strp)
+
+            elif test=="5A":
                 if loop % 2 == 0:
                     chamber_data = [[0x555555555555555555555555555555555555555555555555 for _ in range(6)] for _ in range(8)]
                 else:
                     chamber_data = [[0xAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAA for _ in range(6)] for _ in range(8)]
 
-            if test=="RANDOM":
+            elif test=="RANDOM":
 
                 chamber_data = NULL()
 
-                for _ in range(1000):
+                num_hits = random.randint(0,1000)
+
+                for _ in range(num_hits):
                     prt   = random.randint(0,7)
                     ly    = random.randint(0,5)
                     strp  = random.randint(0,191)
@@ -181,6 +201,8 @@ async def chamber_test(dut, test, nloops=512, verbose=False):
                 #                 [0,0,0,0,0,0],
                 #                 [0,0,0,0,0,0],
                 #                 [0,0,0,0,0,0],]
+            else:
+                chamber_data = NULL()
 
             queue.append(chamber_data.copy())
             dut.sbits_i.value = chamber_data
