@@ -11,7 +11,6 @@ from math import ceil
 
 import cocotb
 import plotille
-from cocotb.clock import Clock
 from cocotb.triggers import RisingEdge
 
 from chamber_beh import process_chamber
@@ -73,7 +72,7 @@ async def chamber_test(dut, test, nloops=512, verbose=False):
     config.deghost_post = dut.partition_gen[0].partition_inst.DEGHOST_POST.value
     config.group_width = dut.partition_gen[0].partition_inst.S0_WIDTH.value
     config.num_outputs=int(dut.NUM_SEGMENTS)
-    config.ly_thresh = 4
+    config.ly_thresh = 6
     config.hit_thresh = 0 # set to zero to disable until implmented in fw
     config.cross_part_seg_width=0 # set to zero to disable until implmented in fw
 
@@ -84,11 +83,11 @@ async def chamber_test(dut, test, nloops=512, verbose=False):
     dut.ly_thresh.value = config.ly_thresh
 
     # flush the bufers
-    for _ in range(32):
+    for _ in range(256):
         await RisingEdge(dut.clock)
 
     # measure latency
-    meas_latency=1
+    meas_latency=-1
     for i in range(128):
         # extract latency
         dut.sbits_i.value = [[1 for _ in range(6)] for _ in range(NUM_PARTITIONS)]
@@ -103,7 +102,7 @@ async def chamber_test(dut, test, nloops=512, verbose=False):
 
     # flush the bufers
     dut.sbits_i.value = NULL()
-    for _ in range(32):
+    for _ in range(LATENCY*8+1):
         await RisingEdge(dut.clock)
 
     strip_cnts = []
@@ -116,6 +115,8 @@ async def chamber_test(dut, test, nloops=512, verbose=False):
         queue.append(NULL())
 
     # loop over some number of test cases
+    istrip = 0
+    iprt = 0
     loop = 0
     while loop < nloops:
 
@@ -131,18 +132,14 @@ async def chamber_test(dut, test, nloops=512, verbose=False):
 
             if test=="WALKING1" or test=="WALKINGF":
 
-                if loop == 0:
+                if istrip == 191:
                     istrip = 0
-                    iprt = 0
-                else:
-                    if istrip == 191:
-                        istrip = 0
-                        if iprt == 7:
-                            iprt = 0
-                        else:
-                            iprt += 1
+                    if iprt == 7:
+                        iprt = 0
                     else:
-                        istrip += 1
+                        iprt += 1
+                else:
+                    istrip += 1
 
                 dat = 0x1 if test=="WALKING1" else 0xffff
                 chamber_data=NULL()
@@ -208,7 +205,7 @@ async def chamber_test(dut, test, nloops=512, verbose=False):
             else:
                 chamber_data = NULL()
 
-            queue.append(chamber_data.copy())
+            queue.append(chamber_data)
             dut.sbits_i.value = chamber_data
 
             loop += 1
