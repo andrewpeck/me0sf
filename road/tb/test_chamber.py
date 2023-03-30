@@ -12,11 +12,13 @@ from math import ceil
 import cocotb
 import plotille
 from cocotb.triggers import RisingEdge
+from cocotb_test.simulator import run
 
 from chamber_beh import process_chamber
 from datagen import datagen
-from subfunc import *
-from tb_common import *
+from subfunc import Config
+from tb_common import (get_max_span_from_dut, get_segments_from_dut,
+                       monitor_dav, setup)
 
 @cocotb.test()
 async def chamber_test_ff(dut, nloops=20):
@@ -66,15 +68,14 @@ async def chamber_test(dut, test, nloops=512, verbose=False):
     config.x_prt_en = dut.X_PRT_EN.value
     config.en_non_pointing = dut.EN_NON_POINTING.value
     config.max_span = get_max_span_from_dut(dut)
-    config.max_span = get_max_span_from_dut(dut)
-    config.width = int(dut.partition_gen[0].partition_inst.pat_unit_mux_inst.WIDTH.value)
+    config.width = dut.partition_gen[0].partition_inst.pat_unit_mux_inst.WIDTH.value
     config.deghost_pre = dut.partition_gen[0].partition_inst.DEGHOST_PRE.value
     config.deghost_post = dut.partition_gen[0].partition_inst.DEGHOST_POST.value
     config.group_width = dut.partition_gen[0].partition_inst.S0_WIDTH.value
-    config.num_outputs=int(dut.NUM_SEGMENTS)
+    config.num_outputs= dut.NUM_SEGMENTS
     config.ly_thresh = 6
     config.hit_thresh = 0 # set to zero to disable until implmented in fw
-    config.cross_part_seg_width=0 # set to zero to disable until implmented in fw
+    config.cross_part_seg_width = 0 # set to zero to disable until implmented in fw
 
     NUM_PARTITIONS = 8
     NULL = lambda : [[0 for _ in range(6)] for _ in range(8)]
