@@ -156,7 +156,9 @@ begin
   --------------------------------------------------------------------------------
 
   partition_gen : for I in 0 to NUM_FINDERS-1 generate
-    signal partition_or : partition_t;
+    signal partition_or     : partition_t;
+    signal partition_or_reg : partition_t;
+    signal dav_or           : std_logic := '0';
   begin
 
     single_partitions : if (NUM_FINDERS <= 8) generate
@@ -194,6 +196,14 @@ begin
 
     end generate;
 
+    process (clock) is
+    begin
+      if (rising_edge(clock)) then
+        dav_or           <= dav_i;
+        partition_or_reg <= partition_or;
+      end if;
+    end process;
+
     --------------------------------------------------------------------------------
     -- Per Partition Pattern Finders
     --------------------------------------------------------------------------------
@@ -207,12 +217,12 @@ begin
       port map (
 
         clock => clock,
-        dav_i => dav_i,
+        dav_i => dav_or,
 
         ly_thresh => ly_thresh,
 
         -- primary layer
-        partition_i => partition_or,
+        partition_i => partition_or_reg,
 
         -- output patterns
         dav_o      => all_segs_dav(I),
@@ -230,6 +240,7 @@ begin
   begin
     if (rising_edge(clock)) then
 
+      -- FIXME: this needs to work with X_PRT pattern finding
       for iprt in 0 to NUM_PARTITIONS-1 loop
         for ivfat in 0 to 2 loop
 
