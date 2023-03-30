@@ -57,7 +57,7 @@ async def partition_test(dut, NLOOPS=1000, test="SEGMENTS"):
     dut.partition_i.value = 6*[0]
 
     # flush the buffers
-    for i in range(32):
+    for i in range(128):
         await RisingEdge(dut.clock)
 
     strip_cnts = []
@@ -78,6 +78,11 @@ async def partition_test(dut, NLOOPS=1000, test="SEGMENTS"):
             break
 
     LATENCY = ceil(meas_latency)
+
+    # flush the buffers
+    dut.partition_i.value = [0 for _ in range(6)]
+    for i in range(128):
+        await RisingEdge(dut.clock)
 
     for i in range(LATENCY):
         queue.append([0]*6)
