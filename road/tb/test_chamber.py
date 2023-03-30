@@ -72,7 +72,7 @@ async def chamber_test(dut, test, nloops=512, verbose=False):
     config.deghost_pre = dut.partition_gen[0].partition_inst.DEGHOST_PRE.value
     config.deghost_post = dut.partition_gen[0].partition_inst.DEGHOST_POST.value
     config.group_width = dut.partition_gen[0].partition_inst.S0_WIDTH.value
-    config.num_outputs= dut.NUM_SEGMENTS
+    config.num_outputs= dut.NUM_SEGMENTS.value
     config.ly_thresh = 6
     config.hit_thresh = 0 # set to zero to disable until implmented in fw
     config.cross_part_seg_width = 0 # set to zero to disable until implmented in fw
