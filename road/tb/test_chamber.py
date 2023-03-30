@@ -7,6 +7,7 @@
 
 import os
 import random
+from math import ceil
 
 import cocotb
 import plotille
@@ -78,7 +79,6 @@ async def chamber_test(dut, test, nloops=512, verbose=False):
 
     NUM_PARTITIONS = 8
     NULL = lambda : [[0 for _ in range(6)] for _ in range(8)]
-    LATENCY = 6
     dut.sbits_i.value = NULL()
 
     dut.ly_thresh.value = config.ly_thresh
@@ -88,14 +88,18 @@ async def chamber_test(dut, test, nloops=512, verbose=False):
         await RisingEdge(dut.clock)
 
     # measure latency
+    meas_latency=1
     for i in range(128):
         # extract latency
         dut.sbits_i.value = [[1 for _ in range(6)] for _ in range(NUM_PARTITIONS)]
         await RisingEdge(dut.clock)
         if dut.segments_o[0].lc.value.is_resolvable and \
            dut.segments_o[0].lc.value.integer >= config.ly_thresh:
-            print(f"Latency={i} clocks ({i/8.0} bx)")
+            meas_latency = i/8.0
+            print(f"Latency={i} clocks ({meas_latency} bx)")
             break
+
+    LATENCY = ceil(meas_latency)
 
     # flush the bufers
     dut.sbits_i.value = NULL()
@@ -107,8 +111,7 @@ async def chamber_test(dut, test, nloops=512, verbose=False):
     partition_cnts = []
 
     queue = []
-    dut.sbits_i.value = NULL()
-    for _ in range(LATENCY):
+    for _ in range(LATENCY-1):
         await RisingEdge(dut.dav_i)
         queue.append(NULL())
 
@@ -119,7 +122,8 @@ async def chamber_test(dut, test, nloops=512, verbose=False):
         # push new data on dav_i
         if dut.dav_i_phase.value == 7:
 
-            print(f"{loop=}")
+            if verbose:
+                print(f"{loop=}")
 
             # (1) generate new random data
             # (2) push it onto the queue
