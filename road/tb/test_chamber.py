@@ -55,8 +55,8 @@ async def chamber_test(dut, test, nloops=512, verbose=False):
     random.seed(56) # chloe's favorite number
 
     # setup the dut and extract constants from it
-
     setup(dut)
+
     cocotb.start_soon(monitor_dav(dut))
 
     await RisingEdge(dut.clock)
@@ -117,7 +117,7 @@ async def chamber_test(dut, test, nloops=512, verbose=False):
     while loop < nloops:
 
         # push new data on dav_i
-        if dut.dav_i.value == 1:
+        if dut.dav_i_phase.value == 7:
 
             print(f"{loop=}")
 
@@ -210,7 +210,7 @@ async def chamber_test(dut, test, nloops=512, verbose=False):
             loop += 1
 
         # pop old data on dav_o
-        if dut.dav_o.value == 1:
+        if dut.dav_o_phase.value == 0:
 
             # gather emulator output
             popped_data = queue.pop(0)
@@ -241,6 +241,7 @@ async def chamber_test(dut, test, nloops=512, verbose=False):
                         print(f" {err} seg {i}:")
                         print("   > sw: " + str(sw_segments[i]))
                         print("   > fw: " + str(fw_segments[i]))
+
                     assert sw_segments[i] == fw_segments[i]
 
         await RisingEdge(dut.clock)
@@ -289,6 +290,7 @@ def test_chamber():
     parameters = {}
 
     os.environ["SIM"] = "questa"
+    os.environ["COCOTB_RESULTS_FILE"] = f"../log/{module}.xml"
 
     run(vhdl_sources=vhdl_sources,
         module=module,  # name of cocotb test module
