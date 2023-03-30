@@ -45,8 +45,14 @@ entity partition is
     --------------------------------------------------------------------------------
 
     clock : in  std_logic;
+
     dav_i : in  std_logic;
     dav_o : out std_logic := '0';
+
+    -- synthesis translate_off
+    dav_i_phase : out natural range 0 to 7 := 0;
+    dav_o_phase : out natural range 0 to 7 := 0;
+    -- synthesis translate_on
 
     ly_thresh : in std_logic_vector (2 downto 0);
 
@@ -76,6 +82,19 @@ architecture behavioral of partition is
   signal dav_priority : std_logic_vector (PRT_WIDTH/S0_WIDTH-1 downto 0) := (others => '0');
 
 begin
+
+  --------------------------------------------------------------------------------
+  -- DAV Monitor (for sim)
+  --------------------------------------------------------------------------------
+
+  -- synthesis translate_off
+  dav_to_phase_i_mon : entity work.dav_to_phase
+    generic map (DIV => 1)
+    port map (clock  => clock, dav => dav_i, phase_o => dav_i_phase);
+  dav_to_phase_o_mon : entity work.dav_to_phase
+    generic map (DIV => 1)
+    port map (clock  => clock, dav => dav_o, phase_o => dav_o_phase);
+  -- synthesis translate_on
 
   --------------------------------------------------------------------------------
   -- Pattern Unit Mux
