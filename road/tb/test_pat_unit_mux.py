@@ -27,19 +27,19 @@ def set_layer_hits(dut, hits):
     dut.ly5.value = hits[5]
 
 
-@cocotb.test()
+@cocotb.test() # type: ignore
 async def pat_unit_mux_walking(dut):
     await pat_unit_mux_test(dut, NLOOPS=192, test="WALKING1")
 
-@cocotb.test()
+@cocotb.test() # type: ignore
 async def pat_unit_mux_segments(dut):
     await pat_unit_mux_test(dut, NLOOPS=1000, test="SEGMENTS")
 
-@cocotb.test()
+@cocotb.test() # type: ignore
 async def pat_unit_mux_5s(dut):
     await pat_unit_mux_test(dut, NLOOPS=20, test="5A")
 
-@cocotb.test()
+@cocotb.test() # type: ignore
 async def pat_unit_mux_ff(dut):
     await pat_unit_mux_test(dut, NLOOPS=20, test="FF")
 

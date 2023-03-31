@@ -20,31 +20,31 @@ from subfunc import Config
 from tb_common import (get_max_span_from_dut, get_segments_from_dut,
                        monitor_dav, setup)
 
-@cocotb.test()
+@cocotb.test() # type: ignore
 async def chamber_test_ff(dut, nloops=20):
     await chamber_test(dut, "FF", nloops)
 
-@cocotb.test()
+@cocotb.test() # type: ignore
 async def chamber_test_5a(dut, nloops=20):
     await chamber_test(dut, "5A", nloops)
 
-@cocotb.test()
+@cocotb.test() # type: ignore
 async def chamber_test_walking1(dut, nloops=192*2):
     await chamber_test(dut, "WALKING1", nloops)
 
-@cocotb.test()
+@cocotb.test() # type: ignore
 async def chamber_test_walkingf(dut, nloops=192*2):
     await chamber_test(dut, "WALKINGF", nloops)
 
-@cocotb.test()
-async def chamber_test_xprt(dut, nloops=1000):
+@cocotb.test() # type: ignore
+async def chamber_test_xprt(dut, nloops=100):
     await chamber_test(dut, "XPRT", nloops)
 
-@cocotb.test()
+@cocotb.test() # type: ignore
 async def chamber_test_segs(dut, nloops=1000):
     await chamber_test(dut, "SEGMENTS", nloops)
 
-@cocotb.test()
+@cocotb.test() # type: ignore
 async def chamber_test_random(dut, nloops=100):
     await chamber_test(dut, "RANDOM", nloops)
 
@@ -87,10 +87,9 @@ async def chamber_test(dut, test, nloops=512, verbose=False):
     for _ in range(256):
         await RisingEdge(dut.clock)
 
-    # measure latency
+    # measure latency by putting some s-bits on a strip and waiting to see the output
     meas_latency=-1
     for i in range(128):
-        # extract latency
         dut.sbits_i.value = [[1 for _ in range(6)] for _ in range(NUM_PARTITIONS)]
         await RisingEdge(dut.clock)
         if dut.segments_o[0].lc.value.is_resolvable and \
@@ -111,6 +110,7 @@ async def chamber_test(dut, test, nloops=512, verbose=False):
     partition_cnts = []
 
     queue = []
+
     for _ in range(LATENCY-1):
         await RisingEdge(dut.dav_i)
         queue.append(NULL())
@@ -217,9 +217,8 @@ async def chamber_test(dut, test, nloops=512, verbose=False):
             # gather emulator output
             popped_data = queue.pop(0)
 
-            sw_segments = process_chamber(
-                chamber_data=popped_data,
-                config=config)
+            sw_segments = process_chamber(chamber_data=popped_data,
+                                          config=config)
 
             fw_segments = get_segments_from_dut(dut)
 

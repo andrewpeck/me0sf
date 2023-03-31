@@ -27,11 +27,11 @@ async def monitor_dav(dut, latency):
             await RisingEdge(dut.clock)
         assert dut.dav_o.value == 1, f"Is the latency setting wrong? did not find dav w/ latency={latency}"
 
-@cocotb.test()
+@cocotb.test() # type: ignore
 async def pat_unit_test_segments(dut):
     await pat_unit_test(dut, test="SEGMENTS")
 
-@cocotb.test()
+@cocotb.test() # type: ignore
 async def pat_unit_test_noise(dut):
     await pat_unit_test(dut, test="NOISE")
 

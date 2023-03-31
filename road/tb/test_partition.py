@@ -12,27 +12,27 @@ from partition_beh import process_partition
 from subfunc import *
 from tb_common import *
 
-@cocotb.test()
+@cocotb.test() # type: ignore
 async def partition_test_5A(dut):
     await partition_test(dut, NLOOPS=20, test="5A")
 
-@cocotb.test()
+@cocotb.test() # type: ignore
 async def partition_test_FF(dut):
     await partition_test(dut, NLOOPS=20, test="FF")
 
-@cocotb.test()
+@cocotb.test() # type: ignore
 async def partition_test_walking1(dut):
     await partition_test(dut, NLOOPS=192, test="WALKING1")
 
-@cocotb.test()
+@cocotb.test() # type: ignore
 async def partition_test_walkingf(dut):
     await partition_test(dut, NLOOPS=192, test="WALKINGF")
 
-@cocotb.test()
+@cocotb.test() # type: ignore
 async def partition_test_random(dut):
     await partition_test(dut, NLOOPS=2000, test="RANDOM")
 
-@cocotb.test()
+@cocotb.test() # type: ignore
 async def partition_test_segs(dut):
     await partition_test(dut, NLOOPS=2000, test="SEGMENTS")
 

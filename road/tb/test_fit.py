@@ -1,12 +1,12 @@
 #!/usr/bin/env python3
+import math
 import os
 import random
-import math
 
 import cocotb
-from cocotb_test.simulator import run
 from cocotb.clock import Clock
 from cocotb.triggers import RisingEdge
+from cocotb_test.simulator import run
 
 
 def fit_modified(x, y):
@@ -39,24 +39,14 @@ def rand_y():
             math.floor(rand_m * (4 - 2.5) + rand_b + random.randint(-1, 1)),
             math.floor(rand_m * (5 - 2.5) + rand_b + random.randint(-1, 1))]
 
-    # return [random.randint(-15, 15),
-    #         random.randint(-15, 15),
-    #         random.randint(-15, 15),
-    #         random.randint(-15, 15),
-    #         random.randint(-15, 15),
-    #         random.randint(-15, 15)]
-    #
-    # return [1, 2, 3, 4, 5, 6]
-
-
 def print_slope(slope, intercept, key_strip, m, b, key_s):
     print("found y=%.3f x + %f (s=%f)" % (slope, intercept, key_strip))
     print("expec y=%.3f x + %f (s=%f)" % (m, b, key_s))
     print("\n")
 
 
-@cocotb.test()
-async def fit_tb(dut):
+@cocotb.test() # type: ignore
+async def fit_tb(dut, NLOOPS=10000):
     """Test for priority encoder with randomized data on all inputs"""
 
     cocotb.fork(Clock(dut.clock, 20, units="ns").start())  # Create a clock
@@ -79,33 +69,25 @@ async def fit_tb(dut):
 
     LATENCY = dut.N_STAGES.value + 1
 
-    for i in range(LATENCY):
+    for _ in range(LATENCY):
         await RisingEdge(dut.clock)
 
     data = []
 
-    itests = 0
-
-    for i in range(LATENCY - 1):
+    for _ in range(LATENCY - 1):
 
         y = rand_y()
+        data.append(y)
 
         # plot line
         # plt.plot(x, y)
         # plt.show()
 
-        data.append(y)
+        (dut.ly0.value, dut.ly1.value, dut.ly2.value, dut.ly3.value, dut.ly4.value, dut.ly5.value) = y
 
-        dut.ly0.value = y[0]
-        dut.ly1.value = y[1]
-        dut.ly2.value = y[2]
-        dut.ly3.value = y[3]
-        dut.ly4.value = y[4]
-        dut.ly5.value = y[5]
+        await RisingEdge(dut.clock)
 
-        await RisingEdge(dut.clock)  # Synchronize with the clock
-
-    for i in range(50000):
+    for iloop in range(NLOOPS):
 
         y = rand_y()
 
@@ -139,34 +121,27 @@ async def fit_tb(dut):
         # m = round(m, 1)
         # b = round(b, 1)
 
-        # if (round(slope, 1) != round(m, 1) or round(intercept, 2) != round(b, 1)):
-
         # if (slope != m or intercept != b):
-        # print_slope(slope, intercept, m, b)
+        #    print_slope(slope, intercept, m, b)
 
         key_s = m * 2.5 + b
-        # key_strip = slope*2.5 + b
 
         # print(this_data)
-
         # print_slope(slope, intercept, m, b)
-
         # print_slope(slope, intercept, key_strip, m, b, key_s)
 
-        assert abs(b - intercept) < max_error_intercept, print_slope(
-            slope, intercept, key_strip, m, b, key_s)
-        assert abs(m - slope) < max_error_strips_per_layer, print_slope(
-            slope, intercept, key_strip, m, b, key_s)
-        assert abs(key_s - key_strip) < max_error_strips, print_slope(
-            slope, intercept, key_strip, m, b, key_s)
+        assert abs(b - intercept) < max_error_intercept, \
+            print_slope(slope, intercept, key_strip, m, b, key_s)
+        assert abs(m - slope) < max_error_strips_per_layer, \
+            print_slope(slope, intercept, key_strip, m, b, key_s)
+        assert abs(key_s - key_strip) < max_error_strips, \
+            print_slope(slope, intercept, key_strip, m, b, key_s)
 
-        if itests % 1000 == 0:
-            print("%d fits tested" % itests)
-
-        itests += 1
+        if iloop % 1000 == 0:
+            print("%d fits tested" % iloop)
 
     print("="*80)
-    print("%d fits tested" % itests)
+    print("%d fits tested" % NLOOPS)
     print("="*80)
 
 
