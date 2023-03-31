@@ -147,8 +147,6 @@ async def chamber_test(dut, test, nloops=512, verbose=False):
                 chamber_data[iprt] = [(2**192-1) & (dat << istrip) for _ in range(6)]
 
             elif test=="SEGMENTS":
-                prt   = random.randint(0,7)
-                chamber_data = NULL()
                 chamber_data = [datagen(n_segs=2, n_noise=8, max_span=config.max_span)
                                 for _ in range(NUM_PARTITIONS)]
 
