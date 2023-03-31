@@ -1,7 +1,6 @@
 # Emulator for chamber.vhd
 import functools
 import operator
-from math import ceil
 from typing import List
 
 from partition_beh import process_partition
@@ -84,10 +83,10 @@ def process_chamber(chamber_data : List[List[int]], config : Config):
 
                 # otherwise look only in the +1 partition
                 else:
-                    data[finder][0] =                                 chamber_data[finder//2][0]
-                    data[finder][1] =                                 chamber_data[finder//2][1]
-                    data[finder][2] = chamber_data[finder//2+1][2] or chamber_data[finder//2][2]
-                    data[finder][3] = chamber_data[finder//2+1][3] or chamber_data[finder//2][3]
+                    data[finder][0] =                                chamber_data[finder//2][0]
+                    data[finder][1] =                                chamber_data[finder//2][1]
+                    data[finder][2] = chamber_data[finder//2+1][2] | chamber_data[finder//2][2]
+                    data[finder][3] = chamber_data[finder//2+1][3] | chamber_data[finder//2][3]
                     data[finder][4] = chamber_data[finder//2+1][4]
                     data[finder][5] = chamber_data[finder//2+1][5]
 
