@@ -43,7 +43,7 @@ entity pat_unit_mux is
     -- of the chamber where some virtual chamber of all zeroes exists... to be
     -- trimmed away by the compiler during optimization
     PADDING    : natural        := (get_max_span(patdef_array)-1)/2;
-    MUX_FACTOR : natural        := 1
+    MUX_FACTOR : natural        := 8
     );
   port(
 
