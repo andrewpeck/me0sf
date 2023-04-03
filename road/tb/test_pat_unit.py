@@ -27,11 +27,11 @@ async def monitor_dav(dut, latency):
             await RisingEdge(dut.clock)
         assert dut.dav_o.value == 1, f"Is the latency setting wrong? did not find dav w/ latency={latency}"
 
-@cocotb.test()
+@cocotb.test() # type: ignore
 async def pat_unit_test_segments(dut):
     await pat_unit_test(dut, test="SEGMENTS")
 
-@cocotb.test()
+@cocotb.test() # type: ignore
 async def pat_unit_test_noise(dut):
     await pat_unit_test(dut, test="NOISE")
 
@@ -43,11 +43,12 @@ async def pat_unit_test(dut, test="SEGMENTS"):
     LY_CNT = 6
     N_NOISE = 1
     LY_THRESH = 4
-    HIT_THRESH = 0
+    HIT_THRESH = 4
     LATENCY = dut.LATENCY.value
 
     # set layer count threshold
     dut.ly_thresh.value = LY_THRESH
+    dut.hit_thresh.value = HIT_THRESH
 
     # set MAX_SPAN from firmware
     # should be a number approx 37
@@ -70,17 +71,20 @@ async def pat_unit_test(dut, test="SEGMENTS"):
 
     if test=="SEGMENTS": 
         get_data = lambda : datagen(LY_CNT, N_NOISE, max_span=MAX_SPAN)
-    if test=="NOISE":
+    elif test=="NOISE":
+
         def get_data() -> List[int]:
-            hits = [0]*6
-            for _ in range(30):
+            hits = [0 for _ in range(6)]
+            num_hits = random.randint(0,50)
+            for _ in range(num_hits):
                 ly = random.randint(0,5)
                 strp = random.randint(0,37)
                 clust = 2**(random.randint(0,3))-1
                 hits[ly] |= clust << strp
             hits = [x & 2**37-1 for x in hits]
             return hits
-        
+    else:
+        raise Exception(f"Unknown test {test}")
 
     for _ in range(LATENCY):
         ly_data = get_data()

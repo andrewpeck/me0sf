@@ -27,19 +27,19 @@ def set_layer_hits(dut, hits):
     dut.ly5.value = hits[5]
 
 
-@cocotb.test()
+@cocotb.test() # type: ignore
 async def pat_unit_mux_walking(dut):
-    await pat_unit_mux_test(dut, NLOOPS=500, test="WALKING1")
+    await pat_unit_mux_test(dut, NLOOPS=192, test="WALKING1")
 
-@cocotb.test()
+@cocotb.test() # type: ignore
 async def pat_unit_mux_segments(dut):
     await pat_unit_mux_test(dut, NLOOPS=1000, test="SEGMENTS")
 
-@cocotb.test()
+@cocotb.test() # type: ignore
 async def pat_unit_mux_5s(dut):
     await pat_unit_mux_test(dut, NLOOPS=20, test="5A")
 
-@cocotb.test()
+@cocotb.test() # type: ignore
 async def pat_unit_mux_ff(dut):
     await pat_unit_mux_test(dut, NLOOPS=20, test="FF")
 
@@ -49,7 +49,6 @@ async def pat_unit_mux_test(dut, NLOOPS=500, test="WALKING1"):
 
     setup(dut)
 
-    dut.ly_thresh.value = 4
 
     await RisingEdge(dut.clock)
 
@@ -58,13 +57,15 @@ async def pat_unit_mux_test(dut, NLOOPS=500, test="WALKING1"):
     config = Config()
     config.max_span=get_max_span_from_dut(dut)
     config.hit_thresh=0
-    config.ly_thresh=int(dut.ly_thresh.value)
+    config.ly_thresh=6
     config.width=dut.WIDTH.value
 
-    set_dut_inputs(dut, [0] * 6)
+    dut.ly_thresh.value = config.ly_thresh
+    dut.hit_thresh.value = config.hit_thresh
+    set_dut_inputs(dut, [0 for _ in range(6)])
 
     # flush the pipeline for a few clocks
-    for _ in range(10):
+    for _ in range(32):
         await RisingEdge(dut.clock)
 
     strip_cnts = []
@@ -73,7 +74,7 @@ async def pat_unit_mux_test(dut, NLOOPS=500, test="WALKING1"):
     # set up a fixed latency queue
     queue = []
     for _ in range(LATENCY+1):
-        queue.append([0]*6)
+        queue.append([0 for _ in range(6)])
 
     await RisingEdge(dut.dav_i) # align to the dav_i
 
@@ -82,14 +83,14 @@ async def pat_unit_mux_test(dut, NLOOPS=500, test="WALKING1"):
     while i < NLOOPS:
 
         # push new data on dav_i
-        if dut.dav_i.value == 1:
+        if dut.dav_i_phase.value == 7:
 
             # (1) generate new random data
             # (2) push it onto the queue
             # (3) set the DUT inputs to the new data
 
             if test=="WALKING1":
-                new_data = 6 * [0x1 << (i % 192)]
+                new_data = [0x1 << (i % 192) for _ in range(6)]
             elif test=="5A":
                 if i % 2 == 0:
                     new_data = [0x555555555555555555555555555555555555555555555555 for _ in range(6)]
@@ -104,7 +105,7 @@ async def pat_unit_mux_test(dut, NLOOPS=500, test="WALKING1"):
                 new_data = datagen(n_segs=2, n_noise=10, max_span=config.width)
             else:
                 new_data = 0*[6]
-                assert "Invalid test selected"
+                raise Exception("Invalid test selected")
 
             queue.append(new_data)
 
@@ -113,7 +114,7 @@ async def pat_unit_mux_test(dut, NLOOPS=500, test="WALKING1"):
             i += 1
 
         # pop old data on dav_o
-        if dut.dav_o.value == 1:
+        if dut.dav_o_phase.value == 0:
 
 
             # (1) pop old data from the head of the queue
@@ -169,13 +170,14 @@ def test_pat_unit_mux():
     parameters["MUX_FACTOR"] = 8
 
     os.environ["SIM"] = "questa"
+    #os.environ["COCOTB_RESULTS_FILE"] = f"../log/{module}.xml"
 
     run(vhdl_sources=vhdl_sources,
         module=module,  # name of cocotb test module
         compile_args=["-2008"],
         toplevel="pat_unit_mux",  # top level HDL
         toplevel_lang="vhdl",
-        # sim_args=["-do", '"set NumericStdNoWarnings 1;"'],
+        sim_args=["-do", "set NumericStdNoWarnings 1;"],
         parameters=parameters,
         gui=0)
 

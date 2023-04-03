@@ -33,15 +33,12 @@ use ieee.numeric_std.all;
 
 entity chamber is
   generic (
-    EN_NON_POINTING : boolean := false;
-
-    FINAL_BITONIC  : boolean := true;
-    NUM_PARTITIONS : integer := 8;
-    NUM_SEGMENTS   : integer := 4;
-    S0_WIDTH       : natural := 16;
-    S1_REUSE       : natural := 4;      -- 1, 2, or 4
-
-    REG_OUTPUTS  : boolean := false;
+    X_PRT_EN        : boolean := true;   -- true to enable x-prt segment finding
+    EN_NON_POINTING : boolean := false;  -- true to enable x-prt segment finding on non-pointing muons
+    NUM_SEGMENTS    : integer := 4;      -- number of output segments
+    S0_WIDTH        : natural := 16;     -- chunk each partition into groups this size and choose only 1 segment from each group
+    S1_REUSE        : natural := 4;      -- reuse sorters
+    REG_OUTPUTS     : boolean := false;  -- true to  register outputs on the 40MHz clock
 
     PATLIST : patdef_array_t := patdef_array;
 
@@ -53,11 +50,19 @@ entity chamber is
     LY5_SPAN : natural := get_max_span(patdef_array)   -- TODO: variably size the other layers instead of using the max
     );
   port(
-    clock             : in  std_logic;                 -- MUST BE 320MHZ
-    clock40           : in  std_logic;                 -- MUST BE  40MHZ
-    ly_thresh         : in  std_logic_vector (2 downto 0);
+    clock             : in  std_logic;                     -- MUST BE 320MHZ
+    clock40           : in  std_logic;                     -- MUST BE  40MHZ
+
+    ly_thresh         : in  std_logic_vector (2 downto 0); -- Layer threshold, 0 to 6
+    hit_thresh        : in  std_logic_vector (5 downto 0); -- Hit threshold
+
     dav_i             : in  std_logic;
     dav_o             : out std_logic;
+    -- synthesis translate_off
+    dav_i_phase       : out natural range 0 to 7;
+    dav_o_phase       : out natural range 0 to 7;
+    -- synthesis translate_on
+
     sbits_i           : in  chamber_t;
     vfat_pretrigger_o : out std_logic_vector (23 downto 0);
     pretrigger_o      : out std_logic;
@@ -71,6 +76,8 @@ architecture behavioral of chamber is
   -- Constants
   --------------------------------------------------------------------------------
 
+  constant NUM_PARTITIONS : integer := 8;
+
   -- Number of segments output from each partition, e.g. 24
   constant NUM_SEGS_PER_PRT : natural := PRT_WIDTH/S0_WIDTH;
 
@@ -80,18 +87,19 @@ architecture behavioral of chamber is
   --
   -- include a +1 offset so the 15 case divides to 8, while 8 divides to 4
   --
-  -- | N_PRT | S1_REUSE | N_SELECTORS |
+  -- | X_PRT | S1_REUSE | N_SELECTORS |
   -- |-------+----------+-------------|
-  -- |     8 |        1 |           4 |
-  -- |     8 |        2 |           2 |
-  -- |     8 |        4 |           1 |
-  -- |    15 |        1 |           8 |
-  -- |    15 |        2 |           4 |
-  -- |    15 |        4 |           2 |
-  --
-  constant NUM_SELECTORS_S0 : natural := ((NUM_PARTITIONS+1)/2) / S1_REUSE;
+  -- |     f |        1 |           4 |
+  -- |     f |        2 |           2 |
+  -- |     f |        4 |           1 |
+  -- |     t |        1 |           8 |
+  -- |     t |        2 |           4 |
+  -- |     t |        4 |           2 |
 
-  constant NUM_SEGMENT_SELECTOR_INPUTS : natural := (NUM_PARTITIONS+1)/S1_REUSE*NUM_SEGMENTS*2;
+  constant NUM_FINDERS : integer := if_then_else (X_PRT_EN, 15, 8);
+
+  constant NUM_SELECTORS_S0 : natural := ((NUM_FINDERS+1)/2) / S1_REUSE;
+  constant NUM_SEGMENT_SELECTOR_INPUTS : natural := (NUM_FINDERS+1)/S1_REUSE*NUM_SEGMENTS*2;
 
   --------------------------------------------------------------------------------
   -- Segments
@@ -100,9 +108,9 @@ architecture behavioral of chamber is
   signal segs_to_selector : segment_list_t
     ((NUM_PARTITIONS+1)/2*NUM_SEGMENTS-1 downto 0);
 
-  signal all_segs            : segment_list_t (NUM_PARTITIONS * NUM_SEGS_PER_PRT - 1 downto 0);
-  signal one_prt_sorted_segs : segment_list_t (NUM_PARTITIONS * NUM_SEGMENTS - 1 downto 0);
-  signal two_prt_sorted_segs : segment_list_t (NUM_PARTITIONS * NUM_SEGMENTS/2 - 1 downto 0);
+  signal all_segs            : segment_list_t (NUM_FINDERS * NUM_SEGS_PER_PRT - 1 downto 0);
+  signal one_prt_sorted_segs : segment_list_t (NUM_FINDERS * NUM_SEGMENTS - 1 downto 0);
+  signal two_prt_sorted_segs : segment_list_t (NUM_FINDERS * NUM_SEGMENTS/2 - 1 downto 0);
   signal final_segs          : segment_list_t (NUM_SEGMENTS - 1 downto 0);
 
   signal vfat_pretrigger : std_logic_vector (3*NUM_PARTITIONS-1 downto 0);
@@ -111,13 +119,11 @@ architecture behavioral of chamber is
   -- Data valids
   --------------------------------------------------------------------------------
 
-  signal all_segs_dav : std_logic_vector (NUM_PARTITIONS - 1 downto 0) := (others => '0');
+  signal all_segs_dav : std_logic_vector (NUM_FINDERS - 1 downto 0) := (others => '0');
 
-  signal one_prt_sorted_dav : std_logic_vector (NUM_PARTITIONS-1 downto 0)   := (others => '0');
-  signal two_prt_sorted_dav : std_logic_vector (NUM_PARTITIONS/2-1 downto 0) := (others => '0');
+  signal one_prt_sorted_dav : std_logic_vector (NUM_FINDERS-1 downto 0)   := (others => '0');
+  signal two_prt_sorted_dav : std_logic_vector (NUM_FINDERS/2-1 downto 0) := (others => '0');
   signal final_segs_dav     : std_logic;
-
-  signal dav_sr : std_logic_vector(9 downto 0);
 
   signal muxout_dav : std_logic := '0';
 
@@ -126,69 +132,79 @@ architecture behavioral of chamber is
 begin
 
   assert
-    (NUM_PARTITIONS = 8 and S1_REUSE = 1 and NUM_SELECTORS_S0 = 4) or
-    (NUM_PARTITIONS = 8 and S1_REUSE = 2 and NUM_SELECTORS_S0 = 2) or
-    (NUM_PARTITIONS = 8 and S1_REUSE = 4 and NUM_SELECTORS_S0 = 1) or
-    (NUM_PARTITIONS = 15 and S1_REUSE = 1 and NUM_SELECTORS_S0 = 8) or
-    (NUM_PARTITIONS = 15 and S1_REUSE = 2 and NUM_SELECTORS_S0 = 4) or
-    (NUM_PARTITIONS = 15 and S1_REUSE = 4 and NUM_SELECTORS_S0 = 2)
+    (X_PRT_EN = false and S1_REUSE = 1 and NUM_SELECTORS_S0 = 4) or
+    (X_PRT_EN = false and S1_REUSE = 2 and NUM_SELECTORS_S0 = 2) or
+    (X_PRT_EN = false and S1_REUSE = 4 and NUM_SELECTORS_S0 = 1) or
+    (X_PRT_EN = true  and S1_REUSE = 1 and NUM_SELECTORS_S0 = 8) or
+    (X_PRT_EN = true  and S1_REUSE = 2 and NUM_SELECTORS_S0 = 4) or
+    (X_PRT_EN = true  and S1_REUSE = 4 and NUM_SELECTORS_S0 = 2)
     report "Error in NUM_SELECTORS_S0 calculation" severity error;
 
   assert S1_REUSE = 1 or S1_REUSE = 2 or S1_REUSE = 4
     report "Only allowed values for s1 reuse are 1,2, and 4"
     severity error;
 
+  -- synthesis translate_off
+  dav_to_phase_i_mon : entity work.dav_to_phase
+    generic map (DIV => 1)
+    port map (clock  => clock, dav => dav_i, phase_o => dav_i_phase);
+  dav_to_phase_o_mon : entity work.dav_to_phase
+    generic map (DIV => 1)
+    port map (clock  => clock, dav => dav_o, phase_o => dav_o_phase);
+  -- synthesis translate_on
+
   --------------------------------------------------------------------------------
   -- Input signal assignment
   --------------------------------------------------------------------------------
 
-  partition_gen : for I in 0 to NUM_PARTITIONS-1 generate
-    signal partition_or : partition_t;
+  partition_gen : for I in 0 to NUM_FINDERS-1 generate
+    signal partition_or     : partition_t;
+    signal partition_or_reg : partition_t;
+    signal dav_or           : std_logic := '0';
   begin
 
-    single_partitions : if (NUM_PARTITIONS <= 8) generate
+    single_partitions : if (NUM_FINDERS <= 8) generate
       partition_or <= sbits_i(I);
     end generate;
 
-    half_partitions : if (NUM_PARTITIONS > 8) generate
+    half_partitions : if (NUM_FINDERS > 8) generate
 
+      -- for even finders, just take the partition as it is
       even_gen : if (I mod 2 = 0) generate
         partition_or <= sbits_i(I/2);
       end generate;
 
-      -- look for only straight and pointing segments
-      -- (for cms)
-      pointing : if (not EN_NON_POINTING) generate
-        odd_gen : if (I mod 2 = 1) generate
-          partition_or(5) <= sbits_i((I-1)/2)(5);
-          partition_or(4) <= sbits_i((I-1)/2)(4);
-          partition_or(3) <= sbits_i((I-1)/2)(3);
-          gt_1to15 : if (I > 1) generate
-            partition_or(2) <= sbits_i((I-1)/2)(2) or sbits_i((I-1)/2-1)(2);
-            partition_or(1) <= sbits_i((I-1)/2)(1) or sbits_i((I-1)/2-1)(1);
-            partition_or(0) <= sbits_i((I-1)/2)(0) or sbits_i((I-1)/2-1)(0);
-          end generate;
-          gt0 : if (I = 1) generate
-            partition_or(2) <= sbits_i((I-1)/2)(2);
-            partition_or(1) <= sbits_i((I-1)/2)(1);
-            partition_or(0) <= sbits_i((I-1)/2)(0);
-          end generate;
-        end generate;
-      end generate;
+      -- for odd finders, or adjacent partitions
+      odd_gen : if (I mod 2 = 1) generate
 
-      -- look for both x-partition segments toward the IP and away
-      -- (for cosmic test stand)
-      non_pointing : if (EN_NON_POINTING) generate
-      begin
-        partition_or(5) <= sbits_i((I-1)/2)(5);
-        partition_or(4) <= sbits_i((I-1)/2)(4);
-        partition_or(3) <= sbits_i((I-1)/2)(3);
-        partition_or(2) <= sbits_i((I-1)/2)(2) or sbits_i((I-1)/2-1)(2) or sbits_i((I-1)/2+1)(2);
-        partition_or(1) <= sbits_i((I-1)/2)(1) or sbits_i((I-1)/2-1)(1) or sbits_i((I-1)/2+1)(1);
-        partition_or(0) <= sbits_i((I-1)/2)(0) or sbits_i((I-1)/2-1)(0) or sbits_i((I-1)/2+1)(0);
+        -- look for only straight and pointing segments (for cms)
+        pointing : if (not EN_NON_POINTING) generate
+          partition_or(0) <=                        sbits_i(I/2)(0);
+          partition_or(1) <=                        sbits_i(I/2)(1);
+          partition_or(2) <= sbits_i(I/2 + 1)(2) or sbits_i(I/2)(2);
+          partition_or(3) <= sbits_i(I/2 + 1)(3) or sbits_i(I/2)(3);
+          partition_or(4) <= sbits_i(I/2 + 1)(4);
+          partition_or(5) <= sbits_i(I/2 + 1)(5);
+        end generate;
+
+        -- look for both x-partition segments toward the IP and away
+        -- (for cosmic test stand)
+        non_pointing : if (EN_NON_POINTING) generate
+        begin
+          assert false report "NON_POINTING not supported yet" severity error;
+        end generate;
+
       end generate;
 
     end generate;
+
+    process (clock) is
+    begin
+      if (rising_edge(clock)) then
+        dav_or           <= dav_i;
+        partition_or_reg <= partition_or;
+      end if;
+    end process;
 
     --------------------------------------------------------------------------------
     -- Per Partition Pattern Finders
@@ -203,12 +219,13 @@ begin
       port map (
 
         clock => clock,
-        dav_i => dav_i,
+        dav_i => dav_or,
 
-        ly_thresh => ly_thresh,
+        ly_thresh  => ly_thresh,
+        hit_thresh => hit_thresh,
 
         -- primary layer
-        partition_i => partition_or,
+        partition_i => partition_or_reg,
 
         -- output patterns
         dav_o      => all_segs_dav(I),
@@ -226,6 +243,7 @@ begin
   begin
     if (rising_edge(clock)) then
 
+      -- FIXME: this needs to work with X_PRT pattern finding
       for iprt in 0 to NUM_PARTITIONS-1 loop
         for ivfat in 0 to 2 loop
 
@@ -263,7 +281,7 @@ begin
   --
   --------------------------------------------------------------------------------
 
-  partition_sorter : for I in 0 to NUM_PARTITIONS-1 generate
+  partition_sorter : for I in 0 to NUM_FINDERS-1 generate
   begin
     segment_selector_inst : entity work.segment_selector
       generic map (
@@ -281,7 +299,7 @@ begin
         );
   end generate;
 
-  dipartition_sorter : for I in 0 to NUM_PARTITIONS/2-1 generate
+  dipartition_sorter : for I in 0 to NUM_FINDERS/2-1 generate
   begin
     segment_selector_inst : entity work.segment_selector
       generic map (

@@ -12,23 +12,27 @@ from partition_beh import process_partition
 from subfunc import *
 from tb_common import *
 
-@cocotb.test()
+@cocotb.test() # type: ignore
 async def partition_test_5A(dut):
     await partition_test(dut, NLOOPS=20, test="5A")
 
-@cocotb.test()
+@cocotb.test() # type: ignore
 async def partition_test_FF(dut):
     await partition_test(dut, NLOOPS=20, test="FF")
 
-@cocotb.test()
-async def partition_test_walking(dut):
+@cocotb.test() # type: ignore
+async def partition_test_walking1(dut):
     await partition_test(dut, NLOOPS=192, test="WALKING1")
 
-@cocotb.test()
+@cocotb.test() # type: ignore
+async def partition_test_walkingf(dut):
+    await partition_test(dut, NLOOPS=192, test="WALKINGF")
+
+@cocotb.test() # type: ignore
 async def partition_test_random(dut):
     await partition_test(dut, NLOOPS=2000, test="RANDOM")
 
-@cocotb.test()
+@cocotb.test() # type: ignore
 async def partition_test_segs(dut):
     await partition_test(dut, NLOOPS=2000, test="SEGMENTS")
 
@@ -40,8 +44,6 @@ async def partition_test(dut, NLOOPS=1000, test="SEGMENTS"):
 
     # random.seed(56)
 
-    LATENCY = int(ceil(dut.LATENCY.value/8.0))
-
     config = Config()
     config.width = 192
     config.max_span = get_max_span_from_dut(dut)
@@ -52,17 +54,38 @@ async def partition_test(dut, NLOOPS=1000, test="SEGMENTS"):
 
     # initial inputs
     dut.ly_thresh.value = config.ly_thresh
+    dut.hit_thresh.value = config.hit_thresh
     dut.partition_i.value = 6*[0]
 
-    for i in range(4):
-        await RisingEdge(dut.dav_i)
+    # flush the buffers
+    for i in range(128):
+        await RisingEdge(dut.clock)
 
     strip_cnts = []
     id_cnts = []
 
     queue = []
 
-    for i in range(LATENCY-1):
+    # measure latency
+    meas_latency=1
+    for i in range(128):
+        # extract latency
+        dut.partition_i.value = [1 for _ in range(6)]
+        await RisingEdge(dut.clock)
+        if dut.segments_o[0].lc.value.is_resolvable and \
+           dut.segments_o[0].lc.value.integer >= config.ly_thresh:
+            meas_latency = i/8.0
+            print(f"Latency={i} clocks ({meas_latency} bx)")
+            break
+
+    LATENCY = ceil(meas_latency)
+
+    # flush the buffers
+    dut.partition_i.value = [0 for _ in range(6)]
+    for i in range(128):
+        await RisingEdge(dut.clock)
+
+    for i in range(LATENCY):
         queue.append([0]*6)
 
     # loop over some number of test cases
@@ -70,7 +93,7 @@ async def partition_test(dut, NLOOPS=1000, test="SEGMENTS"):
     while i < NLOOPS:
 
         # push new data on dav_i
-        if dut.dav_i.value == 1:
+        if dut.dav_i_phase.value == 7:
 
             i += 1
 
@@ -80,6 +103,9 @@ async def partition_test(dut, NLOOPS=1000, test="SEGMENTS"):
 
             if test=="WALKING1":
                 hits = [(0x1 << (i % 192)) for _ in range(6)]
+
+            elif test=="WALKINGF":
+                hits = [(2**192-1) & (0xffff << (i % 192)) for _ in range(6)]
 
             elif test=="5A":
                 if i % 2 == 0:
@@ -107,15 +133,16 @@ async def partition_test(dut, NLOOPS=1000, test="SEGMENTS"):
                     hits[ly] &= 2**192-1
                 
             else:
-                hits = 0*[6]
-                assert "Invalid test selected"
+                hits = [0 for _ in range(6)]
+                raise Exception("Invalid test selected")
+
 
             queue.append(hits)
             dut.partition_i.value = hits
 
 
         # pop old data on dav_o
-        if dut.dav_o.value == 1:
+        if dut.dav_o_phase.value == 0:
 
             popped_data = queue.pop(0)
 
@@ -170,13 +197,14 @@ def test_partition():
                     os.path.join(rtl_dir, "partition.vhd")]
 
     os.environ["SIM"] = "questa"
+    #os.environ["COCOTB_RESULTS_FILE"] = f"../log/{module}.xml"
 
     run(vhdl_sources=vhdl_sources,
         module=module,  # name of cocotb test module
         compile_args=["-2008"],
         toplevel="partition",  # top level HDL
         toplevel_lang="vhdl",
-        # sim_args = ['-do "set NumericStdNoWarnings 1;"'],
+        sim_args=["-do", "set NumericStdNoWarnings 1;"],
         gui=0)
 
 if __name__ == "__main__":

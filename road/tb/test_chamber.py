@@ -7,40 +7,46 @@
 
 import os
 import random
+from math import ceil
 
 import cocotb
 import plotille
-from cocotb.clock import Clock
 from cocotb.triggers import RisingEdge
+from cocotb_test.simulator import run
 
 from chamber_beh import process_chamber
 from datagen import datagen
-from subfunc import *
-from tb_common import *
+from subfunc import Config
+from tb_common import (get_max_span_from_dut, get_segments_from_dut,
+                       monitor_dav, setup)
 
-# @cocotb.test()
-# async def chamber_test_segs(dut, nloops=1000):
-#     await chamber_test(dut, "SEGMENTS", nloops)
-
-@cocotb.test()
-async def chamber_test_random(dut, nloops=100):
-    await chamber_test(dut, "RANDOM", nloops)
-
-@cocotb.test()
+@cocotb.test() # type: ignore
 async def chamber_test_ff(dut, nloops=20):
     await chamber_test(dut, "FF", nloops)
 
-@cocotb.test()
+@cocotb.test() # type: ignore
 async def chamber_test_5a(dut, nloops=20):
     await chamber_test(dut, "5A", nloops)
 
-@cocotb.test()
+@cocotb.test() # type: ignore
 async def chamber_test_walking1(dut, nloops=192*2):
     await chamber_test(dut, "WALKING1", nloops)
 
-@cocotb.test()
+@cocotb.test() # type: ignore
 async def chamber_test_walkingf(dut, nloops=192*2):
     await chamber_test(dut, "WALKINGF", nloops)
+
+@cocotb.test() # type: ignore
+async def chamber_test_xprt(dut, nloops=100):
+    await chamber_test(dut, "XPRT", nloops)
+
+@cocotb.test() # type: ignore
+async def chamber_test_segs(dut, nloops=1000):
+    await chamber_test(dut, "SEGMENTS", nloops)
+
+@cocotb.test() # type: ignore
+async def chamber_test_random(dut, nloops=100):
+    await chamber_test(dut, "RANDOM", nloops)
 
 async def chamber_test(dut, test, nloops=512, verbose=False):
 
@@ -51,48 +57,54 @@ async def chamber_test(dut, test, nloops=512, verbose=False):
     random.seed(56) # chloe's favorite number
 
     # setup the dut and extract constants from it
-
     setup(dut)
+
     cocotb.start_soon(monitor_dav(dut))
 
     await RisingEdge(dut.clock)
 
     config = Config()
 
+    config.x_prt_en = dut.X_PRT_EN.value
+    config.en_non_pointing = dut.EN_NON_POINTING.value
     config.max_span = get_max_span_from_dut(dut)
-    config.width = int(dut.partition_gen[0].partition_inst.pat_unit_mux_inst.WIDTH.value)
+    config.width = dut.partition_gen[0].partition_inst.pat_unit_mux_inst.WIDTH.value
     config.deghost_pre = dut.partition_gen[0].partition_inst.DEGHOST_PRE.value
     config.deghost_post = dut.partition_gen[0].partition_inst.DEGHOST_POST.value
     config.group_width = dut.partition_gen[0].partition_inst.S0_WIDTH.value
-    config.num_outputs=int(dut.NUM_SEGMENTS)
-    config.ly_thresh = 4
+    config.num_outputs= dut.NUM_SEGMENTS.value
+    config.ly_thresh = 6
+    config.hit_thresh = 6
     config.hit_thresh = 0 # set to zero to disable until implmented in fw
-    config.cross_part_seg_width=0 # set to zero to disable until implmented in fw
+    config.cross_part_seg_width = 0 # set to zero to disable until implmented in fw
 
-    NUM_PARTITIONS = int(dut.NUM_PARTITIONS.value)
+    NUM_PARTITIONS = 8
     NULL = lambda : [[0 for _ in range(6)] for _ in range(8)]
-    LATENCY = 5
     dut.sbits_i.value = NULL()
 
     dut.ly_thresh.value = config.ly_thresh
+    dut.hit_thresh.value = config.hit_thresh
 
     # flush the bufers
-    for _ in range(32):
+    for _ in range(256):
         await RisingEdge(dut.clock)
 
-    # measure latency
+    # measure latency by putting some s-bits on a strip and waiting to see the output
+    meas_latency=-1
     for i in range(128):
-        # extract latency
         dut.sbits_i.value = [[1 for _ in range(6)] for _ in range(NUM_PARTITIONS)]
         await RisingEdge(dut.clock)
         if dut.segments_o[0].lc.value.is_resolvable and \
            dut.segments_o[0].lc.value.integer >= config.ly_thresh:
-            print(f"Latency={i} clocks ({i/8.0} bx)")
+            meas_latency = i/8.0
+            print(f"Latency={i} clocks ({meas_latency} bx)")
             break
+
+    LATENCY = ceil(meas_latency)
 
     # flush the bufers
     dut.sbits_i.value = NULL()
-    for _ in range(32):
+    for _ in range(LATENCY*8+1):
         await RisingEdge(dut.clock)
 
     strip_cnts = []
@@ -100,29 +112,28 @@ async def chamber_test(dut, test, nloops=512, verbose=False):
     partition_cnts = []
 
     queue = []
-    dut.sbits_i.value = NULL()
-    for _ in range(LATENCY):
+
+    for _ in range(LATENCY-1):
         await RisingEdge(dut.dav_i)
         queue.append(NULL())
 
     # loop over some number of test cases
+    istrip = 0
+    iprt = 0
     loop = 0
     while loop < nloops:
 
         # push new data on dav_i
-        if dut.dav_i.value == 1:
+        if dut.dav_i_phase.value == 7:
 
-            print(f"{loop=}")
+            if verbose:
+                print(f"{loop=}")
 
             # (1) generate new random data
             # (2) push it onto the queue
             # (3) set the DUT inputs to the new data
 
             if test=="WALKING1" or test=="WALKINGF":
-
-                if loop == 0:
-                    istrip = 0
-                    iprt = 0
 
                 if istrip == 191:
                     istrip = 0
@@ -137,29 +148,43 @@ async def chamber_test(dut, test, nloops=512, verbose=False):
                 chamber_data=NULL()
                 chamber_data[iprt] = [(2**192-1) & (dat << istrip) for _ in range(6)]
 
-            if test=="SEGMENTS":
-                prt   = random.randint(0,7)
-                chamber_data = NULL()
+            elif test=="SEGMENTS":
                 chamber_data = [datagen(n_segs=2, n_noise=8, max_span=config.max_span)
                                 for _ in range(NUM_PARTITIONS)]
 
-            if test=="FF":
+            elif test=="FF":
                 if loop % 2 == 0:
                     chamber_data = [[0xFFFFFFFFFFFFFFFFFFFFFFFFFFFFFFFFFFFFFFFFFFFFFFFF for _ in range(6)] for _ in range(8)]
                 else:
                     chamber_data = [[0x000000000000000000000000000000000000000000000000 for _ in range(6)] for _ in range(8)]
 
-            if test=="5A":
+            elif test=="XPRT":
+
+                prt   = random.randint(0,6)
+                strp  = random.randint(0,191)
+
+                # feed in a cross-partition segment
+                chamber_data=NULL()
+                chamber_data[prt+0][0] |= (1 << strp)
+                chamber_data[prt+0][1] |= (1 << strp)
+                chamber_data[prt+0][2] |= (1 << strp)
+                chamber_data[prt+1][3] |= (1 << strp)
+                chamber_data[prt+1][4] |= (1 << strp)
+                chamber_data[prt+1][5] |= (1 << strp)
+
+            elif test=="5A":
                 if loop % 2 == 0:
                     chamber_data = [[0x555555555555555555555555555555555555555555555555 for _ in range(6)] for _ in range(8)]
                 else:
                     chamber_data = [[0xAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAA for _ in range(6)] for _ in range(8)]
 
-            if test=="RANDOM":
+            elif test=="RANDOM":
 
                 chamber_data = NULL()
 
-                for _ in range(1000):
+                num_hits = random.randint(0,1000)
+
+                for _ in range(num_hits):
                     prt   = random.randint(0,7)
                     ly    = random.randint(0,5)
                     strp  = random.randint(0,191)
@@ -178,21 +203,22 @@ async def chamber_test(dut, test, nloops=512, verbose=False):
                 #                 [0,0,0,0,0,0],
                 #                 [0,0,0,0,0,0],
                 #                 [0,0,0,0,0,0],]
+            else:
+                chamber_data = NULL()
 
-            queue.append(chamber_data.copy())
+            queue.append(chamber_data)
             dut.sbits_i.value = chamber_data
 
             loop += 1
 
         # pop old data on dav_o
-        if dut.dav_o.value == 1:
+        if dut.dav_o_phase.value == 0:
 
             # gather emulator output
             popped_data = queue.pop(0)
 
-            sw_segments = process_chamber(
-                chamber_data=popped_data,
-                config=config)
+            sw_segments = process_chamber(chamber_data=popped_data,
+                                          config=config)
 
             fw_segments = get_segments_from_dut(dut)
 
@@ -210,12 +236,13 @@ async def chamber_test(dut, test, nloops=512, verbose=False):
                     partition_cnts.append(fw_segments[i].partition)
 
                 err = "   "
-                if loop > 7:
+                if loop > LATENCY+2:
                     if sw_segments[i] != fw_segments[i]:
                         err = "ERR"
                         print(f" {err} seg {i}:")
                         print("   > sw: " + str(sw_segments[i]))
                         print("   > fw: " + str(fw_segments[i]))
+
                     assert sw_segments[i] == fw_segments[i]
 
         await RisingEdge(dut.clock)
@@ -264,13 +291,14 @@ def test_chamber():
     parameters = {}
 
     os.environ["SIM"] = "questa"
+    #os.environ["COCOTB_RESULTS_FILE"] = f"../log/{module}.xml"
 
     run(vhdl_sources=vhdl_sources,
         module=module,  # name of cocotb test module
         compile_args=["-2008"],
         toplevel="chamber",  # top level HDL
         toplevel_lang="vhdl",
-        # sim_args=["-do", "set NumericStdNoWarnings 1;"],
+        sim_args=["-do", "set NumericStdNoWarnings 1;"],
         parameters=parameters,
         gui=0)
 

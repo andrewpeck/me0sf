@@ -39,7 +39,8 @@ entity pat_unit is
     dav_i : in  std_logic;
     dav_o : out std_logic;
 
-    ly_thresh : in std_logic_vector (2 downto 0);
+    ly_thresh  : in std_logic_vector (2 downto 0);
+    hit_thresh : in std_logic_vector (5 downto 0);
 
     ly0 : in std_logic_vector (LY0_SPAN-1 downto 0);
     ly1 : in std_logic_vector (LY1_SPAN-1 downto 0);
@@ -55,8 +56,12 @@ end pat_unit;
 
 architecture behavioral of pat_unit is
 
+  signal dav_s1 : std_logic := '0';
+
   signal pats     : segment_list_t (NUM_PATTERNS-1 downto 0) := (others => null_pattern);
+
   signal pats_dav : std_logic                                := '0';
+  signal priority_dav : std_logic                                := '0';
 
   function count_ones(slv : std_logic_vector) return natural is
     variable n_ones : natural := 0;
@@ -72,7 +77,6 @@ architecture behavioral of pat_unit is
   signal best_slv : std_logic_vector (segment_t'w-1 downto 0);
   signal best     : segment_t;
   signal cand_slv : bus_array (0 to NUM_PATTERNS-1) (segment_t'w-1 downto 0);
-  signal dav_dly  : std_logic_vector (LATENCY-1 downto 0) := (others => '0');
 
 begin
 
@@ -84,22 +88,6 @@ begin
   assert (LY3_SPAN mod 2 = 1) report "Layer Span Must be Odd (span=" & integer'image(LY3_SPAN) & ")" severity error;
   assert (LY4_SPAN mod 2 = 1) report "Layer Span Must be Odd (span=" & integer'image(LY4_SPAN) & ")" severity error;
   assert (LY5_SPAN mod 2 = 1) report "Layer Span Must be Odd (span=" & integer'image(LY5_SPAN) & ")" severity error;
-
-  --------------------------------------------------------------------------------
-  -- Data Valid
-  --------------------------------------------------------------------------------
-
-  dav_o <= dav_dly(LATENCY-1);
-
-  process (clock) is
-  begin
-    if (rising_edge(clock)) then
-      dav_dly(0) <= dav_i;
-      for I in 1 to LATENCY-1 loop
-        dav_dly(I) <= dav_dly(I-1);
-      end loop;
-    end if;
-  end process;
 
   --------------------------------------------------------------------------------
   -- Layer Processing
@@ -264,8 +252,8 @@ begin
       )
     port map (
       clock => clock,
-      dav_i => '1',
-      dav_o => open,
+      dav_i => pats_dav,
+      dav_o => priority_dav,
       dat_i => cand_slv,
       dat_o => best_slv,
       adr_o => open
@@ -287,7 +275,11 @@ begin
   process (clock) is
   begin
     if (rising_edge(clock)) then
-      if (best.lc >= to_integer(unsigned(ly_thresh))) then
+
+      dav_o <= priority_dav;
+
+      if (best.lc >= to_integer(unsigned(ly_thresh)) and
+          best.hc >= to_integer(unsigned(hit_thresh))) then
         pat_o <= best;
       else
         pat_o <= zero(pat_o);
