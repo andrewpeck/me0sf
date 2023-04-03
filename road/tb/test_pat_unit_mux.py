@@ -169,7 +169,7 @@ def test_pat_unit_mux():
     parameters["MUX_FACTOR"] = 8
 
     os.environ["SIM"] = "questa"
-    os.environ["COCOTB_RESULTS_FILE"] = f"../log/{module}.xml"
+    #os.environ["COCOTB_RESULTS_FILE"] = f"../log/{module}.xml"
 
     run(vhdl_sources=vhdl_sources,
         module=module,  # name of cocotb test module

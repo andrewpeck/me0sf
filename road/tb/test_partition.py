@@ -196,7 +196,7 @@ def test_partition():
                     os.path.join(rtl_dir, "partition.vhd")]
 
     os.environ["SIM"] = "questa"
-    os.environ["COCOTB_RESULTS_FILE"] = f"../log/{module}.xml"
+    #os.environ["COCOTB_RESULTS_FILE"] = f"../log/{module}.xml"
 
     run(vhdl_sources=vhdl_sources,
         module=module,  # name of cocotb test module
