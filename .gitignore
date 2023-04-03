@@ -20,3 +20,5 @@ transcript
 modelsim.ini
 road/tb_bakup
 wave.do
+road/hdl/pat_types.svh
+.vscode
