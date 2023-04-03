@@ -58,10 +58,10 @@ architecture behavioral of pat_unit is
 
   signal dav_s1 : std_logic := '0';
 
-  signal pats     : segment_list_t (NUM_PATTERNS-1 downto 0) := (others => null_pattern);
+  signal pats : segment_list_t (NUM_PATTERNS-1 downto 0) := (others => null_pattern);
 
-  signal pats_dav : std_logic                                := '0';
-  signal priority_dav : std_logic                                := '0';
+  signal pats_dav     : std_logic := '0';
+  signal priority_dav : std_logic := '0';
 
   function count_ones(slv : std_logic_vector) return natural is
     variable n_ones : natural := 0;

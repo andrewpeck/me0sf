@@ -24,7 +24,6 @@
 use work.pat_types.all;
 use work.pat_pkg.all;
 use work.patterns.all;
-use work.priority_encoder_pkg.all;
 
 library ieee;
 use ieee.std_logic_1164.all;
@@ -39,6 +38,8 @@ entity chamber is
     S0_WIDTH        : natural := 16;     -- chunk each partition into groups this size and choose only 1 segment from each group
     S1_REUSE        : natural := 4;      -- reuse sorters
     REG_OUTPUTS     : boolean := false;  -- true to  register outputs on the 40MHz clock
+    PULSE_EXTEND    : integer := 2;      -- how long pulses should be extended by
+    DEADTIME        : natural := 3;      -- deadtime in bx
 
     PATLIST : patdef_array_t := patdef_array;
 
@@ -102,6 +103,13 @@ architecture behavioral of chamber is
   constant NUM_SEGMENT_SELECTOR_INPUTS : natural := (NUM_FINDERS+1)/S1_REUSE*NUM_SEGMENTS*2;
 
   --------------------------------------------------------------------------------
+  -- Extension
+  --------------------------------------------------------------------------------
+
+  signal sbits_extend : chamber_t;
+  signal dav_extend   : std_logic := '0';
+
+  --------------------------------------------------------------------------------
   -- Segments
   --------------------------------------------------------------------------------
 
@@ -154,6 +162,19 @@ begin
   -- synthesis translate_on
 
   --------------------------------------------------------------------------------
+  -- Pulse Extension
+  --------------------------------------------------------------------------------
+
+  chamber_pulse_extension_inst : entity work.chamber_pulse_extension
+    generic map (LENGTH => PULSE_EXTEND)
+    port map (
+      clock   => clock,
+      sbits_i => sbits_i,
+      sbits_o => sbits_extend);
+
+  dav_extend <= dav_i;
+
+  --------------------------------------------------------------------------------
   -- Input signal assignment
   --------------------------------------------------------------------------------
 
@@ -164,14 +185,14 @@ begin
   begin
 
     single_partitions : if (NUM_FINDERS <= 8) generate
-      partition_or <= sbits_i(I);
+      partition_or <= sbits_extend(I);
     end generate;
 
     half_partitions : if (NUM_FINDERS > 8) generate
 
       -- for even finders, just take the partition as it is
       even_gen : if (I mod 2 = 0) generate
-        partition_or <= sbits_i(I/2);
+        partition_or <= sbits_extend(I/2);
       end generate;
 
       -- for odd finders, or adjacent partitions
@@ -179,12 +200,12 @@ begin
 
         -- look for only straight and pointing segments (for cms)
         pointing : if (not EN_NON_POINTING) generate
-          partition_or(0) <=                        sbits_i(I/2)(0);
-          partition_or(1) <=                        sbits_i(I/2)(1);
-          partition_or(2) <= sbits_i(I/2 + 1)(2) or sbits_i(I/2)(2);
-          partition_or(3) <= sbits_i(I/2 + 1)(3) or sbits_i(I/2)(3);
-          partition_or(4) <= sbits_i(I/2 + 1)(4);
-          partition_or(5) <= sbits_i(I/2 + 1)(5);
+          partition_or(0) <=                             sbits_extend(I/2)(0);
+          partition_or(1) <=                             sbits_extend(I/2)(1);
+          partition_or(2) <= sbits_extend(I/2 + 1)(2) or sbits_extend(I/2)(2);
+          partition_or(3) <= sbits_extend(I/2 + 1)(3) or sbits_extend(I/2)(3);
+          partition_or(4) <= sbits_extend(I/2 + 1)(4);
+          partition_or(5) <= sbits_extend(I/2 + 1)(5);
         end generate;
 
         -- look for both x-partition segments toward the IP and away
@@ -201,7 +222,7 @@ begin
     process (clock) is
     begin
       if (rising_edge(clock)) then
-        dav_or           <= dav_i;
+        dav_or           <= dav_extend;
         partition_or_reg <= partition_or;
       end if;
     end process;
@@ -214,7 +235,8 @@ begin
       generic map (
         NUM_SEGMENTS  => NUM_SEGMENTS,
         PARTITION_NUM => I,
-        S0_WIDTH      => S0_WIDTH
+        S0_WIDTH      => S0_WIDTH,
+        DEADTIME      => DEADTIME
         )
       port map (
 
@@ -320,8 +342,6 @@ begin
   -- Final candidate sorting
   --
   -- sort from down to NUM_SEGMENTS
-  --
-  -- TODO?: replace with priority encoder... ? the # of outputs is very small...
   --------------------------------------------------------------------------------
 
   segment_selector_final : entity work.segment_selector
