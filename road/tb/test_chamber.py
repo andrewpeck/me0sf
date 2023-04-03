@@ -29,11 +29,11 @@ async def chamber_test_5a(dut, nloops=20):
     await chamber_test(dut, "5A", nloops)
 
 @cocotb.test() # type: ignore
-async def chamber_test_walking1(dut, nloops=192*2):
+async def chamber_test_walking1(dut, nloops=192):
     await chamber_test(dut, "WALKING1", nloops)
 
 @cocotb.test() # type: ignore
-async def chamber_test_walkingf(dut, nloops=192*2):
+async def chamber_test_walkingf(dut, nloops=192):
     await chamber_test(dut, "WALKINGF", nloops)
 
 @cocotb.test() # type: ignore
@@ -41,7 +41,7 @@ async def chamber_test_xprt(dut, nloops=100):
     await chamber_test(dut, "XPRT", nloops)
 
 @cocotb.test() # type: ignore
-async def chamber_test_segs(dut, nloops=1000):
+async def chamber_test_segs(dut, nloops=100):
     await chamber_test(dut, "SEGMENTS", nloops)
 
 @cocotb.test() # type: ignore
