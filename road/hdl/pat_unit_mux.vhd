@@ -49,7 +49,8 @@ entity pat_unit_mux is
 
     clock : in std_logic;
 
-    ly_thresh : in std_logic_vector (2 downto 0);
+    ly_thresh  : in std_logic_vector (2 downto 0);
+    hit_thresh : in std_logic_vector (5 downto 0);
 
     dav_i : in  std_logic;
     dav_o : out std_logic := '0';
@@ -195,7 +196,8 @@ begin
 
         clock => clock,
 
-        ly_thresh => ly_thresh,
+        ly_thresh  => ly_thresh,
+        hit_thresh => hit_thresh,
 
         dav_i => lyX_in_dav,
         ly0   => ly0_in,

@@ -61,6 +61,7 @@ async def pat_unit_mux_test(dut, NLOOPS=500, test="WALKING1"):
     config.width=dut.WIDTH.value
 
     dut.ly_thresh.value = config.ly_thresh
+    dut.hit_thresh.value = config.hit_thresh
     set_dut_inputs(dut, [0 for _ in range(6)])
 
     # flush the pipeline for a few clocks

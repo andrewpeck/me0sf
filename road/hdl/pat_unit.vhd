@@ -39,7 +39,8 @@ entity pat_unit is
     dav_i : in  std_logic;
     dav_o : out std_logic;
 
-    ly_thresh : in std_logic_vector (2 downto 0);
+    ly_thresh  : in std_logic_vector (2 downto 0);
+    hit_thresh : in std_logic_vector (5 downto 0);
 
     ly0 : in std_logic_vector (LY0_SPAN-1 downto 0);
     ly1 : in std_logic_vector (LY1_SPAN-1 downto 0);
@@ -277,7 +278,8 @@ begin
 
       dav_o <= priority_dav;
 
-      if (best.lc >= to_integer(unsigned(ly_thresh))) then
+      if (best.lc >= to_integer(unsigned(ly_thresh)) and
+          best.hc >= to_integer(unsigned(hit_thresh))) then
         pat_o <= best;
       else
         pat_o <= zero(pat_o);

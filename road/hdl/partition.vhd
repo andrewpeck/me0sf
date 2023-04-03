@@ -54,7 +54,8 @@ entity partition is
     dav_o_phase : out natural range 0 to 7 := 0;
     -- synthesis translate_on
 
-    ly_thresh : in std_logic_vector (2 downto 0);
+    ly_thresh  : in std_logic_vector (2 downto 0);
+    hit_thresh : in std_logic_vector (5 downto 0);
 
     --------------------------------------------------------------------------------
     -- Inputs
@@ -114,7 +115,8 @@ begin
     port map (
       clock => clock,
 
-      ly_thresh => ly_thresh,
+      ly_thresh  => ly_thresh,
+      hit_thresh => hit_thresh,
 
       dav_i => dav_i,
       ly0   => partition_i(0),

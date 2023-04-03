@@ -50,9 +50,11 @@ entity chamber is
     LY5_SPAN : natural := get_max_span(patdef_array)   -- TODO: variably size the other layers instead of using the max
     );
   port(
-    clock             : in  std_logic;                 -- MUST BE 320MHZ
-    clock40           : in  std_logic;                 -- MUST BE  40MHZ
-    ly_thresh         : in  std_logic_vector (2 downto 0);
+    clock             : in  std_logic;                     -- MUST BE 320MHZ
+    clock40           : in  std_logic;                     -- MUST BE  40MHZ
+
+    ly_thresh         : in  std_logic_vector (2 downto 0); -- Layer threshold, 0 to 6
+    hit_thresh        : in  std_logic_vector (5 downto 0); -- Hit threshold
 
     dav_i             : in  std_logic;
     dav_o             : out std_logic;
@@ -219,7 +221,8 @@ begin
         clock => clock,
         dav_i => dav_or,
 
-        ly_thresh => ly_thresh,
+        ly_thresh  => ly_thresh,
+        hit_thresh => hit_thresh,
 
         -- primary layer
         partition_i => partition_or_reg,

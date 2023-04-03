@@ -43,11 +43,12 @@ async def pat_unit_test(dut, test="SEGMENTS"):
     LY_CNT = 6
     N_NOISE = 1
     LY_THRESH = 4
-    HIT_THRESH = 0
+    HIT_THRESH = 4
     LATENCY = dut.LATENCY.value
 
     # set layer count threshold
     dut.ly_thresh.value = LY_THRESH
+    dut.hit_thresh.value = HIT_THRESH
 
     # set MAX_SPAN from firmware
     # should be a number approx 37
