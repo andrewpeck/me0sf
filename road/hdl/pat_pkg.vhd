@@ -57,6 +57,8 @@ package pat_pkg is
   -- Pattern Helper Functions
   --------------------------------------------------------------------------------
 
+  function seg_valid (seg : segment_t) return boolean;
+
   -- mirror a pattern unit (left/right symmetry)
   function mirror_patdef (pat : patdef_t; id : natural) return patdef_t;
 
@@ -132,6 +134,11 @@ package body pat_pkg is
     result.ly4 := (hi => pat.ly4.lo * (-1), lo => pat.ly4.hi * (-1));
     result.ly5 := (hi => pat.ly5.lo * (-1), lo => pat.ly5.hi * (-1));
     return result;
+  end;
+
+  function seg_valid (seg : segment_t) return boolean is
+  begin
+    return seg.lc /= 0;
   end;
 
   function "=" (L : segment_t; R : segment_t) return boolean is

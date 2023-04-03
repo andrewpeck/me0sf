@@ -121,7 +121,8 @@ architecture behavioral of chamber is
   signal two_prt_sorted_segs : segment_list_t (NUM_FINDERS * NUM_SEGMENTS/2 - 1 downto 0);
   signal final_segs          : segment_list_t (NUM_SEGMENTS - 1 downto 0);
 
-  signal vfat_pretrigger : std_logic_vector (3*NUM_PARTITIONS-1 downto 0);
+  signal vfat_pretrigger       : std_logic_vector (3*NUM_PARTITIONS-1 downto 0);
+  signal vfat_pretrigger_cross : std_logic_vector (3*NUM_PARTITIONS-1 downto 0);
 
   --------------------------------------------------------------------------------
   -- Data valids
@@ -261,28 +262,49 @@ begin
   -- Pretrigger
   --------------------------------------------------------------------------------
 
-  process (clock) is
+  pretrig_gen : for iprt in 0 to NUM_PARTITIONS-1 generate
+
+    constant ifinder : integer := if_then_else (X_PRT_EN, iprt*2, iprt);
+
+    impure function get_seg_hit (segs   : segment_list_t;
+                                 finder : integer;
+                                 vfat   : integer;
+                                 seg    : integer) return boolean is
+    begin
+      return seg_valid(segs(finder*NUM_SEGS_PER_PRT +
+                            vfat * NUM_SEGS_PER_PRT/3 + seg));
+    end;
+
   begin
-    if (rising_edge(clock)) then
 
-      -- FIXME: this needs to work with X_PRT pattern finding
-      for iprt in 0 to NUM_PARTITIONS-1 loop
-        for ivfat in 0 to 2 loop
+    process (clock) is
+    begin
+      if (rising_edge(clock)) then
 
-          vfat_pretrigger(iprt*3+ivfat) <= '0';
+          for ivfat in 0 to 2 loop
 
-          for iseg in 0 to NUM_SEGS_PER_PRT/3-1 loop
-            if (all_segs(iprt*NUM_SEGS_PER_PRT +
-                         ivfat * NUM_SEGS_PER_PRT/3 +
-                         iseg).lc /= 0) then
-              vfat_pretrigger(iprt*3+ivfat) <= '1';
-            end if;
+            vfat_pretrigger(iprt*3+ivfat) <= '0';
+
+            for iseg in 0 to NUM_SEGS_PER_PRT/3-1 loop
+
+              if (get_seg_hit(all_segs, ifinder, ivfat, iseg)
+
+                  -- check the -1 partition
+                  or (X_PRT_EN and ifinder > 0 and get_seg_hit(all_segs, ifinder-1, ivfat, iseg))
+
+                  -- check the +1 partition
+                  or (X_PRT_EN and ifinder < NUM_FINDERS-1 and get_seg_hit(all_segs, ifinder+1, ivfat, iseg)))
+
+              then
+                vfat_pretrigger(iprt*3+ivfat) <= '1';
+              end if;
+
+            end loop;
           end loop;
-        end loop;
-      end loop;
+      end if;
+    end process;
 
-    end if;
-  end process;
+  end generate;
 
   --------------------------------------------------------------------------------
   -- Partition Sorting

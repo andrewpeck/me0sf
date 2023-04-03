@@ -270,7 +270,7 @@ begin
   process (segments_o) is
   begin
     for I in segments_o'range loop
-      if (segments_o(I).lc /= 0) then
+      if (seg_valid(segments_o(I))) then
         trig(I) <= '1';
       else
         trig(I) <= '0';
