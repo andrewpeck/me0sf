@@ -21,10 +21,12 @@ entity partition is
 
     LATENCY : integer := PARTITION_LATENCY;
 
-    NUM_SEGMENTS  : integer := 4;
-    PARTITION_NUM : integer := 0;          -- just assign a number (e.g. 0-7) to each partition so we can look it up later
-    PRT_WIDTH     : natural := PRT_WIDTH;  -- width of the partition (192)
-    S0_WIDTH      : natural := 8;          -- width of the pre-sorting regions
+    NUM_SEGMENTS   : integer := 4;
+    PARTITION_NUM  : integer := 0;          -- just assign a number (e.g. 0-7) to each partition so we can look it up later
+    PRT_WIDTH      : natural := PRT_WIDTH;  -- width of the partition (192)
+    S0_WIDTH       : natural := 8;          -- width of the pre-sorting regions
+    PAT_UNIT_REUSE : natural := 8;          --
+
 
     DEGHOST_PRE  : boolean := true;      -- perform intra-partition ghost cancellation BEFORE sorting
     DEGHOST_POST : boolean := false;     -- perform intra-partition ghost cancellation AFTER sorting
@@ -109,7 +111,7 @@ begin
   pat_unit_mux_inst : entity work.pat_unit_mux
     generic map (
       WIDTH         => PRT_WIDTH,
-      MUX_FACTOR    => PAT_UNIT_MUX,
+      MUX_FACTOR    => PAT_UNIT_REUSE,
       PARTITION_NUM => PARTITION_NUM
       )
     port map (
