@@ -36,13 +36,13 @@ jobs:
       fail-fast: false
       matrix:
         testbenches:
-          - road/tb/test_dav_to_phase.py
-          - road/tb/test_mult.py
-          - road/tb/test_fit.py
-          - road/tb/test_pat_unit.py
-          - road/tb/test_pat_unit_mux.py
-          - road/tb/test_partition.py
           - road/tb/test_chamber.py
+          - road/tb/test_partition.py
+          - road/tb/test_pat_unit_mux.py
+          - road/tb/test_pat_unit.py
+          - road/tb/test_fit.py
+          - road/tb/test_mult.py
+          - road/tb/test_dav_to_phase.py
     steps:
 
       - uses: actions/checkout@v2
