@@ -24,7 +24,6 @@
 use work.pat_types.all;
 use work.pat_pkg.all;
 use work.patterns.all;
-use work.priority_encoder_pkg.all;
 
 library ieee;
 use ieee.std_logic_1164.all;
@@ -39,6 +38,8 @@ entity chamber is
     S0_WIDTH        : natural := 16;     -- chunk each partition into groups this size and choose only 1 segment from each group
     S1_REUSE        : natural := 4;      -- reuse sorters
     REG_OUTPUTS     : boolean := false;  -- true to  register outputs on the 40MHz clock
+    PULSE_EXTEND    : integer := 2;      -- how long pulses should be extended by
+    DEADTIME        : natural := 3;      -- deadtime in bx
 
     PATLIST : patdef_array_t := patdef_array;
 
@@ -102,6 +103,13 @@ architecture behavioral of chamber is
   constant NUM_SEGMENT_SELECTOR_INPUTS : natural := (NUM_FINDERS+1)/S1_REUSE*NUM_SEGMENTS*2;
 
   --------------------------------------------------------------------------------
+  -- Extension
+  --------------------------------------------------------------------------------
+
+  signal sbits_extend : chamber_t;
+  signal dav_extend   : std_logic := '0';
+
+  --------------------------------------------------------------------------------
   -- Segments
   --------------------------------------------------------------------------------
 
@@ -113,7 +121,8 @@ architecture behavioral of chamber is
   signal two_prt_sorted_segs : segment_list_t (NUM_FINDERS * NUM_SEGMENTS/2 - 1 downto 0);
   signal final_segs          : segment_list_t (NUM_SEGMENTS - 1 downto 0);
 
-  signal vfat_pretrigger : std_logic_vector (3*NUM_PARTITIONS-1 downto 0);
+  signal vfat_pretrigger       : std_logic_vector (3*NUM_PARTITIONS-1 downto 0);
+  signal vfat_pretrigger_cross : std_logic_vector (3*NUM_PARTITIONS-1 downto 0);
 
   --------------------------------------------------------------------------------
   -- Data valids
@@ -154,6 +163,19 @@ begin
   -- synthesis translate_on
 
   --------------------------------------------------------------------------------
+  -- Pulse Extension
+  --------------------------------------------------------------------------------
+
+  chamber_pulse_extension_inst : entity work.chamber_pulse_extension
+    generic map (LENGTH => PULSE_EXTEND)
+    port map (
+      clock   => clock,
+      sbits_i => sbits_i,
+      sbits_o => sbits_extend);
+
+  dav_extend <= dav_i;
+
+  --------------------------------------------------------------------------------
   -- Input signal assignment
   --------------------------------------------------------------------------------
 
@@ -164,14 +186,14 @@ begin
   begin
 
     single_partitions : if (NUM_FINDERS <= 8) generate
-      partition_or <= sbits_i(I);
+      partition_or <= sbits_extend(I);
     end generate;
 
     half_partitions : if (NUM_FINDERS > 8) generate
 
       -- for even finders, just take the partition as it is
       even_gen : if (I mod 2 = 0) generate
-        partition_or <= sbits_i(I/2);
+        partition_or <= sbits_extend(I/2);
       end generate;
 
       -- for odd finders, or adjacent partitions
@@ -179,12 +201,12 @@ begin
 
         -- look for only straight and pointing segments (for cms)
         pointing : if (not EN_NON_POINTING) generate
-          partition_or(0) <=                        sbits_i(I/2)(0);
-          partition_or(1) <=                        sbits_i(I/2)(1);
-          partition_or(2) <= sbits_i(I/2 + 1)(2) or sbits_i(I/2)(2);
-          partition_or(3) <= sbits_i(I/2 + 1)(3) or sbits_i(I/2)(3);
-          partition_or(4) <= sbits_i(I/2 + 1)(4);
-          partition_or(5) <= sbits_i(I/2 + 1)(5);
+          partition_or(0) <=                             sbits_extend(I/2)(0);
+          partition_or(1) <=                             sbits_extend(I/2)(1);
+          partition_or(2) <= sbits_extend(I/2 + 1)(2) or sbits_extend(I/2)(2);
+          partition_or(3) <= sbits_extend(I/2 + 1)(3) or sbits_extend(I/2)(3);
+          partition_or(4) <= sbits_extend(I/2 + 1)(4);
+          partition_or(5) <= sbits_extend(I/2 + 1)(5);
         end generate;
 
         -- look for both x-partition segments toward the IP and away
@@ -201,7 +223,7 @@ begin
     process (clock) is
     begin
       if (rising_edge(clock)) then
-        dav_or           <= dav_i;
+        dav_or           <= dav_extend;
         partition_or_reg <= partition_or;
       end if;
     end process;
@@ -214,7 +236,8 @@ begin
       generic map (
         NUM_SEGMENTS  => NUM_SEGMENTS,
         PARTITION_NUM => I,
-        S0_WIDTH      => S0_WIDTH
+        S0_WIDTH      => S0_WIDTH,
+        DEADTIME      => DEADTIME
         )
       port map (
 
@@ -239,28 +262,49 @@ begin
   -- Pretrigger
   --------------------------------------------------------------------------------
 
-  process (clock) is
+  pretrig_gen : for iprt in 0 to NUM_PARTITIONS-1 generate
+
+    constant ifinder : integer := if_then_else (X_PRT_EN, iprt*2, iprt);
+
+    impure function get_seg_hit (segs   : segment_list_t;
+                                 finder : integer;
+                                 vfat   : integer;
+                                 seg    : integer) return boolean is
+    begin
+      return seg_valid(segs(finder*NUM_SEGS_PER_PRT +
+                            vfat * NUM_SEGS_PER_PRT/3 + seg));
+    end;
+
   begin
-    if (rising_edge(clock)) then
 
-      -- FIXME: this needs to work with X_PRT pattern finding
-      for iprt in 0 to NUM_PARTITIONS-1 loop
-        for ivfat in 0 to 2 loop
+    process (clock) is
+    begin
+      if (rising_edge(clock)) then
 
-          vfat_pretrigger(iprt*3+ivfat) <= '0';
+          for ivfat in 0 to 2 loop
 
-          for iseg in 0 to NUM_SEGS_PER_PRT/3-1 loop
-            if (all_segs(iprt*NUM_SEGS_PER_PRT +
-                         ivfat * NUM_SEGS_PER_PRT/3 +
-                         iseg).lc /= 0) then
-              vfat_pretrigger(iprt*3+ivfat) <= '1';
-            end if;
+            vfat_pretrigger(iprt*3+ivfat) <= '0';
+
+            for iseg in 0 to NUM_SEGS_PER_PRT/3-1 loop
+
+              if (get_seg_hit(all_segs, ifinder, ivfat, iseg)
+
+                  -- check the -1 partition
+                  or (X_PRT_EN and ifinder > 0 and get_seg_hit(all_segs, ifinder-1, ivfat, iseg))
+
+                  -- check the +1 partition
+                  or (X_PRT_EN and ifinder < NUM_FINDERS-1 and get_seg_hit(all_segs, ifinder+1, ivfat, iseg)))
+
+              then
+                vfat_pretrigger(iprt*3+ivfat) <= '1';
+              end if;
+
+            end loop;
           end loop;
-        end loop;
-      end loop;
+      end if;
+    end process;
 
-    end if;
-  end process;
+  end generate;
 
   --------------------------------------------------------------------------------
   -- Partition Sorting
@@ -320,8 +364,6 @@ begin
   -- Final candidate sorting
   --
   -- sort from down to NUM_SEGMENTS
-  --
-  -- TODO?: replace with priority encoder... ? the # of outputs is very small...
   --------------------------------------------------------------------------------
 
   segment_selector_final : entity work.segment_selector

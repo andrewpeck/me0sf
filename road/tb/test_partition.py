@@ -192,9 +192,12 @@ def test_partition():
                     os.path.join(rtl_dir, "centroid_finder.vhd"),
                     os.path.join(rtl_dir, "pat_unit.vhd"),
                     os.path.join(rtl_dir, "dav_to_phase.vhd"),
+                    os.path.join(rtl_dir, "deadzone.vhd"),
                     os.path.join(rtl_dir, "pat_unit_mux.vhd"),
                     os.path.join(rtl_dir, "deghost.vhd"),
                     os.path.join(rtl_dir, "partition.vhd")]
+
+    parameters = {"DEADTIME": 0}
 
     os.environ["SIM"] = "questa"
     #os.environ["COCOTB_RESULTS_FILE"] = f"../log/{module}.xml"
@@ -202,6 +205,7 @@ def test_partition():
     run(vhdl_sources=vhdl_sources,
         module=module,  # name of cocotb test module
         compile_args=["-2008"],
+        parameters=parameters,
         toplevel="partition",  # top level HDL
         toplevel_lang="vhdl",
         sim_args=["-do", "set NumericStdNoWarnings 1;"],

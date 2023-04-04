@@ -26,7 +26,7 @@ entity partition is
     PRT_WIDTH      : natural := PRT_WIDTH;  -- width of the partition (192)
     S0_WIDTH       : natural := 8;          -- width of the pre-sorting regions
     PAT_UNIT_REUSE : natural := 8;          --
-
+    DEADTIME       : natural := 3;          -- deadtime in bx
 
     DEGHOST_PRE  : boolean := true;      -- perform intra-partition ghost cancellation BEFORE sorting
     DEGHOST_POST : boolean := false;     -- perform intra-partition ghost cancellation AFTER sorting
@@ -112,7 +112,8 @@ begin
     generic map (
       WIDTH         => PRT_WIDTH,
       MUX_FACTOR    => PAT_UNIT_REUSE,
-      PARTITION_NUM => PARTITION_NUM
+      PARTITION_NUM => PARTITION_NUM,
+      DEADTIME      => DEADTIME
       )
     port map (
       clock => clock,

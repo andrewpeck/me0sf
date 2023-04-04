@@ -164,10 +164,12 @@ def test_pat_unit_mux():
         os.path.join(rtl_dir, "patterns.vhd"),
         os.path.join(rtl_dir, "pat_unit.vhd"),
         os.path.join(rtl_dir, "dav_to_phase.vhd"),
+        os.path.join(rtl_dir, "deadzone.vhd"),
         os.path.join(rtl_dir, "pat_unit_mux.vhd")]
 
     parameters = {}
     parameters["MUX_FACTOR"] = 8
+    parameters["DEADTIME"]   = 0
 
     os.environ["SIM"] = "questa"
     #os.environ["COCOTB_RESULTS_FILE"] = f"../log/{module}.xml"
