@@ -169,7 +169,7 @@ begin
   chamber_pulse_extension_inst : entity work.chamber_pulse_extension
     generic map (LENGTH => PULSE_EXTEND)
     port map (
-      clock   => clock,
+      clock   => clock40,
       sbits_i => sbits_i,
       sbits_o => sbits_extend);
 

@@ -39,7 +39,7 @@ begin
 
         pulse_extension_1 : entity work.pulse_extension
           generic map
-          (MAX => LENGTH*8)
+          (MAX => LENGTH)
           port map
           (clock  => clock, d => sbits_i(I)(J)(K), q => sbits_o(I)(J)(K));
 
