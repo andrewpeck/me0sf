@@ -242,8 +242,8 @@ begin
   priority_encoder_inst : entity work.priority_encoder
     generic map (
       WIDTH       => NUM_PATTERNS,
-      REG_INPUT   => true,
-      REG_OUTPUT  => true,
+      REG_INPUT   => false,
+      REG_OUTPUT  => false,
       REG_STAGES  => 2,
       DAT_BITS    => best_slv'length,
       QLT_BITS    => PATTERN_SORTB,
