@@ -6,6 +6,7 @@ config:
 
 types:
 
+  - STRIP_BITS: {qualifier: constant, type: integer, value: 8, comment: "8 bits to count 0-191"}
   - HC_BITS: {qualifier: constant, type: integer, value: 6, comment: "number of bits to count all hits in 6 layers"}
   - LC_BITS: {qualifier: constant, type: integer, value: 3, comment: "number of bits to count layers hit"}
   - PID_BITS: {qualifier: constant, type: integer, value: 4, comment: "number of bits to cnt the pids"}
@@ -15,7 +16,6 @@ types:
 
   # - PATTERN_LENGTH: {qualifier: constant, type: integer, value: CNT_BITS + PID_BITS + CENTROID_BITS + VALID_BIT, comment: ""}
 
-  - STRIP_BITS: {qualifier: constant, type: integer, value: 8, comment: "8 bits to count 0-191"}
 
   - PARTITION_BITS: {qualifier: constant, type: integer, value: 4, comment: "4 bits to count 0-15"}
 
@@ -39,7 +39,6 @@ types:
   - partition_t: {array: [0, 5], type: layer_t}
   - int_array_t: {array: open, type: integer}
   - patdef_array_t: {array: open, type: patdef_t}
-  #- chamber_t: {array: [0, 7], type: partition_t}
 
   - pat_unit_pre_t:
       - lc: {type: unsigned, range: [LC_BITS-1, 0]}
@@ -53,7 +52,7 @@ types:
   - pat_unit_mux_t:
       - lc: {type: unsigned, range: [LC_BITS-1, 0]}
       - id: {type: unsigned, range: [PID_BITS-1, 0]}
-      - strip: {type: unsigned, range: [7, 0]}
+      - strip: {type: unsigned, range: [STRIP_BITS-1, 0]}
 
   - segment_t:
       # msbs are ignored, sorting bits should be placed in MSB --> LSB order
