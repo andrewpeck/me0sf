@@ -180,59 +180,6 @@ begin
       end if;
     end process;
 
-    --------------------------------------------------------------------------------
-    -- Centroid Finding
-    -- done in parallel with count ones etc
-    --------------------------------------------------------------------------------
-
-    -- centroid_finder_0 : entity work.centroid_finder
-    --   generic map (LENGTH => ly0_size, NBITS => CENTROID_BITS)
-    --   port map (
-    --     clk  => clock,
-    --     din  => ly0_mask,
-    --     dout => pats(I).hits(0)
-    --     );
-
-    -- centroid_finder_1 : entity work.centroid_finder
-    --   generic map (LENGTH => ly1_size, NBITS => CENTROID_BITS)
-    --   port map (
-    --     clk  => clock,
-    --     din  => ly1_mask,
-    --     dout => pats(I).hits(1)
-    --     );
-
-    -- centroid_finder_2 : entity work.centroid_finder
-    --   generic map (LENGTH => ly2_size, NBITS => CENTROID_BITS)
-    --   port map (
-    --     clk  => clock,
-    --     din  => ly2_mask,
-    --     dout => pats(I).hits(2)
-    --     );
-
-    -- centroid_finder_3 : entity work.centroid_finder
-    --   generic map (LENGTH => ly3_size, NBITS => CENTROID_BITS)
-    --   port map (
-    --     clk  => clock,
-    --     din  => ly3_mask,
-    --     dout => pats(I).hits(3)
-    --     );
-
-    -- centroid_finder_4 : entity work.centroid_finder
-    --   generic map (LENGTH => ly4_size, NBITS => CENTROID_BITS)
-    --   port map (
-    --     clk  => clock,
-    --     din  => ly4_mask,
-    --     dout => pats(I).hits(4)
-    --     );
-
-    -- centroid_finder_5 : entity work.centroid_finder
-    --   generic map (LENGTH => ly5_size, NBITS => CENTROID_BITS)
-    --   port map (
-    --     clk  => clock,
-    --     din  => ly5_mask,
-    --     dout => pats(I).hits(5)
-    --     );
-
   end generate;
 
   --------------------------------------------------------------------------------
