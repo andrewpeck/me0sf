@@ -1,5 +1,0 @@
-#Simulator modelsim
-# -*- mode: TCL;-*-
-#road/chamber_prbs.vhd topsim=chamber_prbs
-#example/sim/TB_example_wave.do  wavefile
-#example/sim/TB_example.udo dofile
