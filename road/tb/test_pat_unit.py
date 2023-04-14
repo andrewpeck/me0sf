@@ -114,14 +114,9 @@ async def pat_unit_test(dut, test="SEGMENTS"):
                               hit_thresh=HIT_THRESH,
                               ly_thresh=LY_THRESH,
                               partition=0,
-                              light_hit_count = True)
-        fw_segment = get_segment_from_pat_unit(dut)
+                              light_hit_count = False)
 
-        # apply count threshold conditions to emulator pattern assignment
-        # TODO: fold this into the segment finding
-        if sw_segment.lc < LY_THRESH:
-            sw_segment.id = 0
-            sw_segment.lc = 0
+        fw_segment = get_segment_from_pat_unit(dut)
 
         if sw_segment != fw_segment:
             print(f"loop={i}")
