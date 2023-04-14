@@ -29,7 +29,7 @@ package pat_pkg is
   function if_then_else (bool : boolean; a : std_logic_vector; b : std_logic_vector)
     return std_logic_vector;
 
-  constant PAT_UNIT_LATENCY     : positive := 5;
+  constant PAT_UNIT_LATENCY     : positive := 4;
   constant PAT_UNIT_MUX_LATENCY : positive := PAT_UNIT_LATENCY + 3;
   constant PARTITION_LATENCY    : positive := PAT_UNIT_MUX_LATENCY + 5;
   constant SELECTOR_LATENCY     : positive := 4;
