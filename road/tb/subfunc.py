@@ -4,7 +4,6 @@ from math import ceil, floor
 from typing import List
 
 class Config:
-    hit_thresh : int = 4
     ly_thresh : int = 4
     max_span : int = 37
     width : int = 192

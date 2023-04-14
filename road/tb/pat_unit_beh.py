@@ -99,7 +99,6 @@ def calculate_layer_count(masked_data : List[int]) -> int:
 
 def pat_unit(data,
              strip : int = 0,
-             hit_thresh : int = 4,
              ly_thresh : int = 4,
              partition : int = -1,
              light_hit_count : bool = True,
@@ -148,8 +147,6 @@ def pat_unit(data,
     best = max(seg_list) # type: ignore
 
     # (7) apply a layer threshold
-    if (best.hc < hit_thresh):
-        best.reset()
     if (best.lc < ly_thresh):
         best.reset()
 

@@ -54,7 +54,6 @@ async def partition_test(dut, NLOOPS=1000, test="SEGMENTS"):
 
     # initial inputs
     dut.ly_thresh.value = config.ly_thresh
-    dut.hit_thresh.value = config.hit_thresh
     dut.partition_i.value = 6*[0]
 
     # flush the buffers

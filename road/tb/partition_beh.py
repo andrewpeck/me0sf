@@ -134,7 +134,6 @@ def test_process_partition():
     data = [1]*6
 
     config = Config();
-    config.hit_thresh=6
     config.ly_thresh=6
     config.deghost_pre=True
 

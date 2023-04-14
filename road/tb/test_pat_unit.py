@@ -43,12 +43,10 @@ async def pat_unit_test(dut, test="SEGMENTS"):
     LY_CNT = 6
     N_NOISE = 1
     LY_THRESH = 4
-    HIT_THRESH = 0
     LATENCY = dut.LATENCY.value
 
     # set layer count threshold
     dut.ly_thresh.value = LY_THRESH
-    dut.hit_thresh.value = HIT_THRESH
 
     # set MAX_SPAN from firmware
     # should be a number approx 37
@@ -111,7 +109,6 @@ async def pat_unit_test(dut, test="SEGMENTS"):
         # (2) run the emulator on the old data
         data = queue.pop(0)
         sw_segment = pat_unit(data=data, strip=0,
-                              hit_thresh=HIT_THRESH,
                               ly_thresh=LY_THRESH,
                               partition=0,
                               light_hit_count=True)
