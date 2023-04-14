@@ -171,7 +171,7 @@ begin
       REG_STAGES  => 2,
       DAT_BITS    => best_slv'length,
       QLT_BITS    => best_slv'length,
-      IGNORE_BITS => 0, -- 1 to ignore the bend of the pattern id, 2 and 3 are the same, 4, 5 are the same, etc
+      IGNORE_BITS => 1, -- 1 to ignore the bend of the pattern id, 2 and 3 are the same, 4, 5 are the same, etc
       ADR_BITS_o  => integer(ceil(log2(real(NUM_PATTERNS))))
       )
     port map (

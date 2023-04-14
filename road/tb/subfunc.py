@@ -71,7 +71,10 @@ class Segment:
 
         quality = 0
         if (lc > 0):
-            quality = (lc << 23) | (hc << 17) | (id << 12) | (strip << 4) | prt
+            # 0xFE to ignore the least significant bit of the pattern id which
+            # just specifies the direction of the bend, which we don't really
+            # care about
+            quality = (lc << 23) | (hc << 17) | ((id & 0xFE) << 12) | (strip << 4) | prt
 
         self.quality=quality
 
