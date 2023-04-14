@@ -55,7 +55,7 @@ def calculate_global_layer_mask(patlist):
 # FIXME: ugh this is not nice
 calculate_global_layer_mask(PATLIST)
 
-def mask_layer_data (data : List[int], mask):
+def mask_layer_data (data : List[int], mask) -> List[int]:
     """
     AND together a list of layer masks with a list of layers
 
@@ -64,7 +64,7 @@ def mask_layer_data (data : List[int], mask):
     mask is a 6 layer collection of masks
 
     """
-    return tuple(map(lambda ly_dat, ly_mask: ly_dat & ly_mask , data, mask))
+    return list(map(lambda ly_dat, ly_mask: ly_dat & ly_mask , data, mask))
 
 def calculate_centroids(masked_data : List[int]) -> List[float]:
     # print(masked_data)
@@ -124,7 +124,7 @@ def pat_unit(data,
                 zip(hits, lycs, pids, centroids)]
 
     # (6) choose the max of all patterns
-    best = max(seg_list)
+    best = max(seg_list) # type: ignore
 
     # (7) apply a layer threshold
     if (best.hc < hit_thresh):
