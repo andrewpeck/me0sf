@@ -196,6 +196,7 @@ def test_partition():
                     os.path.join(rtl_dir, "deghost.vhd"),
                     os.path.join(rtl_dir, "partition.vhd")]
 
+    # disable DEADTIME in the test bench since it is not emulated in the software
     parameters = {"DEADTIME": 0}
 
     os.environ["SIM"] = "questa"
