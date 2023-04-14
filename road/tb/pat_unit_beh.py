@@ -89,8 +89,6 @@ def calculate_hit_count(masked_data : List[int], light : bool = False) -> int:
         enabled_layers = [0,5]
         hcs = [min(7,count_ones(hits)) if ly in enabled_layers else 0 for (ly,hits) in enumerate(masked_data)]
         hc = sum(hcs)
-        print(f'{hcs=}')
-        print(f'{hc=}')
         return hc
     else:
         return sum([count_ones(x) for x in masked_data])
@@ -104,7 +102,7 @@ def pat_unit(data,
              hit_thresh : int = 4,
              ly_thresh : int = 4,
              partition : int = -1,
-             light_hit_count : bool = False,
+             light_hit_count : bool = True,
              verbose : bool = False):
 
     """

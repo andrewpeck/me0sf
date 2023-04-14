@@ -132,12 +132,12 @@ begin
   begin
     if (rising_edge(clk)) then
 
-      hc <= to_unsigned(count_ones(ly0) +
-                        count_ones(ly1) +
-                        count_ones(ly2) +
-                        count_ones(ly3) +
-                        count_ones(ly4) +
-                        count_ones(ly5), HCB);
+      hc <= to_unsigned(hc_quality(count_ones(ly0)) +
+                        -- count_ones(ly1) +
+                        -- count_ones(ly2) +
+                        -- count_ones(ly3) +
+                        -- count_ones(ly4) +
+                        hc_quality(count_ones(ly5)), HCB);
 
       lc <= to_unsigned(count_ones(or_reduce(ly0) &
                                    or_reduce(ly1) &
