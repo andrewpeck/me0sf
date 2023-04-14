@@ -147,7 +147,8 @@ begin
         hc  => pats(I).hc,
         lc  => pats(I).lc);
 
-    pats(I).id <= to_unsigned(I, PID_BITS);
+    -- pattern id
+    pats(I).id <= to_unsigned(patlist(I).id, PID_BITS);
 
     process (clock) is
     begin
