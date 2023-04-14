@@ -154,6 +154,9 @@ def pat_unit(data,
             print(seg)
 
 
+    best.hc=0
+    best.update_quality()
+
     return best
 
 ################################################################################
