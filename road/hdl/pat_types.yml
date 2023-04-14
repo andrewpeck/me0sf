@@ -7,7 +7,7 @@ config:
 types:
 
   - STRIP_BITS: {qualifier: constant, type: integer, value: 8, comment: "8 bits to count 0-191"}
-  - HC_BITS: {qualifier: constant, type: integer, value: 6, comment: "number of bits to count all hits in 6 layers"}
+  - HC_BITS: {qualifier: constant, type: integer, value: 4, comment: "number of bits to count all hits in 6 layers"}
   - LC_BITS: {qualifier: constant, type: integer, value: 3, comment: "number of bits to count layers hit"}
   - PID_BITS: {qualifier: constant, type: integer, value: 4, comment: "number of bits to cnt the pids"}
   - CENTROID_BITS: {qualifier: constant, type: integer, value: 4, comment: "number of bits to cnt the centroid"}
