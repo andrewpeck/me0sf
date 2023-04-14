@@ -25,12 +25,17 @@ def setup(dut):
 def get_segments_from_dut(dut):
 
     def convert_segment(segment):
-        pid = segment.id.value.integer
         lyc = segment.lc.value.integer
-        hitc = segment.hc.value.integer
-        strip = segment.strip.value.integer
-        partition = segment.partition.value.integer
-        seg = Segment(lc=lyc, hc=hitc, id=pid, strip=strip, partition=partition)
+        pid = segment.id.value.integer
+        if hasattr(segment, "strip"):
+            strip = segment.strip.value.integer
+        else:
+            strip = 0
+        if hasattr(segment, "partition"):
+            partition = segment.partition.value.integer
+        else:
+            partition = 0
+        seg = Segment(lc=lyc, id=pid, strip=strip, partition=partition)
         return seg
 
     segs = [convert_segment(x) for x in dut.segments_o]
@@ -39,12 +44,10 @@ def get_segments_from_dut(dut):
     return segs
 
 
-def get_segment_from_dut(dut):
+def get_segment_from_pat_unit(dut):
     lc = int(dut.pat_o.lc.value)
-    hc  = int(dut.pat_o.hc.value)
     id = int(dut.pat_o.id.value)
-    partition = int(dut.pat_o.partition.value)
-    seg = Segment(hc=hc, lc=lc, id=id, strip=0, partition=partition)
+    seg = Segment(lc=lc, id=id, strip=0, partition=0)
     return seg
 
 

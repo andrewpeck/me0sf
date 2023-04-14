@@ -235,14 +235,14 @@ begin
     partition_inst : entity work.partition
       generic map (
         NUM_SEGMENTS  => NUM_SEGMENTS,
-        PARTITION_NUM => I,
         S0_WIDTH      => S0_WIDTH,
-        DEADTIME      => DEADTIME
-        )
+        DEADTIME      => DEADTIME)
       port map (
 
         clock => clock,
         dav_i => dav_or,
+
+        partition_num => I,
 
         ly_thresh  => ly_thresh,
         hit_thresh => hit_thresh,
@@ -271,7 +271,7 @@ begin
                                  vfat   : integer;
                                  seg    : integer) return boolean is
     begin
-      return seg_valid(segs(finder*NUM_SEGS_PER_PRT +
+      return valid(segs(finder*NUM_SEGS_PER_PRT +
                             vfat * NUM_SEGS_PER_PRT/3 + seg));
     end;
 
@@ -332,8 +332,9 @@ begin
         MODE        => "BITONIC",
         NUM_OUTPUTS => NUM_SEGMENTS,
         NUM_INPUTS  => NUM_SEGS_PER_PRT,
-        SORTB       => PATTERN_SORTB,
-        IGNOREB     => PARTITION_BITS)
+        SORTB       => segment_t'w,
+        IGNOREB     => PARTITION_BITS -- can ignore prt since this is intra-partition
+        )
       port map (
         clock  => clock,
         dav_i  => all_segs_dav(I),
@@ -350,7 +351,8 @@ begin
         MODE        => "BITONIC",
         NUM_INPUTS  => NUM_SEGMENTS*2,
         NUM_OUTPUTS => NUM_SEGMENTS,
-        SORTB       => PATTERN_SORTB)
+        SORTB       => segment_t'w
+        )
       port map (
         clock  => clock,
         dav_i  => one_prt_sorted_dav(I),
@@ -371,7 +373,8 @@ begin
       MODE        => "BITONIC",
       NUM_OUTPUTS => NUM_SEGMENTS,
       NUM_INPUTS  => two_prt_sorted_segs'length,
-      SORTB       => PATTERN_SORTB)
+      SORTB       => segment_t'w
+      )
     port map (
       clock  => clock,
       dav_i  => two_prt_sorted_dav(0),

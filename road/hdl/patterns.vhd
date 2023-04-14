@@ -146,6 +146,10 @@ package patterns is
 
   function get_pat_span (pat : patdef_t) return integer;
 
+  function get_ly_size (ly : natural; ly_pat : hi_lo_t) return natural;
+
+  function get_max_span_ly (list : patdef_array_t; ly : integer) return integer;
+
 end package patterns;
 
 package body patterns is
@@ -200,6 +204,38 @@ package body patterns is
 
   end;
 
+  function get_max_span_ly (list : patdef_array_t; ly : integer)
+    return integer is
+    variable max : integer := 0;
+    variable tmp : integer := 0;
+    variable pat : hi_lo_t;
+  begin
+    for I in list'range loop
+
+      if (ly=0) then
+        pat := list(I).ly0;
+      elsif (ly=1) then
+        pat := list(I).ly1;
+      elsif (ly=2) then
+        pat := list(I).ly2;
+      elsif (ly=3) then
+        pat := list(I).ly3;
+      elsif (ly=4) then
+        pat := list(I).ly4;
+      elsif (ly=5) then
+        pat := list(I).ly5;
+      end if;
+
+      tmp := get_ly_size(ly, pat);
+
+      if (tmp > max) then
+        max := tmp;
+      end if;
+    end loop;
+
+    return max;
+  end;
+
   function get_max_span (list : patdef_array_t) return integer is
     variable max : integer := 0;
     variable tmp : integer := 0;
@@ -246,6 +282,12 @@ package body patterns is
     end loop;
 
     return (max_r - min_l)+1;
+  end;
+
+  function get_ly_size (ly : natural; ly_pat : hi_lo_t)
+    return natural is
+  begin
+    return (ly_pat.hi-ly_pat.lo+1);
   end;
 
 end package body patterns;

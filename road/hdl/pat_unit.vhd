@@ -49,7 +49,7 @@ entity pat_unit is
     ly4 : in std_logic_vector (LY4_SPAN-1 downto 0);
     ly5 : in std_logic_vector (LY5_SPAN-1 downto 0);
 
-    pat_o : out segment_t
+    pat_o : out pat_unit_t
 
     );
 end pat_unit;
@@ -58,25 +58,15 @@ architecture behavioral of pat_unit is
 
   signal dav_s1 : std_logic := '0';
 
-  signal pats : segment_list_t (NUM_PATTERNS-1 downto 0) := (others => null_pattern);
+  signal pats : pat_unit_pre_list_t (NUM_PATTERNS-1 downto 0)
+    := (others => null_pat_unit_pre);
 
   signal pats_dav     : std_logic := '0';
   signal priority_dav : std_logic := '0';
 
-  function count_ones(slv : std_logic_vector) return natural is
-    variable n_ones : natural := 0;
-  begin
-    for i in slv'range loop
-      if slv(i) = '1' then
-        n_ones := n_ones + 1;
-      end if;
-    end loop;
-    return n_ones;
-  end function count_ones;
-
-  signal best_slv : std_logic_vector (segment_t'w-1 downto 0);
-  signal best     : segment_t;
-  signal cand_slv : bus_array (0 to NUM_PATTERNS-1) (segment_t'w-1 downto 0);
+  signal best_slv : std_logic_vector (pat_unit_pre_t'w-1 downto 0);
+  signal best     : pat_unit_pre_t;
+  signal cand_slv : bus_array (0 to NUM_PATTERNS-1) (pat_unit_pre_t'w-1 downto 0);
 
 begin
 
@@ -95,19 +85,12 @@ begin
 
   patgen : for I in 0 to patlist'length-1 generate
 
-    function get_ly_size (ly     : natural;
-                          ly_pat : hi_lo_t)
-      return natural is
-    begin
-      return (ly_pat.hi-ly_pat.lo+1);
-    end;
-
     function get_ly_mask (size   : natural;
                           ly     : std_logic_vector;
                           ly_pat : hi_lo_t)
       return std_logic_vector is
       variable result : std_logic_vector(size-1 downto 0);
-      variable center : natural := ly'length / 2;  -- FIXME: check the rounding on this
+      variable center : natural := ly'length / 2;
     begin
       result := ly (center + ly_pat.hi downto center + ly_pat.lo);
       return result;
@@ -183,11 +166,11 @@ begin
     generic map (
       WIDTH       => NUM_PATTERNS,
       REG_INPUT   => false,
-      REG_OUTPUT  => false,
+      REG_OUTPUT  => true,
       REG_STAGES  => 2,
       DAT_BITS    => best_slv'length,
-      QLT_BITS    => PATTERN_SORTB,
-      IGNORE_BITS => STRIP_BITS + PARTITION_BITS,
+      QLT_BITS    => best_slv'length,
+      IGNORE_BITS => 0, -- 1 to ignore the bend of the pattern id, 2 and 3 are the same, 4, 5 are the same, etc
       ADR_BITS_o  => integer(ceil(log2(real(NUM_PATTERNS))))
       )
     port map (
@@ -218,12 +201,13 @@ begin
 
       dav_o <= priority_dav;
 
-      if (best.lc >= to_integer(unsigned(ly_thresh)) and
-          best.hc >= to_integer(unsigned(hit_thresh))) then
-        pat_o <= best;
+      if (best.lc >= to_integer(unsigned(ly_thresh))) then
+        pat_o.lc <= best.lc;
+        pat_o.id <= best.id;
       else
         pat_o <= zero(pat_o);
       end if;
+
     end if;
   end process;
 

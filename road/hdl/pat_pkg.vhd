@@ -17,6 +17,9 @@ use work.pat_types.all;
 
 package pat_pkg is
 
+
+  function count_ones(slv : std_logic_vector) return natural;
+
   function if_then_else (bool : boolean; a : integer; b : integer)
     return integer;
   function if_then_else (bool : boolean; a : boolean; b : boolean)
@@ -37,33 +40,52 @@ package pat_pkg is
   -- Build Parameters
   --------------------------------------------------------------------------------
 
-  constant PRT_WIDTH      : positive              := 192;
+  constant PRT_WIDTH : positive := 192;
 
   --------------------------------------------------------------------------------
   -- Types for patterns
   --------------------------------------------------------------------------------
 
+  constant null_pat_unit_pre : pat_unit_pre_t :=
+    (lc => (others => '0'),
+     id => (others => '0'),
+     hc => (others => '0'));
+
+  constant null_pat_unit : pat_unit_t :=
+    (lc    => (others => '0'),
+     id    => (others => '0'));
+
+  constant null_pat_unit_mux : pat_unit_mux_t :=
+    (lc    => (others => '0'),
+     id    => (others => '0'),
+     strip => (others => '0'));
+
   constant null_pattern : segment_t :=
-    (
-      lc        => (others => '0'),
-      hc        => (others => '0'),
-      id        => (others => '0'),
-      hits      => (others => (others => '0')),
-      partition => (others => '0'),
-      strip     => (others => '0')
-      );
+    (lc        => (others => '0'),
+     id        => (others => '0'),
+     partition => (others => '0'),
+     strip     => (others => '0'));
 
   --------------------------------------------------------------------------------
   -- Pattern Helper Functions
   --------------------------------------------------------------------------------
 
-  function seg_valid (seg : segment_t) return boolean;
+  function valid (seg : segment_t) return boolean;
+  function valid (seg : pat_unit_t) return boolean;
+  function valid (seg : pat_unit_mux_t) return boolean;
 
   -- mirror a pattern unit (left/right symmetry)
   function mirror_patdef (pat : patdef_t; id : natural) return patdef_t;
 
-  function get_sortb (x : std_logic_vector) return std_logic_vector;
+  function segment_t_get_sortb (x      : std_logic_vector) return std_logic_vector;
+  function pat_unit_mux_t_get_sortb (x : std_logic_vector) return std_logic_vector;
 
+  -- comparisons
+  function "<"(L  : pat_unit_mux_t; R : pat_unit_mux_t) return boolean;
+  function ">"(L  : pat_unit_mux_t; R : pat_unit_mux_t) return boolean;
+  function "="(L  : pat_unit_mux_t; R : pat_unit_mux_t) return boolean;
+  function ">="(L : pat_unit_mux_t; R : pat_unit_mux_t) return boolean;
+  function "<="(L : pat_unit_mux_t; R : pat_unit_mux_t) return boolean;
   -- comparisons
   function "<"(L  : segment_t; R : segment_t) return boolean;
   function ">"(L  : segment_t; R : segment_t) return boolean;
@@ -79,6 +101,17 @@ package pat_pkg is
 end package pat_pkg;
 
 package body pat_pkg is
+
+  function count_ones(slv : std_logic_vector) return natural is
+    variable n_ones : natural := 0;
+  begin
+    for i in slv'range loop
+      if slv(i) = '1' then
+        n_ones := n_ones + 1;
+      end if;
+    end loop;
+    return n_ones;
+  end function count_ones;
 
   function if_then_else (bool : boolean; a : std_logic; b : std_logic) return std_logic is
   begin
@@ -116,10 +149,17 @@ package body pat_pkg is
     end if;
   end if_then_else;
 
-  function get_sortb (x : std_logic_vector) return std_logic_vector is
-    variable y : std_logic_vector(PATTERN_SORTB-1 downto 0);
+  function pat_unit_mux_t_get_sortb (x : std_logic_vector) return std_logic_vector is
+    variable y : std_logic_vector(x'length-1 downto 0);
   begin
-    y := x(PATTERN_SORTB-1 downto 0);
+    y := x(x'length-1 downto 0);
+    return y;
+  end;
+
+  function segment_t_get_sortb (x : std_logic_vector) return std_logic_vector is
+    variable y : std_logic_vector(x'length-1 downto 0);
+  begin
+    y := x(x'length-1 downto 0);
     return y;
   end;
 
@@ -136,17 +176,65 @@ package body pat_pkg is
     return result;
   end;
 
-  function seg_valid (seg : segment_t) return boolean is
+  function valid (seg : segment_t) return boolean is
+  begin return seg.lc /= 0; end;
+  function valid (seg : pat_unit_t) return boolean is
+  begin return seg.lc /= 0; end;
+  function valid (seg : pat_unit_mux_t) return boolean is
+  begin return seg.lc /= 0; end;
+
+  --------------------------------------------------------------------------------
+  -- Comparison function for pat_unit_mux types
+  --------------------------------------------------------------------------------
+
+  function "=" (L : pat_unit_mux_t; R : pat_unit_mux_t) return boolean is
+    variable left, right : std_logic_vector(pat_unit_mux_t'w-1 downto 0);
   begin
-    return seg.lc /= 0;
+    left  := convert(L, left);
+    right := convert(R, right);
+    return (unsigned(pat_unit_mux_t_get_sortb(left)) =
+            unsigned(pat_unit_mux_t_get_sortb(right)));
   end;
+
+  function ">" (L : pat_unit_mux_t; R : pat_unit_mux_t) return boolean is
+    variable left, right : std_logic_vector(pat_unit_mux_t'w-1 downto 0);
+  begin
+    left  := convert(L, left);
+    right := convert(R, right);
+    return (unsigned(pat_unit_mux_t_get_sortb(left)) >
+            unsigned(pat_unit_mux_t_get_sortb(right)));
+  end;
+
+  function "<" (L : pat_unit_mux_t; R : pat_unit_mux_t) return boolean is
+    variable left, right : std_logic_vector(pat_unit_mux_t'w-1 downto 0);
+  begin
+    left  := convert(L, left);
+    right := convert(R, right);
+    return (unsigned(pat_unit_mux_t_get_sortb(left)) <
+            unsigned(pat_unit_mux_t_get_sortb(right)));
+  end;
+
+  function "<=" (L : pat_unit_mux_t; R : pat_unit_mux_t) return boolean is
+  begin
+    return L < R or L = R;
+  end;
+
+  function ">=" (L : pat_unit_mux_t; R : pat_unit_mux_t) return boolean is
+  begin
+    return L > R or L = R;
+  end;
+
+  --------------------------------------------------------------------------------
+  -- Comparison function for full segments
+  --------------------------------------------------------------------------------
 
   function "=" (L : segment_t; R : segment_t) return boolean is
     variable left, right : std_logic_vector(segment_t'w-1 downto 0);
   begin
     left  := convert(L, left);
     right := convert(R, right);
-    return (unsigned(get_sortb(left)) = unsigned(get_sortb(right)));
+    return (unsigned(segment_t_get_sortb(left)) =
+            unsigned(segment_t_get_sortb(right)));
   end;
 
   function ">" (L : segment_t; R : segment_t) return boolean is
@@ -154,7 +242,8 @@ package body pat_pkg is
   begin
     left  := convert(L, left);
     right := convert(R, right);
-    return (unsigned(get_sortb(left)) > unsigned(get_sortb(right)));
+    return (unsigned(segment_t_get_sortb(left)) >
+            unsigned(segment_t_get_sortb(right)));
   end;
 
   function "<" (L : segment_t; R : segment_t) return boolean is
@@ -162,14 +251,8 @@ package body pat_pkg is
   begin
     left  := convert(L, left);
     right := convert(R, right);
-
-    -- report "Comparison L < R" & LF & " > left  cnt=" & to_string(get_sortb(left)(6 downto 4))
-    --   & " pid=" & to_string(get_sortb(left)(3 downto 0)) &  LF &
-    --   " > right cnt=" & to_string(get_sortb(right)(6 downto 4))
-    --   & " pid=" & to_string(get_sortb(right)(3 downto 0))
-    -- severity note;
-
-    return (unsigned(get_sortb(left)) < unsigned(get_sortb(right)));
+    return (unsigned(segment_t_get_sortb(left)) <
+            unsigned(segment_t_get_sortb(right)));
   end;
 
   function "<=" (L : segment_t; R : segment_t) return boolean is
@@ -184,13 +267,13 @@ package body pat_pkg is
 
   -- unit test function to check that the sorting operators are working correctly
   procedure check_pattern_operators (nil : boolean) is
-    variable ply0 : segment_t := (lc => to_unsigned(0, LC_BITS), hc => to_unsigned(0, HC_BITS), id => x"A", hits => (others => (others => '0')), partition => (others => '0'), strip => (others => '0'));
-    variable ply1 : segment_t := (lc => to_unsigned(1, LC_BITS), hc => to_unsigned(1, HC_BITS), id => x"9", hits => (others => (others => '0')), partition => (others => '0'), strip => (others => '0'));
-    variable ply2 : segment_t := (lc => to_unsigned(2, LC_BITS), hc => to_unsigned(2, HC_BITS), id => x"8", hits => (others => (others => '0')), partition => (others => '0'), strip => (others => '0'));
+    variable ply0 : segment_t := (lc => to_unsigned(0, LC_BITS), id => x"A", partition => (others => '0'), strip => (others => '0'));
+    variable ply1 : segment_t := (lc => to_unsigned(1, LC_BITS), id => x"9", partition => (others => '0'), strip => (others => '0'));
+    variable ply2 : segment_t := (lc => to_unsigned(2, LC_BITS), id => x"8", partition => (others => '0'), strip => (others => '0'));
 
-    variable pat0 : segment_t := (lc => to_unsigned(1, LC_BITS), hc => to_unsigned(1, HC_BITS), id => x"0", hits => (others => (others => '0')), partition => (others => '0'), strip => (others => '0'));
-    variable pat1 : segment_t := (lc => to_unsigned(1, LC_BITS), hc => to_unsigned(1, HC_BITS), id => x"1", hits => (others => (others => '0')), partition => (others => '0'), strip => (others => '0'));
-    variable pat2 : segment_t := (lc => to_unsigned(1, LC_BITS), hc => to_unsigned(1, HC_BITS), id => x"2", hits => (others => (others => '0')), partition => (others => '0'), strip => (others => '0'));
+    variable pat0 : segment_t := (lc => to_unsigned(1, LC_BITS), id => x"0", partition => (others => '0'), strip => (others => '0'));
+    variable pat1 : segment_t := (lc => to_unsigned(1, LC_BITS), id => x"1", partition => (others => '0'), strip => (others => '0'));
+    variable pat2 : segment_t := (lc => to_unsigned(1, LC_BITS), id => x"2", partition => (others => '0'), strip => (others => '0'));
   begin
 
     -- > testing

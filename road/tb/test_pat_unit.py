@@ -43,7 +43,7 @@ async def pat_unit_test(dut, test="SEGMENTS"):
     LY_CNT = 6
     N_NOISE = 1
     LY_THRESH = 4
-    HIT_THRESH = 4
+    HIT_THRESH = 0
     LATENCY = dut.LATENCY.value
 
     # set layer count threshold
@@ -113,8 +113,9 @@ async def pat_unit_test(dut, test="SEGMENTS"):
         sw_segment = pat_unit(data=data, strip=0,
                               hit_thresh=HIT_THRESH,
                               ly_thresh=LY_THRESH,
-                              partition=0)
-        fw_segment = get_segment_from_dut(dut)
+                              partition=0,
+                              light_hit_count = True)
+        fw_segment = get_segment_from_pat_unit(dut)
 
         # apply count threshold conditions to emulator pattern assignment
         # TODO: fold this into the segment finding

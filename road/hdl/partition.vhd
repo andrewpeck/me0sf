@@ -22,14 +22,13 @@ entity partition is
     LATENCY : integer := PARTITION_LATENCY;
 
     NUM_SEGMENTS   : integer := 4;
-    PARTITION_NUM  : integer := 0;          -- just assign a number (e.g. 0-7) to each partition so we can look it up later
     PRT_WIDTH      : natural := PRT_WIDTH;  -- width of the partition (192)
     S0_WIDTH       : natural := 8;          -- width of the pre-sorting regions
     PAT_UNIT_REUSE : natural := 8;          --
     DEADTIME       : natural := 3;          -- deadtime in bx
 
-    DEGHOST_PRE  : boolean := true;      -- perform intra-partition ghost cancellation BEFORE sorting
-    DEGHOST_POST : boolean := false;     -- perform intra-partition ghost cancellation AFTER sorting
+    DEGHOST_PRE  : boolean := true;     -- perform intra-partition ghost cancellation BEFORE sorting
+    DEGHOST_POST : boolean := false;    -- perform intra-partition ghost cancellation AFTER sorting
 
     PATLIST : patdef_array_t := patdef_array;
 
@@ -46,7 +45,7 @@ entity partition is
     -- Control
     --------------------------------------------------------------------------------
 
-    clock : in  std_logic;
+    clock : in std_logic;
 
     dav_i : in  std_logic;
     dav_o : out std_logic := '0';
@@ -65,6 +64,8 @@ entity partition is
 
     partition_i : in partition_t;
 
+    partition_num : integer range 0 to 15 := 0;  -- just assign a number (e.g. 0-7) to each partition so we can look it up later
+
     --------------------------------------------------------------------------------
     -- outputs
     --------------------------------------------------------------------------------
@@ -76,11 +77,12 @@ end partition;
 
 architecture behavioral of partition is
 
-  signal segments             : segment_list_t (PRT_WIDTH-1 downto 0);
-  signal segments_deghost     : segment_list_t (PRT_WIDTH-1 downto 0);
+  signal segments             : pat_unit_mux_list_t (PRT_WIDTH-1 downto 0);
+  signal segments_deghost     : pat_unit_mux_list_t (PRT_WIDTH-1 downto 0);
   signal segments_dav         : std_logic := '0';
   signal segments_dav_deghost : std_logic := '0';
-  signal segments_s0          : segment_list_t (PRT_WIDTH/S0_WIDTH-1 downto 0);
+  signal segments_s0          : pat_unit_mux_list_t (PRT_WIDTH/S0_WIDTH-1 downto 0);
+  signal segments_postghost   : pat_unit_mux_list_t (PRT_WIDTH/S0_WIDTH-1 downto 0);
 
   signal dav_priority : std_logic_vector (PRT_WIDTH/S0_WIDTH-1 downto 0) := (others => '0');
 
@@ -112,7 +114,6 @@ begin
     generic map (
       WIDTH         => PRT_WIDTH,
       MUX_FACTOR    => PAT_UNIT_REUSE,
-      PARTITION_NUM => PARTITION_NUM,
       DEADTIME      => DEADTIME
       )
     port map (
@@ -170,7 +171,9 @@ begin
   --       └───────┬───────┘               └───────┬───────┘
   --              OUT                             OUT
   --
-  -- TODO: this can probably be time-multiplexed?
+  -- TODO: consider making the regions wider and choosing the best 2 instead of 1?
+  --
+  -- the second one comes for free with some very minor mods to the priority encoder
   --
   -------------------------------------------------------------------------------
 
@@ -187,8 +190,8 @@ begin
     priority_encoder_inst : entity work.priority_encoder
       generic map (
         DAT_BITS    => best'length,
-        QLT_BITS    => PATTERN_SORTB,
-        IGNORE_BITS => PARTITION_BITS,  -- everything is the same partition here, ignore them
+        QLT_BITS    => best'length,
+        IGNORE_BITS => 0,
         WIDTH       => S0_WIDTH,
         REG_INPUT   => true,
         REG_OUTPUT  => true,
@@ -225,13 +228,32 @@ begin
         dav_i      => dav_priority(0),
         dav_o      => dav_o,
         segments_i => segments_s0,
-        segments_o => segments_o
+        segments_o => segments_postghost
         );
   end generate;
 
   not_post_filter_deghost_gen : if (not DEGHOST_POST) generate
-    segments_o <= segments_s0;
-    dav_o      <= dav_priority(0);
+    segments_postghost <= segments_s0;
   end generate;
+
+  --------------------------------------------------------------------------------
+  -- Outputs
+  --------------------------------------------------------------------------------
+
+  process (clock) is
+  begin
+    if (rising_edge(clock)) then
+
+      dav_o <= dav_priority(0);
+
+      for I in segments_o'range loop
+        segments_o(I).lc        <= segments_s0(I).lc;
+        segments_o(I).id        <= segments_s0(I).id;
+        segments_o(I).strip     <= segments_s0(I).strip;
+        segments_o(I).partition <= to_unsigned(partition_num, 4);
+      end loop;
+
+    end if;
+  end process;
 
 end behavioral;

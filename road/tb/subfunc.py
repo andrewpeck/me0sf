@@ -40,7 +40,7 @@ class Mask:
 
 class Segment:
 
-    def __init__(self, hc, lc, id, strip=0, partition=0, centroid=None,
+    def __init__(self, lc, id, hc=0, strip=0, partition=0, centroid=None,
                  substrip=None, bend_ang=None):
         self.hc = hc
         self.lc = lc
@@ -70,8 +70,8 @@ class Segment:
         strip = 0 if strip is None else strip
 
         quality = 0
-        if (hc > 0):
-            quality = (lc << 23 | hc << 17) | (id << 12) | strip << 4 | prt
+        if (lc > 0):
+            quality = (lc << 23) | (hc << 17) | (id << 12) | (strip << 4) | prt
 
         self.quality=quality
 
@@ -91,7 +91,7 @@ class Segment:
             
 
     def __eq__(self, other):
-        if (self.hc == 0 and other.hc == 0):
+        if (self.lc == 0 and other.lc == 0):
             return True
 
         return self.id==other.id and \
@@ -107,7 +107,7 @@ class Segment:
         if (self.id==0):
             return "n/a"
 
-        return f"id={self.id}, hc={self.hc}, lc={self.lc}, strip={self.strip}, prt={self.partition}, quality={self.quality}"
+        return f"id={self.id}, lc={self.lc}, strip={self.strip}, prt={self.partition}, quality={self.quality}"
 
     def __repr__(self):
         return f"Seg {self.quality}"
