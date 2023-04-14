@@ -146,7 +146,7 @@ def test_pat_unit():
 
     vhdl_sources = [
         os.path.join(rtl_dir, "priority_encoder/hdl/priority_encoder.vhd"),
-        os.path.join(rtl_dir, "centroid_finder.vhd"),
+        os.path.join(rtl_dir, "hit_count.vhd"),
         os.path.join(rtl_dir, "pat_types.vhd"),
         os.path.join(rtl_dir, "pat_pkg.vhd"),
         os.path.join(rtl_dir, "patterns.vhd"),

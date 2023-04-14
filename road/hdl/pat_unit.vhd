@@ -149,34 +149,27 @@ begin
     ly4_mask <= get_ly_mask (ly4_size, ly4, patlist(I).ly4);
     ly5_mask <= get_ly_mask (ly5_size, ly5, patlist(I).ly5);
 
+    i_hit_count : entity work.hit_count
+      generic map(
+        HCB => HC_BITS,
+        LCB => LC_BITS)
+      port map (
+        clk => clock,
+        ly0 => ly0_mask,
+        ly1 => ly1_mask,
+        ly2 => ly2_mask,
+        ly3 => ly3_mask,
+        ly4 => ly4_mask,
+        ly5 => ly5_mask,
+        hc  => pats(I).hc,
+        lc  => pats(I).lc);
+
+    pats(I).id <= to_unsigned(I, PID_BITS);
+
     process (clock) is
     begin
       if (rising_edge(clock)) then
-
         pats_dav <= dav_i;
-
-        pats(I) <= null_pattern;
-
-        -- count
-        pats(I).hc <=
-          to_unsigned(count_ones(ly0_mask) +
-                      count_ones(ly1_mask) +
-                      count_ones(ly2_mask) +
-                      count_ones(ly3_mask) +
-                      count_ones(ly4_mask) +
-                      count_ones(ly5_mask), HC_BITS);
-
-        pats(I).lc <=
-          to_unsigned(count_ones(or_reduce(ly0_mask) &
-                                 or_reduce(ly1_mask) &
-                                 or_reduce(ly2_mask) &
-                                 or_reduce(ly3_mask) &
-                                 or_reduce(ly4_mask) &
-                                 or_reduce(ly5_mask)), LC_BITS);
-
-        -- pattern id
-        pats(I).id <= to_unsigned(patlist(I).id, PID_BITS);
-
       end if;
     end process;
 

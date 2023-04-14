@@ -189,7 +189,7 @@ def test_partition():
                     os.path.join(rtl_dir, "pat_pkg.vhd"),
                     os.path.join(rtl_dir, "fixed_delay.vhd"),
                     os.path.join(rtl_dir, "patterns.vhd"),
-                    os.path.join(rtl_dir, "centroid_finder.vhd"),
+                    os.path.join(rtl_dir, "hit_count.vhd"),
                     os.path.join(rtl_dir, "pat_unit.vhd"),
                     os.path.join(rtl_dir, "dav_to_phase.vhd"),
                     os.path.join(rtl_dir, "deadzone.vhd"),
