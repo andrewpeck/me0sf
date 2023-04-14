@@ -34,6 +34,13 @@ entity pat_unit_mux is
   generic(
     VERBOSE       : boolean := false;
 
+    LY0_SPAN : natural := get_max_span(patdef_array);
+    LY1_SPAN : natural := get_max_span(patdef_array);
+    LY2_SPAN : natural := get_max_span(patdef_array);
+    LY3_SPAN : natural := get_max_span(patdef_array);
+    LY4_SPAN : natural := get_max_span(patdef_array);
+    LY5_SPAN : natural := get_max_span(patdef_array);
+
     LATENCY : natural := PAT_UNIT_MUX_LATENCY;
 
     PATLIST : patdef_array_t := patdef_array;
@@ -88,13 +95,6 @@ architecture behavioral of pat_unit_mux is
   constant NUM_SECTORS : positive := WIDTH/MUX_FACTOR;
 
   constant LY_SPAN : natural := get_max_span(patdef_array);
-
-  constant LY0_SPAN : natural := get_max_span_ly(patdef_array, 0);
-  constant LY1_SPAN : natural := get_max_span_ly(patdef_array, 1);
-  constant LY2_SPAN : natural := get_max_span_ly(patdef_array, 2);
-  constant LY3_SPAN : natural := get_max_span_ly(patdef_array, 3);
-  constant LY4_SPAN : natural := get_max_span_ly(patdef_array, 4);
-  constant LY5_SPAN : natural := get_max_span_ly(patdef_array, 5);
 
   signal ly0_padded : std_logic_vector (WIDTH-1 + 2*PADDING downto 0);
   signal ly1_padded : std_logic_vector (WIDTH-1 + 2*PADDING downto 0);
