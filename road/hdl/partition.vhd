@@ -193,7 +193,7 @@ begin
         WIDTH       => S0_WIDTH,
         REG_INPUT   => true,
         REG_OUTPUT  => true,
-        REG_STAGES  => 3
+        REG_STAGES  => 2
         )
       port map (
         clock => clock,
