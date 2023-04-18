@@ -109,6 +109,9 @@ architecture behavioral of pat_unit_mux is
 
   signal phase_i, patterns_mux_phase : natural range 0 to MUX_FACTOR-1;
 
+  attribute MAX_FANOUT : integer;
+  attribute MAX_FANOUT of patterns_mux_phase : signal is 128;
+
   signal dav_reg : std_logic := '0';
 
   signal pat_unit_dav : std_logic_vector(NUM_SECTORS-1 downto 0);
