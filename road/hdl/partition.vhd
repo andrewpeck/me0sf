@@ -55,7 +55,7 @@ entity partition is
     dav_o_phase : out natural range 0 to 7 := 0;
     -- synthesis translate_on
 
-    ly_thresh  : in std_logic_vector (2 downto 0);
+    ly_thresh : in std_logic_vector (2 downto 0);
 
     --------------------------------------------------------------------------------
     -- Inputs
@@ -76,12 +76,13 @@ end partition;
 
 architecture behavioral of partition is
 
-  signal segments             : pat_unit_mux_list_t (PRT_WIDTH-1 downto 0);
-  signal segments_deghost     : pat_unit_mux_list_t (PRT_WIDTH-1 downto 0);
+  signal segments           : pat_unit_mux_list_t (PRT_WIDTH-1 downto 0);
+  signal segments_deghost   : pat_unit_mux_list_t (PRT_WIDTH-1 downto 0);
+  signal segments_s0        : pat_unit_mux_list_t (PRT_WIDTH/S0_WIDTH-1 downto 0);
+  signal segments_postghost : pat_unit_mux_list_t (PRT_WIDTH/S0_WIDTH-1 downto 0);
+
   signal segments_dav         : std_logic := '0';
   signal segments_dav_deghost : std_logic := '0';
-  signal segments_s0          : pat_unit_mux_list_t (PRT_WIDTH/S0_WIDTH-1 downto 0);
-  signal segments_postghost   : pat_unit_mux_list_t (PRT_WIDTH/S0_WIDTH-1 downto 0);
 
   signal dav_priority : std_logic_vector (PRT_WIDTH/S0_WIDTH-1 downto 0) := (others => '0');
 
@@ -111,14 +112,14 @@ begin
 
   pat_unit_mux_inst : entity work.pat_unit_mux
     generic map (
-      WIDTH         => PRT_WIDTH,
-      MUX_FACTOR    => PAT_UNIT_REUSE,
-      DEADTIME      => DEADTIME
+      WIDTH      => PRT_WIDTH,
+      MUX_FACTOR => PAT_UNIT_REUSE,
+      DEADTIME   => DEADTIME
       )
     port map (
       clock => clock,
 
-      ly_thresh  => ly_thresh,
+      ly_thresh => ly_thresh,
 
       dav_i => dav_i,
       ly0   => partition_i(0),
