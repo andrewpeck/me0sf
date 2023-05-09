@@ -39,8 +39,11 @@ class Mask:
 
 class Segment:
 
+    ignore_bend = False
+
     def __init__(self, lc, id, hc=0, strip=0, partition=0, centroid=None,
                  substrip=None, bend_ang=None):
+
         self.hc = hc
         self.lc = lc
         self.id = id
@@ -69,11 +72,17 @@ class Segment:
         strip = 0 if strip is None else strip
 
         quality = 0
+
         if (lc > 0):
-            # 0xFE to ignore the least significant bit of the pattern id which
-            # just specifies the direction of the bend, which we don't really
-            # care about
-            quality = (lc << 23) | (hc << 17) | ((id & 0xFE) << 12) | (strip << 4) | prt
+            if self.ignore_bend:
+                # 0xFE to ignore the least significant bit of the pattern id
+                # which just specifies the direction of the bend, which we don't
+                # really care about
+                idmask = 0xFE
+            else:
+                idmask = 0xFF
+
+            quality = (lc << 23) | (hc << 17) | ((id & idmask) << 12) | (strip << 4) | prt
 
         self.quality=quality
 
