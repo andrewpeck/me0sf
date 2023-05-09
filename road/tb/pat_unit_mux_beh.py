@@ -24,7 +24,9 @@ def pat_mux(partition_data, partition, config : Config):
                                  hit_thresh = config.hit_thresh,
                                  ly_thresh = config.ly_thresh,
                                  strip=strip,
-                                 partition=partition)
+                                 partition=partition, 
+                                 input_max_span = config.max_span, 
+                                 num_or = config.num_or)
 
     return [fn(x) for x in range(config.width)]
 
@@ -49,7 +51,7 @@ def test_extract_data_window():
 def test_pat_mux():
     data = [0b1, 0b1, 0b1, 0b1, 0b1, 0b1]
 
-    config = Config();
+    config = Config()
     config.ly_thresh=6
     config.hit_thresh=6
     config.max_span=37

@@ -19,7 +19,7 @@ from read_ntuple import *
 from subfunc import *
 
 
-def analysis(root_dat, hits, bx, bx_list, cross_part, verbose, pu):
+def analysis(root_dat, hits, bx, bx_list, cross_part, verbose, pu, num_or):
     # Output text file
     file_out = open("output_log_%s_bx%s_crosspart_%s.txt"%(hits, bx, cross_part), "w")
 
@@ -73,7 +73,7 @@ def analysis(root_dat, hits, bx, bx_list, cross_part, verbose, pu):
         simhit_chamber = event["me0_sim_hit_chamber"] - 1
         simhit_eta_partition = event["me0_sim_hit_eta_partition"] - 1
         simhit_layer = event["me0_sim_hit_layer"] - 1
-        simhit_sbit = np.floor(event["me0_sim_hit_strip"] / 2.0)
+        simhit_sbit = np.floor(event["me0_sim_hit_strip"] / num_or)
         simhit_particle = event["me0_sim_hit_particle"]
 
         # read simtrack info
@@ -95,7 +95,7 @@ def analysis(root_dat, hits, bx, bx_list, cross_part, verbose, pu):
         digihit_chamber = event["me0_digi_hit_chamber"] - 1
         digihit_eta_partition = event["me0_digi_hit_eta_partition"] - 1
         digihit_layer = event["me0_digi_hit_layer"] - 1
-        digihit_sbit = np.floor(event["me0_digi_hit_strip"] / 2.0)
+        digihit_sbit = np.floor(event["me0_digi_hit_strip"] / num_or)
         digihit_bx = event["me0_digi_hit_bx"]
 
         # read rechit info
@@ -103,7 +103,7 @@ def analysis(root_dat, hits, bx, bx_list, cross_part, verbose, pu):
         rechit_chamber = event["me0_rec_hit_chamber"] - 1
         rechit_eta_partition = event["me0_rec_hit_eta_partition"] - 1
         rechit_layer = event["me0_rec_hit_layer"] - 1
-        rechit_sbit = np.floor(event["me0_rec_hit_strip"] / 2.0)
+        rechit_sbit = np.floor(event["me0_rec_hit_strip"] / num_or)
         rechit_bx = event["me0_rec_hit_bx"]
 
         # read offline segment info
@@ -305,6 +305,9 @@ def analysis(root_dat, hits, bx, bx_list, cross_part, verbose, pu):
             config.num_outputs = 10
             config.cross_part_seg_width = 4
             config.ghost_width = 10
+            num_or_to_span = {2:37, 4:19, 8:11, 16:7}
+            config.max_span = num_or_to_span[num_or]
+            config.num_or = num_or
             seglist = process_chamber(data, config)
             seglist_final = []
             #print (seglist)
@@ -817,10 +820,15 @@ if __name__ == "__main__":
     parser.add_argument("-c", "--cross_part", action="store", dest="cross_part", help="cross_part = 'full' or 'partial' or 'none'")
     parser.add_argument("-v", "--verbose", action="store_true", dest="verbose", help="whether to print all track segment matching info")
     parser.add_argument("-p", "--pu", action="store", dest="pu", help="PU")
+    parser.add_argument("-o", "--num_or", action="store", dest="num_or", default = "2", help="number of strips that are OR-ed together")
     args = parser.parse_args()
 
     # read in the data
     root_dat = read_ntuple(args.file_path)
+
+    if int(args.num_or) <= 2:
+        print ("At least 2 strips OR-ed together")
+        sys.exit()
 
     if args.cross_part not in ["full", "partial", "none"]:
         print ("Incorrect argument for cross partition")
@@ -845,4 +853,4 @@ if __name__ == "__main__":
         else:
             bx_list = list(range(-(math.floor(n_bx/2)), math.floor(n_bx/2)+1))
 
-    analysis(root_dat, args.hits, args.bx, bx_list, args.cross_part, args.verbose, args.pu)
+    analysis(root_dat, args.hits, args.bx, bx_list, args.cross_part, args.verbose, args.pu, int(args.num_or))
