@@ -151,7 +151,7 @@ async def partition_test(dut, NLOOPS=1000, test="SEGMENTS"):
 
             fw_segments = get_segments_from_dut(dut)
 
-            for j in range(len(sw_segments)):
+            for j in range(max([len(fw_segments), len(sw_segments)])):
 
                 if fw_segments[j].id > 0:
                     strip_cnts.append(j)
