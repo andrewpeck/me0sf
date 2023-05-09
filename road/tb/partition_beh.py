@@ -118,10 +118,12 @@ def process_partition(partition_data : List[int],
 
     # divide partition into pieces and take best segment from each piece
     chunked = chunk(segments, config.group_width)
-    segments = list(map(max, chunked))
+
+    segments = [max(x) for x in chunked]
 
     if (config.deghost_post):
-        segments = cancel_edges(segments=segments, group_width=0, ghost_width=1, edge_distance=1)
+        segments = cancel_edges(segments=segments, group_width=0,
+                                ghost_width=1, edge_distance=1)
 
     return segments
 
