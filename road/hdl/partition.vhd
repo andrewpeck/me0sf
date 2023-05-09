@@ -176,8 +176,8 @@ begin
   -------------------------------------------------------------------------------
 
   s0_gen : for region in 0 to PRT_WIDTH/S0_WIDTH-1 generate
-    signal best     : std_logic_vector (segment_t'w - 1 downto 0);
-    signal cand_slv : bus_array (0 to S0_WIDTH-1) (segment_t'w - 1 downto 0);
+    signal best     : std_logic_vector (pat_unit_mux_t'w - 1 downto 0);
+    signal cand_slv : bus_array (0 to S0_WIDTH-1) (pat_unit_mux_t'w - 1 downto 0);
   begin
 
     cand_to_slv : for I in 0 to S0_WIDTH-1 generate
@@ -219,7 +219,7 @@ begin
   post_filter_deghost_gen : if (DEGHOST_POST) generate
     deghost_post : entity work.deghost
       generic map (
-        WIDTH        => segments_o'length,
+        WIDTH        => segments_s0'length,
         CHECK_STRIPS => true)
       port map (
         clock      => clock,
