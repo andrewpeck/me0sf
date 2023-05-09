@@ -21,7 +21,7 @@ from subfunc import *
 
 def analysis(root_dat, hits, bx, bx_list, cross_part, verbose, pu, num_or):
     # Output text file
-    file_out = open("output_log_%s_bx%s_crosspart_%s.txt"%(hits, bx, cross_part), "w")
+    file_out = open("output_log_%s_bx%s_crosspart_%s.txt"%(hits, bx, cross_part, num_or), "w")
 
     # Nr. of segments per chamber per event
     num_seg_per_chamber = ROOT.TH1D("num_seg_per_chamber","Fraction of Events vs Number of Segments per Chamber",13,-0.5,12.5)
@@ -513,7 +513,7 @@ def analysis(root_dat, hits, bx, bx_list, cross_part, verbose, pu, num_or):
         print ("Overall purity w.r.t sim tracks = %.4f\n"%(st_purity))
         file_out.write("Overall purity w.r.t sim tracks = %.4f\n\n"%(st_purity))
 
-    plot_file = ROOT.TFile("output_plots_%s_bx%s_crosspart_%s.root"%(hits, bx, cross_part), "recreate")
+    plot_file = ROOT.TFile("output_plots_%s_bx%s_crosspart_%s_or%d.root"%(hits, bx, cross_part, num_or), "recreate")
     plot_file.cd()
 
     # Plotting
@@ -544,7 +544,7 @@ def analysis(root_dat, hits, bx, bx_list, cross_part, verbose, pu, num_or):
     ROOT.gPad.Update()
     latex.DrawLatex(0.9, 0.91,plot_text1)
     latex.DrawLatex(0.42, 0.91,plot_text2)
-    c1.Print("offline_eff_%s_bx%s_crosspart_%s.pdf"%(hits, bx, cross_part))
+    c1.Print("offline_eff_%s_bx%s_crosspart_%s_or%d.pdf"%(hits, bx, cross_part, num_or))
     offline_eff.Write()
 
     c2 = ROOT.TCanvas('', '', 800, 650)
@@ -565,7 +565,7 @@ def analysis(root_dat, hits, bx, bx_list, cross_part, verbose, pu, num_or):
     offline_effi_mres.SetLineColor(1)
     latex.DrawLatex(0.9, 0.91,plot_text1)
     latex.DrawLatex(0.42, 0.91,plot_text2)
-    c2.Print("offline_effi_mres_%s_bx%s_crosspart_%s.pdf"%(hits, bx, cross_part))
+    c2.Print("offline_effi_mres_%s_bx%s_crosspart_%s_or%d.pdf"%(hits, bx, cross_part, num_or))
     offline_effi_mres.Write()
 
     c3 = ROOT.TCanvas('', '', 800, 650)
@@ -587,7 +587,7 @@ def analysis(root_dat, hits, bx, bx_list, cross_part, verbose, pu, num_or):
     offline_effi_sres.SetLineColor(1)
     latex.DrawLatex(0.9, 0.91,plot_text1)
     latex.DrawLatex(0.42, 0.91,plot_text2)
-    c3.Print("offline_effi_sres_%s_bx%s_crosspart_%s.pdf"%(hits, bx, cross_part))
+    c3.Print("offline_effi_sres_%s_bx%s_crosspart_%s_or%d.pdf"%(hits, bx, cross_part, num_or))
     offline_effi_sres.Write()
 
     if n_st_effi_total != 0:
@@ -607,7 +607,7 @@ def analysis(root_dat, hits, bx, bx_list, cross_part, verbose, pu, num_or):
         ROOT.gPad.Update()
         latex.DrawLatex(0.9, 0.91,plot_text1)
         latex.DrawLatex(0.42, 0.91,plot_text2)
-        c4.Print("st_eff_bending_%s_bx%s_crosspart_%s.pdf"%(hits, bx, cross_part))
+        c4.Print("st_eff_bending_%s_bx%s_crosspart_%s_or%d.pdf"%(hits, bx, cross_part, num_or))
         st_eff_bending.Write()
 
         c5 = ROOT.TCanvas('', '', 800, 650)
@@ -626,7 +626,7 @@ def analysis(root_dat, hits, bx, bx_list, cross_part, verbose, pu, num_or):
         ROOT.gPad.Update()
         latex.DrawLatex(0.9, 0.91,plot_text1)
         latex.DrawLatex(0.42, 0.91,plot_text2)
-        c5.Print("st_eff_pt_%s_bx%s_crosspart_%s.pdf"%(hits, bx, cross_part))
+        c5.Print("st_eff_pt_%s_bx%s_crosspart_%s_or%d.pdf"%(hits, bx, cross_part, num_or))
         st_eff_pt.Write()
 
         c6 = ROOT.TCanvas('', '', 800, 650)
@@ -645,7 +645,7 @@ def analysis(root_dat, hits, bx, bx_list, cross_part, verbose, pu, num_or):
         ROOT.gPad.Update()
         latex.DrawLatex(0.9, 0.91,plot_text1)
         latex.DrawLatex(0.42, 0.91,plot_text2)
-        c6.Print("st_eff_eta_%s_bx%s_crosspart_%s.pdf"%(hits, bx, cross_part))
+        c6.Print("st_eff_eta_%s_bx%s_crosspart_%s_or%d.pdf"%(hits, bx, cross_part, num_or))
         st_eff_eta.Write()
 
         c7 = ROOT.TCanvas('', '', 800, 650)
@@ -666,7 +666,7 @@ def analysis(root_dat, hits, bx, bx_list, cross_part, verbose, pu, num_or):
         st_effi_mres.SetLineColor(1)
         latex.DrawLatex(0.9, 0.91,plot_text1)
         latex.DrawLatex(0.42, 0.91,plot_text2)
-        c7.Print("st_effi_mres_%s_bx%s_crosspart_%s.pdf"%(hits, bx, cross_part))
+        c7.Print("st_effi_mres_%s_bx%s_crosspart_%s_or%d.pdf"%(hits, bx, cross_part, num_or))
         st_effi_mres.Write()
 
         c8 = ROOT.TCanvas('', '', 800, 650)
@@ -687,7 +687,7 @@ def analysis(root_dat, hits, bx, bx_list, cross_part, verbose, pu, num_or):
         st_effi_sres.SetLineColor(1)
         latex.DrawLatex(0.9, 0.91,plot_text1)
         latex.DrawLatex(0.42, 0.91,plot_text2)
-        c8.Print("st_effi_sres_%s_bx%s_crosspart_%s.pdf"%(hits, bx, cross_part))
+        c8.Print("st_effi_sres_%s_bx%s_crosspart_%s_or%d.pdf"%(hits, bx, cross_part, num_or))
         st_effi_sres.Write()
 
         c9 = ROOT.TCanvas('', '', 800, 650)
@@ -706,7 +706,7 @@ def analysis(root_dat, hits, bx, bx_list, cross_part, verbose, pu, num_or):
         ROOT.gPad.Update()
         latex.DrawLatex(0.9, 0.91,plot_text1)
         latex.DrawLatex(0.42, 0.91,plot_text2)
-        c9.Print("st_purity_eta_%s_bx%s_crosspart_%s.pdf"%(hits, bx, cross_part))
+        c9.Print("st_purity_eta_%s_bx%s_crosspart_%s_or%d.pdf"%(hits, bx, cross_part, num_or))
         st_purity_eta.Write()
 
         c10 = ROOT.TCanvas('', '', 800, 650)
@@ -725,7 +725,7 @@ def analysis(root_dat, hits, bx, bx_list, cross_part, verbose, pu, num_or):
         ROOT.gPad.Update()
         latex.DrawLatex(0.9, 0.91,plot_text1)
         latex.DrawLatex(0.42, 0.91,plot_text2)
-        c10.Print("st_purity_bending_%s_bx%s_crosspart_%s.pdf"%(hits, bx, cross_part))
+        c10.Print("st_purity_bending_%s_bx%s_crosspart_%s_or%d.pdf"%(hits, bx, cross_part, num_or))
         st_purity_bending.Write()
 
     c11 = ROOT.TCanvas('', '', 800, 650)
@@ -740,7 +740,7 @@ def analysis(root_dat, hits, bx, bx_list, cross_part, verbose, pu, num_or):
     num_seg_per_chamber.SetLineColor(1)
     latex.DrawLatex(0.9, 0.91,plot_text1)
     latex.DrawLatex(0.42, 0.91,plot_text2)
-    c11.Print("num_seg_per_chamber_%s_bx%s_crosspart_%s.pdf"%(hits, bx, cross_part))
+    c11.Print("num_seg_per_chamber_%s_bx%s_crosspart_%s_or%d.pdf"%(hits, bx, cross_part, num_or))
     num_seg_per_chamber.Write()
 
     c11a = ROOT.TCanvas('', '', 800, 650)
@@ -756,7 +756,7 @@ def analysis(root_dat, hits, bx, bx_list, cross_part, verbose, pu, num_or):
     num_seg_per_chamber.SetLineColor(1)
     latex.DrawLatex(0.9, 0.91,plot_text1)
     latex.DrawLatex(0.42, 0.91,plot_text2)
-    c11a.Print("num_seg_per_chamber_%s_bx%s_crosspart_%s_log.pdf"%(hits, bx, cross_part))
+    c11a.Print("num_seg_per_chamber_%s_bx%s_crosspart_%s_log.pdf"%(hits, bx, cross_part, num_or))
     num_seg_per_chamber.Write()
 
     c12 = ROOT.TCanvas('', '', 800, 650)
@@ -771,7 +771,7 @@ def analysis(root_dat, hits, bx, bx_list, cross_part, verbose, pu, num_or):
     num_seg_per_chamber_offline.SetLineColor(1)
     latex.DrawLatex(0.9, 0.91,plot_text1)
     latex.DrawLatex(0.42, 0.91,plot_text2)
-    c12.Print("num_seg_per_chamber_offline_%s_bx%s_crosspart_%s.pdf"%(hits, bx, cross_part))
+    c12.Print("num_seg_per_chamber_offline_%s_bx%s_crosspart_%s_or%d.pdf"%(hits, bx, cross_part, num_or))
     num_seg_per_chamber_offline.Write()
 
     c12a = ROOT.TCanvas('', '', 800, 650)
@@ -787,7 +787,7 @@ def analysis(root_dat, hits, bx, bx_list, cross_part, verbose, pu, num_or):
     num_seg_per_chamber_offline.SetLineColor(1)
     latex.DrawLatex(0.9, 0.91,plot_text1)
     latex.DrawLatex(0.42, 0.91,plot_text2)
-    c12a.Print("num_seg_per_chamber_offline_%s_bx%s_crosspart_%s_log.pdf"%(hits, bx, cross_part))
+    c12a.Print("num_seg_per_chamber_offline_%s_bx%s_crosspart_%s_log.pdf"%(hits, bx, cross_part, num_or))
     num_seg_per_chamber_offline.Write()
 
     file_out.close()
@@ -804,7 +804,7 @@ def test_analysis_mc():
         analysis(root_dat, hits, bx, bx_list, cross_part, True, 0)
         
         # checking
-        file_out_name = "output_log_%s_bx%s_crosspart_%s.txt"%(hits, bx, cross_part)
+        file_out_name = "output_log_%s_bx%s_crosspart_%s.txt"%(hits, bx, cross_part, num_or)
         file_compare_name = "test_data/%s"%file_out_name
         os.system("diff %s %s > out.txt"%(file_out_name, file_compare_name))
         file_out = open("out.txt")
