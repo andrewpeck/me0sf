@@ -828,7 +828,7 @@ if __name__ == "__main__":
     # read in the data
     root_dat = read_ntuple(args.file_path)
 
-    if int(args.num_or) <= 2:
+    if int(args.num_or) < 2:
         print ("At least 2 strips OR-ed together")
         sys.exit()
 
