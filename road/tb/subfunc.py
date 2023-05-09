@@ -92,7 +92,8 @@ class Segment:
             self.substrip = fit[1] #b
 
     def __str__(self):
-        if (self.id==0):
+
+        if (self.lc==0):
             return "n/a"
 
         return f"id={self.id}, lc={self.lc}, strip={self.strip}, prt={self.partition}, quality={self.quality}"
