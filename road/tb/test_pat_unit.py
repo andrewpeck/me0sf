@@ -43,12 +43,10 @@ async def pat_unit_test(dut, test="SEGMENTS"):
     LY_CNT = 6
     N_NOISE = 1
     LY_THRESH = 4
-    HIT_THRESH = 4
     LATENCY = dut.LATENCY.value
 
     # set layer count threshold
     dut.ly_thresh.value = LY_THRESH
-    dut.hit_thresh.value = HIT_THRESH
 
     # set MAX_SPAN from firmware
     # should be a number approx 37
@@ -111,16 +109,11 @@ async def pat_unit_test(dut, test="SEGMENTS"):
         # (2) run the emulator on the old data
         data = queue.pop(0)
         sw_segment = pat_unit(data=data, strip=0,
-                              hit_thresh=HIT_THRESH,
                               ly_thresh=LY_THRESH,
-                              partition=0)
-        fw_segment = get_segment_from_dut(dut)
+                              partition=0,
+                              light_hit_count=True)
 
-        # apply count threshold conditions to emulator pattern assignment
-        # TODO: fold this into the segment finding
-        if sw_segment.lc < LY_THRESH:
-            sw_segment.id = 0
-            sw_segment.lc = 0
+        fw_segment = get_segment_from_pat_unit(dut)
 
         if sw_segment != fw_segment:
             print(f"loop={i}")
@@ -146,7 +139,7 @@ def test_pat_unit():
 
     vhdl_sources = [
         os.path.join(rtl_dir, "priority_encoder/hdl/priority_encoder.vhd"),
-        os.path.join(rtl_dir, "centroid_finder.vhd"),
+        os.path.join(rtl_dir, "hit_count.vhd"),
         os.path.join(rtl_dir, "pat_types.vhd"),
         os.path.join(rtl_dir, "pat_pkg.vhd"),
         os.path.join(rtl_dir, "patterns.vhd"),

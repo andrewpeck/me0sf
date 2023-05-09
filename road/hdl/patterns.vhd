@@ -30,7 +30,7 @@ package patterns is
   --------------------------------------------------------------------------------
 
   constant pat_l : patdef_t := (
-    id  => 14,
+    id  => 13,
     ly0 => (lo => -4, hi => -1),
     ly1 => (lo => -3, hi => 0),
     ly2 => (lo => -1, hi => 1),
@@ -44,7 +44,7 @@ package patterns is
   --------------------------------------------------------------------------------
 
   constant pat_l2 : patdef_t := (
-    id  => 12,
+    id  => 11,
     ly0 => (lo => -5, hi => -2),
     ly1 => (lo => -4, hi => 1),
     ly2 => (lo => -1, hi => 1),
@@ -58,7 +58,7 @@ package patterns is
   --------------------------------------------------------------------------------
 
   constant pat_l3 : patdef_t := (
-    id  => 10,
+    id  => 9,
     ly0 => (lo => -8, hi => -5),
     ly1 => (lo => -7, hi => -4),
     ly2 => (lo => -3, hi => 0),
@@ -72,7 +72,7 @@ package patterns is
   --------------------------------------------------------------------------------
 
   constant pat_l4 : patdef_t := (
-    id  => 8,
+    id  => 7,
     ly0 => (lo => -8, hi => -5),
     ly1 => (lo => -7, hi => -4),
     ly2 => (lo => -3, hi => 0),
@@ -86,7 +86,7 @@ package patterns is
   --------------------------------------------------------------------------------
 
   constant pat_l5 : patdef_t := (
-    id  => 6,
+    id  => 5,
     ly0 => (lo => -11, hi => -8),
     ly1 => (lo => -9, hi => -5),
     ly2 => (lo => -3, hi => 0),
@@ -100,7 +100,7 @@ package patterns is
   --------------------------------------------------------------------------------
 
   constant pat_l6 : patdef_t := (
-    id  => 4,
+    id  => 3,
     ly0 => (lo => -15, hi => -11),
     ly1 => (lo => -11, hi => -9),
     ly2 => (lo => -9, hi => 4),
@@ -114,7 +114,7 @@ package patterns is
   --------------------------------------------------------------------------------
 
   constant pat_l7 : patdef_t := (
-    id  => 2,
+    id  => 1,
     ly0 => (lo => -18, hi => -10),
     ly1 => (lo => -14, hi => -6),
     ly2 => (lo => -9, hi => 2),
@@ -145,6 +145,10 @@ package patterns is
   function get_max_span (list : patdef_array_t) return integer;
 
   function get_pat_span (pat : patdef_t) return integer;
+
+  function get_ly_size (ly : natural; ly_pat : hi_lo_t) return natural;
+
+  function get_max_span_ly (list : patdef_array_t; ly : integer) return integer;
 
 end package patterns;
 
@@ -200,6 +204,38 @@ package body patterns is
 
   end;
 
+  function get_max_span_ly (list : patdef_array_t; ly : integer)
+    return integer is
+    variable max : integer := 0;
+    variable tmp : integer := 0;
+    variable pat : hi_lo_t;
+  begin
+    for I in list'range loop
+
+      if (ly=0) then
+        pat := list(I).ly0;
+      elsif (ly=1) then
+        pat := list(I).ly1;
+      elsif (ly=2) then
+        pat := list(I).ly2;
+      elsif (ly=3) then
+        pat := list(I).ly3;
+      elsif (ly=4) then
+        pat := list(I).ly4;
+      elsif (ly=5) then
+        pat := list(I).ly5;
+      end if;
+
+      tmp := get_ly_size(ly, pat);
+
+      if (tmp > max) then
+        max := tmp;
+      end if;
+    end loop;
+
+    return max;
+  end;
+
   function get_max_span (list : patdef_array_t) return integer is
     variable max : integer := 0;
     variable tmp : integer := 0;
@@ -246,6 +282,12 @@ package body patterns is
     end loop;
 
     return (max_r - min_l)+1;
+  end;
+
+  function get_ly_size (ly : natural; ly_pat : hi_lo_t)
+    return natural is
+  begin
+    return (ly_pat.hi-ly_pat.lo+1);
   end;
 
 end package body patterns;

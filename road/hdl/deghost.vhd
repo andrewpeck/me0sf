@@ -19,8 +19,8 @@ entity deghost is
     clock      : in  std_logic;
     dav_i      : in  std_logic;
     dav_o      : out std_logic;
-    segments_i : in  segment_list_t (WIDTH-1 downto 0);
-    segments_o : out segment_list_t (WIDTH-1 downto 0)
+    segments_i : in  pat_unit_mux_list_t (WIDTH-1 downto 0);
+    segments_o : out pat_unit_mux_list_t (WIDTH-1 downto 0)
     );
 end deghost;
 
@@ -69,7 +69,7 @@ begin
                 segments_i(I).id = segments_i(I+1).id + 2 or
                 segments_i(I).id + 2 = segments_i(I+1).id))) then
 
-            segments_o(I) <= null_pattern;
+            segments_o(I) <= zero(segments_o(I));
 
             -- if (segments_i(I).lc > 4) then
             --   assert false
@@ -98,7 +98,7 @@ begin
                 segments_i(I).id = segments_i(I-1).id - 2 or
                 segments_i(I).id - 2 = segments_i(I-1).id))) then
 
-            segments_o(I) <= null_pattern;
+            segments_o(I) <= zero(segments_o(I));
 
             -- if (segments_i(I).lc > 4) then
             --   assert false

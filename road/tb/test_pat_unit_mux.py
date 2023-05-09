@@ -56,12 +56,10 @@ async def pat_unit_mux_test(dut, NLOOPS=500, test="WALKING1"):
 
     config = Config()
     config.max_span=get_max_span_from_dut(dut)
-    config.hit_thresh=0
     config.ly_thresh=6
     config.width=dut.WIDTH.value
 
     dut.ly_thresh.value = config.ly_thresh
-    dut.hit_thresh.value = config.hit_thresh
     set_dut_inputs(dut, [0 for _ in range(6)])
 
     # flush the pipeline for a few clocks
@@ -160,7 +158,7 @@ def test_pat_unit_mux():
         os.path.join(rtl_dir, "priority_encoder/hdl/priority_encoder.vhd"),
         os.path.join(rtl_dir, "pat_types.vhd"),
         os.path.join(rtl_dir, "pat_pkg.vhd"),
-        os.path.join(rtl_dir, "centroid_finder.vhd"),
+        os.path.join(rtl_dir, "hit_count.vhd"),
         os.path.join(rtl_dir, "patterns.vhd"),
         os.path.join(rtl_dir, "pat_unit.vhd"),
         os.path.join(rtl_dir, "dav_to_phase.vhd"),

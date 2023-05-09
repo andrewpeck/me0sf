@@ -33,7 +33,13 @@ use work.priority_encoder_pkg.all;
 entity pat_unit_mux is
   generic(
     VERBOSE       : boolean := false;
-    PARTITION_NUM : integer := 0;
+
+    LY0_SPAN : natural := get_max_span(patdef_array);
+    LY1_SPAN : natural := get_max_span(patdef_array);
+    LY2_SPAN : natural := get_max_span(patdef_array);
+    LY3_SPAN : natural := get_max_span(patdef_array);
+    LY4_SPAN : natural := get_max_span(patdef_array);
+    LY5_SPAN : natural := get_max_span(patdef_array);
 
     LATENCY : natural := PAT_UNIT_MUX_LATENCY;
 
@@ -52,7 +58,6 @@ entity pat_unit_mux is
     clock : in std_logic;
 
     ly_thresh  : in std_logic_vector (2 downto 0);
-    hit_thresh : in std_logic_vector (5 downto 0);
 
     dav_i : in  std_logic;
     dav_o : out std_logic := '0';
@@ -69,7 +74,7 @@ entity pat_unit_mux is
     ly4 : in std_logic_vector (WIDTH-1 downto 0);
     ly5 : in std_logic_vector (WIDTH-1 downto 0);
 
-    segments_o : out segment_list_t (WIDTH-1 downto 0)
+    segments_o : out pat_unit_mux_list_t (WIDTH-1 downto 0)
 
     );
 end pat_unit_mux;
@@ -88,12 +93,7 @@ architecture behavioral of pat_unit_mux is
 
   constant NUM_SECTORS : positive := WIDTH/MUX_FACTOR;
 
-  constant LY0_SPAN : natural := get_max_span(patdef_array);
-  constant LY1_SPAN : natural := get_max_span(patdef_array);
-  constant LY2_SPAN : natural := get_max_span(patdef_array);
-  constant LY3_SPAN : natural := get_max_span(patdef_array);
-  constant LY4_SPAN : natural := get_max_span(patdef_array);
-  constant LY5_SPAN : natural := get_max_span(patdef_array);
+  constant LY_SPAN : natural := get_max_span(patdef_array);
 
   signal ly0_padded : std_logic_vector (WIDTH-1 + 2*PADDING downto 0);
   signal ly1_padded : std_logic_vector (WIDTH-1 + 2*PADDING downto 0);
@@ -102,12 +102,15 @@ architecture behavioral of pat_unit_mux is
   signal ly4_padded : std_logic_vector (WIDTH-1 + 2*PADDING downto 0);
   signal ly5_padded : std_logic_vector (WIDTH-1 + 2*PADDING downto 0);
 
-  signal patterns_mux : segment_list_t (NUM_SECTORS-1 downto 0);
+  signal patterns_mux : pat_unit_list_t (NUM_SECTORS-1 downto 0);
 
   -- convert to strip type, appends the strip # to the format
-  signal strips_reg : segment_list_t (WIDTH-1 downto 0);
+  signal strips_reg : pat_unit_mux_list_t (WIDTH-1 downto 0);
 
   signal phase_i, patterns_mux_phase : natural range 0 to MUX_FACTOR-1;
+
+  attribute MAX_FANOUT : integer;
+  attribute MAX_FANOUT of patterns_mux_phase : signal is 128;
 
   signal dav_reg : std_logic := '0';
 
@@ -170,12 +173,8 @@ begin
 
   patgen : for I in 0 to NUM_SECTORS-1 generate
 
-    signal ly0_unit : std_logic_vector (LY0_SPAN - 1 downto 0) := (others => '0');
-    signal ly1_unit : std_logic_vector (LY1_SPAN - 1 downto 0) := (others => '0');
-    signal ly2_unit : std_logic_vector (LY2_SPAN - 1 downto 0) := (others => '0');
-    signal ly3_unit : std_logic_vector (LY3_SPAN - 1 downto 0) := (others => '0');
-    signal ly4_unit : std_logic_vector (LY4_SPAN - 1 downto 0) := (others => '0');
-    signal ly5_unit : std_logic_vector (LY5_SPAN - 1 downto 0) := (others => '0');
+    signal ly0_unit, ly1_unit, ly2_unit, ly3_unit, ly4_unit, ly5_unit
+      : std_logic_vector (LY_SPAN - 1 downto 0) := (others => '0');
 
     signal lyx_unit_dav : std_logic := '0';
 
@@ -204,7 +203,6 @@ begin
         clock => clock,
 
         ly_thresh  => ly_thresh,
-        hit_thresh => hit_thresh,
 
         dav_i => lyx_unit_dav,
         ly0   => ly0_unit,
@@ -241,11 +239,9 @@ begin
 
       -- unfold the pattern unit multiplexer and assign the strip number
       for I in 0 to NUM_SECTORS-1 loop
-        strips_reg(I*MUX_FACTOR+patterns_mux_phase) <= patterns_mux(I);
-        strips_reg(I*MUX_FACTOR+patterns_mux_phase).strip <=
-          to_unsigned(I*MUX_FACTOR+patterns_mux_phase, STRIP_BITS);
-        strips_reg(I*MUX_FACTOR+patterns_mux_phase).partition <=
-          to_unsigned(PARTITION_NUM, segments_o(I).partition'length);
+        strips_reg(I*MUX_FACTOR+patterns_mux_phase).id        <= patterns_mux(I).id;
+        strips_reg(I*MUX_FACTOR+patterns_mux_phase).lc        <= patterns_mux(I).lc;
+        strips_reg(I*MUX_FACTOR+patterns_mux_phase).strip     <= to_unsigned(I*MUX_FACTOR+patterns_mux_phase, STRIP_BITS);
       end loop;
 
       -- copy the unfolded outputs to be stable for a 25 ns clock period since
@@ -253,7 +249,7 @@ begin
       if (patterns_mux_phase = 0) then
         for I in segments_o'range loop
           if dead(I) = '1' then
-            segments_o(I) <= null_pattern;
+            segments_o(I) <= zero(segments_o(I));
           else
             segments_o(I) <= strips_reg(I);
           end if;
@@ -270,7 +266,7 @@ begin
   process (segments_o) is
   begin
     for I in segments_o'range loop
-      if (seg_valid(segments_o(I))) then
+      if (valid(segments_o(I))) then
         trig(I) <= '1';
       else
         trig(I) <= '0';

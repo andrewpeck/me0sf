@@ -4,7 +4,6 @@ from math import ceil, floor
 from typing import List
 
 class Config:
-    hit_thresh : int = 4
     ly_thresh : int = 4
     max_span : int = 37
     width : int = 192
@@ -40,8 +39,11 @@ class Mask:
 
 class Segment:
 
-    def __init__(self, hc, lc, id, strip=0, partition=0, centroid=None,
+    ignore_bend = False
+
+    def __init__(self, lc, id, hc=0, strip=0, partition=0, centroid=None,
                  substrip=None, bend_ang=None):
+
         self.hc = hc
         self.lc = lc
         self.id = id
@@ -70,8 +72,17 @@ class Segment:
         strip = 0 if strip is None else strip
 
         quality = 0
-        if (hc > 0):
-            quality = (lc << 23 | hc << 17) | (id << 12) | strip << 4 | prt
+
+        if (lc > 0):
+            if self.ignore_bend:
+                # 0xFE to ignore the least significant bit of the pattern id
+                # which just specifies the direction of the bend, which we don't
+                # really care about
+                idmask = 0xFE
+            else:
+                idmask = 0xFF
+
+            quality = (lc << 23) | (hc << 17) | ((id & idmask) << 12) | (strip << 4) | prt
 
         self.quality=quality
 
@@ -88,35 +99,31 @@ class Segment:
             fit = llse_fit(x, centroids)
             self.bend_ang = fit[0] #m
             self.substrip = fit[1] #b
-            
-
-    def __eq__(self, other):
-        if (self.hc == 0 and other.hc == 0):
-            return True
-
-        return self.id==other.id and \
-            self.hc==other.hc and self.lc==other.lc and \
-            self.strip==other.strip and \
-            self.quality==other.quality and \
-            self.partition==other.partition
-            # self.centroid==other.centroid and  \
-            # self.substrip==other.substrip and \
-            # self.bend_ang==other.bend_ang and \
 
     def __str__(self):
-        if (self.id==0):
+
+        if (self.lc==0):
             return "n/a"
 
-        return f"id={self.id}, hc={self.hc}, lc={self.lc}, strip={self.strip}, prt={self.partition}, quality={self.quality}"
+        return f"id={self.id}, lc={self.lc}, strip={self.strip}, prt={self.partition}, quality={self.quality}"
 
     def __repr__(self):
         return f"Seg {self.quality}"
 
+    def __eq__(self, other):
+
+        if (self.lc == 0 and other.lc == 0):
+            return True
+
+        return self.quality == other.quality
+
     def __gt__(self, other):
+
         if isinstance(other, Segment):
             return self.quality > other.quality
 
     def __lt__(self, other):
+
         if isinstance(other, Segment):
             return self.quality < other.quality
 
@@ -306,9 +313,9 @@ def llse_fit(x, y):
 
     return m, b
 
-def chunk(it, size):
-    it = iter(it)
-    return iter(lambda: tuple(islice(it, size)), ())
+def chunk(in_list, n):
+    return [in_list[i * n:(i + 1) * n]
+            for i in range((len(in_list) + n - 1) // n )]
 
 Partition = List[Segment]
 Chamber = List[Partition]
