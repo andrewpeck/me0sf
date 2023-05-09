@@ -304,9 +304,9 @@ def llse_fit(x, y):
 
     return m, b
 
-def chunk(it, size):
-    it = iter(it)
-    return iter(lambda: tuple(islice(it, size)), ())
+def chunk(in_list, n):
+    return [in_list[i * n:(i + 1) * n]
+            for i in range((len(in_list) + n - 1) // n )]
 
 Partition = List[Segment]
 Chamber = List[Partition]
