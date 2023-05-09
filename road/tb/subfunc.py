@@ -90,20 +90,6 @@ class Segment:
             fit = llse_fit(x, centroids)
             self.bend_ang = fit[0] #m
             self.substrip = fit[1] #b
-            
-
-    def __eq__(self, other):
-        if (self.lc == 0 and other.lc == 0):
-            return True
-
-        return self.id==other.id and \
-            self.hc==other.hc and self.lc==other.lc and \
-            self.strip==other.strip and \
-            self.quality==other.quality and \
-            self.partition==other.partition
-            # self.centroid==other.centroid and  \
-            # self.substrip==other.substrip and \
-            # self.bend_ang==other.bend_ang and \
 
     def __str__(self):
         if (self.id==0):
@@ -114,11 +100,20 @@ class Segment:
     def __repr__(self):
         return f"Seg {self.quality}"
 
+    def __eq__(self, other):
+
+        if (self.lc == 0 and other.lc == 0):
+            return True
+
+        return self.quality == other.quality
+
     def __gt__(self, other):
+
         if isinstance(other, Segment):
             return self.quality > other.quality
 
     def __lt__(self, other):
+
         if isinstance(other, Segment):
             return self.quality < other.quality
 
