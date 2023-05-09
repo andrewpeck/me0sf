@@ -756,7 +756,7 @@ def analysis(root_dat, hits, bx, bx_list, cross_part, verbose, pu, num_or):
     num_seg_per_chamber.SetLineColor(1)
     latex.DrawLatex(0.9, 0.91,plot_text1)
     latex.DrawLatex(0.42, 0.91,plot_text2)
-    c11a.Print("num_seg_per_chamber_%s_bx%s_crosspart_%s_log.pdf"%(hits, bx, cross_part, num_or))
+    c11a.Print("num_seg_per_chamber_%s_bx%s_crosspart_%s_or%d_log.pdf"%(hits, bx, cross_part, num_or))
     num_seg_per_chamber.Write()
 
     c12 = ROOT.TCanvas('', '', 800, 650)
@@ -787,7 +787,7 @@ def analysis(root_dat, hits, bx, bx_list, cross_part, verbose, pu, num_or):
     num_seg_per_chamber_offline.SetLineColor(1)
     latex.DrawLatex(0.9, 0.91,plot_text1)
     latex.DrawLatex(0.42, 0.91,plot_text2)
-    c12a.Print("num_seg_per_chamber_offline_%s_bx%s_crosspart_%s_log.pdf"%(hits, bx, cross_part, num_or))
+    c12a.Print("num_seg_per_chamber_offline_%s_bx%s_crosspart_%s_or%d_log.pdf"%(hits, bx, cross_part, num_or))
     num_seg_per_chamber_offline.Write()
 
     file_out.close()
