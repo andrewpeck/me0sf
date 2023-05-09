@@ -21,7 +21,7 @@ from subfunc import *
 
 def analysis(root_dat, hits, bx, bx_list, cross_part, verbose, pu, num_or):
     # Output text file
-    file_out = open("output_log_%s_bx%s_crosspart_%s.txt"%(hits, bx, cross_part, num_or), "w")
+    file_out = open("output_log_%s_bx%s_crosspart_%s_or%d.txt"%(hits, bx, cross_part, num_or), "w")
 
     # Nr. of segments per chamber per event
     num_seg_per_chamber = ROOT.TH1D("num_seg_per_chamber","Fraction of Events vs Number of Segments per Chamber",13,-0.5,12.5)
@@ -799,17 +799,19 @@ def test_analysis_mc():
     bx = "all"
     bx_list = list(range(-9999,10000))
     cross_part_list = ["none", "partial", "full"]
+    num_or_list = [2, 4]
     for cross_part in cross_part_list:
-        print ("Comparing cross partition: %s"%cross_part)
-        analysis(root_dat, hits, bx, bx_list, cross_part, True, 0)
+        for num_or in num_or_list:
+            print ("Comparing cross partition: %s"%cross_part)
+            analysis(root_dat, hits, bx, bx_list, cross_part, True, 0)
         
-        # checking
-        file_out_name = "output_log_%s_bx%s_crosspart_%s.txt"%(hits, bx, cross_part, num_or)
-        file_compare_name = "test_data/%s"%file_out_name
-        os.system("diff %s %s > out.txt"%(file_out_name, file_compare_name))
-        file_out = open("out.txt")
-        assert len(file_out.readlines()) == 0
-        file_out.close()
+            # checking
+            file_out_name = "output_log_%s_bx%s_crosspart_%s_or%d.txt"%(hits, bx, cross_part, num_or)
+            file_compare_name = "test_data/%s"%file_out_name
+            os.system("diff %s %s > out.txt"%(file_out_name, file_compare_name))
+            file_out = open("out.txt")
+            assert len(file_out.readlines()) == 0
+            file_out.close()
 
 
 if __name__ == "__main__":
