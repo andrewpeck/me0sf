@@ -1,0 +1,1078 @@
+Event number = 0
+  Online Segment in Chamber (0-17 for region -1, 18-35 for region 1) 1:
+     Eta Partition = 3, Center Strip = 16.3750, Bending angle = 0.2885, ID = 19, Hit count = 5, Layer count = 4, Quality = 34287894
+
+  Online Segment in Chamber (0-17 for region -1, 18-35 for region 1) 27:
+     Eta Partition = 3, Center Strip = 1.0833, Bending angle = 0.0429, ID = 19, Hit count = 7, Layer count = 6, Quality = 51327014
+
+  SimTrack - Online Segment Matching: 
+    Sim Track: Chamber = 27: , Eta Partition = 3, Center Strip = 1.5000, Bending angle = 0.2000, Hit count = 6, Layer_count = 6, pT = 17.9238
+    Online segment: Chamber = 27: , Eta Partition = 3, Center Strip = 1.0833, Bending angle = 0.0429, ID = 19, Hit count = 7, Layer count = 6, Quality = 51327014
+
+    Sim Track: Chamber = 1: , Eta Partition = 3, Center Strip = 16.5000, Bending angle = 0.2000, Hit count = 6, Layer_count = 6, pT = 17.9238
+    Online segment: Chamber = 1: , Eta Partition = 3, Center Strip = 16.3750, Bending angle = 0.2885, ID = 19, Hit count = 5, Layer count = 4, Quality = 34287894
+
+  Sim Tracks not matched to online segments:
+
+
+Event number = 1
+  Online Segment in Chamber (0-17 for region -1, 18-35 for region 1) 14:
+     Eta Partition = 5, Center Strip = 86.9167, Bending angle = 0.0714, ID = 19, Hit count = 7, Layer count = 6, Quality = 51328378
+
+  Online Segment in Chamber (0-17 for region -1, 18-35 for region 1) 22:
+     Eta Partition = 5, Center Strip = 26.7500, Bending angle = 0.5000, ID = 19, Hit count = 7, Layer count = 5, Quality = 42938810
+
+  SimTrack - Online Segment Matching: 
+    Sim Track: Chamber = 22: , Eta Partition = 5, Center Strip = 27.0000, Bending angle = 0.4000, Hit count = 6, Layer_count = 6, pT = 1.7270
+    Online segment: Chamber = 22: , Eta Partition = 5, Center Strip = 26.7500, Bending angle = 0.5000, ID = 19, Hit count = 7, Layer count = 5, Quality = 42938810
+
+    Sim Track: Chamber = 14: , Eta Partition = 5, Center Strip = 87.5000, Bending angle = 0.2000, Hit count = 6, Layer_count = 6, pT = 1.7270
+    Online segment: Chamber = 14: , Eta Partition = 5, Center Strip = 86.9167, Bending angle = 0.0714, ID = 19, Hit count = 7, Layer count = 6, Quality = 51328378
+
+  Sim Tracks not matched to online segments:
+
+
+Event number = 2
+  Online Segment in Chamber (0-17 for region -1, 18-35 for region 1) 0:
+     Eta Partition = 0, Center Strip = 26.0000, Bending angle = 0.0000, ID = 19, Hit count = 6, Layer count = 6, Quality = 51196336
+
+  Online Segment in Chamber (0-17 for region -1, 18-35 for region 1) 27:
+     Eta Partition = 0, Center Strip = 78.0833, Bending angle = 0.0714, ID = 19, Hit count = 7, Layer count = 6, Quality = 51328240
+
+  SimTrack - Online Segment Matching: 
+    Sim Track: Chamber = 27: , Eta Partition = 0, Center Strip = 78.5000, Bending angle = 0.2000, Hit count = 6, Layer_count = 6, pT = 45.5898
+    Online segment: Chamber = 27: , Eta Partition = 0, Center Strip = 78.0833, Bending angle = 0.0714, ID = 19, Hit count = 7, Layer count = 6, Quality = 51328240
+
+    Sim Track: Chamber = 0: , Eta Partition = 0, Center Strip = 26.0000, Bending angle = 0.0000, Hit count = 6, Layer_count = 6, pT = 45.5898
+    Online segment: Chamber = 0: , Eta Partition = 0, Center Strip = 26.0000, Bending angle = 0.0000, ID = 19, Hit count = 6, Layer count = 6, Quality = 51196336
+
+  Sim Tracks not matched to online segments:
+
+
+Event number = 3
+  Online Segment in Chamber (0-17 for region -1, 18-35 for region 1) 5:
+     Eta Partition = 7, Center Strip = 61.5833, Bending angle = -0.0143, ID = 19, Hit count = 11, Layer count = 6, Quality = 51852270
+
+  Online Segment in Chamber (0-17 for region -1, 18-35 for region 1) 17:
+     Eta Partition = 0, Center Strip = 7.0000, Bending angle = 0.0000, ID = 19, Hit count = 5, Layer count = 5, Quality = 42676352
+
+  Online Segment in Chamber (0-17 for region -1, 18-35 for region 1) 26:
+     Eta Partition = 0, Center Strip = 69.0000, Bending angle = 0.0000, ID = 19, Hit count = 5, Layer count = 5, Quality = 42677344
+
+  Online Segment in Chamber (0-17 for region -1, 18-35 for region 1) 32:
+     Eta Partition = 7, Center Strip = 82.3333, Bending angle = 0.4000, ID = 18, Hit count = 10, Layer count = 6, Quality = 51717422
+
+  SimTrack - Online Segment Matching: 
+    Sim Track: Chamber = 32: , Eta Partition = 7, Center Strip = 83.0000, Bending angle = 0.4000, Hit count = 6, Layer_count = 6, pT = 3.7453
+    Online segment: Chamber = 32: , Eta Partition = 7, Center Strip = 82.3333, Bending angle = 0.4000, ID = 18, Hit count = 10, Layer count = 6, Quality = 51717422
+
+    Sim Track: Chamber = 5: , Eta Partition = 7, Center Strip = 62.0000, Bending angle = 0.0000, Hit count = 6, Layer_count = 6, pT = 3.7453
+    Online segment: Chamber = 5: , Eta Partition = 7, Center Strip = 61.5833, Bending angle = -0.0143, ID = 19, Hit count = 11, Layer count = 6, Quality = 51852270
+
+    Sim Track: Chamber = 17: , Eta Partition = 0, Center Strip = 7.5000, Bending angle = -0.2000, Hit count = 6, Layer_count = 6, pT = 22.2499
+    Online segment: Chamber = 17: , Eta Partition = 0, Center Strip = 7.0000, Bending angle = 0.0000, ID = 19, Hit count = 5, Layer count = 5, Quality = 42676352
+
+    Sim Track: Chamber = 26: , Eta Partition = 0, Center Strip = 69.5000, Bending angle = -0.2000, Hit count = 6, Layer_count = 6, pT = 22.2499
+    Online segment: Chamber = 26: , Eta Partition = 0, Center Strip = 69.0000, Bending angle = 0.0000, ID = 19, Hit count = 5, Layer count = 5, Quality = 42677344
+
+  Sim Tracks not matched to online segments:
+
+
+Event number = 4
+  SimTrack - Online Segment Matching: 
+  Sim Tracks not matched to online segments:
+
+
+Event number = 5
+  SimTrack - Online Segment Matching: 
+  Sim Tracks not matched to online segments:
+
+
+Event number = 6
+  SimTrack - Online Segment Matching: 
+  Sim Tracks not matched to online segments:
+
+
+Event number = 7
+  SimTrack - Online Segment Matching: 
+  Sim Tracks not matched to online segments:
+
+
+Event number = 8
+  Online Segment in Chamber (0-17 for region -1, 18-35 for region 1) 7:
+     Eta Partition = 4, Center Strip = 42.8750, Bending angle = 0.1500, ID = 19, Hit count = 7, Layer count = 5, Quality = 42939064
+
+  Online Segment in Chamber (0-17 for region -1, 18-35 for region 1) 34:
+     Eta Partition = 4, Center Strip = 68.9167, Bending angle = 0.0714, ID = 19, Hit count = 9, Layer count = 6, Quality = 51590232
+
+  SimTrack - Online Segment Matching: 
+    Sim Track: Chamber = 34: , Eta Partition = 4, Center Strip = 69.0000, Bending angle = 0.0000, Hit count = 6, Layer_count = 6, pT = 16.6091
+    Online segment: Chamber = 34: , Eta Partition = 4, Center Strip = 68.9167, Bending angle = 0.0714, ID = 19, Hit count = 9, Layer count = 6, Quality = 51590232
+
+    Sim Track: Chamber = 7: , Eta Partition = 4, Center Strip = 43.0000, Bending angle = 0.0000, Hit count = 6, Layer_count = 6, pT = 16.6091
+    Online segment: Chamber = 7: , Eta Partition = 4, Center Strip = 42.8750, Bending angle = 0.1500, ID = 19, Hit count = 7, Layer count = 5, Quality = 42939064
+
+  Sim Tracks not matched to online segments:
+
+
+Event number = 9
+  Online Segment in Chamber (0-17 for region -1, 18-35 for region 1) 10:
+     Eta Partition = 5, Center Strip = 54.9167, Bending angle = -0.0429, ID = 19, Hit count = 7, Layer count = 6, Quality = 51327866
+
+  Online Segment in Chamber (0-17 for region -1, 18-35 for region 1) 13:
+     Eta Partition = 4, Center Strip = 14.0000, Bending angle = 0.0000, ID = 19, Hit count = 6, Layer count = 6, Quality = 51196152
+
+  Online Segment in Chamber (0-17 for region -1, 18-35 for region 1) 19:
+     Eta Partition = 5, Center Strip = 48.2500, Bending angle = -0.2143, ID = 19, Hit count = 9, Layer count = 6, Quality = 51589898
+
+  Online Segment in Chamber (0-17 for region -1, 18-35 for region 1) 22:
+     Eta Partition = 4, Center Strip = 73.0000, Bending angle = 0.0000, ID = 19, Hit count = 6, Layer count = 6, Quality = 51197096
+
+  Online Segment in Chamber (0-17 for region -1, 18-35 for region 1) 22:
+     Eta Partition = 4, Center Strip = 66.6750, Bending angle = -0.4500, ID = 19, Hit count = 5, Layer count = 4, Quality = 34288695
+
+  SimTrack - Online Segment Matching: 
+    Sim Track: Chamber = 13: , Eta Partition = 4, Center Strip = 14.5000, Bending angle = -0.2000, Hit count = 6, Layer_count = 6, pT = 33.0575
+    Online segment: Chamber = 13: , Eta Partition = 4, Center Strip = 14.0000, Bending angle = 0.0000, ID = 19, Hit count = 6, Layer count = 6, Quality = 51196152
+
+    Sim Track: Chamber = 22: , Eta Partition = 4, Center Strip = 73.0000, Bending angle = 0.0000, Hit count = 6, Layer_count = 6, pT = 33.0575
+    Online segment: Chamber = 22: , Eta Partition = 4, Center Strip = 73.0000, Bending angle = 0.0000, ID = 19, Hit count = 6, Layer count = 6, Quality = 51197096
+
+    Sim Track: Chamber = 19: , Eta Partition = 5, Center Strip = 49.5000, Bending angle = 0.2000, Hit count = 6, Layer_count = 6, pT = 25.4872
+    Online segment: Chamber = 19: , Eta Partition = 5, Center Strip = 48.2500, Bending angle = -0.2143, ID = 19, Hit count = 9, Layer count = 6, Quality = 51589898
+
+    Sim Track: Chamber = 10: , Eta Partition = 5, Center Strip = 55.0000, Bending angle = 0.0000, Hit count = 6, Layer_count = 6, pT = 25.4872
+    Online segment: Chamber = 10: , Eta Partition = 5, Center Strip = 54.9167, Bending angle = -0.0429, ID = 19, Hit count = 7, Layer count = 6, Quality = 51327866
+
+  Sim Tracks not matched to online segments:
+
+
+Event number = 10
+  Online Segment in Chamber (0-17 for region -1, 18-35 for region 1) 6:
+     Eta Partition = 5, Center Strip = 23.1667, Bending angle = 0.1143, ID = 19, Hit count = 8, Layer count = 6, Quality = 51458442
+
+  Online Segment in Chamber (0-17 for region -1, 18-35 for region 1) 33:
+     Eta Partition = 5, Center Strip = 84.0833, Bending angle = 0.0714, ID = 19, Hit count = 7, Layer count = 6, Quality = 51328346
+
+  SimTrack - Online Segment Matching: 
+    Sim Track: Chamber = 33: , Eta Partition = 5, Center Strip = 84.5000, Bending angle = 0.2000, Hit count = 6, Layer_count = 6, pT = 19.6405
+    Online segment: Chamber = 33: , Eta Partition = 5, Center Strip = 84.0833, Bending angle = 0.0714, ID = 19, Hit count = 7, Layer count = 6, Quality = 51328346
+
+    Sim Track: Chamber = 6: , Eta Partition = 5, Center Strip = 23.5000, Bending angle = 0.2000, Hit count = 6, Layer_count = 6, pT = 19.6405
+    Online segment: Chamber = 6: , Eta Partition = 5, Center Strip = 23.1667, Bending angle = 0.1143, ID = 19, Hit count = 8, Layer count = 6, Quality = 51458442
+
+  Sim Tracks not matched to online segments:
+
+
+Event number = 11
+  Online Segment in Chamber (0-17 for region -1, 18-35 for region 1) 6:
+     Eta Partition = 5, Center Strip = 43.2500, Bending angle = -0.1857, ID = 19, Hit count = 7, Layer count = 6, Quality = 51327690
+
+  Online Segment in Chamber (0-17 for region -1, 18-35 for region 1) 14:
+     Eta Partition = 4, Center Strip = 27.0000, Bending angle = 0.0000, ID = 19, Hit count = 6, Layer count = 6, Quality = 51196360
+
+  Online Segment in Chamber (0-17 for region -1, 18-35 for region 1) 23:
+     Eta Partition = 4, Center Strip = 38.8250, Bending angle = -0.1000, ID = 19, Hit count = 5, Layer count = 4, Quality = 34288248
+
+  Online Segment in Chamber (0-17 for region -1, 18-35 for region 1) 34:
+     Eta Partition = 5, Center Strip = 80.5000, Bending angle = -0.2571, ID = 19, Hit count = 6, Layer count = 6, Quality = 51197210
+
+  SimTrack - Online Segment Matching: 
+    Sim Track: Chamber = 14: , Eta Partition = 4, Center Strip = 27.5000, Bending angle = -0.2000, Hit count = 6, Layer_count = 6, pT = 10.4129
+    Online segment: Chamber = 14: , Eta Partition = 4, Center Strip = 27.0000, Bending angle = 0.0000, ID = 19, Hit count = 6, Layer count = 6, Quality = 51196360
+
+    Sim Track: Chamber = 23: , Eta Partition = 4, Center Strip = 39.0000, Bending angle = 0.0000, Hit count = 6, Layer_count = 6, pT = 10.4129
+    Online segment: Chamber = 23: , Eta Partition = 4, Center Strip = 38.8250, Bending angle = -0.1000, ID = 19, Hit count = 5, Layer count = 4, Quality = 34288248
+
+    Sim Track: Chamber = 6: , Eta Partition = 5, Center Strip = 43.5000, Bending angle = -0.2000, Hit count = 6, Layer_count = 6, pT = 3.9175
+    Online segment: Chamber = 6: , Eta Partition = 5, Center Strip = 43.2500, Bending angle = -0.1857, ID = 19, Hit count = 7, Layer count = 6, Quality = 51327690
+
+    Sim Track: Chamber = 34: , Eta Partition = 5, Center Strip = 80.5000, Bending angle = -0.2000, Hit count = 6, Layer_count = 6, pT = 3.9175
+    Online segment: Chamber = 34: , Eta Partition = 5, Center Strip = 80.5000, Bending angle = -0.2571, ID = 19, Hit count = 6, Layer count = 6, Quality = 51197210
+
+  Sim Tracks not matched to online segments:
+
+
+Event number = 12
+  SimTrack - Online Segment Matching: 
+  Sim Tracks not matched to online segments:
+
+
+Event number = 13
+  SimTrack - Online Segment Matching: 
+  Sim Tracks not matched to online segments:
+
+
+Event number = 14
+  Online Segment in Chamber (0-17 for region -1, 18-35 for region 1) 13:
+     Eta Partition = 3, Center Strip = 85.9167, Bending angle = -0.0429, ID = 19, Hit count = 7, Layer count = 6, Quality = 51328358
+
+  Online Segment in Chamber (0-17 for region -1, 18-35 for region 1) 15:
+     Eta Partition = 1, Center Strip = 65.0000, Bending angle = 0.0000, ID = 19, Hit count = 6, Layer count = 6, Quality = 51196961
+
+  Online Segment in Chamber (0-17 for region -1, 18-35 for region 1) 17:
+     Eta Partition = 0, Center Strip = 93.4167, Bending angle = 0.3857, ID = 18, Hit count = 9, Layer count = 6, Quality = 51586512
+
+  Online Segment in Chamber (0-17 for region -1, 18-35 for region 1) 22:
+     Eta Partition = 3, Center Strip = 18.5833, Bending angle = 0.0714, ID = 19, Hit count = 11, Layer count = 6, Quality = 51851574
+
+  Online Segment in Chamber (0-17 for region -1, 18-35 for region 1) 24:
+     Eta Partition = 1, Center Strip = 48.4167, Bending angle = 1.0714, ID = 10, Hit count = 7, Layer count = 6, Quality = 51290898
+
+  Online Segment in Chamber (0-17 for region -1, 18-35 for region 1) 26:
+     Eta Partition = 0, Center Strip = 90.0750, Bending angle = 0.4500, ID = 19, Hit count = 8, Layer count = 5, Quality = 43070880
+
+  SimTrack - Online Segment Matching: 
+    Sim Track: Chamber = 22: , Eta Partition = 3, Center Strip = 19.0000, Bending angle = 0.0000, Hit count = 6, Layer_count = 6, pT = 32.1818
+    Online segment: Chamber = 22: , Eta Partition = 3, Center Strip = 18.5833, Bending angle = 0.0714, ID = 19, Hit count = 11, Layer count = 6, Quality = 51851574
+
+    Sim Track: Chamber = 13: , Eta Partition = 3, Center Strip = 86.0000, Bending angle = 0.0000, Hit count = 6, Layer_count = 6, pT = 32.1818
+    Online segment: Chamber = 13: , Eta Partition = 3, Center Strip = 85.9167, Bending angle = -0.0429, ID = 19, Hit count = 7, Layer count = 6, Quality = 51328358
+
+    Sim Track: Chamber = 24: , Eta Partition = 0, Center Strip = 46.0000, Bending angle = 0.0000, Hit count = 6, Layer_count = 6, pT = 24.5312
+    Online segment: Chamber = 24: , Eta Partition = 1, Center Strip = 48.4167, Bending angle = 1.0714, ID = 10, Hit count = 7, Layer count = 6, Quality = 51290898
+
+    Sim Track: Chamber = 15: , Eta Partition = 1, Center Strip = 65.0000, Bending angle = 0.0000, Hit count = 6, Layer_count = 6, pT = 24.5312
+    Online segment: Chamber = 15: , Eta Partition = 1, Center Strip = 65.0000, Bending angle = 0.0000, ID = 19, Hit count = 6, Layer count = 6, Quality = 51196961
+
+    Sim Track: Chamber = 26: , Eta Partition = 0, Center Strip = 90.5000, Bending angle = 0.6000, Hit count = 6, Layer_count = 6, pT = 5.1612
+    Online segment: Chamber = 26: , Eta Partition = 0, Center Strip = 90.0750, Bending angle = 0.4500, ID = 19, Hit count = 8, Layer count = 5, Quality = 43070880
+
+    Sim Track: Chamber = 17: , Eta Partition = 0, Center Strip = 94.0000, Bending angle = 0.4000, Hit count = 6, Layer_count = 6, pT = 5.1612
+    Online segment: Chamber = 17: , Eta Partition = 0, Center Strip = 93.4167, Bending angle = 0.3857, ID = 18, Hit count = 9, Layer count = 6, Quality = 51586512
+
+  Sim Tracks not matched to online segments:
+
+
+Event number = 15
+  Online Segment in Chamber (0-17 for region -1, 18-35 for region 1) 4:
+     Eta Partition = 6, Center Strip = 41.7500, Bending angle = -0.0143, ID = 19, Hit count = 9, Layer count = 6, Quality = 51589804
+
+  Online Segment in Chamber (0-17 for region -1, 18-35 for region 1) 31:
+     Eta Partition = 6, Center Strip = 43.9167, Bending angle = -0.0714, ID = 19, Hit count = 7, Layer count = 6, Quality = 51327692
+
+  SimTrack - Online Segment Matching: 
+    Sim Track: Chamber = 4: , Eta Partition = 6, Center Strip = 42.0000, Bending angle = 0.0000, Hit count = 6, Layer_count = 6, pT = 24.1896
+    Online segment: Chamber = 4: , Eta Partition = 6, Center Strip = 41.7500, Bending angle = -0.0143, ID = 19, Hit count = 9, Layer count = 6, Quality = 51589804
+
+    Sim Track: Chamber = 31: , Eta Partition = 6, Center Strip = 44.0000, Bending angle = 0.0000, Hit count = 6, Layer_count = 6, pT = 24.1896
+    Online segment: Chamber = 31: , Eta Partition = 6, Center Strip = 43.9167, Bending angle = -0.0714, ID = 19, Hit count = 7, Layer count = 6, Quality = 51327692
+
+  Sim Tracks not matched to online segments:
+
+
+Event number = 16
+  Online Segment in Chamber (0-17 for region -1, 18-35 for region 1) 2:
+     Eta Partition = 5, Center Strip = 70.8250, Bending angle = -0.2500, ID = 19, Hit count = 6, Layer count = 5, Quality = 42808442
+
+  Online Segment in Chamber (0-17 for region -1, 18-35 for region 1) 4:
+     Eta Partition = 6, Center Strip = 17.5000, Bending angle = -0.2286, ID = 19, Hit count = 8, Layer count = 6, Quality = 51458348
+
+  Online Segment in Chamber (0-17 for region -1, 18-35 for region 1) 6:
+     Eta Partition = 6, Center Strip = 22.9167, Bending angle = -0.0143, ID = 19, Hit count = 7, Layer count = 6, Quality = 51327356
+
+  Online Segment in Chamber (0-17 for region -1, 18-35 for region 1) 30:
+     Eta Partition = 5, Center Strip = 58.0500, Bending angle = -0.3000, ID = 19, Hit count = 4, Layer count = 4, Quality = 34157482
+
+  Online Segment in Chamber (0-17 for region -1, 18-35 for region 1) 32:
+     Eta Partition = 7, Center Strip = 65.5833, Bending angle = -0.7571, ID = 13, Hit count = 8, Layer count = 6, Quality = 51434542
+
+  Online Segment in Chamber (0-17 for region -1, 18-35 for region 1) 33:
+     Eta Partition = 6, Center Strip = 61.0000, Bending angle = 0.0000, ID = 19, Hit count = 6, Layer count = 6, Quality = 51196908
+
+  SimTrack - Online Segment Matching: 
+    Sim Track: Chamber = 6: , Eta Partition = 6, Center Strip = 23.0000, Bending angle = 0.0000, Hit count = 6, Layer_count = 6, pT = 21.9118
+    Online segment: Chamber = 6: , Eta Partition = 6, Center Strip = 22.9167, Bending angle = -0.0143, ID = 19, Hit count = 7, Layer count = 6, Quality = 51327356
+
+    Sim Track: Chamber = 33: , Eta Partition = 6, Center Strip = 61.0000, Bending angle = 0.0000, Hit count = 6, Layer_count = 6, pT = 21.9118
+    Online segment: Chamber = 33: , Eta Partition = 6, Center Strip = 61.0000, Bending angle = 0.0000, ID = 19, Hit count = 6, Layer count = 6, Quality = 51196908
+
+    Sim Track: Chamber = 4: , Eta Partition = 6, Center Strip = 17.5000, Bending angle = -0.2000, Hit count = 6, Layer_count = 6, pT = 2.0140
+    Online segment: Chamber = 4: , Eta Partition = 6, Center Strip = 17.5000, Bending angle = -0.2286, ID = 19, Hit count = 8, Layer count = 6, Quality = 51458348
+
+    Sim Track: Chamber = 32: , Eta Partition = 7, Center Strip = 66.0000, Bending angle = -0.4000, Hit count = 6, Layer_count = 6, pT = 2.0140
+    Online segment: Chamber = 32: , Eta Partition = 7, Center Strip = 65.5833, Bending angle = -0.7571, ID = 13, Hit count = 8, Layer count = 6, Quality = 51434542
+
+    Sim Track: Chamber = 2: , Eta Partition = 5, Center Strip = 71.0000, Bending angle = -0.4000, Hit count = 6, Layer_count = 6, pT = 4.3040
+    Online segment: Chamber = 2: , Eta Partition = 5, Center Strip = 70.8250, Bending angle = -0.2500, ID = 19, Hit count = 6, Layer count = 5, Quality = 42808442
+
+    Sim Track: Chamber = 30: , Eta Partition = 5, Center Strip = 58.5000, Bending angle = -0.2000, Hit count = 6, Layer_count = 6, pT = 4.3040
+    Online segment: Chamber = 30: , Eta Partition = 5, Center Strip = 58.0500, Bending angle = -0.3000, ID = 19, Hit count = 4, Layer count = 4, Quality = 34157482
+
+  Sim Tracks not matched to online segments:
+
+
+Event number = 17
+  Online Segment in Chamber (0-17 for region -1, 18-35 for region 1) 0:
+     Eta Partition = 1, Center Strip = 31.5000, Bending angle = -0.2571, ID = 19, Hit count = 6, Layer count = 6, Quality = 51196418
+
+  Online Segment in Chamber (0-17 for region -1, 18-35 for region 1) 28:
+     Eta Partition = 1, Center Strip = 61.9167, Bending angle = -0.4143, ID = 19, Hit count = 7, Layer count = 6, Quality = 51327970
+
+  SimTrack - Online Segment Matching: 
+    Sim Track: Chamber = 0: , Eta Partition = 1, Center Strip = 32.0000, Bending angle = -0.4000, Hit count = 6, Layer_count = 6, pT = 3.8088
+    Online segment: Chamber = 0: , Eta Partition = 1, Center Strip = 31.5000, Bending angle = -0.2571, ID = 19, Hit count = 6, Layer count = 6, Quality = 51196418
+
+    Sim Track: Chamber = 28: , Eta Partition = 1, Center Strip = 62.0000, Bending angle = -0.4000, Hit count = 6, Layer_count = 6, pT = 3.8088
+    Online segment: Chamber = 28: , Eta Partition = 1, Center Strip = 61.9167, Bending angle = -0.4143, ID = 19, Hit count = 7, Layer count = 6, Quality = 51327970
+
+  Sim Tracks not matched to online segments:
+
+
+Event number = 18
+  SimTrack - Online Segment Matching: 
+  Sim Tracks not matched to online segments:
+
+
+Event number = 19
+  Online Segment in Chamber (0-17 for region -1, 18-35 for region 1) 6:
+     Eta Partition = 2, Center Strip = 68.0000, Bending angle = 0.0000, ID = 19, Hit count = 5, Layer count = 5, Quality = 42677332
+
+  Online Segment in Chamber (0-17 for region -1, 18-35 for region 1) 9:
+     Eta Partition = 6, Center Strip = 9.0000, Bending angle = 0.0000, ID = 19, Hit count = 5, Layer count = 5, Quality = 42676396
+
+  Online Segment in Chamber (0-17 for region -1, 18-35 for region 1) 18:
+     Eta Partition = 6, Center Strip = 73.5500, Bending angle = -0.1000, ID = 19, Hit count = 8, Layer count = 5, Quality = 43070636
+
+  Online Segment in Chamber (0-17 for region -1, 18-35 for region 1) 33:
+     Eta Partition = 2, Center Strip = 14.0833, Bending angle = -0.0714, ID = 19, Hit count = 7, Layer count = 6, Quality = 51327220
+
+  SimTrack - Online Segment Matching: 
+    Sim Track: Chamber = 9: , Eta Partition = 6, Center Strip = 9.0000, Bending angle = 0.0000, Hit count = 6, Layer_count = 6, pT = 17.9968
+    Online segment: Chamber = 9: , Eta Partition = 6, Center Strip = 9.0000, Bending angle = 0.0000, ID = 19, Hit count = 5, Layer count = 5, Quality = 42676396
+
+    Sim Track: Chamber = 18: , Eta Partition = 6, Center Strip = 74.0000, Bending angle = 0.0000, Hit count = 6, Layer_count = 6, pT = 17.9968
+    Online segment: Chamber = 18: , Eta Partition = 6, Center Strip = 73.5500, Bending angle = -0.1000, ID = 19, Hit count = 8, Layer count = 5, Quality = 43070636
+
+    Sim Track: Chamber = 6: , Eta Partition = 2, Center Strip = 68.0000, Bending angle = 0.0000, Hit count = 7, Layer_count = 6, pT = 27.5909
+    Online segment: Chamber = 6: , Eta Partition = 2, Center Strip = 68.0000, Bending angle = 0.0000, ID = 19, Hit count = 5, Layer count = 5, Quality = 42677332
+
+    Sim Track: Chamber = 33: , Eta Partition = 2, Center Strip = 15.0000, Bending angle = 0.0000, Hit count = 6, Layer_count = 6, pT = 27.5909
+    Online segment: Chamber = 33: , Eta Partition = 2, Center Strip = 14.0833, Bending angle = -0.0714, ID = 19, Hit count = 7, Layer count = 6, Quality = 51327220
+
+  Sim Tracks not matched to online segments:
+
+
+Event number = 20
+  SimTrack - Online Segment Matching: 
+  Sim Tracks not matched to online segments:
+
+
+Event number = 21
+  Online Segment in Chamber (0-17 for region -1, 18-35 for region 1) 10:
+     Eta Partition = 4, Center Strip = 76.6750, Bending angle = -0.0500, ID = 19, Hit count = 7, Layer count = 4, Quality = 34550984
+
+  Online Segment in Chamber (0-17 for region -1, 18-35 for region 1) 11:
+     Eta Partition = 0, Center Strip = 82.0000, Bending angle = 0.0000, ID = 19, Hit count = 4, Layer count = 4, Quality = 34157872
+
+  Online Segment in Chamber (0-17 for region -1, 18-35 for region 1) 15:
+     Eta Partition = 5, Center Strip = 93.9167, Bending angle = -0.0143, ID = 19, Hit count = 7, Layer count = 6, Quality = 51328490
+
+  Online Segment in Chamber (0-17 for region -1, 18-35 for region 1) 20:
+     Eta Partition = 5, Center Strip = 86.0000, Bending angle = 0.0000, ID = 19, Hit count = 6, Layer count = 6, Quality = 51197305
+
+  Online Segment in Chamber (0-17 for region -1, 18-35 for region 1) 25:
+     Eta Partition = 5, Center Strip = 88.8333, Bending angle = -0.0571, ID = 19, Hit count = 8, Layer count = 6, Quality = 51459482
+
+  SimTrack - Online Segment Matching: 
+    Sim Track: Chamber = 11: , Eta Partition = 0, Center Strip = 82.5000, Bending angle = 0.3333, Hit count = 4, Layer_count = 4, pT = 26.1504
+    Online segment: Chamber = 11: , Eta Partition = 0, Center Strip = 82.0000, Bending angle = 0.0000, ID = 19, Hit count = 4, Layer count = 4, Quality = 34157872
+
+    Sim Track: Chamber = 10: , Eta Partition = 4, Center Strip = 77.5000, Bending angle = -0.2000, Hit count = 6, Layer_count = 6, pT = 8.2304
+    Online segment: Chamber = 10: , Eta Partition = 4, Center Strip = 76.6750, Bending angle = -0.0500, ID = 19, Hit count = 7, Layer count = 4, Quality = 34550984
+
+    Sim Track: Chamber = 20: , Eta Partition = 5, Center Strip = 86.5000, Bending angle = -0.2000, Hit count = 6, Layer_count = 6, pT = 8.2304
+    Online segment: Chamber = 20: , Eta Partition = 5, Center Strip = 86.0000, Bending angle = 0.0000, ID = 19, Hit count = 6, Layer count = 6, Quality = 51197305
+
+    Sim Track: Chamber = 15: , Eta Partition = 5, Center Strip = 94.0000, Bending angle = 0.0000, Hit count = 6, Layer_count = 6, pT = 30.5236
+    Online segment: Chamber = 15: , Eta Partition = 5, Center Strip = 93.9167, Bending angle = -0.0143, ID = 19, Hit count = 7, Layer count = 6, Quality = 51328490
+
+    Sim Track: Chamber = 25: , Eta Partition = 5, Center Strip = 89.0000, Bending angle = 0.0000, Hit count = 6, Layer_count = 6, pT = 30.5236
+    Online segment: Chamber = 25: , Eta Partition = 5, Center Strip = 88.8333, Bending angle = -0.0571, ID = 19, Hit count = 8, Layer count = 6, Quality = 51459482
+
+  Sim Tracks not matched to online segments:
+
+
+Event number = 22
+  Online Segment in Chamber (0-17 for region -1, 18-35 for region 1) 8:
+     Eta Partition = 2, Center Strip = 24.8333, Bending angle = 0.0857, ID = 19, Hit count = 8, Layer count = 6, Quality = 51458452
+
+  Online Segment in Chamber (0-17 for region -1, 18-35 for region 1) 9:
+     Eta Partition = 1, Center Strip = 24.3500, Bending angle = 0.1000, ID = 19, Hit count = 7, Layer count = 5, Quality = 42938770
+
+  Online Segment in Chamber (0-17 for region -1, 18-35 for region 1) 17:
+     Eta Partition = 6, Center Strip = 14.0000, Bending angle = 0.0000, ID = 19, Hit count = 4, Layer count = 4, Quality = 34156796
+
+  Online Segment in Chamber (0-17 for region -1, 18-35 for region 1) 18:
+     Eta Partition = 2, Center Strip = 58.0833, Bending angle = 0.0714, ID = 19, Hit count = 7, Layer count = 6, Quality = 51327923
+
+  Online Segment in Chamber (0-17 for region -1, 18-35 for region 1) 26:
+     Eta Partition = 6, Center Strip = 43.7500, Bending angle = -0.1000, ID = 19, Hit count = 9, Layer count = 6, Quality = 51589836
+
+  Online Segment in Chamber (0-17 for region -1, 18-35 for region 1) 35:
+     Eta Partition = 3, Center Strip = 82.0000, Bending angle = 0.0000, ID = 19, Hit count = 6, Layer count = 6, Quality = 51197237
+
+  SimTrack - Online Segment Matching: 
+    Sim Track: Chamber = 17: , Eta Partition = 6, Center Strip = 14.0000, Bending angle = 0.0000, Hit count = 6, Layer_count = 6, pT = 5.5866
+    Online segment: Chamber = 17: , Eta Partition = 6, Center Strip = 14.0000, Bending angle = 0.0000, ID = 19, Hit count = 4, Layer count = 4, Quality = 34156796
+
+    Sim Track: Chamber = 26: , Eta Partition = 6, Center Strip = 44.0000, Bending angle = 0.0000, Hit count = 6, Layer_count = 6, pT = 5.5866
+    Online segment: Chamber = 26: , Eta Partition = 6, Center Strip = 43.7500, Bending angle = -0.1000, ID = 19, Hit count = 9, Layer count = 6, Quality = 51589836
+
+    Sim Track: Chamber = 9: , Eta Partition = 1, Center Strip = 24.0000, Bending angle = 0.0000, Hit count = 6, Layer_count = 6, pT = 28.2948
+    Online segment: Chamber = 9: , Eta Partition = 1, Center Strip = 24.3500, Bending angle = 0.1000, ID = 19, Hit count = 7, Layer count = 5, Quality = 42938770
+
+    Sim Track: Chamber = 18: , Eta Partition = 2, Center Strip = 58.0000, Bending angle = 0.0000, Hit count = 6, Layer_count = 6, pT = 28.2948
+    Online segment: Chamber = 18: , Eta Partition = 2, Center Strip = 58.0833, Bending angle = 0.0714, ID = 19, Hit count = 7, Layer count = 6, Quality = 51327923
+
+    Sim Track: Chamber = 35: , Eta Partition = 3, Center Strip = 82.5000, Bending angle = 0.2000, Hit count = 6, Layer_count = 6, pT = 26.7020
+    Online segment: Chamber = 35: , Eta Partition = 3, Center Strip = 82.0000, Bending angle = 0.0000, ID = 19, Hit count = 6, Layer count = 6, Quality = 51197237
+
+    Sim Track: Chamber = 8: , Eta Partition = 2, Center Strip = 25.0000, Bending angle = 0.0000, Hit count = 6, Layer_count = 6, pT = 26.7020
+    Online segment: Chamber = 8: , Eta Partition = 2, Center Strip = 24.8333, Bending angle = 0.0857, ID = 19, Hit count = 8, Layer count = 6, Quality = 51458452
+
+  Sim Tracks not matched to online segments:
+
+
+Event number = 23
+  Online Segment in Chamber (0-17 for region -1, 18-35 for region 1) 2:
+     Eta Partition = 6, Center Strip = 82.7250, Bending angle = -0.1500, ID = 19, Hit count = 5, Layer count = 4, Quality = 34288956
+
+  Online Segment in Chamber (0-17 for region -1, 18-35 for region 1) 30:
+     Eta Partition = 6, Center Strip = 60.2500, Bending angle = -0.1857, ID = 19, Hit count = 7, Layer count = 6, Quality = 51327964
+
+  SimTrack - Online Segment Matching: 
+    Sim Track: Chamber = 2: , Eta Partition = 6, Center Strip = 82.5000, Bending angle = -0.2000, Hit count = 6, Layer_count = 6, pT = 5.3928
+    Online segment: Chamber = 2: , Eta Partition = 6, Center Strip = 82.7250, Bending angle = -0.1500, ID = 19, Hit count = 5, Layer count = 4, Quality = 34288956
+
+    Sim Track: Chamber = 30: , Eta Partition = 6, Center Strip = 60.5000, Bending angle = -0.2000, Hit count = 6, Layer_count = 6, pT = 5.3928
+    Online segment: Chamber = 30: , Eta Partition = 6, Center Strip = 60.2500, Bending angle = -0.1857, ID = 19, Hit count = 7, Layer count = 6, Quality = 51327964
+
+  Sim Tracks not matched to online segments:
+
+
+Event number = 24
+  Online Segment in Chamber (0-17 for region -1, 18-35 for region 1) 5:
+     Eta Partition = 2, Center Strip = 4.6667, Bending angle = -0.3143, ID = 19, Hit count = 8, Layer count = 6, Quality = 51458132
+
+  Online Segment in Chamber (0-17 for region -1, 18-35 for region 1) 5:
+     Eta Partition = 2, Center Strip = 9.7000, Bending angle = -0.3000, ID = 19, Hit count = 6, Layer count = 4, Quality = 34418851
+
+  Online Segment in Chamber (0-17 for region -1, 18-35 for region 1) 16:
+     Eta Partition = 6, Center Strip = 52.2500, Bending angle = -0.3857, ID = 19, Hit count = 7, Layer count = 6, Quality = 51327819
+
+  Online Segment in Chamber (0-17 for region -1, 18-35 for region 1) 26:
+     Eta Partition = 6, Center Strip = 71.5000, Bending angle = -0.2286, ID = 19, Hit count = 8, Layer count = 6, Quality = 51459212
+
+  Online Segment in Chamber (0-17 for region -1, 18-35 for region 1) 32:
+     Eta Partition = 2, Center Strip = 12.6667, Bending angle = -0.2286, ID = 19, Hit count = 6, Layer count = 6, Quality = 51196116
+
+  SimTrack - Online Segment Matching: 
+    Sim Track: Chamber = 5: , Eta Partition = 2, Center Strip = 5.0000, Bending angle = -0.4000, Hit count = 6, Layer_count = 6, pT = 4.5844
+    Online segment: Chamber = 5: , Eta Partition = 2, Center Strip = 4.6667, Bending angle = -0.3143, ID = 19, Hit count = 8, Layer count = 6, Quality = 51458132
+
+    Sim Track: Chamber = 32: , Eta Partition = 2, Center Strip = 13.0000, Bending angle = -0.4000, Hit count = 6, Layer_count = 6, pT = 4.5844
+    Online segment: Chamber = 32: , Eta Partition = 2, Center Strip = 12.6667, Bending angle = -0.2286, ID = 19, Hit count = 6, Layer count = 6, Quality = 51196116
+
+    Sim Track: Chamber = 16: , Eta Partition = 6, Center Strip = 52.5000, Bending angle = -0.2000, Hit count = 6, Layer_count = 6, pT = 3.6782
+    Online segment: Chamber = 16: , Eta Partition = 6, Center Strip = 52.2500, Bending angle = -0.3857, ID = 19, Hit count = 7, Layer count = 6, Quality = 51327819
+
+    Sim Track: Chamber = 26: , Eta Partition = 6, Center Strip = 71.5000, Bending angle = -0.2000, Hit count = 6, Layer_count = 6, pT = 3.6782
+    Online segment: Chamber = 26: , Eta Partition = 6, Center Strip = 71.5000, Bending angle = -0.2286, ID = 19, Hit count = 8, Layer count = 6, Quality = 51459212
+
+  Sim Tracks not matched to online segments:
+
+
+Event number = 25
+  Online Segment in Chamber (0-17 for region -1, 18-35 for region 1) 10:
+     Eta Partition = 6, Center Strip = 94.0833, Bending angle = -0.0143, ID = 19, Hit count = 7, Layer count = 6, Quality = 51328508
+
+  Online Segment in Chamber (0-17 for region -1, 18-35 for region 1) 20:
+     Eta Partition = 6, Center Strip = 71.2500, Bending angle = -0.0429, ID = 19, Hit count = 9, Layer count = 6, Quality = 51590284
+
+  SimTrack - Online Segment Matching: 
+    Sim Track: Chamber = 10: , Eta Partition = 6, Center Strip = 94.0000, Bending angle = 0.0000, Hit count = 6, Layer_count = 6, pT = 7.8050
+    Online segment: Chamber = 10: , Eta Partition = 6, Center Strip = 94.0833, Bending angle = -0.0143, ID = 19, Hit count = 7, Layer count = 6, Quality = 51328508
+
+    Sim Track: Chamber = 20: , Eta Partition = 6, Center Strip = 72.0000, Bending angle = 0.0000, Hit count = 6, Layer_count = 6, pT = 7.8050
+    Online segment: Chamber = 20: , Eta Partition = 6, Center Strip = 71.2500, Bending angle = -0.0429, ID = 19, Hit count = 9, Layer count = 6, Quality = 51590284
+
+  Sim Tracks not matched to online segments:
+
+
+Event number = 26
+  Online Segment in Chamber (0-17 for region -1, 18-35 for region 1) 12:
+     Eta Partition = 7, Center Strip = 11.0000, Bending angle = 0.0000, ID = 19, Hit count = 6, Layer count = 6, Quality = 51196110
+
+  Online Segment in Chamber (0-17 for region -1, 18-35 for region 1) 20:
+     Eta Partition = 7, Center Strip = 3.0000, Bending angle = 0.0000, ID = 19, Hit count = 6, Layer count = 6, Quality = 51195982
+
+  SimTrack - Online Segment Matching: 
+    Sim Track: Chamber = 20: , Eta Partition = 7, Center Strip = 3.5000, Bending angle = 0.2000, Hit count = 6, Layer_count = 6, pT = 11.8050
+    Online segment: Chamber = 20: , Eta Partition = 7, Center Strip = 3.0000, Bending angle = 0.0000, ID = 19, Hit count = 6, Layer count = 6, Quality = 51195982
+
+    Sim Track: Chamber = 12: , Eta Partition = 7, Center Strip = 11.0000, Bending angle = 0.0000, Hit count = 6, Layer_count = 6, pT = 11.8050
+    Online segment: Chamber = 12: , Eta Partition = 7, Center Strip = 11.0000, Bending angle = 0.0000, ID = 19, Hit count = 6, Layer count = 6, Quality = 51196110
+
+  Sim Tracks not matched to online segments:
+
+
+Event number = 27
+  Online Segment in Chamber (0-17 for region -1, 18-35 for region 1) 2:
+     Eta Partition = 5, Center Strip = 8.8500, Bending angle = 0.1000, ID = 19, Hit count = 6, Layer count = 5, Quality = 42807450
+
+  Online Segment in Chamber (0-17 for region -1, 18-35 for region 1) 13:
+     Eta Partition = 1, Center Strip = 14.0000, Bending angle = 0.0000, ID = 19, Hit count = 4, Layer count = 4, Quality = 34156786
+
+  Online Segment in Chamber (0-17 for region -1, 18-35 for region 1) 22:
+     Eta Partition = 1, Center Strip = 70.0000, Bending angle = 0.0000, ID = 19, Hit count = 4, Layer count = 4, Quality = 34157682
+
+  Online Segment in Chamber (0-17 for region -1, 18-35 for region 1) 28:
+     Eta Partition = 5, Center Strip = 22.0000, Bending angle = 0.0000, ID = 19, Hit count = 4, Layer count = 4, Quality = 34156922
+
+  SimTrack - Online Segment Matching: 
+    Sim Track: Chamber = 13: , Eta Partition = 1, Center Strip = 14.0000, Bending angle = 0.0000, Hit count = 6, Layer_count = 6, pT = 33.6945
+    Online segment: Chamber = 13: , Eta Partition = 1, Center Strip = 14.0000, Bending angle = 0.0000, ID = 19, Hit count = 4, Layer count = 4, Quality = 34156786
+
+    Sim Track: Chamber = 22: , Eta Partition = 1, Center Strip = 70.0000, Bending angle = 0.0000, Hit count = 6, Layer_count = 6, pT = 33.6945
+    Online segment: Chamber = 22: , Eta Partition = 1, Center Strip = 70.0000, Bending angle = 0.0000, ID = 19, Hit count = 4, Layer count = 4, Quality = 34157682
+
+    Sim Track: Chamber = 28: , Eta Partition = 5, Center Strip = 22.0000, Bending angle = 0.0000, Hit count = 6, Layer_count = 6, pT = 7.6578
+    Online segment: Chamber = 28: , Eta Partition = 5, Center Strip = 22.0000, Bending angle = 0.0000, ID = 19, Hit count = 4, Layer count = 4, Quality = 34156922
+
+    Sim Track: Chamber = 2: , Eta Partition = 5, Center Strip = 9.0000, Bending angle = 0.0000, Hit count = 6, Layer_count = 6, pT = 7.6578
+    Online segment: Chamber = 2: , Eta Partition = 5, Center Strip = 8.8500, Bending angle = 0.1000, ID = 19, Hit count = 6, Layer count = 5, Quality = 42807450
+
+  Sim Tracks not matched to online segments:
+
+
+Event number = 28
+  Online Segment in Chamber (0-17 for region -1, 18-35 for region 1) 8:
+     Eta Partition = 3, Center Strip = 22.0000, Bending angle = 0.0000, ID = 19, Hit count = 6, Layer count = 6, Quality = 51196278
+
+  Online Segment in Chamber (0-17 for region -1, 18-35 for region 1) 14:
+     Eta Partition = 5, Center Strip = 61.9167, Bending angle = -0.0429, ID = 19, Hit count = 9, Layer count = 6, Quality = 51590122
+
+  Online Segment in Chamber (0-17 for region -1, 18-35 for region 1) 23:
+     Eta Partition = 5, Center Strip = 17.1667, Bending angle = -0.1143, ID = 19, Hit count = 8, Layer count = 6, Quality = 51458346
+
+  Online Segment in Chamber (0-17 for region -1, 18-35 for region 1) 35:
+     Eta Partition = 3, Center Strip = 87.0000, Bending angle = 0.0000, ID = 19, Hit count = 6, Layer count = 6, Quality = 51197318
+
+  SimTrack - Online Segment Matching: 
+    Sim Track: Chamber = 14: , Eta Partition = 5, Center Strip = 62.0000, Bending angle = 0.0000, Hit count = 6, Layer_count = 6, pT = 16.1799
+    Online segment: Chamber = 14: , Eta Partition = 5, Center Strip = 61.9167, Bending angle = -0.0429, ID = 19, Hit count = 9, Layer count = 6, Quality = 51590122
+
+    Sim Track: Chamber = 23: , Eta Partition = 5, Center Strip = 17.5000, Bending angle = -0.2000, Hit count = 6, Layer_count = 6, pT = 16.1799
+    Online segment: Chamber = 23: , Eta Partition = 5, Center Strip = 17.1667, Bending angle = -0.1143, ID = 19, Hit count = 8, Layer count = 6, Quality = 51458346
+
+    Sim Track: Chamber = 35: , Eta Partition = 3, Center Strip = 87.0000, Bending angle = 0.0000, Hit count = 6, Layer_count = 6, pT = 22.8285
+    Online segment: Chamber = 35: , Eta Partition = 3, Center Strip = 87.0000, Bending angle = 0.0000, ID = 19, Hit count = 6, Layer count = 6, Quality = 51197318
+
+    Sim Track: Chamber = 8: , Eta Partition = 3, Center Strip = 22.0000, Bending angle = 0.0000, Hit count = 6, Layer_count = 6, pT = 22.8285
+    Online segment: Chamber = 8: , Eta Partition = 3, Center Strip = 22.0000, Bending angle = 0.0000, ID = 19, Hit count = 6, Layer count = 6, Quality = 51196278
+
+  Sim Tracks not matched to online segments:
+
+
+Event number = 29
+  Online Segment in Chamber (0-17 for region -1, 18-35 for region 1) 7:
+     Eta Partition = 3, Center Strip = 41.8333, Bending angle = -0.0857, ID = 19, Hit count = 8, Layer count = 6, Quality = 51458726
+
+  Online Segment in Chamber (0-17 for region -1, 18-35 for region 1) 17:
+     Eta Partition = 3, Center Strip = 47.6667, Bending angle = 0.1143, ID = 19, Hit count = 10, Layer count = 6, Quality = 51720966
+
+  Online Segment in Chamber (0-17 for region -1, 18-35 for region 1) 26:
+     Eta Partition = 3, Center Strip = 59.0000, Bending angle = 0.0000, ID = 19, Hit count = 6, Layer count = 6, Quality = 51196870
+
+  Online Segment in Chamber (0-17 for region -1, 18-35 for region 1) 34:
+     Eta Partition = 3, Center Strip = 26.0000, Bending angle = 0.0000, ID = 19, Hit count = 6, Layer count = 6, Quality = 51196342
+
+  SimTrack - Online Segment Matching: 
+    Sim Track: Chamber = 7: , Eta Partition = 3, Center Strip = 42.0000, Bending angle = 0.0000, Hit count = 6, Layer_count = 6, pT = 11.0218
+    Online segment: Chamber = 7: , Eta Partition = 3, Center Strip = 41.8333, Bending angle = -0.0857, ID = 19, Hit count = 8, Layer count = 6, Quality = 51458726
+
+    Sim Track: Chamber = 34: , Eta Partition = 3, Center Strip = 26.0000, Bending angle = 0.0000, Hit count = 6, Layer_count = 6, pT = 11.0218
+    Online segment: Chamber = 34: , Eta Partition = 3, Center Strip = 26.0000, Bending angle = 0.0000, ID = 19, Hit count = 6, Layer count = 6, Quality = 51196342
+
+    Sim Track: Chamber = 26: , Eta Partition = 3, Center Strip = 59.0000, Bending angle = 0.0000, Hit count = 6, Layer_count = 6, pT = 22.6896
+    Online segment: Chamber = 26: , Eta Partition = 3, Center Strip = 59.0000, Bending angle = 0.0000, ID = 19, Hit count = 6, Layer count = 6, Quality = 51196870
+
+    Sim Track: Chamber = 17: , Eta Partition = 3, Center Strip = 48.0000, Bending angle = 0.0000, Hit count = 6, Layer_count = 6, pT = 22.6896
+    Online segment: Chamber = 17: , Eta Partition = 3, Center Strip = 47.6667, Bending angle = 0.1143, ID = 19, Hit count = 10, Layer count = 6, Quality = 51720966
+
+  Sim Tracks not matched to online segments:
+
+
+Event number = 30
+  Online Segment in Chamber (0-17 for region -1, 18-35 for region 1) 11:
+     Eta Partition = 2, Center Strip = 2.3333, Bending angle = -0.0571, ID = 19, Hit count = 8, Layer count = 6, Quality = 51458100
+
+  Online Segment in Chamber (0-17 for region -1, 18-35 for region 1) 19:
+     Eta Partition = 2, Center Strip = 8.8333, Bending angle = 0.0571, ID = 19, Hit count = 10, Layer count = 6, Quality = 51720340
+
+  SimTrack - Online Segment Matching: 
+    Sim Track: Chamber = 19: , Eta Partition = 2, Center Strip = 9.5000, Bending angle = 0.2000, Hit count = 6, Layer_count = 6, pT = 30.7852
+    Online segment: Chamber = 19: , Eta Partition = 2, Center Strip = 8.8333, Bending angle = 0.0571, ID = 19, Hit count = 10, Layer count = 6, Quality = 51720340
+
+    Sim Track: Chamber = 11: , Eta Partition = 2, Center Strip = 2.0000, Bending angle = 0.0000, Hit count = 6, Layer_count = 6, pT = 30.7852
+    Online segment: Chamber = 11: , Eta Partition = 2, Center Strip = 2.3333, Bending angle = -0.0571, ID = 19, Hit count = 8, Layer count = 6, Quality = 51458100
+
+  Sim Tracks not matched to online segments:
+
+
+Event number = 31
+  Online Segment in Chamber (0-17 for region -1, 18-35 for region 1) 1:
+     Eta Partition = 6, Center Strip = 90.2500, Bending angle = 0.1286, ID = 19, Hit count = 9, Layer count = 6, Quality = 51590588
+
+  Online Segment in Chamber (0-17 for region -1, 18-35 for region 1) 6:
+     Eta Partition = 7, Center Strip = 77.8333, Bending angle = -0.4286, ID = 19, Hit count = 8, Layer count = 6, Quality = 51459310
+
+  Online Segment in Chamber (0-17 for region -1, 18-35 for region 1) 8:
+     Eta Partition = 2, Center Strip = 86.6385, Bending angle = 0.1284, ID = 19, Hit count = 8, Layer count = 5, Quality = 43070820
+
+  Online Segment in Chamber (0-17 for region -1, 18-35 for region 1) 12:
+     Eta Partition = 1, Center Strip = 77.9500, Bending angle = 0.1000, ID = 19, Hit count = 6, Layer count = 5, Quality = 42808546
+
+  Online Segment in Chamber (0-17 for region -1, 18-35 for region 1) 21:
+     Eta Partition = 1, Center Strip = 44.0000, Bending angle = 0.0000, ID = 19, Hit count = 6, Layer count = 6, Quality = 51196626
+
+  Online Segment in Chamber (0-17 for region -1, 18-35 for region 1) 28:
+     Eta Partition = 6, Center Strip = 18.0000, Bending angle = 0.0000, ID = 19, Hit count = 5, Layer count = 5, Quality = 42676540
+
+  Online Segment in Chamber (0-17 for region -1, 18-35 for region 1) 34:
+     Eta Partition = 6, Center Strip = 42.8333, Bending angle = -0.1143, ID = 19, Hit count = 8, Layer count = 6, Quality = 51458748
+
+  Online Segment in Chamber (0-17 for region -1, 18-35 for region 1) 35:
+     Eta Partition = 2, Center Strip = 35.0833, Bending angle = -0.0714, ID = 19, Hit count = 7, Layer count = 6, Quality = 51327556
+
+  SimTrack - Online Segment Matching: 
+    Sim Track: Chamber = 35: , Eta Partition = 2, Center Strip = 35.5000, Bending angle = 0.2000, Hit count = 6, Layer_count = 6, pT = 12.7676
+    Online segment: Chamber = 35: , Eta Partition = 2, Center Strip = 35.0833, Bending angle = -0.0714, ID = 19, Hit count = 7, Layer count = 6, Quality = 51327556
+
+    Sim Track: Chamber = 8: , Eta Partition = 2, Center Strip = 87.0000, Bending angle = 0.0000, Hit count = 6, Layer_count = 6, pT = 12.7676
+    Online segment: Chamber = 8: , Eta Partition = 2, Center Strip = 86.6385, Bending angle = 0.1284, ID = 19, Hit count = 8, Layer count = 5, Quality = 43070820
+
+    Sim Track: Chamber = 28: , Eta Partition = 6, Center Strip = 18.5000, Bending angle = 0.2000, Hit count = 6, Layer_count = 6, pT = 16.3000
+    Online segment: Chamber = 28: , Eta Partition = 6, Center Strip = 18.0000, Bending angle = 0.0000, ID = 19, Hit count = 5, Layer count = 5, Quality = 42676540
+
+    Sim Track: Chamber = 1: , Eta Partition = 6, Center Strip = 91.0000, Bending angle = 0.0000, Hit count = 6, Layer_count = 6, pT = 16.3000
+    Online segment: Chamber = 1: , Eta Partition = 6, Center Strip = 90.2500, Bending angle = 0.1286, ID = 19, Hit count = 9, Layer count = 6, Quality = 51590588
+
+    Sim Track: Chamber = 6: , Eta Partition = 7, Center Strip = 78.0000, Bending angle = -0.4000, Hit count = 6, Layer_count = 6, pT = 3.2464
+    Online segment: Chamber = 6: , Eta Partition = 7, Center Strip = 77.8333, Bending angle = -0.4286, ID = 19, Hit count = 8, Layer count = 6, Quality = 51459310
+
+    Sim Track: Chamber = 34: , Eta Partition = 6, Center Strip = 43.5000, Bending angle = -0.2000, Hit count = 6, Layer_count = 6, pT = 3.2464
+    Online segment: Chamber = 34: , Eta Partition = 6, Center Strip = 42.8333, Bending angle = -0.1143, ID = 19, Hit count = 8, Layer count = 6, Quality = 51458748
+
+    Sim Track: Chamber = 21: , Eta Partition = 1, Center Strip = 44.5000, Bending angle = 0.2000, Hit count = 6, Layer_count = 6, pT = 13.5050
+    Online segment: Chamber = 21: , Eta Partition = 1, Center Strip = 44.0000, Bending angle = 0.0000, ID = 19, Hit count = 6, Layer count = 6, Quality = 51196626
+
+    Sim Track: Chamber = 12: , Eta Partition = 1, Center Strip = 78.0000, Bending angle = 0.0000, Hit count = 6, Layer_count = 6, pT = 13.5050
+    Online segment: Chamber = 12: , Eta Partition = 1, Center Strip = 77.9500, Bending angle = 0.1000, ID = 19, Hit count = 6, Layer count = 5, Quality = 42808546
+
+  Sim Tracks not matched to online segments:
+
+
+Event number = 32
+  Online Segment in Chamber (0-17 for region -1, 18-35 for region 1) 13:
+     Eta Partition = 5, Center Strip = 82.1667, Bending angle = 0.1429, ID = 19, Hit count = 8, Layer count = 6, Quality = 51459385
+
+  Online Segment in Chamber (0-17 for region -1, 18-35 for region 1) 22:
+     Eta Partition = 5, Center Strip = 52.0833, Bending angle = 0.0714, ID = 19, Hit count = 7, Layer count = 6, Quality = 51327833
+
+  SimTrack - Online Segment Matching: 
+    Sim Track: Chamber = 22: , Eta Partition = 5, Center Strip = 52.5000, Bending angle = 0.2000, Hit count = 6, Layer_count = 6, pT = 6.9601
+    Online segment: Chamber = 22: , Eta Partition = 5, Center Strip = 52.0833, Bending angle = 0.0714, ID = 19, Hit count = 7, Layer count = 6, Quality = 51327833
+
+    Sim Track: Chamber = 13: , Eta Partition = 5, Center Strip = 82.5000, Bending angle = 0.2000, Hit count = 6, Layer_count = 6, pT = 6.9601
+    Online segment: Chamber = 13: , Eta Partition = 5, Center Strip = 82.1667, Bending angle = 0.1429, ID = 19, Hit count = 8, Layer count = 6, Quality = 51459385
+
+  Sim Tracks not matched to online segments:
+
+
+Event number = 33
+  Online Segment in Chamber (0-17 for region -1, 18-35 for region 1) 5:
+     Eta Partition = 4, Center Strip = 18.0000, Bending angle = 0.0000, ID = 19, Hit count = 6, Layer count = 6, Quality = 51196216
+
+  Online Segment in Chamber (0-17 for region -1, 18-35 for region 1) 7:
+     Eta Partition = 7, Center Strip = 87.1667, Bending angle = 0.0571, ID = 19, Hit count = 8, Layer count = 6, Quality = 51459469
+
+  Online Segment in Chamber (0-17 for region -1, 18-35 for region 1) 8:
+     Eta Partition = 2, Center Strip = 64.0000, Bending angle = 0.0000, ID = 19, Hit count = 6, Layer count = 6, Quality = 51196948
+
+  Online Segment in Chamber (0-17 for region -1, 18-35 for region 1) 9:
+     Eta Partition = 6, Center Strip = 65.5000, Bending angle = -0.2286, ID = 19, Hit count = 10, Layer count = 6, Quality = 51721244
+
+  Online Segment in Chamber (0-17 for region -1, 18-35 for region 1) 18:
+     Eta Partition = 6, Center Strip = 12.8333, Bending angle = -0.0571, ID = 19, Hit count = 8, Layer count = 6, Quality = 51458268
+
+  Online Segment in Chamber (0-17 for region -1, 18-35 for region 1) 32:
+     Eta Partition = 4, Center Strip = 91.0000, Bending angle = 0.0000, ID = 19, Hit count = 6, Layer count = 6, Quality = 51197384
+
+  Online Segment in Chamber (0-17 for region -1, 18-35 for region 1) 34:
+     Eta Partition = 6, Center Strip = 29.2500, Bending angle = 0.1286, ID = 19, Hit count = 9, Layer count = 6, Quality = 51589612
+
+  Online Segment in Chamber (0-17 for region -1, 18-35 for region 1) 35:
+     Eta Partition = 2, Center Strip = 41.0000, Bending angle = 0.0000, ID = 19, Hit count = 6, Layer count = 6, Quality = 51196580
+
+  SimTrack - Online Segment Matching: 
+    Sim Track: Chamber = 32: , Eta Partition = 4, Center Strip = 91.0000, Bending angle = 0.0000, Hit count = 6, Layer_count = 6, pT = 16.4598
+    Online segment: Chamber = 32: , Eta Partition = 4, Center Strip = 91.0000, Bending angle = 0.0000, ID = 19, Hit count = 6, Layer count = 6, Quality = 51197384
+
+    Sim Track: Chamber = 5: , Eta Partition = 4, Center Strip = 18.0000, Bending angle = 0.0000, Hit count = 6, Layer_count = 6, pT = 16.4598
+    Online segment: Chamber = 5: , Eta Partition = 4, Center Strip = 18.0000, Bending angle = 0.0000, ID = 19, Hit count = 6, Layer count = 6, Quality = 51196216
+
+    Sim Track: Chamber = 35: , Eta Partition = 2, Center Strip = 41.0000, Bending angle = 0.0000, Hit count = 6, Layer_count = 6, pT = 36.5653
+    Online segment: Chamber = 35: , Eta Partition = 2, Center Strip = 41.0000, Bending angle = 0.0000, ID = 19, Hit count = 6, Layer count = 6, Quality = 51196580
+
+    Sim Track: Chamber = 8: , Eta Partition = 2, Center Strip = 64.0000, Bending angle = 0.0000, Hit count = 6, Layer_count = 6, pT = 36.5653
+    Online segment: Chamber = 8: , Eta Partition = 2, Center Strip = 64.0000, Bending angle = 0.0000, ID = 19, Hit count = 6, Layer count = 6, Quality = 51196948
+
+    Sim Track: Chamber = 34: , Eta Partition = 6, Center Strip = 29.5000, Bending angle = 0.2000, Hit count = 6, Layer_count = 6, pT = 9.4510
+    Online segment: Chamber = 34: , Eta Partition = 6, Center Strip = 29.2500, Bending angle = 0.1286, ID = 19, Hit count = 9, Layer count = 6, Quality = 51589612
+
+    Sim Track: Chamber = 7: , Eta Partition = 7, Center Strip = 87.5000, Bending angle = 0.2000, Hit count = 6, Layer_count = 6, pT = 9.4510
+    Online segment: Chamber = 7: , Eta Partition = 7, Center Strip = 87.1667, Bending angle = 0.0571, ID = 19, Hit count = 8, Layer count = 6, Quality = 51459469
+
+    Sim Track: Chamber = 9: , Eta Partition = 6, Center Strip = 65.5000, Bending angle = -0.2000, Hit count = 6, Layer_count = 6, pT = 14.2878
+    Online segment: Chamber = 9: , Eta Partition = 6, Center Strip = 65.5000, Bending angle = -0.2286, ID = 19, Hit count = 10, Layer count = 6, Quality = 51721244
+
+    Sim Track: Chamber = 18: , Eta Partition = 6, Center Strip = 13.0000, Bending angle = 0.0000, Hit count = 6, Layer_count = 6, pT = 14.2878
+    Online segment: Chamber = 18: , Eta Partition = 6, Center Strip = 12.8333, Bending angle = -0.0571, ID = 19, Hit count = 8, Layer count = 6, Quality = 51458268
+
+  Sim Tracks not matched to online segments:
+
+
+Event number = 34
+  Online Segment in Chamber (0-17 for region -1, 18-35 for region 1) 9:
+     Eta Partition = 3, Center Strip = 87.0000, Bending angle = 0.0000, ID = 19, Hit count = 4, Layer count = 4, Quality = 34157958
+
+  Online Segment in Chamber (0-17 for region -1, 18-35 for region 1) 16:
+     Eta Partition = 6, Center Strip = 55.5000, Bending angle = 0.3143, ID = 19, Hit count = 8, Layer count = 6, Quality = 51458940
+
+  Online Segment in Chamber (0-17 for region -1, 18-35 for region 1) 19:
+     Eta Partition = 3, Center Strip = 87.0833, Bending angle = -0.0429, ID = 19, Hit count = 7, Layer count = 6, Quality = 51328390
+
+  Online Segment in Chamber (0-17 for region -1, 18-35 for region 1) 24:
+     Eta Partition = 6, Center Strip = 1.3333, Bending angle = 0.2000, ID = 19, Hit count = 8, Layer count = 6, Quality = 51458092
+
+  SimTrack - Online Segment Matching: 
+    Sim Track: Chamber = 24: , Eta Partition = 6, Center Strip = 1.5000, Bending angle = 0.2000, Hit count = 6, Layer_count = 6, pT = 4.2915
+    Online segment: Chamber = 24: , Eta Partition = 6, Center Strip = 1.3333, Bending angle = 0.2000, ID = 19, Hit count = 8, Layer count = 6, Quality = 51458092
+
+    Sim Track: Chamber = 16: , Eta Partition = 6, Center Strip = 56.0000, Bending angle = 0.4000, Hit count = 6, Layer_count = 6, pT = 4.2915
+    Online segment: Chamber = 16: , Eta Partition = 6, Center Strip = 55.5000, Bending angle = 0.3143, ID = 19, Hit count = 8, Layer count = 6, Quality = 51458940
+
+    Sim Track: Chamber = 9: , Eta Partition = 3, Center Strip = 87.5000, Bending angle = -0.2000, Hit count = 6, Layer_count = 6, pT = 19.9167
+    Online segment: Chamber = 9: , Eta Partition = 3, Center Strip = 87.0000, Bending angle = 0.0000, ID = 19, Hit count = 4, Layer count = 4, Quality = 34157958
+
+    Sim Track: Chamber = 19: , Eta Partition = 3, Center Strip = 87.5000, Bending angle = -0.2000, Hit count = 6, Layer_count = 6, pT = 19.9167
+    Online segment: Chamber = 19: , Eta Partition = 3, Center Strip = 87.0833, Bending angle = -0.0429, ID = 19, Hit count = 7, Layer count = 6, Quality = 51328390
+
+  Sim Tracks not matched to online segments:
+
+
+Event number = 35
+  Online Segment in Chamber (0-17 for region -1, 18-35 for region 1) 0:
+     Eta Partition = 4, Center Strip = 58.0833, Bending angle = 0.0714, ID = 19, Hit count = 7, Layer count = 6, Quality = 51327928
+
+  Online Segment in Chamber (0-17 for region -1, 18-35 for region 1) 10:
+     Eta Partition = 5, Center Strip = 7.0000, Bending angle = 0.0000, ID = 19, Hit count = 4, Layer count = 4, Quality = 34156682
+
+  Online Segment in Chamber (0-17 for region -1, 18-35 for region 1) 16:
+     Eta Partition = 0, Center Strip = 70.5000, Bending angle = -0.0857, ID = 19, Hit count = 10, Layer count = 6, Quality = 51721328
+
+  Online Segment in Chamber (0-17 for region -1, 18-35 for region 1) 19:
+     Eta Partition = 5, Center Strip = 78.0000, Bending angle = 0.0000, ID = 19, Hit count = 5, Layer count = 5, Quality = 42677498
+
+  Online Segment in Chamber (0-17 for region -1, 18-35 for region 1) 25:
+     Eta Partition = 0, Center Strip = 16.2500, Bending angle = -0.1000, ID = 19, Hit count = 9, Layer count = 6, Quality = 51589392
+
+  Online Segment in Chamber (0-17 for region -1, 18-35 for region 1) 27:
+     Eta Partition = 4, Center Strip = 13.6667, Bending angle = -0.1143, ID = 19, Hit count = 10, Layer count = 6, Quality = 51720424
+
+  SimTrack - Online Segment Matching: 
+    Sim Track: Chamber = 0: , Eta Partition = 4, Center Strip = 58.5000, Bending angle = -0.2000, Hit count = 6, Layer_count = 6, pT = 10.2835
+    Online segment: Chamber = 0: , Eta Partition = 4, Center Strip = 58.0833, Bending angle = 0.0714, ID = 19, Hit count = 7, Layer count = 6, Quality = 51327928
+
+    Sim Track: Chamber = 27: , Eta Partition = 4, Center Strip = 14.0000, Bending angle = 0.0000, Hit count = 6, Layer_count = 6, pT = 10.2835
+    Online segment: Chamber = 27: , Eta Partition = 4, Center Strip = 13.6667, Bending angle = -0.1143, ID = 19, Hit count = 10, Layer count = 6, Quality = 51720424
+
+    Sim Track: Chamber = 10: , Eta Partition = 5, Center Strip = 7.0000, Bending angle = 0.0000, Hit count = 6, Layer_count = 6, pT = 23.9124
+    Online segment: Chamber = 10: , Eta Partition = 5, Center Strip = 7.0000, Bending angle = 0.0000, ID = 19, Hit count = 4, Layer count = 4, Quality = 34156682
+
+    Sim Track: Chamber = 19: , Eta Partition = 5, Center Strip = 78.0000, Bending angle = 0.0000, Hit count = 6, Layer_count = 6, pT = 23.9124
+    Online segment: Chamber = 19: , Eta Partition = 5, Center Strip = 78.0000, Bending angle = 0.0000, ID = 19, Hit count = 5, Layer count = 5, Quality = 42677498
+
+    Sim Track: Chamber = 16: , Eta Partition = 0, Center Strip = 70.0000, Bending angle = 0.0000, Hit count = 6, Layer_count = 6, pT = 49.7535
+    Online segment: Chamber = 16: , Eta Partition = 0, Center Strip = 70.5000, Bending angle = -0.0857, ID = 19, Hit count = 10, Layer count = 6, Quality = 51721328
+
+    Sim Track: Chamber = 25: , Eta Partition = 0, Center Strip = 17.0000, Bending angle = 0.0000, Hit count = 6, Layer_count = 6, pT = 49.7535
+    Online segment: Chamber = 25: , Eta Partition = 0, Center Strip = 16.2500, Bending angle = -0.1000, ID = 19, Hit count = 9, Layer count = 6, Quality = 51589392
+
+  Sim Tracks not matched to online segments:
+
+
+Event number = 36
+  Online Segment in Chamber (0-17 for region -1, 18-35 for region 1) 8:
+     Eta Partition = 1, Center Strip = 38.0000, Bending angle = 0.0000, ID = 19, Hit count = 6, Layer count = 6, Quality = 51196530
+
+  Online Segment in Chamber (0-17 for region -1, 18-35 for region 1) 10:
+     Eta Partition = 4, Center Strip = 61.0000, Bending angle = 0.0000, ID = 19, Hit count = 6, Layer count = 6, Quality = 51196903
+
+  Online Segment in Chamber (0-17 for region -1, 18-35 for region 1) 19:
+     Eta Partition = 4, Center Strip = 25.0000, Bending angle = 0.0000, ID = 19, Hit count = 5, Layer count = 5, Quality = 42676648
+
+  Online Segment in Chamber (0-17 for region -1, 18-35 for region 1) 35:
+     Eta Partition = 2, Center Strip = 68.0833, Bending angle = 0.0429, ID = 19, Hit count = 9, Layer count = 6, Quality = 51590211
+
+  SimTrack - Online Segment Matching: 
+    Sim Track: Chamber = 10: , Eta Partition = 4, Center Strip = 61.5000, Bending angle = -0.2000, Hit count = 6, Layer_count = 6, pT = 33.6005
+    Online segment: Chamber = 10: , Eta Partition = 4, Center Strip = 61.0000, Bending angle = 0.0000, ID = 19, Hit count = 6, Layer count = 6, Quality = 51196903
+
+    Sim Track: Chamber = 19: , Eta Partition = 4, Center Strip = 25.0000, Bending angle = 0.0000, Hit count = 6, Layer_count = 6, pT = 33.6005
+    Online segment: Chamber = 19: , Eta Partition = 4, Center Strip = 25.0000, Bending angle = 0.0000, ID = 19, Hit count = 5, Layer count = 5, Quality = 42676648
+
+    Sim Track: Chamber = 35: , Eta Partition = 1, Center Strip = 68.0000, Bending angle = 0.0000, Hit count = 6, Layer_count = 6, pT = 31.3740
+    Online segment: Chamber = 35: , Eta Partition = 2, Center Strip = 68.0833, Bending angle = 0.0429, ID = 19, Hit count = 9, Layer count = 6, Quality = 51590211
+
+    Sim Track: Chamber = 8: , Eta Partition = 1, Center Strip = 38.0000, Bending angle = 0.0000, Hit count = 6, Layer_count = 6, pT = 31.3740
+    Online segment: Chamber = 8: , Eta Partition = 1, Center Strip = 38.0000, Bending angle = 0.0000, ID = 19, Hit count = 6, Layer count = 6, Quality = 51196530
+
+  Sim Tracks not matched to online segments:
+
+
+Event number = 37
+  Online Segment in Chamber (0-17 for region -1, 18-35 for region 1) 2:
+     Eta Partition = 5, Center Strip = 79.9750, Bending angle = 0.3500, ID = 19, Hit count = 5, Layer count = 4, Quality = 34288906
+
+  Online Segment in Chamber (0-17 for region -1, 18-35 for region 1) 7:
+     Eta Partition = 0, Center Strip = 49.4167, Bending angle = -0.0143, ID = 19, Hit count = 13, Layer count = 6, Quality = 52114192
+
+  Online Segment in Chamber (0-17 for region -1, 18-35 for region 1) 29:
+     Eta Partition = 4, Center Strip = 69.5500, Bending angle = 0.2000, ID = 19, Hit count = 6, Layer count = 4, Quality = 34419816
+
+  Online Segment in Chamber (0-17 for region -1, 18-35 for region 1) 34:
+     Eta Partition = 0, Center Strip = 56.9167, Bending angle = 0.0143, ID = 19, Hit count = 7, Layer count = 6, Quality = 51327888
+
+  SimTrack - Online Segment Matching: 
+    Sim Track: Chamber = 34: , Eta Partition = 0, Center Strip = 57.0000, Bending angle = 0.0000, Hit count = 6, Layer_count = 6, pT = 38.4536
+    Online segment: Chamber = 34: , Eta Partition = 0, Center Strip = 56.9167, Bending angle = 0.0143, ID = 19, Hit count = 7, Layer count = 6, Quality = 51327888
+
+    Sim Track: Chamber = 7: , Eta Partition = 0, Center Strip = 50.0000, Bending angle = 0.0000, Hit count = 6, Layer_count = 6, pT = 38.4536
+    Online segment: Chamber = 7: , Eta Partition = 0, Center Strip = 49.4167, Bending angle = -0.0143, ID = 19, Hit count = 13, Layer count = 6, Quality = 52114192
+
+    Sim Track: Chamber = 29: , Eta Partition = 4, Center Strip = 69.5000, Bending angle = 0.2000, Hit count = 6, Layer_count = 6, pT = 4.8662
+    Online segment: Chamber = 29: , Eta Partition = 4, Center Strip = 69.5500, Bending angle = 0.2000, ID = 19, Hit count = 6, Layer count = 4, Quality = 34419816
+
+    Sim Track: Chamber = 2: , Eta Partition = 5, Center Strip = 80.5000, Bending angle = 0.2000, Hit count = 6, Layer_count = 6, pT = 4.8662
+    Online segment: Chamber = 2: , Eta Partition = 5, Center Strip = 79.9750, Bending angle = 0.3500, ID = 19, Hit count = 5, Layer count = 4, Quality = 34288906
+
+  Sim Tracks not matched to online segments:
+
+
+Event number = 38
+  Online Segment in Chamber (0-17 for region -1, 18-35 for region 1) 12:
+     Eta Partition = 6, Center Strip = 65.5000, Bending angle = -0.2000, ID = 19, Hit count = 8, Layer count = 6, Quality = 51459116
+
+  Online Segment in Chamber (0-17 for region -1, 18-35 for region 1) 15:
+     Eta Partition = 2, Center Strip = 44.0000, Bending angle = 0.0000, ID = 19, Hit count = 6, Layer count = 6, Quality = 51196627
+
+  Online Segment in Chamber (0-17 for region -1, 18-35 for region 1) 21:
+     Eta Partition = 6, Center Strip = 15.2500, Bending angle = -0.0714, ID = 19, Hit count = 8, Layer count = 6, Quality = 51458316
+
+  Online Segment in Chamber (0-17 for region -1, 18-35 for region 1) 24:
+     Eta Partition = 1, Center Strip = 65.0000, Bending angle = 0.0000, ID = 19, Hit count = 5, Layer count = 5, Quality = 42677282
+
+  SimTrack - Online Segment Matching: 
+    Sim Track: Chamber = 12: , Eta Partition = 6, Center Strip = 66.0000, Bending angle = 0.0000, Hit count = 6, Layer_count = 6, pT = 16.7846
+    Online segment: Chamber = 12: , Eta Partition = 6, Center Strip = 65.5000, Bending angle = -0.2000, ID = 19, Hit count = 8, Layer count = 6, Quality = 51459116
+
+    Sim Track: Chamber = 21: , Eta Partition = 6, Center Strip = 15.5000, Bending angle = -0.2000, Hit count = 6, Layer_count = 6, pT = 16.7846
+    Online segment: Chamber = 21: , Eta Partition = 6, Center Strip = 15.2500, Bending angle = -0.0714, ID = 19, Hit count = 8, Layer count = 6, Quality = 51458316
+
+    Sim Track: Chamber = 24: , Eta Partition = 1, Center Strip = 65.0000, Bending angle = 0.0000, Hit count = 6, Layer_count = 6, pT = 24.5655
+    Online segment: Chamber = 24: , Eta Partition = 1, Center Strip = 65.0000, Bending angle = 0.0000, ID = 19, Hit count = 5, Layer count = 5, Quality = 42677282
+
+    Sim Track: Chamber = 15: , Eta Partition = 2, Center Strip = 44.5000, Bending angle = 0.2000, Hit count = 6, Layer_count = 6, pT = 24.5655
+    Online segment: Chamber = 15: , Eta Partition = 2, Center Strip = 44.0000, Bending angle = 0.0000, ID = 19, Hit count = 6, Layer count = 6, Quality = 51196627
+
+  Sim Tracks not matched to online segments:
+
+
+Event number = 39
+  SimTrack - Online Segment Matching: 
+  Sim Tracks not matched to online segments:
+
+
+Event number = 40
+  Online Segment in Chamber (0-17 for region -1, 18-35 for region 1) 8:
+     Eta Partition = 7, Center Strip = 55.0980, Bending angle = 0.0068, ID = 19, Hit count = 6, Layer count = 5, Quality = 42808206
+
+  Online Segment in Chamber (0-17 for region -1, 18-35 for region 1) 35:
+     Eta Partition = 7, Center Strip = 57.4167, Bending angle = 0.1286, ID = 19, Hit count = 9, Layer count = 6, Quality = 51590062
+
+  SimTrack - Online Segment Matching: 
+    Sim Track: Chamber = 35: , Eta Partition = 7, Center Strip = 58.0000, Bending angle = 0.0000, Hit count = 6, Layer_count = 6, pT = 13.1952
+    Online segment: Chamber = 35: , Eta Partition = 7, Center Strip = 57.4167, Bending angle = 0.1286, ID = 19, Hit count = 9, Layer count = 6, Quality = 51590062
+
+    Sim Track: Chamber = 8: , Eta Partition = 7, Center Strip = 55.0000, Bending angle = 0.0000, Hit count = 6, Layer_count = 6, pT = 13.1952
+    Online segment: Chamber = 8: , Eta Partition = 7, Center Strip = 55.0980, Bending angle = 0.0068, ID = 19, Hit count = 6, Layer count = 5, Quality = 42808206
+
+  Sim Tracks not matched to online segments:
+
+
+Event number = 41
+  Online Segment in Chamber (0-17 for region -1, 18-35 for region 1) 1:
+     Eta Partition = 7, Center Strip = 26.3333, Bending angle = 0.2000, ID = 19, Hit count = 8, Layer count = 6, Quality = 51458494
+
+  Online Segment in Chamber (0-17 for region -1, 18-35 for region 1) 3:
+     Eta Partition = 6, Center Strip = 67.0000, Bending angle = 0.0000, ID = 19, Hit count = 4, Layer count = 4, Quality = 34157644
+
+  Online Segment in Chamber (0-17 for region -1, 18-35 for region 1) 27:
+     Eta Partition = 7, Center Strip = 47.3333, Bending angle = 0.3143, ID = 19, Hit count = 8, Layer count = 6, Quality = 51458814
+
+  Online Segment in Chamber (0-17 for region -1, 18-35 for region 1) 30:
+     Eta Partition = 5, Center Strip = 41.0000, Bending angle = 0.0000, ID = 19, Hit count = 4, Layer count = 4, Quality = 34157226
+
+  SimTrack - Online Segment Matching: 
+    Sim Track: Chamber = 27: , Eta Partition = 7, Center Strip = 47.5000, Bending angle = 0.2000, Hit count = 6, Layer_count = 6, pT = 2.6397
+    Online segment: Chamber = 27: , Eta Partition = 7, Center Strip = 47.3333, Bending angle = 0.3143, ID = 19, Hit count = 8, Layer count = 6, Quality = 51458814
+
+    Sim Track: Chamber = 1: , Eta Partition = 7, Center Strip = 26.5000, Bending angle = 0.2000, Hit count = 6, Layer_count = 6, pT = 2.6397
+    Online segment: Chamber = 1: , Eta Partition = 7, Center Strip = 26.3333, Bending angle = 0.2000, ID = 19, Hit count = 8, Layer count = 6, Quality = 51458494
+
+    Sim Track: Chamber = 30: , Eta Partition = 5, Center Strip = 41.0000, Bending angle = 0.0000, Hit count = 6, Layer_count = 6, pT = 18.6518
+    Online segment: Chamber = 30: , Eta Partition = 5, Center Strip = 41.0000, Bending angle = 0.0000, ID = 19, Hit count = 4, Layer count = 4, Quality = 34157226
+
+    Sim Track: Chamber = 3: , Eta Partition = 6, Center Strip = 67.0000, Bending angle = 0.0000, Hit count = 6, Layer_count = 6, pT = 18.6518
+    Online segment: Chamber = 3: , Eta Partition = 6, Center Strip = 67.0000, Bending angle = 0.0000, ID = 19, Hit count = 4, Layer count = 4, Quality = 34157644
+
+  Sim Tracks not matched to online segments:
+
+
+Event number = 42
+  Online Segment in Chamber (0-17 for region -1, 18-35 for region 1) 4:
+     Eta Partition = 3, Center Strip = 56.2500, Bending angle = 0.2429, ID = 19, Hit count = 9, Layer count = 6, Quality = 51590022
+
+  Online Segment in Chamber (0-17 for region -1, 18-35 for region 1) 25:
+     Eta Partition = 0, Center Strip = 80.5372, Bending angle = -0.2095, ID = 19, Hit count = 7, Layer count = 5, Quality = 42939664
+
+  Online Segment in Chamber (0-17 for region -1, 18-35 for region 1) 31:
+     Eta Partition = 4, Center Strip = 68.4167, Bending angle = 0.2429, ID = 19, Hit count = 7, Layer count = 6, Quality = 51328087
+
+  SimTrack - Online Segment Matching: 
+    Sim Track: Chamber = 25: , Eta Partition = 0, Center Strip = 80.5000, Bending angle = -0.2000, Hit count = 6, Layer_count = 6, pT = 13.9652
+    Online segment: Chamber = 25: , Eta Partition = 0, Center Strip = 80.5372, Bending angle = -0.2095, ID = 19, Hit count = 7, Layer count = 5, Quality = 42939664
+
+    Sim Track: Chamber = 31: , Eta Partition = 4, Center Strip = 69.0000, Bending angle = 0.0000, Hit count = 6, Layer_count = 6, pT = 10.3424
+    Online segment: Chamber = 31: , Eta Partition = 4, Center Strip = 68.4167, Bending angle = 0.2429, ID = 19, Hit count = 7, Layer count = 6, Quality = 51328087
+
+    Sim Track: Chamber = 4: , Eta Partition = 3, Center Strip = 56.5000, Bending angle = 0.2000, Hit count = 6, Layer_count = 6, pT = 10.3424
+    Online segment: Chamber = 4: , Eta Partition = 3, Center Strip = 56.2500, Bending angle = 0.2429, ID = 19, Hit count = 9, Layer count = 6, Quality = 51590022
+
+  Sim Tracks not matched to online segments:
+
+
+Event number = 43
+  SimTrack - Online Segment Matching: 
+  Sim Tracks not matched to online segments:
+
+
+Event number = 44
+  Online Segment in Chamber (0-17 for region -1, 18-35 for region 1) 0:
+     Eta Partition = 1, Center Strip = 44.2250, Bending angle = 2.7500, ID = 4, Hit count = 7, Layer count = 5, Quality = 42877634
+
+  Online Segment in Chamber (0-17 for region -1, 18-35 for region 1) 17:
+     Eta Partition = 2, Center Strip = 38.0000, Bending angle = 0.0000, ID = 19, Hit count = 6, Layer count = 6, Quality = 51196532
+
+  Online Segment in Chamber (0-17 for region -1, 18-35 for region 1) 22:
+     Eta Partition = 3, Center Strip = 37.8333, Bending angle = 1.1714, ID = 14, Hit count = 8, Layer count = 6, Quality = 51438182
+
+  Online Segment in Chamber (0-17 for region -1, 18-35 for region 1) 26:
+     Eta Partition = 2, Center Strip = 70.0000, Bending angle = 0.0000, ID = 19, Hit count = 6, Layer count = 6, Quality = 51197043
+
+  SimTrack - Online Segment Matching: 
+    Sim Track: Chamber = 26: , Eta Partition = 2, Center Strip = 70.0000, Bending angle = 0.0000, Hit count = 6, Layer_count = 6, pT = 25.5442
+    Online segment: Chamber = 26: , Eta Partition = 2, Center Strip = 70.0000, Bending angle = 0.0000, ID = 19, Hit count = 6, Layer count = 6, Quality = 51197043
+
+    Sim Track: Chamber = 17: , Eta Partition = 2, Center Strip = 38.0000, Bending angle = 0.0000, Hit count = 6, Layer_count = 6, pT = 25.5442
+    Online segment: Chamber = 17: , Eta Partition = 2, Center Strip = 38.0000, Bending angle = 0.0000, ID = 19, Hit count = 6, Layer count = 6, Quality = 51196532
+
+    Sim Track: Chamber = 22: , Eta Partition = 3, Center Strip = 38.0000, Bending angle = 1.2000, Hit count = 6, Layer_count = 6, pT = 0.8243
+    Online segment: Chamber = 22: , Eta Partition = 3, Center Strip = 37.8333, Bending angle = 1.1714, ID = 14, Hit count = 8, Layer count = 6, Quality = 51438182
+
+    Sim Track: Chamber = 0: , Eta Partition = 1, Center Strip = 44.5000, Bending angle = 2.6000, Hit count = 6, Layer_count = 6, pT = 0.8243
+    Online segment: Chamber = 0: , Eta Partition = 1, Center Strip = 44.2250, Bending angle = 2.7500, ID = 4, Hit count = 7, Layer count = 5, Quality = 42877634
+
+  Sim Tracks not matched to online segments:
+
+
+Event number = 45
+  SimTrack - Online Segment Matching: 
+  Sim Tracks not matched to online segments:
+
+
+Event number = 46
+  Online Segment in Chamber (0-17 for region -1, 18-35 for region 1) 1:
+     Eta Partition = 3, Center Strip = 65.8333, Bending angle = -0.0857, ID = 19, Hit count = 8, Layer count = 6, Quality = 51459110
+
+  Online Segment in Chamber (0-17 for region -1, 18-35 for region 1) 28:
+     Eta Partition = 3, Center Strip = 44.2750, Bending angle = 0.1500, ID = 19, Hit count = 5, Layer count = 4, Quality = 34288342
+
+  SimTrack - Online Segment Matching: 
+    Sim Track: Chamber = 28: , Eta Partition = 3, Center Strip = 45.0000, Bending angle = 0.0000, Hit count = 6, Layer_count = 6, pT = 21.4724
+    Online segment: Chamber = 28: , Eta Partition = 3, Center Strip = 44.2750, Bending angle = 0.1500, ID = 19, Hit count = 5, Layer count = 4, Quality = 34288342
+
+    Sim Track: Chamber = 1: , Eta Partition = 3, Center Strip = 66.0000, Bending angle = 0.0000, Hit count = 6, Layer_count = 6, pT = 21.4724
+    Online segment: Chamber = 1: , Eta Partition = 3, Center Strip = 65.8333, Bending angle = -0.0857, ID = 19, Hit count = 8, Layer count = 6, Quality = 51459110
+
+  Sim Tracks not matched to online segments:
+
+
+Event number = 47
+  SimTrack - Online Segment Matching: 
+  Sim Tracks not matched to online segments:
+
+
+Event number = 48
+  Online Segment in Chamber (0-17 for region -1, 18-35 for region 1) 4:
+     Eta Partition = 2, Center Strip = 38.0833, Bending angle = -0.0143, ID = 19, Hit count = 11, Layer count = 6, Quality = 51851876
+
+  Online Segment in Chamber (0-17 for region -1, 18-35 for region 1) 31:
+     Eta Partition = 2, Center Strip = 41.6667, Bending angle = -0.1143, ID = 19, Hit count = 10, Layer count = 6, Quality = 51720868
+
+  SimTrack - Online Segment Matching: 
+    Sim Track: Chamber = 4: , Eta Partition = 2, Center Strip = 39.0000, Bending angle = 0.0000, Hit count = 6, Layer_count = 6, pT = 23.0219
+    Online segment: Chamber = 4: , Eta Partition = 2, Center Strip = 38.0833, Bending angle = -0.0143, ID = 19, Hit count = 11, Layer count = 6, Quality = 51851876
+
+    Sim Track: Chamber = 31: , Eta Partition = 2, Center Strip = 42.0000, Bending angle = 0.0000, Hit count = 6, Layer_count = 6, pT = 23.0219
+    Online segment: Chamber = 31: , Eta Partition = 2, Center Strip = 41.6667, Bending angle = -0.1143, ID = 19, Hit count = 10, Layer count = 6, Quality = 51720868
+
+  Sim Tracks not matched to online segments:
+
+
+Event number = 49
+  Online Segment in Chamber (0-17 for region -1, 18-35 for region 1) 7:
+     Eta Partition = 7, Center Strip = 37.0000, Bending angle = 0.0000, ID = 19, Hit count = 6, Layer count = 6, Quality = 51196526
+
+  Online Segment in Chamber (0-17 for region -1, 18-35 for region 1) 34:
+     Eta Partition = 7, Center Strip = 32.9167, Bending angle = 0.0429, ID = 19, Hit count = 9, Layer count = 6, Quality = 51589662
+
+  SimTrack - Online Segment Matching: 
+    Sim Track: Chamber = 7: , Eta Partition = 7, Center Strip = 37.0000, Bending angle = 0.0000, Hit count = 6, Layer_count = 6, pT = 8.1149
+    Online segment: Chamber = 7: , Eta Partition = 7, Center Strip = 37.0000, Bending angle = 0.0000, ID = 19, Hit count = 6, Layer count = 6, Quality = 51196526
+
+    Sim Track: Chamber = 34: , Eta Partition = 7, Center Strip = 33.5000, Bending angle = -0.2000, Hit count = 6, Layer_count = 6, pT = 8.1149
+    Online segment: Chamber = 34: , Eta Partition = 7, Center Strip = 32.9167, Bending angle = 0.0429, ID = 19, Hit count = 9, Layer count = 6, Quality = 51589662
+
+  Sim Tracks not matched to online segments:
+
+
+Overall efficiency w.r.t offline segments = 1.0000
+
+Overall efficiency w.r.t sim tracks = 1.0000
+
+Overall purity w.r.t sim tracks = 0.9928
+

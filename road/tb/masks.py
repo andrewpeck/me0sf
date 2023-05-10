@@ -4,7 +4,7 @@ from subfunc import *
 from printly_dat import printly_dat
 from pat_unit_beh import get_ly_mask, calculate_global_layer_mask
 
-num_or = 4
+num_or = 2
 num_or_to_span = {2:37, 4:19, 8:11, 16:7}
 input_max_span = num_or_to_span[num_or]
 factor = num_or / 2
