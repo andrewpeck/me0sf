@@ -74,8 +74,6 @@ async def chamber_test(dut, test, nloops=512, verbose=False):
     config.group_width = dut.partition_gen[0].partition_inst.S0_WIDTH.value
     config.num_outputs= dut.NUM_SEGMENTS.value
     config.ly_thresh = 6
-    config.hit_thresh = 6
-    config.hit_thresh = 0 # set to zero to disable until implmented in fw
     config.cross_part_seg_width = 0 # set to zero to disable until implmented in fw
 
     NUM_PARTITIONS = 8
@@ -83,7 +81,6 @@ async def chamber_test(dut, test, nloops=512, verbose=False):
     dut.sbits_i.value = NULL()
 
     dut.ly_thresh.value = config.ly_thresh
-    dut.hit_thresh.value = config.hit_thresh
 
     # flush the bufers
     for _ in range(256):
@@ -278,7 +275,7 @@ def test_chamber():
         os.path.join(rtl_dir, "bitonic_sort/kawazome/bitonic_sorter.vhd"),
         os.path.join(rtl_dir, "bitonic_sort/bitonic_sort.vhd"),
         os.path.join(rtl_dir, "patterns.vhd"),
-        os.path.join(rtl_dir, "centroid_finder.vhd"),
+        os.path.join(rtl_dir, "hit_count.vhd"),
         os.path.join(rtl_dir, "segment_selector.vhd"),
         os.path.join(rtl_dir, "pat_unit.vhd"),
         os.path.join(rtl_dir, "fixed_delay.vhd"),

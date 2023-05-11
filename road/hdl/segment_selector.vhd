@@ -39,7 +39,9 @@ architecture behavioral of segment_selector is
   begin
     return 2**integer(ceil(log2(real(size))));
   end;
+
   constant CLOG_WIDTH : natural := next_power_of_two(NUM_INPUTS);
+
   constant BITS       : natural := segment_t'w;
 
 begin
@@ -59,11 +61,6 @@ begin
 
     assert NUM_INPUTS >= NUM_OUTPUTS
       report "Width of segment selector must be >= # of inputs" severity error;
-
-    -- assert false report "BITS = " & integer'image(BITS) severity note;
-    -- assert false report "CLOG_WIDTH = " & integer'image(CLOG_WIDTH) severity note;
-    -- assert false report "NUM_INPUTS = " & integer'image(NUM_INPUTS) severity note;
-    -- assert false report "NUM_OUTPUTS = " & integer'image(NUM_OUTPUTS) severity note;
 
     process (clock) is
     begin
@@ -96,6 +93,11 @@ begin
         end if;
       end process;
     end generate;
+
+    assert SORTB <= BITS report "Sort bits must be <= bits"
+                    & " DATA_BITS=" & integer'image(BITS)
+                    & " KEY_BITS=" & integer'image(SORTB)
+                    severity error;
 
     bitonic_sort_inst : entity work.bitonic_sort
       generic map (

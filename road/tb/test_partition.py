@@ -54,8 +54,7 @@ async def partition_test(dut, NLOOPS=1000, test="SEGMENTS"):
 
     # initial inputs
     dut.ly_thresh.value = config.ly_thresh
-    dut.hit_thresh.value = config.hit_thresh
-    dut.partition_i.value = 6*[0]
+    dut.partition_i.value = [0 for _ in range(6)]
 
     # flush the buffers
     for i in range(128):
@@ -152,7 +151,7 @@ async def partition_test(dut, NLOOPS=1000, test="SEGMENTS"):
 
             fw_segments = get_segments_from_dut(dut)
 
-            for j in range(len(sw_segments)):
+            for j in range(max([len(fw_segments), len(sw_segments)])):
 
                 if fw_segments[j].id > 0:
                     strip_cnts.append(j)
@@ -189,7 +188,7 @@ def test_partition():
                     os.path.join(rtl_dir, "pat_pkg.vhd"),
                     os.path.join(rtl_dir, "fixed_delay.vhd"),
                     os.path.join(rtl_dir, "patterns.vhd"),
-                    os.path.join(rtl_dir, "centroid_finder.vhd"),
+                    os.path.join(rtl_dir, "hit_count.vhd"),
                     os.path.join(rtl_dir, "pat_unit.vhd"),
                     os.path.join(rtl_dir, "dav_to_phase.vhd"),
                     os.path.join(rtl_dir, "deadzone.vhd"),
@@ -197,6 +196,7 @@ def test_partition():
                     os.path.join(rtl_dir, "deghost.vhd"),
                     os.path.join(rtl_dir, "partition.vhd")]
 
+    # disable DEADTIME in the test bench since it is not emulated in the software
     parameters = {"DEADTIME": 0}
 
     os.environ["SIM"] = "questa"

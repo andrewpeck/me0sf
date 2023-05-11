@@ -40,7 +40,6 @@ entity pat_unit is
     dav_o : out std_logic;
 
     ly_thresh  : in std_logic_vector (2 downto 0);
-    hit_thresh : in std_logic_vector (5 downto 0);
 
     ly0 : in std_logic_vector (LY0_SPAN-1 downto 0);
     ly1 : in std_logic_vector (LY1_SPAN-1 downto 0);
@@ -49,7 +48,7 @@ entity pat_unit is
     ly4 : in std_logic_vector (LY4_SPAN-1 downto 0);
     ly5 : in std_logic_vector (LY5_SPAN-1 downto 0);
 
-    pat_o : out segment_t
+    pat_o : out pat_unit_t
 
     );
 end pat_unit;
@@ -58,25 +57,15 @@ architecture behavioral of pat_unit is
 
   signal dav_s1 : std_logic := '0';
 
-  signal pats : segment_list_t (NUM_PATTERNS-1 downto 0) := (others => null_pattern);
+  signal pats : pat_unit_pre_list_t (NUM_PATTERNS-1 downto 0)
+    := (others => null_pat_unit_pre);
 
   signal pats_dav     : std_logic := '0';
   signal priority_dav : std_logic := '0';
 
-  function count_ones(slv : std_logic_vector) return natural is
-    variable n_ones : natural := 0;
-  begin
-    for i in slv'range loop
-      if slv(i) = '1' then
-        n_ones := n_ones + 1;
-      end if;
-    end loop;
-    return n_ones;
-  end function count_ones;
-
-  signal best_slv : std_logic_vector (segment_t'w-1 downto 0);
-  signal best     : segment_t;
-  signal cand_slv : bus_array (0 to NUM_PATTERNS-1) (segment_t'w-1 downto 0);
+  signal best_slv : std_logic_vector (pat_unit_pre_t'w-1 downto 0);
+  signal best     : pat_unit_pre_t;
+  signal cand_slv : bus_array (0 to NUM_PATTERNS-1) (pat_unit_pre_t'w-1 downto 0);
 
 begin
 
@@ -95,19 +84,12 @@ begin
 
   patgen : for I in 0 to patlist'length-1 generate
 
-    function get_ly_size (ly     : natural;
-                          ly_pat : hi_lo_t)
-      return natural is
-    begin
-      return (ly_pat.hi-ly_pat.lo+1);
-    end;
-
     function get_ly_mask (size   : natural;
                           ly     : std_logic_vector;
                           ly_pat : hi_lo_t)
       return std_logic_vector is
       variable result : std_logic_vector(size-1 downto 0);
-      variable center : natural := ly'length / 2;  -- FIXME: check the rounding on this
+      variable center : natural := ly'length / 2;
     begin
       result := ly (center + ly_pat.hi downto center + ly_pat.lo);
       return result;
@@ -149,89 +131,30 @@ begin
     ly4_mask <= get_ly_mask (ly4_size, ly4, patlist(I).ly4);
     ly5_mask <= get_ly_mask (ly5_size, ly5, patlist(I).ly5);
 
+    i_hit_count : entity work.hit_count
+      generic map(
+        HCB => HC_BITS,
+        LCB => LC_BITS)
+      port map (
+        clk => clock,
+        ly0 => ly0_mask,
+        ly1 => ly1_mask,
+        ly2 => ly2_mask,
+        ly3 => ly3_mask,
+        ly4 => ly4_mask,
+        ly5 => ly5_mask,
+        hc  => pats(I).hc,
+        lc  => pats(I).lc);
+
+    -- pattern id
+    pats(I).id <= to_unsigned(patlist(I).id, PID_BITS);
+
     process (clock) is
     begin
       if (rising_edge(clock)) then
-
         pats_dav <= dav_i;
-
-        pats(I) <= null_pattern;
-
-        -- count
-        pats(I).hc <=
-          to_unsigned(count_ones(ly0_mask) +
-                      count_ones(ly1_mask) +
-                      count_ones(ly2_mask) +
-                      count_ones(ly3_mask) +
-                      count_ones(ly4_mask) +
-                      count_ones(ly5_mask), HC_BITS);
-
-        pats(I).lc <=
-          to_unsigned(count_ones(or_reduce(ly0_mask) &
-                                 or_reduce(ly1_mask) &
-                                 or_reduce(ly2_mask) &
-                                 or_reduce(ly3_mask) &
-                                 or_reduce(ly4_mask) &
-                                 or_reduce(ly5_mask)), LC_BITS);
-
-        -- pattern id
-        pats(I).id <= to_unsigned(patlist(I).id, PID_BITS);
-
       end if;
     end process;
-
-    --------------------------------------------------------------------------------
-    -- Centroid Finding
-    -- done in parallel with count ones etc
-    --------------------------------------------------------------------------------
-
-    centroid_finder_0 : entity work.centroid_finder
-      generic map (LENGTH => ly0_size, NBITS => CENTROID_BITS)
-      port map (
-        clk  => clock,
-        din  => ly0_mask,
-        dout => pats(I).hits(0)
-        );
-
-    centroid_finder_1 : entity work.centroid_finder
-      generic map (LENGTH => ly1_size, NBITS => CENTROID_BITS)
-      port map (
-        clk  => clock,
-        din  => ly1_mask,
-        dout => pats(I).hits(1)
-        );
-
-    centroid_finder_2 : entity work.centroid_finder
-      generic map (LENGTH => ly2_size, NBITS => CENTROID_BITS)
-      port map (
-        clk  => clock,
-        din  => ly2_mask,
-        dout => pats(I).hits(2)
-        );
-
-    centroid_finder_3 : entity work.centroid_finder
-      generic map (LENGTH => ly3_size, NBITS => CENTROID_BITS)
-      port map (
-        clk  => clock,
-        din  => ly3_mask,
-        dout => pats(I).hits(3)
-        );
-
-    centroid_finder_4 : entity work.centroid_finder
-      generic map (LENGTH => ly4_size, NBITS => CENTROID_BITS)
-      port map (
-        clk  => clock,
-        din  => ly4_mask,
-        dout => pats(I).hits(4)
-        );
-
-    centroid_finder_5 : entity work.centroid_finder
-      generic map (LENGTH => ly5_size, NBITS => CENTROID_BITS)
-      port map (
-        clk  => clock,
-        din  => ly5_mask,
-        dout => pats(I).hits(5)
-        );
 
   end generate;
 
@@ -242,12 +165,12 @@ begin
   priority_encoder_inst : entity work.priority_encoder
     generic map (
       WIDTH       => NUM_PATTERNS,
-      REG_INPUT   => true,
+      REG_INPUT   => false,
       REG_OUTPUT  => true,
       REG_STAGES  => 2,
       DAT_BITS    => best_slv'length,
-      QLT_BITS    => PATTERN_SORTB,
-      IGNORE_BITS => STRIP_BITS + PARTITION_BITS,
+      QLT_BITS    => best_slv'length,
+      IGNORE_BITS => 0, -- 1 to ignore the bend of the pattern id, 2 and 3 are the same, 4, 5 are the same, etc
       ADR_BITS_o  => integer(ceil(log2(real(NUM_PATTERNS))))
       )
     port map (
@@ -278,12 +201,13 @@ begin
 
       dav_o <= priority_dav;
 
-      if (best.lc >= to_integer(unsigned(ly_thresh)) and
-          best.hc >= to_integer(unsigned(hit_thresh))) then
-        pat_o <= best;
+      if (best.lc >= to_integer(unsigned(ly_thresh))) then
+        pat_o.lc <= best.lc;
+        pat_o.id <= best.id;
       else
         pat_o <= zero(pat_o);
       end if;
+
     end if;
   end process;
 

@@ -21,7 +21,6 @@ def pat_mux(partition_data, partition, config : Config):
     """
 
     fn = lambda strip : pat_unit(extract_data_window(partition_data, strip, config.max_span),
-                                 hit_thresh = config.hit_thresh,
                                  ly_thresh = config.ly_thresh,
                                  strip=strip,
                                  partition=partition, 
@@ -53,7 +52,6 @@ def test_pat_mux():
 
     config = Config()
     config.ly_thresh=6
-    config.hit_thresh=6
     config.max_span=37
 
     mux = pat_mux(data, partition=0, config=config)

@@ -55,7 +55,6 @@ entity chamber is
     clock40           : in  std_logic;                     -- MUST BE  40MHZ
 
     ly_thresh         : in  std_logic_vector (2 downto 0); -- Layer threshold, 0 to 6
-    hit_thresh        : in  std_logic_vector (5 downto 0); -- Hit threshold
 
     dav_i             : in  std_logic;
     dav_o             : out std_logic;
@@ -169,7 +168,7 @@ begin
   chamber_pulse_extension_inst : entity work.chamber_pulse_extension
     generic map (LENGTH => PULSE_EXTEND)
     port map (
-      clock   => clock,
+      clock   => clock40,
       sbits_i => sbits_i,
       sbits_o => sbits_extend);
 
@@ -235,17 +234,16 @@ begin
     partition_inst : entity work.partition
       generic map (
         NUM_SEGMENTS  => NUM_SEGMENTS,
-        PARTITION_NUM => I,
         S0_WIDTH      => S0_WIDTH,
-        DEADTIME      => DEADTIME
-        )
+        DEADTIME      => DEADTIME)
       port map (
 
         clock => clock,
         dav_i => dav_or,
 
+        partition_num => I,
+
         ly_thresh  => ly_thresh,
-        hit_thresh => hit_thresh,
 
         -- primary layer
         partition_i => partition_or_reg,
@@ -271,7 +269,7 @@ begin
                                  vfat   : integer;
                                  seg    : integer) return boolean is
     begin
-      return seg_valid(segs(finder*NUM_SEGS_PER_PRT +
+      return valid(segs(finder*NUM_SEGS_PER_PRT +
                             vfat * NUM_SEGS_PER_PRT/3 + seg));
     end;
 
@@ -332,8 +330,9 @@ begin
         MODE        => "BITONIC",
         NUM_OUTPUTS => NUM_SEGMENTS,
         NUM_INPUTS  => NUM_SEGS_PER_PRT,
-        SORTB       => PATTERN_SORTB,
-        IGNOREB     => PARTITION_BITS)
+        SORTB       => segment_t'w,
+        IGNOREB     => PARTITION_BITS -- can ignore prt since this is intra-partition
+        )
       port map (
         clock  => clock,
         dav_i  => all_segs_dav(I),
@@ -350,7 +349,8 @@ begin
         MODE        => "BITONIC",
         NUM_INPUTS  => NUM_SEGMENTS*2,
         NUM_OUTPUTS => NUM_SEGMENTS,
-        SORTB       => PATTERN_SORTB)
+        SORTB       => segment_t'w
+        )
       port map (
         clock  => clock,
         dav_i  => one_prt_sorted_dav(I),
@@ -371,7 +371,8 @@ begin
       MODE        => "BITONIC",
       NUM_OUTPUTS => NUM_SEGMENTS,
       NUM_INPUTS  => two_prt_sorted_segs'length,
-      SORTB       => PATTERN_SORTB)
+      SORTB       => segment_t'w
+      )
     port map (
       clock  => clock,
       dav_i  => two_prt_sorted_dav(0),
