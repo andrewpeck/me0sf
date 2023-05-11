@@ -60,7 +60,6 @@ def process_chamber(chamber_data : List[List[int]], config : Config):
     # gather segments from each partition
     # this will return a 8 x N list of segments
 
-
     if config.x_prt_en:
 
         num_finders = 15
@@ -83,12 +82,12 @@ def process_chamber(chamber_data : List[List[int]], config : Config):
 
                 # otherwise look only in the +1 partition
                 else:
-                    data[finder][0] =                                chamber_data[finder//2][0]
-                    data[finder][1] =                                chamber_data[finder//2][1]
-                    data[finder][2] = chamber_data[finder//2+1][2] | chamber_data[finder//2][2]
-                    data[finder][3] = chamber_data[finder//2+1][3] | chamber_data[finder//2][3]
-                    data[finder][4] = chamber_data[finder//2+1][4]
-                    data[finder][5] = chamber_data[finder//2+1][5]
+                    data[finder][0] =                                chamber_data[finder//2+1][0]
+                    data[finder][1] =                                chamber_data[finder//2+1][1]
+                    data[finder][2] = chamber_data[finder//2][2]  |  chamber_data[finder//2+1][2]
+                    data[finder][3] = chamber_data[finder//2][3]  |  chamber_data[finder//2+1][3]
+                    data[finder][4] = chamber_data[finder//2][4]
+                    data[finder][5] = chamber_data[finder//2][5]
 
     else:
 
@@ -123,9 +122,11 @@ def process_chamber(chamber_data : List[List[int]], config : Config):
     # sort each partition and pick the best N outputs
     # pick the best N outputs from each partition
     segments = [ sorted(x, reverse=True)[:config.num_outputs] for x in segments]
-
+    
     # join each 2 partitions and pick the best N outputs from them
-    segments = [ x[0] + x[1] for x in zip(*[iter(segments)] * 2)]
+    joined_segments = [ x[0] + x[1] for x in zip(*[iter(segments)] * 2)]
+    joined_segments.append(segments[14])
+    segments = joined_segments
     segments = [ sorted(x, reverse=True)[:config.num_outputs] for x in segments]
 
     # concatenate together all of the segments, sort them, and pick the best N outputs

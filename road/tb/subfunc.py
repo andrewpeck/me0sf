@@ -2,6 +2,9 @@
 from itertools import islice
 from math import ceil, floor
 from typing import List
+import math
+
+LAYER_MASK = None
 
 class Config:
     ly_thresh : int = 4
@@ -17,6 +20,7 @@ class Config:
     num_outputs : int = 4
     check_ids : bool = False
     edge_distance : int = 2
+    num_or : int = 2
 
 
 class hi_lo_t:
@@ -160,10 +164,16 @@ def create_pat_ly(lower : float, upper : float):
             hi = upper*(i-2.5)
             lo = lower*(i-2.5)
 
+        if abs(hi) < 0.1:
+            hi = 0
+        if abs(lo) < 0.1:
+            lo = 0 
+
         layer_list[i] = hi_lo_t(ceil(hi), floor(lo))
 
     return layer_list
 
+# for PATLIST initialization process
 # true patlist; only used for testing pat_unit.vhd emulator
 pat_straight = patdef_t(19, create_pat_ly(-0.4, 0.4))
 pat_l = patdef_t(18, create_pat_ly(0.2, 0.9))
@@ -336,3 +346,5 @@ def test_find_centroid():
     assert find_centroid(0b101) == 2
     assert find_centroid(0b110) == 2.5
     assert find_centroid(0b111) == 2
+
+
