@@ -29,6 +29,7 @@ library ieee;
 use ieee.std_logic_1164.all;
 use ieee.std_logic_misc.all;
 use ieee.numeric_std.all;
+use ieee.math_real.all;
 
 entity chamber is
   generic (
@@ -98,8 +99,9 @@ architecture behavioral of chamber is
 
   constant NUM_FINDERS : integer := if_then_else (X_PRT_EN, 15, 8);
 
-  constant NUM_SELECTORS_S0 : natural := ((NUM_FINDERS+1)/2) / S1_REUSE;
-  constant NUM_SEGMENT_SELECTOR_INPUTS : natural := (NUM_FINDERS+1)/S1_REUSE*NUM_SEGMENTS*2;
+  -- use a CEIL here so that 15/2 -> 8 instead of 7..
+  -- otherwise the highest partition is dropped
+  constant NUM_FINDERS_DIV2 : integer := integer(ceil(real(NUM_FINDERS)/2.0));
 
   --------------------------------------------------------------------------------
   -- Extension
@@ -112,13 +114,10 @@ architecture behavioral of chamber is
   -- Segments
   --------------------------------------------------------------------------------
 
-  signal segs_to_selector : segment_list_t
-    ((NUM_PARTITIONS+1)/2*NUM_SEGMENTS-1 downto 0);
-
-  signal all_segs            : segment_list_t (NUM_FINDERS * NUM_SEGS_PER_PRT - 1 downto 0);
-  signal one_prt_sorted_segs : segment_list_t (NUM_FINDERS * NUM_SEGMENTS - 1 downto 0);
-  signal two_prt_sorted_segs : segment_list_t (NUM_FINDERS * NUM_SEGMENTS/2 - 1 downto 0);
-  signal final_segs          : segment_list_t (NUM_SEGMENTS - 1 downto 0);
+  signal all_segs            : segment_list_t (NUM_FINDERS * NUM_SEGS_PER_PRT - 1 downto 0)    := (others => null_pattern);  -- get all segments from each partition
+  signal two_prt_sorted_segs : segment_list_t (NUM_FINDERS_DIV2 * NUM_SEGMENTS - 1 downto 0)   := (others => null_pattern);  -- sort down to number of output segments for each 2 partitions
+  signal one_prt_sorted_segs : segment_list_t (NUM_FINDERS_DIV2*2 * NUM_SEGMENTS - 1 downto 0) := (others => null_pattern);  -- sort down to the number of output segments for each partition
+  signal final_segs          : segment_list_t (NUM_SEGMENTS - 1 downto 0)                      := (others => null_pattern);
 
   signal vfat_pretrigger       : std_logic_vector (3*NUM_PARTITIONS-1 downto 0);
   signal vfat_pretrigger_cross : std_logic_vector (3*NUM_PARTITIONS-1 downto 0);
@@ -129,8 +128,8 @@ architecture behavioral of chamber is
 
   signal all_segs_dav : std_logic_vector (NUM_FINDERS - 1 downto 0) := (others => '0');
 
-  signal one_prt_sorted_dav : std_logic_vector (NUM_FINDERS-1 downto 0)   := (others => '0');
-  signal two_prt_sorted_dav : std_logic_vector (NUM_FINDERS/2-1 downto 0) := (others => '0');
+  signal one_prt_sorted_dav : std_logic_vector (NUM_FINDERS-1 downto 0)      := (others => '0');
+  signal two_prt_sorted_dav : std_logic_vector (NUM_FINDERS_DIV2-1 downto 0) := (others => '0');
   signal final_segs_dav     : std_logic;
 
   signal muxout_dav : std_logic := '0';
@@ -138,15 +137,6 @@ architecture behavioral of chamber is
   signal outclk : std_logic := '0';
 
 begin
-
-  assert
-    (X_PRT_EN = false and S1_REUSE = 1 and NUM_SELECTORS_S0 = 4) or
-    (X_PRT_EN = false and S1_REUSE = 2 and NUM_SELECTORS_S0 = 2) or
-    (X_PRT_EN = false and S1_REUSE = 4 and NUM_SELECTORS_S0 = 1) or
-    (X_PRT_EN = true  and S1_REUSE = 1 and NUM_SELECTORS_S0 = 8) or
-    (X_PRT_EN = true  and S1_REUSE = 2 and NUM_SELECTORS_S0 = 4) or
-    (X_PRT_EN = true  and S1_REUSE = 4 and NUM_SELECTORS_S0 = 2)
-    report "Error in NUM_SELECTORS_S0 calculation" severity error;
 
   assert S1_REUSE = 1 or S1_REUSE = 2 or S1_REUSE = 4
     report "Only allowed values for s1 reuse are 1,2, and 4"
@@ -331,7 +321,7 @@ begin
         NUM_OUTPUTS => NUM_SEGMENTS,
         NUM_INPUTS  => NUM_SEGS_PER_PRT,
         SORTB       => segment_t'w,
-        IGNOREB     => PARTITION_BITS -- can ignore prt since this is intra-partition
+        IGNOREB     => PARTITION_BITS   -- can ignore prt since this is intra-partition
         )
       port map (
         clock  => clock,
@@ -342,7 +332,7 @@ begin
         );
   end generate;
 
-  dipartition_sorter : for I in 0 to NUM_FINDERS/2-1 generate
+  dipartition_sorter : for I in 0 to NUM_FINDERS_DIV2-1 generate
   begin
     segment_selector_inst : entity work.segment_selector
       generic map (
@@ -353,7 +343,7 @@ begin
         )
       port map (
         clock  => clock,
-        dav_i  => one_prt_sorted_dav(I),
+        dav_i  => one_prt_sorted_dav(I*2),
         dav_o  => two_prt_sorted_dav(I),
         segs_i => one_prt_sorted_segs((I+1)*2*NUM_SEGMENTS-1 downto I*2*NUM_SEGMENTS),
         segs_o => two_prt_sorted_segs((I+1)*NUM_SEGMENTS-1 downto I*NUM_SEGMENTS)
