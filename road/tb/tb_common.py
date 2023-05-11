@@ -8,9 +8,9 @@ from pat_unit_beh import calculate_global_layer_mask
 from subfunc import *
 
 
-def setup(dut):
+def setup(dut, max_span=37):
 
-    calculate_global_layer_mask(get_patlist_from_dut(dut))
+    calculate_global_layer_mask(get_patlist_from_dut(dut), max_span)
 
     # set layer count threshold
     dut.ly_thresh.value = 4
