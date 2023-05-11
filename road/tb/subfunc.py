@@ -4,6 +4,8 @@ from math import ceil, floor
 from typing import List
 import math
 
+LAYER_MASK = None
+
 class Config:
     ly_thresh : int = 4
     max_span : int = 37
