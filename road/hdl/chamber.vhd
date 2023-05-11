@@ -200,12 +200,12 @@ begin
 
         -- look for only straight and pointing segments (for cms)
         pointing : if (not EN_NON_POINTING) generate
-          partition_or(0) <=                             sbits_extend(I/2)(0);
-          partition_or(1) <=                             sbits_extend(I/2)(1);
-          partition_or(2) <= sbits_extend(I/2 + 1)(2) or sbits_extend(I/2)(2);
-          partition_or(3) <= sbits_extend(I/2 + 1)(3) or sbits_extend(I/2)(3);
-          partition_or(4) <= sbits_extend(I/2 + 1)(4);
-          partition_or(5) <= sbits_extend(I/2 + 1)(5);
+          partition_or(0) <=                         sbits_extend(I/2 + 1)(0);
+          partition_or(1) <=                         sbits_extend(I/2 + 1)(1);
+          partition_or(2) <= sbits_extend(I/2)(2) or sbits_extend(I/2 + 1)(2);
+          partition_or(3) <= sbits_extend(I/2)(3) or sbits_extend(I/2 + 1)(3);
+          partition_or(4) <= sbits_extend(I/2)(4);
+          partition_or(5) <= sbits_extend(I/2)(5);
         end generate;
 
         -- look for both x-partition segments toward the IP and away
