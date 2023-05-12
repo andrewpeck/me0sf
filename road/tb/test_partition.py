@@ -46,6 +46,7 @@ async def partition_test(dut, NLOOPS=1000, test="SEGMENTS"):
 
     config = Config()
     config.width = 192
+    config.skip_centroids = True
     config.max_span = get_max_span_from_dut(dut)
     config.width = dut.pat_unit_mux_inst.WIDTH.value
     config.group_width = dut.S0_WIDTH.value

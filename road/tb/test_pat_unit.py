@@ -111,6 +111,7 @@ async def pat_unit_test(dut, test="SEGMENTS"):
         sw_segment = pat_unit(data=data, strip=0,
                               ly_thresh=LY_THRESH,
                               partition=0,
+                              skip_centroids=True,
                               light_hit_count=True)
 
         fw_segment = get_segment_from_pat_unit(dut)

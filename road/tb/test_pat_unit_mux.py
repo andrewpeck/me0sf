@@ -55,6 +55,7 @@ async def pat_unit_mux_test(dut, NLOOPS=500, test="WALKING1"):
     LATENCY = int(ceil(dut.LATENCY.value/8.0))
 
     config = Config()
+    config.skip_centroids = True
     config.max_span=get_max_span_from_dut(dut)
     config.ly_thresh=6
     config.width=dut.WIDTH.value

@@ -65,6 +65,7 @@ async def chamber_test(dut, test, nloops=512, verbose=False):
 
     config = Config()
 
+    config.skip_centroids = True
     config.x_prt_en = dut.X_PRT_EN.value
     config.en_non_pointing = dut.EN_NON_POINTING.value
     config.max_span = get_max_span_from_dut(dut)
