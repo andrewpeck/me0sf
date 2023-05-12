@@ -125,7 +125,8 @@ def process_chamber(chamber_data : List[List[int]], config : Config):
     
     # join each 2 partitions and pick the best N outputs from them
     joined_segments = [ x[0] + x[1] for x in zip(*[iter(segments)] * 2)]
-    joined_segments.append(segments[14])
+    if (len(segments)==15):
+        joined_segments.append(segments[14])
     segments = joined_segments
     segments = [ sorted(x, reverse=True)[:config.num_outputs] for x in segments]
 
