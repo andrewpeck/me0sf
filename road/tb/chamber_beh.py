@@ -134,3 +134,49 @@ def process_chamber(chamber_data : List[List[int]], config : Config):
     segments = sorted(segments, reverse=True)[:config.num_outputs]
 
     return segments
+
+
+def test_chamber_beh():
+
+    config = Config()
+
+    config.num_or = 2
+    config.x_prt_en = True
+    config.en_non_pointing = False
+    config.max_span = 37
+    config.width = 192
+    config.deghost_pre = False
+    config.deghost_post = False
+    config.group_width = 8
+    config.num_outputs= 4
+    config.ly_thresh = 4
+    config.cross_part_seg_width = 0
+    config.skip_centroids = True
+
+    null = lambda : [[0 for _ in range(6)] for _ in range(8)]
+
+    for iprt in range(8):
+        print(f"Partition={iprt}:")
+        for istrip in range(192):
+
+            print(f"Strip={istrip}:")
+
+            data = null()
+
+            for ly in range(6):
+                data[iprt][ly] = 1<<istrip
+
+            segments = process_chamber(chamber_data=data, config=config)
+            if (config.x_prt_en==True):
+                assert segments[0].partition == iprt*2
+            else:
+                assert segments[0].partition == iprt
+            assert segments[0].lc == 6
+            assert segments[0].id == 19
+            assert segments[0].strip == istrip or  \
+                segments[0].strip == istrip+1
+
+            print(" > " + str(segments[0]))
+
+if __name__=="__main__":
+    test_chamber_beh()

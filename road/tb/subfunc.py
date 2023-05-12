@@ -7,6 +7,7 @@ import math
 LAYER_MASK = None
 
 class Config:
+    skip_centroids : bool = False
     ly_thresh : int = 4
     max_span : int = 37
     width : int = 192

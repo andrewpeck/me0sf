@@ -84,9 +84,7 @@ def calculate_hit_count(masked_data : List[int], light : bool = False) -> int:
 
     if light:
         enabled_layers = [0,5]
-        hcs = [min(7,count_ones(hits)) if ly in enabled_layers else 0 for (ly,hits) in enumerate(masked_data)]
-        hc = sum(hcs)
-        return hc
+        return sum([min(7,count_ones(hits)) if ly in enabled_layers else 0 for (ly,hits) in enumerate(masked_data)])
     else:
         return sum([count_ones(x) for x in masked_data])
 
@@ -101,7 +99,8 @@ def pat_unit(data,
              input_max_span : int = 37,
              num_or : int = 2,
              light_hit_count : bool = True,
-             verbose : bool = False):
+             verbose : bool = False,
+             skip_centroids : bool = True):
 
     # construct the dynamic_patlist (we do not use default PATLIST anymore)
     # for robustness concern, other codes might use PATLIST, so we kept the default PATLIST in subfunc
@@ -182,7 +181,10 @@ def pat_unit(data,
     pids = [x.id for x in LAYER_MASK]
 
     # (4) process centroids
-    centroids = [calculate_centroids(x) for x in masked_data]
+    if skip_centroids:
+        centroids = [[0 for _ in range(6)] for _ in range(len(masked_data))]
+    else:
+        centroids = [calculate_centroids(x) for x in masked_data]
 
     # (5) process segments
     seg_list = [Segment(lc=lc,
