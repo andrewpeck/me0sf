@@ -49,7 +49,7 @@ def print_slope(slope, intercept, key_strip, m, b, key_s):
 async def fit_tb(dut, NLOOPS=10000):
     """Test for priority encoder with randomized data on all inputs"""
 
-    cocotb.fork(Clock(dut.clock, 20, units="ns").start())  # Create a clock
+    cocotb.start_soon(Clock(dut.clock, 20, units="ns").start())  # Create a clock
 
     intercept_fracb = dut.B_FRAC_BITS.value
     slope_fracb = dut.M_FRAC_BITS.value

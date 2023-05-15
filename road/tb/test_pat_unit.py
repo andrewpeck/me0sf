@@ -54,7 +54,7 @@ async def pat_unit_test(dut, test="SEGMENTS"):
 
     setup(dut)
 
-    cocotb.fork(monitor_dav(dut,LATENCY))
+    cocotb.start_soon(monitor_dav(dut,LATENCY))
 
     # zero the inputs
     set_dut_inputs(dut, [0] * 6)

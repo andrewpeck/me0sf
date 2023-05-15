@@ -52,9 +52,9 @@ async def phase_check(dut):
 @cocotb.test()
 async def dav_to_phase_tb(dut):
     ""
-    cocotb.fork(Clock(dut.clock, 20, units="ns").start())  # Create a clock
-    cocotb.fork(gen_dav(dut))
-    cocotb.fork(phase_check(dut))
+    cocotb.start_soon(Clock(dut.clock, 20, units="ns").start())  # Create a clock
+    cocotb.start_soon(gen_dav(dut))
+    cocotb.start_soon(phase_check(dut))
 
     print("DIV=%d" % dut.DIV.value)
     print("=" * 80)

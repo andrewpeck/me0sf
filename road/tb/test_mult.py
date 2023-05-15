@@ -13,7 +13,7 @@ from cocotb.triggers import RisingEdge
 async def fit_mult(dut):
     """Test for priority encoder with randomized data on all inputs"""
 
-    cocotb.fork(Clock(dut.clock, 20, units="ns").start())  # Create a clock
+    cocotb.start_soon(Clock(dut.clock, 20, units="ns").start())  # Create a clock
 
     A = dut.WIDTH_A.value
     B = dut.WIDTH_B.value
