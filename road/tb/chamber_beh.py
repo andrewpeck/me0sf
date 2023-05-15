@@ -1,6 +1,8 @@
 # Emulator for chamber.vhd
 import functools
+import multiprocessing.pool
 import operator
+from itertools import repeat
 from typing import List
 
 from partition_beh import process_partition
@@ -93,13 +95,10 @@ def process_chamber(chamber_data : List[List[int]], config : Config):
 
         data = chamber_data
 
-    # for (i,prt) in enumerate(data):
-    #     print(f"{i}" + str(prt))
+    datazip  = zip(data, range(len(data)), repeat(config))
 
-    segments = [process_partition(partition_data = prt_data,
-                                  partition = partition,
-                                  config = config)
-        for (partition, prt_data) in enumerate(data)]
+    with multiprocessing.pool.Pool() as pool:
+        segments = pool.starmap(process_partition, datazip)
 
     # print("Outputs from process partition (raw)")
     # for prt in segments:
