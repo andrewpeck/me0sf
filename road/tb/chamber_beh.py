@@ -2,7 +2,8 @@
 import functools
 import multiprocessing.pool
 import operator
-from itertools import repeat
+import os
+from itertools import repeat, starmap
 from typing import List
 
 from partition_beh import process_partition
@@ -97,8 +98,19 @@ def process_chamber(chamber_data : List[List[int]], config : Config):
 
     datazip  = zip(data, range(len(data)), repeat(config))
 
-    with multiprocessing.pool.Pool() as pool:
-        segments = pool.starmap(process_partition, datazip)
+    # for some reason multi-processing fails with questasim, generating an error
+    # such as:
+    #
+    # Warning: (vsim-7) Failed to open process file
+    # "/proc/self/task/1494057/stat" in read mode. # No such file or directory.
+    #
+    # (errno = ENOENT)
+
+    if "SIM" in os.environ and os.environ["SIM"] == "questa":
+        segments = starmap(process_partition, datazip)
+    else:
+        with multiprocessing.pool.Pool() as pool:
+            segments = pool.starmap(process_partition, datazip)
 
     # print("Outputs from process partition (raw)")
     # for prt in segments:
