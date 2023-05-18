@@ -43,7 +43,6 @@ async def pat_unit_test(dut, test="SEGMENTS"):
     LY_CNT = 6
     N_NOISE = 1
     LY_THRESH = 4
-    LATENCY = dut.LATENCY.value
 
     #--------------------------------------------------------------------------------
     #
@@ -59,7 +58,6 @@ async def pat_unit_test(dut, test="SEGMENTS"):
     MAX_SPAN = get_max_span_from_dut(dut)
 
     setup(dut)
-    cocotb.start_soon(monitor_dav(dut,LATENCY))
 
     #--------------------------------------------------------------------------------
     # Measure Latency
@@ -85,6 +83,7 @@ async def pat_unit_test(dut, test="SEGMENTS"):
     assert meas_latency != -1, print("Couldn't measure pat_unit latency. Never saw a pattern!")
 
     LATENCY = int(meas_latency*8)
+    cocotb.start_soon(monitor_dav(dut,LATENCY))
 
     #-------------------------------------------------------------------------------
     #
