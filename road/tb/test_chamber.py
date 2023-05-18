@@ -54,7 +54,7 @@ async def chamber_test(dut, test, nloops=512, verbose=False):
     Test the chamber.vhd module
     '''
 
-    random.seed(56) # chloe's favorite number
+    #random.seed(56) # chloe's favorite number
 
     # setup the dut and extract constants from it
     setup(dut)
