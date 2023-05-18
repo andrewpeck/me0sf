@@ -1,3 +1,5 @@
+# TODO: test the deadzone logic
+
 import os
 from math import ceil
 
@@ -47,21 +49,58 @@ async def pat_unit_mux_test(dut, NLOOPS=500, test="WALKING1"):
 
     "Test the pat_unix_mux.vhd module"
 
+    #--------------------------------------------------------------------------------
+    # Setup and Flush the Pipeline
+    #--------------------------------------------------------------------------------
+
     setup(dut)
 
+    set_dut_inputs(dut, [0 for _ in range(6)])
 
-    await RisingEdge(dut.clock)
+    for _ in range(64):
+        await RisingEdge(dut.clock)
 
-    LATENCY = int(ceil(dut.LATENCY.value/8.0))
+    #--------------------------------------------------------------------------------
+    # Configuration
+    #--------------------------------------------------------------------------------
 
     config = Config()
     config.skip_centroids = True
     config.max_span=get_max_span_from_dut(dut)
     config.ly_thresh=6
     config.width=dut.WIDTH.value
-
     dut.ly_thresh.value = config.ly_thresh
+
+    #--------------------------------------------------------------------------------
+    # Measure Latency
+    #--------------------------------------------------------------------------------
+
+    meas_latency=-1
+
+    # align to the dav input
+    await RisingEdge(dut.dav_i)
+    for _ in range(8):
+        await RisingEdge(dut.clock)
+    set_dut_inputs(dut, [1 for _ in range(6)])
+
+    for i in range(128):
+        # extract latency
+        await RisingEdge(dut.clock)
+        if dut.segments_o[0].lc.value.is_resolvable and \
+           dut.segments_o[0].lc.value.integer > 0:
+            meas_latency = i/8.0
+            print(f"Latency={i} clocks ({meas_latency} bx)")
+            break
+
+    assert meas_latency != -1, print("Couldn't measure pat_unit_mux latency. Never saw a pattern!")
+
+    LATENCY = ceil(meas_latency)
+
     set_dut_inputs(dut, [0 for _ in range(6)])
+
+    #--------------------------------------------------------------------------------
+    # Setup a fixed latency queue
+    #--------------------------------------------------------------------------------
 
     # flush the pipeline for a few clocks
     for _ in range(32):
@@ -70,14 +109,16 @@ async def pat_unit_mux_test(dut, NLOOPS=500, test="WALKING1"):
     strip_cnts = []
     id_cnts = []
 
-    # set up a fixed latency queue
     queue = []
-    for _ in range(LATENCY+1):
+    for _ in range(LATENCY):
         queue.append([0 for _ in range(6)])
 
     await RisingEdge(dut.dav_i) # align to the dav_i
 
-    # loop over some number of test cases
+    #--------------------------------------------------------------------------------
+    # Event Loop
+    #--------------------------------------------------------------------------------
+
     i = 0
     while i < NLOOPS:
 
