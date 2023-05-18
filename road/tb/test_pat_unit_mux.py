@@ -54,6 +54,7 @@ async def pat_unit_mux_test(dut, NLOOPS=500, test="WALKING1"):
     #--------------------------------------------------------------------------------
 
     setup(dut)
+    cocotb.start_soon(monitor_dav(dut))
 
     set_dut_inputs(dut, [0 for _ in range(6)])
 
