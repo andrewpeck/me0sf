@@ -2,17 +2,11 @@
 
 import os
 
-from cocotb_test.simulator import run
-
 import cocotb
 from cocotb.clock import Clock
 from cocotb.triggers import RisingEdge
-import random
-import math
-import pytest
+from cocotb_test.simulator import run
 
-def princ(string):
-    print(string, end="")
 
 async def gen_dav(dut):
     "Generates a DAV signal every 8 clock cycles"
@@ -25,33 +19,47 @@ async def gen_dav(dut):
 
 async def phase_check(dut):
 
-    # lock on
-    for _ in range(15):
-        await RisingEdge(dut.clock)
+    "Check that the phase is as expected by monitoring the DAV signal."
 
-    cnt = 0
     div = dut.DIV.value
     dly = dut.DLY.value
-    while True:
+    max = dut.MAX.value
+    cnt = 0
+
+    # lock on
+    for _ in range(16):
+
         await RisingEdge(dut.clock)
 
-        cnt = cnt + 1
-
-        if dut.dav.value == 1:
+        if dut.dav == 1:
             cnt = 0
-        if cnt == dut.MAX.value:
+        elif cnt == max-1:
             cnt = 0
+        else:
+            cnt = cnt + 1
 
-        expect = ((cnt + dly) % 8) // div
-        #print(expect)
-        OK = "OK" if expect == dut.phase_o.value else "BAD"
-        print("DIV=%d DLY=%d CNT=%d, DAV=%d PHASE=%d (expect=%d) %s" % (div, dly, cnt, dut.dav.value, dut.phase_o.value, expect, OK))
-        #assert dut.phase_o.value == expect
+    while True:
+
+        expect = ((cnt + dly) % 8)
+        phase = dut.phase_o.value
+
+        OK = "OK" if expect == phase else "BAD"
+        print("DIV=%d DLY=%d CNT=%d, DAV=%d PHASE=%d (expect=%d) %s" % \
+              (div, dly, cnt, dut.dav.value, phase, expect, OK))
+        assert dut.phase_o.value == expect
+
+        if cnt == max-1:
+            cnt = 0
+        else:
+            cnt = cnt + 1
+
+        await RisingEdge(dut.clock)
+
 
 
 @cocotb.test()
-async def dav_to_phase_tb(dut):
-    ""
+async def dav_to_phase_test(dut):
+
     cocotb.start_soon(Clock(dut.clock, 20, units="ns").start())  # Create a clock
     cocotb.start_soon(gen_dav(dut))
     cocotb.start_soon(phase_check(dut))
@@ -59,35 +67,17 @@ async def dav_to_phase_tb(dut):
     print("DIV=%d" % dut.DIV.value)
     print("=" * 80)
 
-    for _ in range(60):
+    for _ in range(128):
         await RisingEdge(dut.clock)
 
-    #     dav = dut.dav.value
-    #     phase = dut.phase_o.value
-
-        # OK = "OK"
-        # if (dut.DIV == 1):
-        #     if (dav == 1 and phase != 0):
-        #         assert False, "dav error with div0"
-        #         OK = "BAD"
-
-        # if (dut.DIV == 2):
-
-        # if (dut.DIV == 4):
-
-        # if (dut.DIV == 8):
-        #     assert phase == 0
-
-        # print("%d %d %s" % (dav, phase, OK))
-
-
-@pytest.mark.parametrize("div", [1, 2, 4, 8])
-@pytest.mark.parametrize("dly", [0, 1, 4])
+#@pytest.mark.parametrize("div", [1, 2, 4, 8])
+#@pytest.mark.parametrize("dly", [0, 1, 4])
 def test_dav_to_phase(div, dly):
 
     tests_dir = os.path.abspath(os.path.dirname(__file__))
     rtl_dir = os.path.abspath(os.path.join(tests_dir, '..', 'hdl'))
     module = os.path.splitext(os.path.basename(__file__))[0]
+    print(f'{module=}')
 
     vhdl_sources = [os.path.join(rtl_dir, "dav_to_phase.vhd")]
 
@@ -96,20 +86,19 @@ def test_dav_to_phase(div, dly):
     parameters["DIV"] = div
     parameters["DLY"] = dly
 
-    os.environ["SIM"] = "ghdl"
+    os.environ["SIM"] = "questa"
 
-    run(
-        vhdl_sources=vhdl_sources,
+    run(vhdl_sources=vhdl_sources,
         module=module,       # name of cocotb test module
         toplevel="dav_to_phase",            # top level HDL
         toplevel_lang="vhdl",
         parameters=parameters,
-        gui=0
-    )
+        gui=0)
 
 
 if __name__ == "__main__":
-    for dly in [0, 1, 4, 7]:
-        for div in [1, 2, 4, 8]:
-        #for div in [1]:
-            test_dav_to_phase(div, dly)
+    # for dly in [0, 1, 4, 7]:
+    #     for div in [1, 2, 4, 8]:
+    #     #for div in [1]:
+    #         test_dav_to_phase(div, dly)
+    test_dav_to_phase(div=1, dly=0)

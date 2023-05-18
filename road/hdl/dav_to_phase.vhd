@@ -78,11 +78,11 @@ begin
           end loop;
         end if;
       end process;
-      dav_dly <= delay(DLY-1) after 0.1 ns;
+      dav_dly <= delay(DLY-1);
     end generate;
 
     dav_nodly_gen : if (DLY=0) generate
-      dav_dly <= dav after 0.1 ns;
+      dav_dly <= dav;
     end generate;
 
     process (clock) is
