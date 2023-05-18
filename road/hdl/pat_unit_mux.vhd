@@ -237,9 +237,9 @@ begin
 
       -- unfold the pattern unit multiplexer and assign the strip number
       for I in 0 to NUM_SECTORS-1 loop
-        strips_reg(I*MUX_FACTOR+patterns_mux_phase).id        <= patterns_mux(I).id;
-        strips_reg(I*MUX_FACTOR+patterns_mux_phase).lc        <= patterns_mux(I).lc;
-        strips_reg(I*MUX_FACTOR+patterns_mux_phase).strip     <= to_unsigned(I*MUX_FACTOR+patterns_mux_phase, STRIP_BITS);
+        strips_reg(I*MUX_FACTOR+patterns_mux_phase).id    <= patterns_mux(I).id;
+        strips_reg(I*MUX_FACTOR+patterns_mux_phase).lc    <= patterns_mux(I).lc;
+        strips_reg(I*MUX_FACTOR+patterns_mux_phase).strip <= to_unsigned(I*MUX_FACTOR+patterns_mux_phase, STRIP_BITS);
       end loop;
 
       -- copy the unfolded outputs to be stable for a 25 ns clock period since
