@@ -5,7 +5,17 @@
 -- A. Peck, A. Datta, C. Grubb, J. Chismar
 ----------------------------------------------------------------------------------
 -- Description:
+--
+-- The pattern unit is the most fundamental element of the ME0 Road Based
+-- Pattern Finder. It is instantiated around a single strip, and looks for the
+-- best candidate pattern that can be identified on that strip.
+--
+-- Because this module is so heavily replicated, great care must be taken in
+-- making modifications, since small changes in resource usage will have huge
+-- ramifications for overall firmware usage.
+--
 ----------------------------------------------------------------------------------
+
 library ieee;
 use ieee.std_logic_1164.all;
 use ieee.std_logic_misc.all;
@@ -147,14 +157,14 @@ begin
     -- pattern id
     pats(I).id <= to_unsigned(patlist(I).id, PID_BITS);
 
-    process (clock) is
-    begin
-      if (rising_edge(clock)) then
-        pats_dav <= dav_i;
-      end if;
-    end process;
-
   end generate;
+
+  process (clock) is
+  begin
+    if (rising_edge(clock)) then
+      pats_dav <= dav_i;
+    end if;
+  end process;
 
   --------------------------------------------------------------------------------
   -- Choose the best 1 of N possible segments
