@@ -24,7 +24,8 @@ def pat_mux(partition_data, partition, config : Config):
                                  ly_thresh = config.ly_thresh,
                                  strip=strip,
                                  partition=partition, 
-                                 input_max_span = config.max_span, 
+                                 input_max_span = config.max_span,
+                                 skip_centroids = config.skip_centroids,
                                  num_or = config.num_or)
 
     return [fn(x) for x in range(config.width)]

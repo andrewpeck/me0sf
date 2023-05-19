@@ -20,6 +20,7 @@ jobs:
           - road/tb/pat_unit_beh.py
           - road/tb/pat_unit_mux_beh.py
           - road/tb/partition_beh.py
+          - road/tb/chamber_beh.py
           - road/tb/analysis_mc.py
     steps:
 
@@ -50,3 +51,20 @@ jobs:
 
       - name: Test Firmware Module
         run: python ${{ matrix.testbenches }}
+
+  synth:
+    runs-on: self-hosted
+    strategy:
+      fail-fast: false
+      matrix:
+        testbenches:
+          - synth_pat_unit
+          - synth_chamber
+    steps:
+
+      - uses: actions/checkout@v2
+        with:
+          submodules: 'true'
+
+      - name: Synthesize Firmware
+        run: make -C road/hdl ${{ matrix.testbenches }}

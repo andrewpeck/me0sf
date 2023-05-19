@@ -5,6 +5,18 @@
 -- A. Peck, A. Datta, C. Grubb, J. Chismar
 ----------------------------------------------------------------------------------
 -- Description:
+--
+-- The "segment selector" is simply a wrapper than instantiates a bitonic
+-- sorter. It converts between the segment_t type into the std_logic_vectors
+-- required by the bitonic sorter. It also has optional INPUT and OUTPUT
+-- registers that can be configured by generics.
+--
+-- NUM_OUTPUTS can be set to a number less than NUM_INPUTS and it will operate
+-- as a funnel and output only the best NUM_OUTPUTs segments.
+--
+-- SORTB and IGNOREB configure the # of bits that are used as sorting keys.
+-- From the datafield, the sorting key is DATA(SORTB-1 downto IGNOREB).
+--
 ----------------------------------------------------------------------------------
 library ieee;
 use ieee.std_logic_1164.all;
@@ -22,7 +34,9 @@ entity segment_selector is
     NUM_INPUTS  : natural := 32;
     NUM_OUTPUTS : natural := 32;
     SORTB       : natural := 1;
-    IGNOREB     : natural := 0
+    IGNOREB     : natural := 0;
+    REG_INPUTS  : boolean := true;
+    REG_OUTPUTS : boolean := true
     );
   port(
     clock  : in  std_logic;
@@ -57,15 +71,26 @@ begin
     signal segs_o_slv : cand_o_array_t;
     signal dav_i_r : std_logic := '0';
     signal dav_o_r : std_logic := '0';
+
   begin
 
     assert NUM_INPUTS >= NUM_OUTPUTS
       report "Width of segment selector must be >= # of inputs" severity error;
 
-    process (clock) is
+    --------------------------------------------------------------------------------
+    -- Input / Output Registers
+    --------------------------------------------------------------------------------
+
+    process (clock, dav_i) is
     begin
-      if (rising_edge(clock)) then
+      if (not REG_INPUTS or rising_edge(clock)) then
         dav_i_r <= dav_i;
+      end if;
+    end process;
+
+    process (clock, dav_o_r) is
+    begin
+      if (not REG_OUTPUTS or rising_edge(clock)) then
         dav_o   <= dav_o_r;
       end if;
     end process;
@@ -75,9 +100,9 @@ begin
       constant bitlo : natural := I*BITS;
       signal sl      : std_logic_vector (bithi-bitlo - 1 downto 0);
     begin
-      process (clock) is
+      process (clock, segs_i) is
       begin
-        if (rising_edge(clock)) then
+        if (not REG_INPUTS or rising_edge(clock)) then
           segs_i_slv(bithi-1 downto bitlo) <= convert(segs_i(I), sl);
         end if;
       end process;
@@ -86,13 +111,17 @@ begin
     -- Select a subset of outputs from the sorter
     outloop : for I in 0 to NUM_OUTPUTS-1 generate
     begin
-      process (clock) is
+      process (clock, segs_o_slv) is
       begin
-        if (rising_edge(clock)) then
+        if (not REG_OUTPUTS or rising_edge(clock)) then
           segs_o(I) <= convert(segs_o_slv((I+1)*BITS-1 downto I*BITS), segs_o(I));
         end if;
       end process;
     end generate;
+
+    --------------------------------------------------------------------------------
+    -- Sorter
+    --------------------------------------------------------------------------------
 
     assert SORTB <= BITS report "Sort bits must be <= bits"
                     & " DATA_BITS=" & integer'image(BITS)

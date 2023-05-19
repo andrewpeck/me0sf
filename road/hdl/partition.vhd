@@ -19,8 +19,6 @@ use work.priority_encoder_pkg.all;
 entity partition is
   generic(
 
-    LATENCY : integer := PARTITION_LATENCY;
-
     NUM_SEGMENTS   : integer := 4;
     PRT_WIDTH      : natural := PRT_WIDTH;  -- width of the partition (192)
     S0_WIDTH       : natural := 8;          -- width of the pre-sorting regions
