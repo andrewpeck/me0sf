@@ -126,6 +126,89 @@ architecture behavioral of hit_count is
     end case;
   end;
 
+  --------------------------------------------------------------------------------
+  --  prodcedural function to sum number of layers hit into a binary value - rom version
+  --  returns   count6 = (inp[5]+inp[4]+inp[3])+(inp[2]+inp[1]+inp[0]);
+  --
+  --  compared to using a more obvious implementation, this function reduced the
+  --  resource usage of the pattern unit by 13 LUTs.. ~20,000 LUTs total
+  --  reduction by helping the synth tool. Uhg.
+  --
+  --------------------------------------------------------------------------------
+
+  function count6 (x : std_logic_vector(5 downto 0))
+    return unsigned is
+  begin
+    case(x) is
+      when "000000" => return to_unsigned(0, 3);
+      when "000001" => return to_unsigned(1, 3);
+      when "000010" => return to_unsigned(1, 3);
+      when "000011" => return to_unsigned(2, 3);
+      when "000100" => return to_unsigned(1, 3);
+      when "000101" => return to_unsigned(2, 3);
+      when "000110" => return to_unsigned(2, 3);
+      when "000111" => return to_unsigned(3, 3);
+      when "001000" => return to_unsigned(1, 3);
+      when "001001" => return to_unsigned(2, 3);
+      when "001010" => return to_unsigned(2, 3);
+      when "001011" => return to_unsigned(3, 3);
+      when "001100" => return to_unsigned(2, 3);
+      when "001101" => return to_unsigned(3, 3);
+      when "001110" => return to_unsigned(3, 3);
+      when "001111" => return to_unsigned(4, 3);
+      when "010000" => return to_unsigned(1, 3);
+      when "010001" => return to_unsigned(2, 3);
+      when "010010" => return to_unsigned(2, 3);
+      when "010011" => return to_unsigned(3, 3);
+      when "010100" => return to_unsigned(2, 3);
+      when "010101" => return to_unsigned(3, 3);
+      when "010110" => return to_unsigned(3, 3);
+      when "010111" => return to_unsigned(4, 3);
+      when "011000" => return to_unsigned(2, 3);
+      when "011001" => return to_unsigned(3, 3);
+      when "011010" => return to_unsigned(3, 3);
+      when "011011" => return to_unsigned(4, 3);
+      when "011100" => return to_unsigned(3, 3);
+      when "011101" => return to_unsigned(4, 3);
+      when "011110" => return to_unsigned(4, 3);
+      when "011111" => return to_unsigned(5, 3);
+      when "100000" => return to_unsigned(1, 3);
+      when "100001" => return to_unsigned(2, 3);
+      when "100010" => return to_unsigned(2, 3);
+      when "100011" => return to_unsigned(3, 3);
+      when "100100" => return to_unsigned(2, 3);
+      when "100101" => return to_unsigned(3, 3);
+      when "100110" => return to_unsigned(3, 3);
+      when "100111" => return to_unsigned(4, 3);
+      when "101000" => return to_unsigned(2, 3);
+      when "101001" => return to_unsigned(3, 3);
+      when "101010" => return to_unsigned(3, 3);
+      when "101011" => return to_unsigned(4, 3);
+      when "101100" => return to_unsigned(3, 3);
+      when "101101" => return to_unsigned(4, 3);
+      when "101110" => return to_unsigned(4, 3);
+      when "101111" => return to_unsigned(5, 3);
+      when "110000" => return to_unsigned(2, 3);
+      when "110001" => return to_unsigned(3, 3);
+      when "110010" => return to_unsigned(3, 3);
+      when "110011" => return to_unsigned(4, 3);
+      when "110100" => return to_unsigned(3, 3);
+      when "110101" => return to_unsigned(4, 3);
+      when "110110" => return to_unsigned(4, 3);
+      when "110111" => return to_unsigned(5, 3);
+      when "111000" => return to_unsigned(3, 3);
+      when "111001" => return to_unsigned(4, 3);
+      when "111010" => return to_unsigned(4, 3);
+      when "111011" => return to_unsigned(5, 3);
+      when "111100" => return to_unsigned(4, 3);
+      when "111101" => return to_unsigned(5, 3);
+      when "111110" => return to_unsigned(5, 3);
+      when "111111" => return to_unsigned(6, 3);
+      when others   => assert false report "Missing case in count6" severity error;
+    end case;
+
+  end;
+
 begin
 
   process (clk) is
@@ -139,12 +222,12 @@ begin
                         -- count_ones(ly4) +
                         hc_quality(count_ones(ly5)), HCB);
 
-      lc <= to_unsigned(count_ones(or_reduce(ly0) &
-                                   or_reduce(ly1) &
-                                   or_reduce(ly2) &
-                                   or_reduce(ly3) &
-                                   or_reduce(ly4) &
-                                   or_reduce(ly5)), LCB);
+      lc <= count6(or_reduce(ly0) &
+                   or_reduce(ly1) &
+                   or_reduce(ly2) &
+                   or_reduce(ly3) &
+                   or_reduce(ly4) &
+                   or_reduce(ly5));
 
     end if;
   end process;
