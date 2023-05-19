@@ -1,4 +1,4 @@
-set UTIL_MAX 376
+set UTIL_MAX 359
 
 read_vhdl -vhdl2008 -library work {
     pat_types.vhd
