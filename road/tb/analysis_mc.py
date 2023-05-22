@@ -337,7 +337,7 @@ def analysis(root_dat, hits, bx, bx_list, cross_part, verbose, pu, num_or):
             #    if seg_chamber_nr[i] != chamber_nr:
             #        continue
             #    if verbose:
-            #        file_out.write("  Offline Segment in Chamber (0-17 for region -1, 18-35 for region 1) %d\n: "%chamber_nr)
+            #        file_out.write("  Offline Segment in Chamber (0-17 for region -1, 18-35 for region 1) %d:\n "%chamber_nr)
             #        file_out.write("     Eta Partition = %d, Center Strip = %.4f, Bending angle = %.4f, Hit count = %d, Layer_count = %d\n"%(seg_eta_partition[i], seg_substrip[i], seg_bending_angle[i], seg_nrechits[i], seg_nlayers[i]))
             #        file_out.write("\n")
 
