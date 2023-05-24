@@ -79,10 +79,10 @@ architecture behavioral of partition is
   signal segments_s0        : pat_unit_mux_list_t (PRT_WIDTH/S0_WIDTH-1 downto 0);
   signal segments_postghost : pat_unit_mux_list_t (PRT_WIDTH/S0_WIDTH-1 downto 0);
 
-  signal segments_dav         : std_logic := '0';
-  signal segments_dav_deghost : std_logic := '0';
-
-  signal dav_priority : std_logic_vector (PRT_WIDTH/S0_WIDTH-1 downto 0) := (others => '0');
+  signal dav_segments         : std_logic                                        := '0';
+  signal dav_segments_deghost : std_logic                                        := '0';
+  signal dav_postghost        : std_logic                                        := '0';
+  signal dav_priority         : std_logic_vector (PRT_WIDTH/S0_WIDTH-1 downto 0) := (others => '0');
 
 begin
 
@@ -127,7 +127,7 @@ begin
       ly4   => partition_i(4),
       ly5   => partition_i(5),
 
-      dav_o      => segments_dav,
+      dav_o      => dav_segments,
       segments_o => segments
       );
 
@@ -144,15 +144,15 @@ begin
         )
       port map (
         clock      => clock,
-        dav_i      => segments_dav,
-        dav_o      => segments_dav_deghost,
+        dav_i      => dav_segments,
+        dav_o      => dav_segments_deghost,
         segments_i => segments,
         segments_o => segments_deghost
         );
   end generate;
 
   not_pre_filter_deghost_gen : if (not DEGHOST_PRE) generate
-    segments_dav_deghost <= segments_dav;
+    dav_segments_deghost <= dav_segments;
     segments_deghost     <= segments;
   end generate;
 
@@ -196,7 +196,7 @@ begin
         )
       port map (
         clock => clock,
-        dav_i => segments_dav_deghost,
+        dav_i => dav_segments_deghost,
         dav_o => dav_priority(region),
         dat_i => cand_slv,
         dat_o => best,
@@ -223,7 +223,7 @@ begin
       port map (
         clock      => clock,
         dav_i      => dav_priority(0),
-        dav_o      => dav_o,
+        dav_o      => dav_postghost,
         segments_i => segments_s0,
         segments_o => segments_postghost
         );
@@ -231,6 +231,7 @@ begin
 
   not_post_filter_deghost_gen : if (not DEGHOST_POST) generate
     segments_postghost <= segments_s0;
+    dav_postghost      <= dav_priority(0);
   end generate;
 
   --------------------------------------------------------------------------------
@@ -241,12 +242,12 @@ begin
   begin
     if (rising_edge(clock)) then
 
-      dav_o <= dav_priority(0);
+      dav_o <= dav_postghost;
 
       for I in segments_o'range loop
-        segments_o(I).lc        <= segments_s0(I).lc;
-        segments_o(I).id        <= segments_s0(I).id;
-        segments_o(I).strip     <= segments_s0(I).strip;
+        segments_o(I).lc        <= segments_postghost(I).lc;
+        segments_o(I).id        <= segments_postghost(I).id;
+        segments_o(I).strip     <= segments_postghost(I).strip;
         segments_o(I).partition <= to_unsigned(partition_num, 4);
       end loop;
 
