@@ -132,8 +132,6 @@ architecture behavioral of chamber is
   signal two_prt_sorted_dav : std_logic_vector (NUM_FINDERS_DIV2-1 downto 0) := (others => '0');
   signal final_segs_dav     : std_logic;
 
-  signal muxout_dav : std_logic := '0';
-
   signal outclk : std_logic := '0';
 
 begin
