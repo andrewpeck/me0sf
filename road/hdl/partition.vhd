@@ -74,9 +74,23 @@ end partition;
 
 architecture behavioral of partition is
 
+  -- ┌───────────┐    ┌─────────┐    ┌──────────┐    ┌──────────┐
+  -- │ Partition │ -> │ Deghost │ -> │ Priority │ -> │ Deghost  │
+  -- │           │    │         │    │ Encoder  │    │          │
+  -- └───────────┘    └─────────┘    └──────────┘    └──────────┘
+  --    segments       segments        segments        segments
+  --                    deghost        priority        postghost
+
+  -- segments direct from the partition
   signal segments           : pat_unit_mux_list_t (PRT_WIDTH-1 downto 0);
+
+  -- /optionally/ deghosted segments
   signal segments_deghost   : pat_unit_mux_list_t (PRT_WIDTH-1 downto 0);
-  signal segments_s0        : pat_unit_mux_list_t (PRT_WIDTH/S0_WIDTH-1 downto 0);
+
+  -- segments out from the priority encoder
+  signal segments_priority        : pat_unit_mux_list_t (PRT_WIDTH/S0_WIDTH-1 downto 0);
+
+  -- segments from the post-encoder deghoster
   signal segments_postghost : pat_unit_mux_list_t (PRT_WIDTH/S0_WIDTH-1 downto 0);
 
   signal dav_segments         : std_logic                                        := '0';
@@ -203,7 +217,7 @@ begin
         adr_o => open
         );
 
-    segments_s0(region) <= convert(best, segments_s0(region));
+    segments_priority(region) <= convert(best, segments_priority(region));
 
   end generate;
 
@@ -218,19 +232,19 @@ begin
   post_filter_deghost_gen : if (DEGHOST_POST) generate
     deghost_post : entity work.deghost
       generic map (
-        WIDTH        => segments_s0'length,
+        WIDTH        => segments_priority'length,
         CHECK_STRIPS => true)
       port map (
         clock      => clock,
         dav_i      => dav_priority(0),
         dav_o      => dav_postghost,
-        segments_i => segments_s0,
+        segments_i => segments_priority,
         segments_o => segments_postghost
         );
   end generate;
 
   not_post_filter_deghost_gen : if (not DEGHOST_POST) generate
-    segments_postghost <= segments_s0;
+    segments_postghost <= segments_priority;
     dav_postghost      <= dav_priority(0);
   end generate;
 
