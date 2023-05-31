@@ -82,13 +82,13 @@ architecture behavioral of partition is
   --                    deghost        priority        postghost
 
   -- segments direct from the partition
-  signal segments           : pat_unit_mux_list_t (PRT_WIDTH-1 downto 0);
+  signal segments : pat_unit_mux_list_t (PRT_WIDTH-1 downto 0);
 
   -- /optionally/ deghosted segments
-  signal segments_deghost   : pat_unit_mux_list_t (PRT_WIDTH-1 downto 0);
+  signal segments_deghost : pat_unit_mux_list_t (PRT_WIDTH-1 downto 0);
 
   -- segments out from the priority encoder
-  signal segments_priority        : pat_unit_mux_list_t (PRT_WIDTH/S0_WIDTH-1 downto 0);
+  signal segments_priority : pat_unit_mux_list_t (PRT_WIDTH/S0_WIDTH-1 downto 0);
 
   -- segments from the post-encoder deghoster
   signal segments_postghost : pat_unit_mux_list_t (PRT_WIDTH/S0_WIDTH-1 downto 0);
@@ -189,13 +189,13 @@ begin
   -------------------------------------------------------------------------------
 
   s0_gen : for region in 0 to PRT_WIDTH/S0_WIDTH-1 generate
-    signal best     : std_logic_vector (pat_unit_mux_t'w - 1 downto 0);
-    signal cand_slv : bus_array (0 to S0_WIDTH-1) (pat_unit_mux_t'w - 1 downto 0);
+    signal best                 : std_logic_vector (pat_unit_mux_t'w - 1 downto 0);
+    signal segments_deghost_slv : bus_array (0 to S0_WIDTH-1) (pat_unit_mux_t'w - 1 downto 0);
   begin
 
     cand_to_slv : for I in 0 to S0_WIDTH-1 generate
     begin
-      cand_slv(I) <= convert(segments_deghost(REGION*S0_WIDTH+I), cand_slv(I));
+      segments_deghost_slv(I) <= convert(segments_deghost(REGION*S0_WIDTH+I), segments_deghost_slv(I));
     end generate;
 
     priority_encoder_inst : entity work.priority_encoder
@@ -203,16 +203,20 @@ begin
         DAT_BITS    => best'length,
         QLT_BITS    => best'length,
         IGNORE_BITS => 0,
-        WIDTH       => S0_WIDTH,
+        WIDTH       => segments_deghost_slv'length,
         REG_INPUT   => true,
         REG_OUTPUT  => true,
         REG_STAGES  => 2
         )
       port map (
         clock => clock,
+
+        -- in
         dav_i => dav_segments_deghost,
+        dat_i => segments_deghost_slv,
+
+        -- out
         dav_o => dav_priority(region),
-        dat_i => cand_slv,
         dat_o => best,
         adr_o => open
         );
