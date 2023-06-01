@@ -43,7 +43,12 @@ async def pat_unit_test(dut, test="SEGMENTS"):
     LY_CNT = 6
     N_NOISE = 1
     LY_THRESH = 4
-    LATENCY = dut.LATENCY.value
+
+    #--------------------------------------------------------------------------------
+    #
+    #--------------------------------------------------------------------------------
+
+    set_dut_inputs(dut, [0 for _ in range(6)])
 
     # set layer count threshold
     dut.ly_thresh.value = LY_THRESH
@@ -54,7 +59,35 @@ async def pat_unit_test(dut, test="SEGMENTS"):
 
     setup(dut)
 
-    cocotb.fork(monitor_dav(dut,LATENCY))
+    #--------------------------------------------------------------------------------
+    # Measure Latency
+    #--------------------------------------------------------------------------------
+
+    meas_latency=-1
+
+    # align to the dav input
+    await RisingEdge(dut.dav_i)
+    for _ in range(8):
+        await RisingEdge(dut.clock)
+    set_dut_inputs(dut, [1<<18 for _ in range(6)])
+
+    for i in range(128):
+        # extract latency
+        await RisingEdge(dut.clock)
+        if dut.pat_o.lc.value.is_resolvable and \
+           dut.pat_o.lc.value.integer > 0:
+            meas_latency = i/8.0
+            print(f"Latency={i} clocks ({meas_latency} bx)")
+            break
+
+    assert meas_latency != -1, print("Couldn't measure pat_unit latency. Never saw a pattern!")
+
+    LATENCY = int(meas_latency*8)
+    cocotb.start_soon(monitor_dav(dut,LATENCY))
+
+    #-------------------------------------------------------------------------------
+    #
+    #-------------------------------------------------------------------------------
 
     # zero the inputs
     set_dut_inputs(dut, [0] * 6)
@@ -111,6 +144,7 @@ async def pat_unit_test(dut, test="SEGMENTS"):
         sw_segment = pat_unit(data=data, strip=0,
                               ly_thresh=LY_THRESH,
                               partition=0,
+                              skip_centroids=True,
                               light_hit_count=True)
 
         fw_segment = get_segment_from_pat_unit(dut)

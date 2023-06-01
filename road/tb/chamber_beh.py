@@ -1,6 +1,9 @@
 # Emulator for chamber.vhd
 import functools
+import multiprocessing.pool
 import operator
+import os
+from itertools import repeat, starmap
 from typing import List
 
 from partition_beh import process_partition
@@ -93,13 +96,21 @@ def process_chamber(chamber_data : List[List[int]], config : Config):
 
         data = chamber_data
 
-    # for (i,prt) in enumerate(data):
-    #     print(f"{i}" + str(prt))
+    datazip  = zip(data, range(len(data)), repeat(config))
 
-    segments = [process_partition(partition_data = prt_data,
-                                  partition = partition,
-                                  config = config)
-        for (partition, prt_data) in enumerate(data)]
+    # for some reason multi-processing fails with questasim, generating an error
+    # such as:
+    #
+    # Warning: (vsim-7) Failed to open process file
+    # "/proc/self/task/1494057/stat" in read mode. # No such file or directory.
+    #
+    # (errno = ENOENT)
+
+    if "SIM" in os.environ and os.environ["SIM"] == "questa":
+        segments = starmap(process_partition, datazip)
+    else:
+        with multiprocessing.pool.Pool() as pool:
+            segments = pool.starmap(process_partition, datazip)
 
     # print("Outputs from process partition (raw)")
     # for prt in segments:
@@ -125,7 +136,8 @@ def process_chamber(chamber_data : List[List[int]], config : Config):
     
     # join each 2 partitions and pick the best N outputs from them
     joined_segments = [ x[0] + x[1] for x in zip(*[iter(segments)] * 2)]
-    joined_segments.append(segments[14])
+    if (len(segments)==15):
+        joined_segments.append(segments[14])
     segments = joined_segments
     segments = [ sorted(x, reverse=True)[:config.num_outputs] for x in segments]
 
@@ -134,3 +146,49 @@ def process_chamber(chamber_data : List[List[int]], config : Config):
     segments = sorted(segments, reverse=True)[:config.num_outputs]
 
     return segments
+
+
+def test_chamber_beh():
+
+    config = Config()
+
+    config.num_or = 2
+    config.x_prt_en = True
+    config.en_non_pointing = False
+    config.max_span = 37
+    config.width = 192
+    config.deghost_pre = False
+    config.deghost_post = False
+    config.group_width = 8
+    config.num_outputs= 4
+    config.ly_thresh = 4
+    config.cross_part_seg_width = 0
+    config.skip_centroids = True
+
+    null = lambda : [[0 for _ in range(6)] for _ in range(8)]
+
+    for iprt in range(8):
+        print(f"Partition={iprt}:")
+        for istrip in range(192):
+
+            print(f"Strip={istrip}:")
+
+            data = null()
+
+            for ly in range(6):
+                data[iprt][ly] = 1<<istrip
+
+            segments = process_chamber(chamber_data=data, config=config)
+            if (config.x_prt_en==True):
+                assert segments[0].partition == iprt*2
+            else:
+                assert segments[0].partition == iprt
+            assert segments[0].lc == 6
+            assert segments[0].id == 19
+            assert segments[0].strip == istrip or  \
+                segments[0].strip == istrip+1
+
+            print(" > " + str(segments[0]))
+
+if __name__=="__main__":
+    test_chamber_beh()
