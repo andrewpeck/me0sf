@@ -32,7 +32,12 @@ use work.priority_encoder_pkg.all;
 
 entity pat_unit_mux is
   generic(
-    VERBOSE       : boolean := false;
+
+    DEBUG : boolean := false;
+
+    VERBOSE : boolean := false;
+
+    DISABLE_PEAKING : boolean := false;
 
     LY0_SPAN : natural := get_max_span(patdef_array);
     LY1_SPAN : natural := get_max_span(patdef_array);
@@ -55,7 +60,7 @@ entity pat_unit_mux is
 
     clock : in std_logic;
 
-    ly_thresh  : in std_logic_vector (2 downto 0);
+    ly_thresh : in std_logic_vector (2 downto 0);
 
     dav_i : in  std_logic;
     dav_o : out std_logic := '0';
@@ -78,6 +83,34 @@ entity pat_unit_mux is
 end pat_unit_mux;
 
 architecture behavioral of pat_unit_mux is
+
+  component ila_chamber
+    port (
+      clk : in std_logic;
+
+      probe0  : in std_logic_vector(5 downto 0);
+      probe1  : in std_logic_vector(5 downto 0);
+      probe2  : in std_logic_vector(5 downto 0);
+      probe3  : in std_logic_vector(2 downto 0);
+      probe4  : in std_logic_vector(2 downto 0);
+      probe5  : in std_logic_vector(3 downto 0);
+      probe6  : in std_logic_vector(2 downto 0);
+      probe7  : in std_logic_vector(3 downto 0);
+      probe8  : in std_logic_vector(7 downto 0);
+      probe9  : in std_logic_vector(3 downto 0);
+      probe10 : in std_logic_vector(2 downto 0);
+      probe11 : in std_logic_vector(3 downto 0);
+      probe12 : in std_logic_vector(7 downto 0);
+      probe13 : in std_logic_vector(3 downto 0);
+      probe14 : in std_logic_vector(2 downto 0);
+      probe15 : in std_logic_vector(3 downto 0);
+      probe16 : in std_logic_vector(7 downto 0);
+      probe17 : in std_logic_vector(3 downto 0);
+      probe18 : in std_logic_vector(2 downto 0);
+      probe19 : in std_logic_vector(3 downto 0);
+      probe20 : in std_logic_vector(7 downto 0)
+      );
+  end component;
 
   function pad_layer (pad : natural; data : std_logic_vector)
     -- function to take slv + padding and pad both the left and right sides
@@ -103,21 +136,91 @@ architecture behavioral of pat_unit_mux is
   signal patterns_mux : pat_unit_list_t (NUM_SECTORS-1 downto 0);
 
   -- convert to strip type, appends the strip # to the format
-  signal strips_reg : pat_unit_mux_list_t (WIDTH-1 downto 0);
+  signal strips_demux : pat_unit_mux_list_t (WIDTH-1 downto 0);
 
   signal phase_i, patterns_mux_phase : natural range 0 to MUX_FACTOR-1;
 
-  attribute MAX_FANOUT : integer;
+  attribute MAX_FANOUT                       : integer;
   attribute MAX_FANOUT of patterns_mux_phase : signal is 128;
 
-  signal dav_reg : std_logic := '0';
+  signal dav_reg     : std_logic := '0';
+  signal dav_peaking : std_logic := '0';
+  signal dav_demux   : std_logic := '0';
 
   signal pat_unit_dav : std_logic_vector(NUM_SECTORS-1 downto 0);
 
   signal dead : std_logic_vector (PRT_WIDTH-1 downto 0) := (others => '0');
   signal trig : std_logic_vector (PRT_WIDTH-1 downto 0) := (others => '0');
 
+  signal segments      : pat_unit_mux_list_t (WIDTH-1 downto 0);
+  signal segments_last : pat_unit_mux_list_t (WIDTH-1 downto 0);
+
+  signal dbg : std_logic_vector(5 downto 0);
+
 begin
+
+  dbg(0) <= ly0_padded (phase_i+0*MUX_FACTOR+PADDING*2 downto phase_i+0*MUX_FACTOR)(PADDING+2);
+  dbg(1) <= ly1_padded (phase_i+0*MUX_FACTOR+PADDING*2 downto phase_i+0*MUX_FACTOR)(PADDING+2);
+  dbg(2) <= ly2_padded (phase_i+0*MUX_FACTOR+PADDING*2 downto phase_i+0*MUX_FACTOR)(PADDING+2);
+  dbg(3) <= ly3_padded (phase_i+0*MUX_FACTOR+PADDING*2 downto phase_i+0*MUX_FACTOR)(PADDING+2);
+  dbg(4) <= ly4_padded (phase_i+0*MUX_FACTOR+PADDING*2 downto phase_i+0*MUX_FACTOR)(PADDING+2);
+  dbg(5) <= ly5_padded (phase_i+0*MUX_FACTOR+PADDING*2 downto phase_i+0*MUX_FACTOR)(PADDING+2);
+
+  debug_gen : if (DEBUG) generate
+
+    ila_partition_inst : ila_chamber
+      port map (
+        clk => clock,
+
+        -- (ly)(strip)
+        probe0(0) => ly0(0),
+        probe0(1) => ly1(0),
+        probe0(2) => ly2(0),
+        probe0(3) => ly3(0),
+        probe0(4) => ly4(0),
+        probe0(5) => ly5(0),
+
+        -- (ly)(strip)
+        probe1(0) => dbg(0),
+        probe1(1) => dbg(1),
+        probe1(2) => dbg(2),
+        probe1(3) => dbg(3),
+        probe1(4) => dbg(4),
+        probe1(5) => dbg(5),
+
+        probe2(0) => dav_i,
+        probe2(1) => dav_o,
+        probe2(2) => dav_reg,
+        probe2(3) => pat_unit_dav(0),
+        probe2(4) => '0',
+        probe2(5) => '0',
+
+        probe3 => std_logic_vector(to_unsigned(patterns_mux_phase, 3)),
+
+        probe4 => (others => '0'),
+
+        probe5 => (others => '0'),
+        probe6 => std_logic_vector(segments_o(3).lc),
+        probe7 => std_logic_vector(segments_o(3).id),
+        probe8 => std_logic_vector(segments_o(3).strip),
+
+        probe9  => (others => '0'),
+        probe10 => std_logic_vector(segments_o(2).lc),
+        probe11 => std_logic_vector(segments_o(2).id),
+        probe12 => std_logic_vector(segments_o(2).strip),
+
+        probe13 => (others => '0'),
+        probe14 => std_logic_vector(patterns_mux(0).lc),
+        probe15 => std_logic_vector(patterns_mux(0).id),
+        probe16 => (others => '0'),
+
+        probe17 => (others => '0'),
+        probe18 => std_logic_vector(strips_demux(2).lc),
+        probe19 => std_logic_vector(strips_demux(2).id),
+        probe20 => std_logic_vector(strips_demux(2).strip)
+
+        );
+  end generate;
 
   --------------------------------------------------------------------------------
   -- Asserts
@@ -200,7 +303,7 @@ begin
 
         clock => clock,
 
-        ly_thresh  => ly_thresh,
+        ly_thresh => ly_thresh,
 
         dav_i => lyx_unit_dav,
         ly0   => ly0_unit,
@@ -230,57 +333,95 @@ begin
     if (rising_edge(clock)) then
 
       if (patterns_mux_phase = 0) then
-        dav_o <= '1';
+        dav_peaking <= '1';
+        dav_demux   <= '1';
       else
-        dav_o <= '0';
+        dav_peaking <= '0';
+        dav_demux   <= '0';
       end if;
 
       -- unfold the pattern unit multiplexer and assign the strip number
       for I in 0 to NUM_SECTORS-1 loop
-        strips_reg(I*MUX_FACTOR+patterns_mux_phase).id    <= patterns_mux(I).id;
-        strips_reg(I*MUX_FACTOR+patterns_mux_phase).lc    <= patterns_mux(I).lc;
-        strips_reg(I*MUX_FACTOR+patterns_mux_phase).strip <= to_unsigned(I*MUX_FACTOR+patterns_mux_phase, STRIP_BITS);
+        strips_demux(I*MUX_FACTOR+patterns_mux_phase).id    <= patterns_mux(I).id;
+        strips_demux(I*MUX_FACTOR+patterns_mux_phase).lc    <= patterns_mux(I).lc;
+        strips_demux(I*MUX_FACTOR+patterns_mux_phase).strip <= to_unsigned(I*MUX_FACTOR+patterns_mux_phase, STRIP_BITS);
       end loop;
 
       -- copy the unfolded outputs to be stable for a 25 ns clock period since
       -- the unfolder changes every clock cycle
       if (patterns_mux_phase = 0) then
+        segments      <= strips_demux;
+        segments_last <= segments;
+      end if;
+
+      --------------------------------------------------------------------------------
+      -- Peak finding logic
+      --------------------------------------------------------------------------------
+      --
+      -- A problem that was quickly discovered in developing the segment finding
+      -- algorithms was that due to the poor timing resolution of the GEM
+      -- chamber, not all hits arrive in a single clock cycle.
+      --
+      -- To account for this, pulse stretching is used to make each S-bit hit
+      -- last for e.g. 3 clock cycles.
+      --
+      -- A problem in this approach though is that the pattern unit will fire on
+      -- the early hits, which e.g. may only have 4 layers, while the remaining
+      -- 2 layers can come in across the next two clock cycles.
+      --
+      -- To prevent this "early-firing" phenomena, a simple mechanism "peaking"
+      -- mechanism is used.
+      --
+      -- This works by buffering the found segments for a single clock cycle,
+      -- and waiting until a time bin where the quality of the found pattern
+      -- decreases, then doing a 1 clock cycle lookback and using the segments
+      -- found in the /previous/ clock cycle.
+      --
+      --
+      -- so for example say the hits are coming in out of time... with pulse
+      -- extension=3
+      --
+      -- bx N we have 4 layers
+      -- bx N+1 we have 6 layers
+      -- bx N+2 we have 6 layers
+      -- bx N + 3 we have 2 layers
+      --
+      -- we'd know from the transition of 6->2 layers that we gathered all of
+      -- the hits, so in this case we use BX N+2 as the actual segment
+      --
+      --
+      --                   ─────┬───┬───┬───┬─────────────────────────────────────────
+      -- segments               │ 5 │ 6 │ 5 │
+      --   lyc             ─────┴───┴───┴───┴─────────────────────────────────────────
+      --
+      --                   ─────────┬───┬───┬───┬─────────────────────────────────────
+      -- segments_last              │ 5 │ 6 │ 5 │
+      --   lyc             ─────────┴───┴───┴───┴─────────────────────────────────────
+      --
+      --                                ┌───┐
+      -- segments <        ─────────────┘   └─────────────────────────────────────────
+      -- segments_last
+      --
+      --                   ──────────────┬───┬────────────────────────────────────────
+      -- segments_o                      │ 6 │
+      --   lyc             ──────────────┴───┴────────────────────────────────────────
+      --
+      --------------------------------------------------------------------------------
+
+      if (dav_demux = '1') then
         for I in segments_o'range loop
-          if dead(I) = '1' then
-            segments_o(I) <= zero(segments_o(I));
+          if DISABLE_PEAKING or segments(I).lc < segments_last(I).lc then
+            segments_o(I) <= segments_last(I);
           else
-            segments_o(I) <= strips_reg(I);
+            segments_o(I) <= zero(segments_o(I));
           end if;
         end loop;
       end if;
 
-    end if;
+      dav_o <= dav_peaking;
+
+    end if;  -- rising_edge(clock)
+
   end process;
-
-  --------------------------------------------------------------------------------
-  -- Deadzoning
-  --------------------------------------------------------------------------------
-
-  process (segments_o) is
-  begin
-    for I in segments_o'range loop
-      if (valid(segments_o(I))) then
-        trig(I) <= '1';
-      else
-        trig(I) <= '0';
-      end if;
-    end loop;
-  end process;
-
-  deadzone_inst : entity work.deadzone
-    generic map (
-      WIDTH    => PRT_WIDTH,
-      DEADTIME => 8*DEADTIME -- multiply by 8 to be in BX units
-      )
-    port map (
-      clock  => clock,
-      trg_i  => trig,
-      dead_o => dead
-      );
 
 end behavioral;
