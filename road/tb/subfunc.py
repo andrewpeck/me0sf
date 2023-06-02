@@ -64,6 +64,7 @@ class Segment:
         self.lc = 0
         self.id = 0
         self.update_quality()
+        return self
 
     def update_quality(self):
         """ create sortable number to compare segments"""

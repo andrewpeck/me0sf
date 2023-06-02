@@ -33,6 +33,7 @@ use ieee.math_real.all;
 
 entity chamber is
   generic (
+    DISABLE_PEAKING : boolean := false;  -- true to disable peaking logic; useful for simulation until the tb is updated
     X_PRT_EN        : boolean := true;   -- true to enable x-prt segment finding
     EN_NON_POINTING : boolean := false;  -- true to enable x-prt segment finding on non-pointing muons
     NUM_SEGMENTS    : integer := 4;      -- number of output segments
@@ -221,9 +222,11 @@ begin
 
     partition_inst : entity work.partition
       generic map (
-        NUM_SEGMENTS  => NUM_SEGMENTS,
-        S0_WIDTH      => S0_WIDTH,
-        DEADTIME      => DEADTIME)
+        DISABLE_PEAKING => DISABLE_PEAKING,
+        NUM_SEGMENTS    => NUM_SEGMENTS,
+        S0_WIDTH        => S0_WIDTH,
+        DEADTIME        => DEADTIME
+        )
       port map (
 
         clock => clock,

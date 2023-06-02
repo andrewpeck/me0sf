@@ -66,19 +66,23 @@ async def partition_test(dut, NLOOPS=1000, test="SEGMENTS"):
 
     queue = []
 
-    # measure latency
-    meas_latency=1
-    for i in range(128):
-        # extract latency
-        dut.partition_i.value = [1 for _ in range(6)]
-        await RisingEdge(dut.clock)
-        if dut.segments_o[0].lc.value.is_resolvable and \
-           dut.segments_o[0].lc.value.integer >= config.ly_thresh:
-            meas_latency = i/8.0
-            print(f"Latency={i} clocks ({meas_latency} bx)")
-            break
+    #--------------------------------------------------------------------------------
+    # Measure latency
+    #--------------------------------------------------------------------------------
 
-    LATENCY = ceil(meas_latency)
+    checkfn = lambda : dut.segments_o[0].lc.value.is_resolvable and \
+        dut.segments_o[0].lc.value.integer >= config.ly_thresh
+
+    def setfn(dut, x):
+        dut.partition_i.value = [x for _ in range(6)]
+
+    meas_latency = await measure_latency(dut, checkfn, setfn)
+
+    LATENCY = ceil(meas_latency)-2
+
+    #--------------------------------------------------------------------------------
+    # Event Loop
+    #--------------------------------------------------------------------------------
 
     # flush the buffers
     dut.partition_i.value = [0 for _ in range(6)]
@@ -192,13 +196,12 @@ def test_partition():
                     os.path.join(rtl_dir, "hit_count.vhd"),
                     os.path.join(rtl_dir, "pat_unit.vhd"),
                     os.path.join(rtl_dir, "dav_to_phase.vhd"),
-                    os.path.join(rtl_dir, "deadzone.vhd"),
                     os.path.join(rtl_dir, "pat_unit_mux.vhd"),
                     os.path.join(rtl_dir, "deghost.vhd"),
                     os.path.join(rtl_dir, "partition.vhd")]
 
     # disable DEADTIME in the test bench since it is not emulated in the software
-    parameters = {"DEADTIME": 0}
+    parameters = {"DEADTIME": 0, "DISABLE_PEAKING": True}
 
     os.environ["SIM"] = "questa"
     #os.environ["COCOTB_RESULTS_FILE"] = f"../log/{module}.xml"

@@ -19,6 +19,8 @@ use work.priority_encoder_pkg.all;
 entity partition is
   generic(
 
+
+    DISABLE_PEAKING : boolean := false;
     NUM_SEGMENTS   : integer := 4;
     PRT_WIDTH      : natural := PRT_WIDTH;  -- width of the partition (192)
     S0_WIDTH       : natural := 8;          -- width of the pre-sorting regions
@@ -124,9 +126,10 @@ begin
 
   pat_unit_mux_inst : entity work.pat_unit_mux
     generic map (
-      WIDTH      => PRT_WIDTH,
-      MUX_FACTOR => PAT_UNIT_REUSE,
-      DEADTIME   => DEADTIME
+      DISABLE_PEAKING => DISABLE_PEAKING,
+      WIDTH           => PRT_WIDTH,
+      MUX_FACTOR      => PAT_UNIT_REUSE,
+      DEADTIME        => DEADTIME
       )
     port map (
       clock => clock,

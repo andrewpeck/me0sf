@@ -14,7 +14,6 @@ read_vhdl -vhdl2008 -library work {
     pat_unit.vhd
     fixed_delay.vhd
     dav_to_phase.vhd
-    deadzone.vhd
     pat_unit_mux.vhd
     deghost.vhd
     partition.vhd

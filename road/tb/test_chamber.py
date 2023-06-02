@@ -1,6 +1,5 @@
 # Testbench for chamber.vhd
 # NOTES:
-#   - measure latency
 #   - verify selector latency parameter
 #   - add cross partition tester
 #   - check the outputs of the partitions before chamber sorting ?
@@ -287,7 +286,6 @@ def test_chamber():
         os.path.join(rtl_dir, "pat_unit.vhd"),
         os.path.join(rtl_dir, "fixed_delay.vhd"),
         os.path.join(rtl_dir, "dav_to_phase.vhd"),
-        os.path.join(rtl_dir, "deadzone.vhd"),
         os.path.join(rtl_dir, "pat_unit_mux.vhd"),
         os.path.join(rtl_dir, "deghost.vhd"),
         os.path.join(rtl_dir, "partition.vhd"),
@@ -295,7 +293,7 @@ def test_chamber():
         os.path.join(rtl_dir, "chamber_pulse_extension.vhd"),
         os.path.join(rtl_dir, "chamber.vhd")]
 
-    parameters = {"PULSE_EXTEND": 0, "DEADTIME": 0}
+    parameters = {"PULSE_EXTEND": 0, "DEADTIME": 0, "DISABLE_PEAKING": True}
 
     os.environ["SIM"] = "questa"
     #os.environ["COCOTB_RESULTS_FILE"] = f"../log/{module}.xml"
