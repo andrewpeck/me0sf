@@ -131,7 +131,7 @@ architecture behavioral of chamber is
 
   signal strip_triggers       : strip_triggers_array_t;
   signal vfat_pretrigger_xprt : vfat_pretrigger_t(NUM_FINDERS-1 downto 0);
-  signal partition_pretrigger : vfat_pretrigger_t(7 downto 0);
+  signal vfat_pretrigger      : vfat_pretrigger_t(7 downto 0);
 
   --------------------------------------------------------------------------------
   -- Data valids
