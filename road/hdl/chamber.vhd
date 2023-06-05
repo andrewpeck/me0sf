@@ -126,7 +126,7 @@ architecture behavioral of chamber is
   type strip_triggers_array_t is array (NUM_FINDERS-1 downto 0) of
     std_logic_vector(PRT_WIDTH-1 downto 0);
 
-  type partition_pretrigger_t is array (integer range <>) of
+  type vfat_pretrigger_t is array (integer range <>) of
     std_logic_vector(2 downto 0);
 
   signal strip_triggers       : strip_triggers_array_t;
