@@ -77,7 +77,9 @@ entity pat_unit_mux is
     ly4 : in std_logic_vector (WIDTH-1 downto 0);
     ly5 : in std_logic_vector (WIDTH-1 downto 0);
 
-    segments_o : out pat_unit_mux_list_t (WIDTH-1 downto 0)
+    segments_o : out pat_unit_mux_list_t (WIDTH-1 downto 0);
+
+    trigger_o : out std_logic_vector (WIDTH-1 downto 0)
 
     );
 end pat_unit_mux;
@@ -412,8 +414,10 @@ begin
         for I in segments_o'range loop
           if DISABLE_PEAKING or segments(I).lc < segments_last(I).lc then
             segments_o(I) <= segments_last(I);
+            trigger_o(I)  <= '1';
           else
             segments_o(I) <= zero(segments_o(I));
+            trigger_o(I)  <= '0';
           end if;
         end loop;
       end if;

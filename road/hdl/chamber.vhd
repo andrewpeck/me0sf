@@ -67,7 +67,6 @@ entity chamber is
 
     sbits_i           : in  chamber_t;
     vfat_pretrigger_o : out std_logic_vector (23 downto 0);
-    pretrigger_o      : out std_logic;
     segments_o        : out segment_list_t (NUM_SEGMENTS-1 downto 0)
     );
 end chamber;
@@ -120,8 +119,19 @@ architecture behavioral of chamber is
   signal one_prt_sorted_segs : segment_list_t (NUM_FINDERS_DIV2*2 * NUM_SEGMENTS - 1 downto 0) := (others => null_pattern);  -- sort down to the number of output segments for each partition
   signal final_segs          : segment_list_t (NUM_SEGMENTS - 1 downto 0)                      := (others => null_pattern);
 
-  signal vfat_pretrigger       : std_logic_vector (3*NUM_PARTITIONS-1 downto 0);
-  signal vfat_pretrigger_cross : std_logic_vector (3*NUM_PARTITIONS-1 downto 0);
+  --------------------------------------------------------------------------------
+  -- Pretriggers
+  --------------------------------------------------------------------------------
+
+  type strip_triggers_array_t is array (NUM_FINDERS-1 downto 0) of
+    std_logic_vector(PRT_WIDTH-1 downto 0);
+
+  type partition_pretrigger_t is array (integer range <>) of
+    std_logic_vector(2 downto 0);
+
+  signal strip_triggers       : strip_triggers_array_t;
+  signal vfat_pretrigger_xprt : vfat_pretrigger_t(NUM_FINDERS-1 downto 0);
+  signal partition_pretrigger : vfat_pretrigger_t(7 downto 0);
 
   --------------------------------------------------------------------------------
   -- Data valids
@@ -241,8 +251,8 @@ begin
 
         -- output patterns
         dav_o      => all_segs_dav(I),
-        segments_o => all_segs((I+1)*NUM_SEGS_PER_PRT-1 downto I*NUM_SEGS_PER_PRT)
-
+        segments_o => all_segs((I+1)*NUM_SEGS_PER_PRT-1 downto I*NUM_SEGS_PER_PRT),
+        trigger_o  => strip_triggers(I)
         );
 
   end generate;
@@ -255,45 +265,74 @@ begin
 
     constant ifinder : integer := if_then_else (X_PRT_EN, iprt*2, iprt);
 
-    impure function get_seg_hit (segs   : segment_list_t;
-                                 finder : integer;
-                                 vfat   : integer;
-                                 seg    : integer) return boolean is
-    begin
-      return valid(segs(finder*NUM_SEGS_PER_PRT +
-                            vfat * NUM_SEGS_PER_PRT/3 + seg));
-    end;
+    signal active_m1 : std_logic_vector (2 downto 0) := (others => '0');
+    signal active_p1 : std_logic_vector (2 downto 0) := (others => '0');
 
   begin
 
+    -- do a reduce_or to get 1 bit per vfat for both the real and cross
+    -- partitions
     process (clock) is
     begin
       if (rising_edge(clock)) then
-
-          for ivfat in 0 to 2 loop
-
-            vfat_pretrigger(iprt*3+ivfat) <= '0';
-
-            for iseg in 0 to NUM_SEGS_PER_PRT/3-1 loop
-
-              if (get_seg_hit(all_segs, ifinder, ivfat, iseg)
-
-                  -- check the -1 partition
-                  or (X_PRT_EN and ifinder > 0 and get_seg_hit(all_segs, ifinder-1, ivfat, iseg))
-
-                  -- check the +1 partition
-                  or (X_PRT_EN and ifinder < NUM_FINDERS-1 and get_seg_hit(all_segs, ifinder+1, ivfat, iseg)))
-
-              then
-                vfat_pretrigger(iprt*3+ivfat) <= '1';
-              end if;
-
-            end loop;
-          end loop;
+        for ivfat in 0 to 2 loop
+          vfat_pretrigger_xprt(iprt)(ivfat) <=
+            or_reduce(strip_triggers(iprt)((ivfat+1) * 64 - 1 downto 64*ivfat));
+        end loop;
       end if;
     end process;
 
+    -- get the negative and positive active flags
+    --
+    m_1 : if (X_PRT_EN and ifinder > 0) generate
+      active_m1 <= vfat_pretrigger_xprt(iprt-1);
+    end generate;
+
+    p_1 : if (X_PRT_EN and ifinder < NUM_FINDERS-1 ) generate
+      active_p1 <= vfat_pretrigger_xprt(iprt+1);
+    end generate;
+
+
+        -- -- or together the real and virtual partitions to get an active VFAT flag
+    vfat_pretrigger(iprt) <= active_m1 or active_p1 or
+                                  vfat_pretrigger_xprt(iprt+1);
+
   end generate;
+
+  process (clock) is
+  begin
+    if (rising_edge(clock)) then
+
+      vfat_pretrigger_o(0) <= vfat_pretrigger(0)(0);
+      vfat_pretrigger_o(1) <= vfat_pretrigger(1)(0);
+      vfat_pretrigger_o(2) <= vfat_pretrigger(2)(0);
+      vfat_pretrigger_o(3) <= vfat_pretrigger(3)(0);
+      vfat_pretrigger_o(4) <= vfat_pretrigger(4)(0);
+      vfat_pretrigger_o(5) <= vfat_pretrigger(5)(0);
+      vfat_pretrigger_o(6) <= vfat_pretrigger(6)(0);
+      vfat_pretrigger_o(7) <= vfat_pretrigger(7)(0);
+
+      vfat_pretrigger_o(8)  <= vfat_pretrigger(0)(1);
+      vfat_pretrigger_o(9)  <= vfat_pretrigger(1)(1);
+      vfat_pretrigger_o(10) <= vfat_pretrigger(2)(1);
+      vfat_pretrigger_o(11) <= vfat_pretrigger(3)(1);
+      vfat_pretrigger_o(12) <= vfat_pretrigger(4)(1);
+      vfat_pretrigger_o(13) <= vfat_pretrigger(5)(1);
+      vfat_pretrigger_o(14) <= vfat_pretrigger(6)(1);
+      vfat_pretrigger_o(15) <= vfat_pretrigger(7)(1);
+
+      vfat_pretrigger_o(16) <= vfat_pretrigger(7)(3);
+      vfat_pretrigger_o(17) <= vfat_pretrigger(7)(3);
+      vfat_pretrigger_o(18) <= vfat_pretrigger(7)(3);
+      vfat_pretrigger_o(19) <= vfat_pretrigger(7)(3);
+      vfat_pretrigger_o(20) <= vfat_pretrigger(7)(3);
+      vfat_pretrigger_o(21) <= vfat_pretrigger(7)(3);
+      vfat_pretrigger_o(22) <= vfat_pretrigger(7)(3);
+      vfat_pretrigger_o(23) <= vfat_pretrigger(7)(3);
+
+    end if;
+  end process;
+
 
   --------------------------------------------------------------------------------
   -- Partition Sorting
@@ -392,8 +431,6 @@ begin
     if (rising_edge(outclk)) then
       dav_o             <= final_segs_dav;
       segments_o        <= final_segs;
-      vfat_pretrigger_o <= vfat_pretrigger;
-      pretrigger_o      <= or_reduce(vfat_pretrigger);
     end if;
   end process;
 

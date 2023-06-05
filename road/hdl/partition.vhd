@@ -69,7 +69,8 @@ entity partition is
     -- outputs
     --------------------------------------------------------------------------------
 
-    segments_o : out segment_list_t (PRT_WIDTH/S0_WIDTH-1 downto 0)
+    segments_o : out segment_list_t (PRT_WIDTH/S0_WIDTH-1 downto 0);
+    trigger_o  : out std_logic_vector (PRT_WIDTH-1 downto 0)
 
     );
 end partition;
@@ -145,7 +146,8 @@ begin
       ly5   => partition_i(5),
 
       dav_o      => dav_segments,
-      segments_o => segments
+      segments_o => segments,
+      trigger_o  => trigger_o
       );
 
   --------------------------------------------------------------------------------
