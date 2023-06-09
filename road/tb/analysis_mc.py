@@ -50,11 +50,13 @@ def analysis(root_dat, hits, bx, bx_list, cross_part, verbose, pu, num_or):
 
     n_offline_effi_total = 0
     n_offline_effi_passed = 0
+    n_offline_purity_total = 0
+    n_offline_purity_passed = 0
     n_st_effi_total = 0
     n_st_effi_passed = 0
     n_st_purity_total = 0
     n_st_purity_passed = 0
-
+    
     n_total_events = len(root_dat)
     prev_frac_done = 0
 
@@ -63,8 +65,8 @@ def analysis(root_dat, hits, bx, bx_list, cross_part, verbose, pu, num_or):
         if (frac_done - prev_frac_done) >= 0.05:
             print ("%.2f"%(frac_done*100) + "% Events Done")
             prev_frac_done = frac_done
-        #if ievent!=1:
-        #    continue
+        if ievent!=1:
+            continue
         if verbose:
             file_out.write("Event number = %d\n"%ievent)
 
@@ -312,6 +314,7 @@ def analysis(root_dat, hits, bx, bx_list, cross_part, verbose, pu, num_or):
             config.cross_part_seg_width = 4
             config.ghost_width = 10
             num_or_to_span = {2:37, 4:19, 8:11, 16:7}
+            #num_or = 4
             config.max_span = num_or_to_span[num_or]
             config.num_or = num_or
             seglist = process_chamber(data, config)
@@ -333,13 +336,13 @@ def analysis(root_dat, hits, bx, bx_list, cross_part, verbose, pu, num_or):
                     file_out.write("\n")
             online_segment_chamber[chamber_nr] = seglist_final
 
-            #for i in range(0, n_offline_seg):
-            #    if seg_chamber_nr[i] != chamber_nr:
-            #        continue
-            #    if verbose:
-            #        file_out.write("  Offline Segment in Chamber (0-17 for region -1, 18-35 for region 1) %d:\n "%chamber_nr)
-            #        file_out.write("     Eta Partition = %d, Center Strip = %.4f, Bending angle = %.4f, Hit count = %d, Layer_count = %d\n"%(seg_eta_partition[i], seg_substrip[i], seg_bending_angle[i], seg_nrechits[i], seg_nlayers[i]))
-            #        file_out.write("\n")
+            for i in range(0, n_offline_seg):
+                if seg_chamber_nr[i] != chamber_nr:
+                    continue
+                if verbose:
+                    file_out.write("  Offline Segment in Chamber (0-17 for region -1, 18-35 for region 1) %d:\n "%chamber_nr)
+                    file_out.write("     Eta Partition = %d, Center Strip = %.4f, Bending angle = %.4f, Hit count = %d, Layer_count = %d\n"%(seg_eta_partition[i], seg_substrip[i], seg_bending_angle[i], seg_nrechits[i], seg_nlayers[i]))
+                    file_out.write("\n")
 
             #for i in range(0, n_me0_track):
             #    if track_chamber_nr[i] != chamber_nr:
@@ -490,6 +493,24 @@ def analysis(root_dat, hits, bx, bx_list, cross_part, verbose, pu, num_or):
                 st_purity_total_eta.Fill(online_eta_partition+1)
                 st_purity_total_bending.Fill(online_bending_angle)
                 n_st_purity_total += 1
+                n_offline_purity_total += 1
+
+                for i in range(0, n_offline_seg):
+                    offline_chamber = seg_chamber_nr[i]
+                    offline_eta_partition = seg_eta_partition[i]
+                    offline_bending_angle = seg_bending_angle[i]
+                    offline_substrip = seg_substrip[i]
+                    if (chamber == offline_chamber) and abs(online_eta_partition - offline_eta_partition)<=1:
+                    #if (chamber == offline_chamber) and (online_eta_partition == offline_eta_partition):
+                        #if online_bending_angle == 0:
+                        #    bending_angle_err = abs(offline_bending_angle)
+                        #else:
+                        #    bending_angle_err = abs((offline_bending_angle - online_bending_angle)/online_bending_angle)
+                        if abs(online_substrip - offline_substrip) <= 5: # match criteria for strip
+                            #if bending_angle_err < 0.4 or abs(online_bending_angle - offline_bending_angle) <= 0.6: # match criteria for bending angle
+                            n_offline_purity_passed += 1
+                            break
+
                 for i in range(0, n_me0_track):
                     st_chamber = track_chamber_nr[i]
                     st_eta_partition = track_eta_partition[i]
@@ -514,6 +535,9 @@ def analysis(root_dat, hits, bx, bx_list, cross_part, verbose, pu, num_or):
     offline_efficiency =  n_offline_effi_passed/n_offline_effi_total
     print ("Overall efficiency w.r.t offline segments = %.4f\n"%(offline_efficiency))
     file_out.write("Overall efficiency w.r.t offline segments = %.4f\n\n"%(offline_efficiency))
+    offline_purity =  n_offline_purity_passed/n_offline_purity_total
+    print ("Overall purity w.r.t offline segments = %.4f\n"%(offline_purity))
+    file_out.write("Overall purity w.r.t offline segments = %.4f\n\n"%(offline_purity))
     if n_st_effi_total != 0:
         st_efficiency =  n_st_effi_passed/n_st_effi_total
         print ("Overall efficiency w.r.t sim tracks = %.4f\n"%(st_efficiency))

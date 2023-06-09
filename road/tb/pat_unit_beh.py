@@ -200,6 +200,8 @@ def pat_unit(data,
     best = max(seg_list) # type: ignore
 
     # (7) apply a layer threshold
+    #if (best.id <= 10):
+    #    ly_thresh += 1
     if (best.lc < ly_thresh):
         best.reset()
 
