@@ -151,9 +151,6 @@ architecture behavioral of pat_unit_mux is
 
   signal pat_unit_dav : std_logic_vector(NUM_SECTORS-1 downto 0);
 
-  signal dead : std_logic_vector (PRT_WIDTH-1 downto 0) := (others => '0');
-  signal trig : std_logic_vector (PRT_WIDTH-1 downto 0) := (others => '0');
-
   signal segments      : pat_unit_mux_list_t (WIDTH-1 downto 0);
   signal segments_last : pat_unit_mux_list_t (WIDTH-1 downto 0);
 
