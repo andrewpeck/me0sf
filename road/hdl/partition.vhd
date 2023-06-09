@@ -155,7 +155,7 @@ begin
   --------------------------------------------------------------------------------
 
   pre_filter_deghost_gen : if (DEGHOST_PRE) generate
-    deghost_pre : entity work.deghost
+    deghost_pre_inst : entity work.deghost
       generic map (
         WIDTH       => segments'length,
         EDGE_DIST   => 2,
@@ -239,7 +239,7 @@ begin
   --------------------------------------------------------------------------------
 
   post_filter_deghost_gen : if (DEGHOST_POST) generate
-    deghost_post : entity work.deghost
+    deghost_post_inst : entity work.deghost
       generic map (
         WIDTH        => segments_priority'length,
         CHECK_STRIPS => true)
