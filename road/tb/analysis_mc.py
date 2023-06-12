@@ -292,7 +292,7 @@ def analysis(root_dat, hits, bx, bx_list, cross_part, verbose, pu, num_or):
         # Find segments per chamber
         online_segment_chamber = {}
         for (chamber_nr, dat_w_segs) in enumerate(datlist):
-            
+           
             online_segment_chamber[chamber_nr] = []
             #print ("  Chamber %d"%chamber_nr)
             seg_m_b = [dat[1] for dat in dat_w_segs]
@@ -314,7 +314,7 @@ def analysis(root_dat, hits, bx, bx_list, cross_part, verbose, pu, num_or):
             config.cross_part_seg_width = 4
             config.ghost_width = 10
             num_or_to_span = {2:37, 4:19, 8:11, 16:7}
-            #num_or = 4
+            num_or = 4
             config.max_span = num_or_to_span[num_or]
             config.num_or = num_or
             seglist = process_chamber(data, config)

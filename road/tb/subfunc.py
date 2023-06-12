@@ -247,6 +247,22 @@ def count_ones(x):
         x = x>>1
     return cnt
 
+def max_cluster_size(x):
+    """calculate maximum cluster size in that integer's binary form"""
+    size = 0
+    max_size = 0
+    while (x > 0):
+        if (x&1)==1:
+            size += 1
+        else:
+            if size > max_size:
+                max_size = size
+            size = 0
+        x = x>>1
+    if size > max_size:
+        max_size = size
+    return max_size
+
 def set_bit(index, num1=0):
     """takes in an integer index to set a one within a binary number; if num1 parameter is filled
     with an integer, that is the binary number it sets the bit within"""

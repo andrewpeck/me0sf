@@ -92,6 +92,10 @@ def calculate_layer_count(masked_data : List[int]) -> int:
     """takes in a []*6 list of pre-masked data and gives the layer count"""
     return sum(map(lambda x : x > 0, masked_data))
 
+def calculate_cluster_size(data):
+    cluster_size_per_layer = [max_cluster_size(x) for x in data]
+    return cluster_size_per_layer
+
 def pat_unit(data,
              strip : int = 0,
              ly_thresh : int = 4,
@@ -200,9 +204,16 @@ def pat_unit(data,
     best = max(seg_list) # type: ignore
 
     # (7) apply a layer threshold
-    #if (best.id <= 10):
-    #    ly_thresh += 1
+    if (partition % 2 != 0):
+        ly_thresh += 1
+    if (best.id <= 10):
+        ly_thresh += 1
     if (best.lc < ly_thresh):
+        best.reset()
+
+    cluster_size_counts = calculate_cluster_size(data)
+    max_cluster_size = max(cluster_size_counts)
+    if max_cluster_size >= 3:
         best.reset()
 
     best.partition=partition
