@@ -33,8 +33,6 @@ use work.priority_encoder_pkg.all;
 entity pat_unit_mux is
   generic(
 
-    DEBUG : boolean := false;
-
     VERBOSE : boolean := false;
 
     DISABLE_PEAKING : boolean := false;
@@ -86,34 +84,6 @@ end pat_unit_mux;
 
 architecture behavioral of pat_unit_mux is
 
-  component ila_chamber
-    port (
-      clk : in std_logic;
-
-      probe0  : in std_logic_vector(5 downto 0);
-      probe1  : in std_logic_vector(5 downto 0);
-      probe2  : in std_logic_vector(5 downto 0);
-      probe3  : in std_logic_vector(2 downto 0);
-      probe4  : in std_logic_vector(2 downto 0);
-      probe5  : in std_logic_vector(3 downto 0);
-      probe6  : in std_logic_vector(2 downto 0);
-      probe7  : in std_logic_vector(3 downto 0);
-      probe8  : in std_logic_vector(7 downto 0);
-      probe9  : in std_logic_vector(3 downto 0);
-      probe10 : in std_logic_vector(2 downto 0);
-      probe11 : in std_logic_vector(3 downto 0);
-      probe12 : in std_logic_vector(7 downto 0);
-      probe13 : in std_logic_vector(3 downto 0);
-      probe14 : in std_logic_vector(2 downto 0);
-      probe15 : in std_logic_vector(3 downto 0);
-      probe16 : in std_logic_vector(7 downto 0);
-      probe17 : in std_logic_vector(3 downto 0);
-      probe18 : in std_logic_vector(2 downto 0);
-      probe19 : in std_logic_vector(3 downto 0);
-      probe20 : in std_logic_vector(7 downto 0)
-      );
-  end component;
-
   function pad_layer (pad : natural; data : std_logic_vector)
     -- function to take slv + padding and pad both the left and right sides
     return std_logic_vector is
@@ -154,72 +124,7 @@ architecture behavioral of pat_unit_mux is
   signal segments      : pat_unit_mux_list_t (WIDTH-1 downto 0);
   signal segments_last : pat_unit_mux_list_t (WIDTH-1 downto 0);
 
-  signal dbg : std_logic_vector(5 downto 0);
-
 begin
-
-  dbg(0) <= ly0_padded (phase_i+0*MUX_FACTOR+PADDING*2 downto phase_i+0*MUX_FACTOR)(PADDING+2);
-  dbg(1) <= ly1_padded (phase_i+0*MUX_FACTOR+PADDING*2 downto phase_i+0*MUX_FACTOR)(PADDING+2);
-  dbg(2) <= ly2_padded (phase_i+0*MUX_FACTOR+PADDING*2 downto phase_i+0*MUX_FACTOR)(PADDING+2);
-  dbg(3) <= ly3_padded (phase_i+0*MUX_FACTOR+PADDING*2 downto phase_i+0*MUX_FACTOR)(PADDING+2);
-  dbg(4) <= ly4_padded (phase_i+0*MUX_FACTOR+PADDING*2 downto phase_i+0*MUX_FACTOR)(PADDING+2);
-  dbg(5) <= ly5_padded (phase_i+0*MUX_FACTOR+PADDING*2 downto phase_i+0*MUX_FACTOR)(PADDING+2);
-
-  debug_gen : if (DEBUG) generate
-
-    ila_partition_inst : ila_chamber
-      port map (
-        clk => clock,
-
-        -- (ly)(strip)
-        probe0(0) => ly0(0),
-        probe0(1) => ly1(0),
-        probe0(2) => ly2(0),
-        probe0(3) => ly3(0),
-        probe0(4) => ly4(0),
-        probe0(5) => ly5(0),
-
-        -- (ly)(strip)
-        probe1(0) => dbg(0),
-        probe1(1) => dbg(1),
-        probe1(2) => dbg(2),
-        probe1(3) => dbg(3),
-        probe1(4) => dbg(4),
-        probe1(5) => dbg(5),
-
-        probe2(0) => dav_i,
-        probe2(1) => dav_o,
-        probe2(2) => dav_reg,
-        probe2(3) => pat_unit_dav(0),
-        probe2(4) => '0',
-        probe2(5) => '0',
-
-        probe3 => std_logic_vector(to_unsigned(patterns_mux_phase, 3)),
-
-        probe4 => (others => '0'),
-
-        probe5 => (others => '0'),
-        probe6 => std_logic_vector(segments_o(3).lc),
-        probe7 => std_logic_vector(segments_o(3).id),
-        probe8 => std_logic_vector(segments_o(3).strip),
-
-        probe9  => (others => '0'),
-        probe10 => std_logic_vector(segments_o(2).lc),
-        probe11 => std_logic_vector(segments_o(2).id),
-        probe12 => std_logic_vector(segments_o(2).strip),
-
-        probe13 => (others => '0'),
-        probe14 => std_logic_vector(patterns_mux(0).lc),
-        probe15 => std_logic_vector(patterns_mux(0).id),
-        probe16 => (others => '0'),
-
-        probe17 => (others => '0'),
-        probe18 => std_logic_vector(strips_demux(2).lc),
-        probe19 => std_logic_vector(strips_demux(2).id),
-        probe20 => std_logic_vector(strips_demux(2).strip)
-
-        );
-  end generate;
 
   --------------------------------------------------------------------------------
   -- Asserts
