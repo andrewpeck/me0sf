@@ -15,6 +15,14 @@ Each ME0 chamber is composed of 6 layers of GEMs.
 
 Each layer is composed of 8 partitions in eta, each of which is split into 384 strips in phi.
 
+The trigger output of a GEM chamber is a binary readout called an "S-bit", which is the OR of two adjacent strips. The resolution of a ME0 chamber in the trigger path is therefore 1/2 of the fundamental resolution, or 8x192 strips per layer.
+
+In summary, and ME0 Chamber has:
+ - 6 layers
+ - each layer has 8 eta partitions
+ - each eta partition has 384 strips (192 s-bits)
+ - 1536 sbits / layer / bx  * 6 layers = 9216 sbits / bx
+
 The orientation of the chamber relative to the interaction point is:
 
 #+begin_example
@@ -31,25 +39,30 @@ The orientation of the chamber relative to the interaction point is:
 --IP-----------------------
 #+end_example
 
-The trigger output of a GEM chamber is a binary readout called an "S-bit", which is the OR of two adjacent strips. The resolution of a ME0 chamber in the trigger path is therefore 1/2 of the fundamental resolution, or 8x192 strips per layer.
+#+begin_example
+\ 16        8         0  /    prt0
+ \ 17       9        1  /     prt1
+  \ 18      10      2  /      prt2
+   \ 19     11     3  /       prt3
+    \ 20    12    4  /        prt4
+     \ 21   13   5  /         prt5
+      \ 22  14  6  /          prt6
+       \ 23 15 7  /           prt7
 
-In summary, and ME0 Chamber has:
- - 6 layers
- - each layer has 8 eta partitions
- - each eta partition has 384 strips (192 s-bits)
- - 1536 sbits / layer / bx  * 6 layers = 9216 sbits / bx
+     strip 191 --> 0
+#+end_example
 
 The basic goal of segment finding in ME0 is that we want to:
 
 1. Identify multi-layer segments
 2. Do some refined angular/position calculation using multi-layer hit data
 
-In a somewhat abstract sense, the mechanism to do this segment identification is along the lines of:
+The mechanism to do this segment identification is broadly something like:
 
-1) Need to identify segments locally
+1) Identify segments locally
    + Create "segment candidates" with some sortable key field
    + Done in parallel, many times
-2) Need to sort segment candidates into a smaller number of output candidates
+2) Sort segment candidates into a smaller number of output candidates
    + Development of sorting machinery can be somewhat decoupled from the exact segment identification mechanism
 3) Perform some post-processing on the segment candidates to produce a refined measurement (some kind of fit)
 
@@ -61,7 +74,7 @@ digraph {
   edge [fontname = "Roboto Mono"];
   node [shape=box]
   rankdir=LR
-  "Input\nSbits" -> "Centroid\nFiltering" -> "Segment\nIdentification" -> "Sorting" -> "Fitting" -> "Output"
+  "Input\nSbits" -> "Segment\nIdentification" -> "Sorting" -> "Fitting" -> "Output"
 }
 #+end_src
 
@@ -562,7 +575,6 @@ Hits are simply bits in the BigInt, e.g. a hit on strip 10 is represented by ~1 
 | Dipartition sorter | 5888  (736 each)        |                                           |
 | Partition          | 382976 (23936 each)     |                                           |
 |                    | ~~> pat unit = 18780 ea |                                           |
-|                    | ~~> Deadzone = 1343 ea  |                                           |
 |                    | ~~> Deghost = 2645      |                                           |
 #+TBLFM: $2=23936*16
 
