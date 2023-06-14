@@ -30,9 +30,24 @@ begin
     data_o <= data_i;
   end generate;
 
-  latency_nonzero : if (DELAY > 0) generate
+  latency_one : if (DELAY = 1) generate
+    process (clock) is
+    begin
+      if (rising_edge(clock)) then
+        data_o <= data_i;
+      end if;
+    end process;
+  end generate;
+
+  latency_nonzero : if (DELAY > 1) generate
+
     type data_array_t is array (DELAY-1 downto 0) of std_logic_vector(WIDTH-1 downto 0);
+
     signal data : data_array_t;
+
+    -- attribute srl_style : string;
+    -- attribute srl_style of data : signal is "srl";
+
   begin
 
     process (clock) is
