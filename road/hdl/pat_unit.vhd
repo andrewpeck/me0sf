@@ -63,8 +63,6 @@ end pat_unit;
 
 architecture behavioral of pat_unit is
 
-  signal dav_s1 : std_logic := '0';
-
   signal pats : pat_unit_pre_list_t (NUM_PATTERNS-1 downto 0)
     := (others => null_pat_unit_pre);
 
