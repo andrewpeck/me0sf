@@ -213,8 +213,8 @@ def pat_unit(data,
 
     cluster_size_counts = calculate_cluster_size(data)
     max_cluster_size = max(cluster_size_counts)
-    if max_cluster_size > 3:
-        best.reset()
+    #if max_cluster_size > 3:
+    #    best.reset()
 
     best.partition=partition
 
