@@ -38,6 +38,10 @@ def analysis(root_dat, hits, bx, bx_list, cross_part, verbose, pu, num_or):
     offline_purity_total_eta = ROOT.TH1F("offline_purity_total_eta", "offline_purity_total_eta",8,0.5,8.5) 
     offline_purity_passed_bending = ROOT.TH1F("offline_purity_passed_bending", "offline_purity_passed_bending",14, -7., 7.)
     offline_purity_total_bending = ROOT.TH1F("offline_purity_total_bending", "offline_purity_total_bending",14, -7., 7.) 
+    offline_effi_passed_id = ROOT.TH1F("offline_effi_passed_id", "offline_effi_passed_id",19, 0.5, 19.5)
+    offline_effi_total_id = ROOT.TH1F("offline_effi_total_id", "offline_effi_total_id",19, 0.5, 19.5)
+    offline_purity_passed_id = ROOT.TH1F("offline_purity_passed_id", "offline_purity_passed_id",19, 0.5, 19.5)
+    offline_purity_total_id = ROOT.TH1F("offline_purity_total_id", "offline_purity_total_id",19, 0.5, 19.5)
 
     # defining histograms for simtrack vs online
     bins = [0.0,1.0,2.0,3.0,4.0,5.0,10.0,15.0,20.0,25.0,30.0,35.0,40.0,45.0,50.0]
@@ -53,6 +57,10 @@ def analysis(root_dat, hits, bx, bx_list, cross_part, verbose, pu, num_or):
     st_purity_total_eta = ROOT.TH1F("st_purity_total_eta", "st_purity_total_eta",8,0.5,8.5) 
     st_purity_passed_bending = ROOT.TH1F("st_purity_passed_bending", "st_purity_passed_bending",14, -7., 7.)
     st_purity_total_bending = ROOT.TH1F("st_purity_total_bending", "st_purity_total_bending",14, -7., 7.) 
+    st_effi_passed_id = ROOT.TH1F("st_effi_passed_id", "st_effi_passed_id",19, 0.5, 19.5)
+    st_effi_total_id = ROOT.TH1F("st_effi_total_id", "st_effi_total_id",19, 0.5, 19.5)
+    st_purity_passed_id = ROOT.TH1F("st_purity_passed_id", "st_purity_passed_id",19, 0.5, 19.5)
+    st_purity_total_id = ROOT.TH1F("st_purity_total_id", "st_purity_total_id",19, 0.5, 19.5)
 
     # define the histograms efficiency vs pt for each pattern (simtracks)
     st_effi_passed_pt1 = ROOT.TH1F("st_effi_passed_pt1", "st_effi_passed_pt1",14, array('d',bins)) 
@@ -402,6 +410,8 @@ def analysis(root_dat, hits, bx, bx_list, cross_part, verbose, pu, num_or):
             offline_nlayers = seg_nlayers[i]
             offline_effi_total_bending.Fill(offline_bending_angle)
             offline_effi_total_eta.Fill(offline_eta_partition)
+            for id in range(1,20):
+                offline_effi_total_id.Fill(id)
             n_offline_effi_total += 1
 
             seg_match = 0
@@ -431,6 +441,7 @@ def analysis(root_dat, hits, bx, bx_list, cross_part, verbose, pu, num_or):
                         #if bending_angle_err < 0.4 or abs(online_bending_angle - offline_bending_angle) <= 0.6: # match criteria for bending angle
                         offline_effi_passed_bending.Fill(offline_bending_angle)
                         offline_effi_passed_eta.Fill(offline_eta_partition)
+                        offline_effi_passed_id.Fill(online_id)
                         n_offline_effi_passed += 1
                         offline_effi_mres.Fill(offline_bending_angle - online_bending_angle)
                         offline_effi_sres.Fill(offline_substrip - online_substrip)
@@ -465,6 +476,8 @@ def analysis(root_dat, hits, bx, bx_list, cross_part, verbose, pu, num_or):
             st_effi_total_bending.Fill(st_bending_angle)
             st_effi_total_pt.Fill(st_pt)
             st_effi_total_eta.Fill(st_eta_partition+1)
+            for id in range(1,20):
+                st_effi_total_id.Fill(id)
             n_st_effi_total += 1
 
             track_match = 0
@@ -494,6 +507,7 @@ def analysis(root_dat, hits, bx, bx_list, cross_part, verbose, pu, num_or):
                         st_effi_passed_bending.Fill(st_bending_angle)
                         st_effi_passed_pt.Fill(st_pt)
                         st_effi_passed_eta.Fill(st_eta_partition+1)
+                        st_effi_passed_id.Fill(online_id)
 
                         if online_id == 1:
                             st_effi_passed_pt1.Fill(st_pt)
@@ -559,10 +573,13 @@ def analysis(root_dat, hits, bx, bx_list, cross_part, verbose, pu, num_or):
                 online_eta_partition = seg.partition
                 online_substrip = seg.substrip+seg.strip
                 online_bending_angle = seg.bend_ang
+                online_id = seg.id
                 st_purity_total_eta.Fill(online_eta_partition+1)
                 st_purity_total_bending.Fill(online_bending_angle)
+                st_purity_total_id.Fill(online_id)
                 offline_purity_total_eta.Fill(online_eta_partition+1)
                 offline_purity_total_bending.Fill(online_bending_angle)
+                offline_purity_total_id.Fill(online_id)
                 n_st_purity_total += 1
                 n_offline_purity_total += 1
 
@@ -581,6 +598,7 @@ def analysis(root_dat, hits, bx, bx_list, cross_part, verbose, pu, num_or):
                             #if bending_angle_err < 0.4 or abs(online_bending_angle - offline_bending_angle) <= 0.6: # match criteria for bending angle
                             offline_purity_passed_eta.Fill(online_eta_partition+1)
                             offline_purity_passed_bending.Fill(online_bending_angle)
+                            offline_purity_passed_id.Fill(online_id)
                             n_offline_purity_passed += 1
                             break
 
@@ -599,6 +617,7 @@ def analysis(root_dat, hits, bx, bx_list, cross_part, verbose, pu, num_or):
                             #if bending_angle_err < 0.4 or abs(online_bending_angle - st_bending_angle) <= 0.6: # match criteria for bending angle
                             st_purity_passed_eta.Fill(online_eta_partition+1)
                             st_purity_passed_bending.Fill(online_bending_angle)
+                            st_purity_passed_id.Fill(online_id)
                             n_st_purity_passed += 1
                             break
 
@@ -671,6 +690,26 @@ def analysis(root_dat, hits, bx, bx_list, cross_part, verbose, pu, num_or):
     latex.DrawLatex(0.42, 0.91,plot_text2)
     c1eta.Print("offline_eff_eta_%s_bx%s_crosspart_%s_or%d.pdf"%(hits, bx, cross_part, num_or))
     offline_eff_eta.Write()
+
+
+    c1id = ROOT.TCanvas('', '', 800, 650)
+    c1id.SetGrid()
+    c1id.DrawFrame(0, 0, 20, 1.1, ";Pattern ID;Efficiency")
+    offline_eff_id = ROOT.TEfficiency(offline_effi_passed_id, offline_effi_total_id)
+    offline_eff_id.Draw("same")
+    offline_eff_id.SetMarkerStyle(8)
+    offline_eff_id.SetMarkerSize(1)
+    offline_eff_id.SetMarkerColor(1)
+    offline_eff_id.SetLineWidth(1)
+    offline_eff_id.SetLineColor(1)
+    ROOT.gPad.Update()
+    offline_eff_id.GetPaintedGraph().GetYaxis().SetLabelSize(0.04)
+    offline_eff_id.GetPaintedGraph().GetXaxis().SetLabelSize(0.04)
+    ROOT.gPad.Update()
+    latex.DrawLatex(0.9, 0.91,plot_text1)
+    latex.DrawLatex(0.42, 0.91,plot_text2)
+    c1id.Print("offline_eff_id_%s_bx%s_crosspart_%s_or%d.pdf"%(hits, bx, cross_part, num_or))
+    offline_eff_id.Write()
 
     c2 = ROOT.TCanvas('', '', 800, 650)
     c2.SetGrid()
@@ -1346,6 +1385,25 @@ def analysis(root_dat, hits, bx, bx_list, cross_part, verbose, pu, num_or):
         c6.Print("st_eff_eta_%s_bx%s_crosspart_%s_or%d.pdf"%(hits, bx, cross_part, num_or))
         st_eff_eta.Write()
 
+        c6id = ROOT.TCanvas('', '', 800, 650)
+        c6id.SetGrid()
+        c6id.DrawFrame(0, 0, 20, 1.1, ";Pattern ID;Efficiency")
+        st_eff_id = ROOT.TEfficiency(st_effi_passed_id, st_effi_total_id)
+        st_eff_id.Draw("same")
+        st_eff_id.SetMarkerStyle(8)
+        st_eff_id.SetMarkerSize(1)
+        st_eff_id.SetMarkerColor(1)
+        st_eff_id.SetLineWidth(1)
+        st_eff_id.SetLineColor(1)
+        ROOT.gPad.Update()
+        st_eff_id.GetPaintedGraph().GetYaxis().SetLabelSize(0.04)
+        st_eff_id.GetPaintedGraph().GetXaxis().SetLabelSize(0.04)
+        ROOT.gPad.Update()
+        latex.DrawLatex(0.9, 0.91,plot_text1)
+        latex.DrawLatex(0.42, 0.91,plot_text2)
+        c6id.Print("st_eff_id_%s_bx%s_crosspart_%s_or%d.pdf"%(hits, bx, cross_part, num_or))
+        st_eff_id.Write()
+
         c7 = ROOT.TCanvas('', '', 800, 650)
         c7.SetGrid()
         c7.DrawFrame(-1, 0, 1, 1.5, ";Bending Angle (sbits/layer);")
@@ -1426,6 +1484,25 @@ def analysis(root_dat, hits, bx, bx_list, cross_part, verbose, pu, num_or):
     c10.Print("st_purity_bending_%s_bx%s_crosspart_%s_or%d.pdf"%(hits, bx, cross_part, num_or))
     st_purity_bending.Write()
 
+    c10id = ROOT.TCanvas('', '', 800, 650)
+    c10id.SetGrid()
+    c10id.DrawFrame(0, 0, 20, 1.1, ";Pattern ID;Purity")
+    st_purity_id = ROOT.TEfficiency(st_purity_passed_id, st_purity_total_id)
+    st_purity_id.Draw("same")
+    st_purity_id.SetMarkerStyle(8)
+    st_purity_id.SetMarkerSize(1)
+    st_purity_id.SetMarkerColor(1)
+    st_purity_id.SetLineWidth(1)
+    st_purity_id.SetLineColor(1)
+    ROOT.gPad.Update()
+    st_purity_id.GetPaintedGraph().GetYaxis().SetLabelSize(0.04)
+    st_purity_id.GetPaintedGraph().GetXaxis().SetLabelSize(0.04)
+    ROOT.gPad.Update()
+    latex.DrawLatex(0.9, 0.91,plot_text1)
+    latex.DrawLatex(0.42, 0.91,plot_text2)
+    c10id.Print("st_purity_id_%s_bx%s_crosspart_%s_or%d.pdf"%(hits, bx, cross_part, num_or))
+    st_purity_id.Write()
+
     c9_off = ROOT.TCanvas('', '', 800, 650)
     c9_off.SetGrid()
     c9_off.DrawFrame(0, 0, 9, 1.1, ";#eta Partition;Purity")
@@ -1463,6 +1540,25 @@ def analysis(root_dat, hits, bx, bx_list, cross_part, verbose, pu, num_or):
     latex.DrawLatex(0.42, 0.91,plot_text2)
     c10_off.Print("offline_purity_bending_%s_bx%s_crosspart_%s_or%d.pdf"%(hits, bx, cross_part, num_or))
     offline_purity_bending.Write()
+
+    c10_offid = ROOT.TCanvas('', '', 800, 650)
+    c10_offid.SetGrid()
+    c10_offid.DrawFrame(0, 0, 20, 1.1, ";Pattern ID;Purity")
+    offline_purity_id = ROOT.TEfficiency(offline_purity_passed_id, offline_purity_total_id)
+    offline_purity_id.Draw("same")
+    offline_purity_id.SetMarkerStyle(8)
+    offline_purity_id.SetMarkerSize(1)
+    offline_purity_id.SetMarkerColor(1)
+    offline_purity_id.SetLineWidth(1)
+    offline_purity_id.SetLineColor(1)
+    ROOT.gPad.Update()
+    offline_purity_id.GetPaintedGraph().GetYaxis().SetLabelSize(0.04)
+    offline_purity_id.GetPaintedGraph().GetXaxis().SetLabelSize(0.04)
+    ROOT.gPad.Update()
+    latex.DrawLatex(0.9, 0.91,plot_text1)
+    latex.DrawLatex(0.42, 0.91,plot_text2)
+    c10_offid.Print("offline_purity_id_%s_bx%s_crosspart_%s_or%d.pdf"%(hits, bx, cross_part, num_or))
+    offline_purity_id.Write()
 
     c11 = ROOT.TCanvas('', '', 800, 650)
     c11.SetGrid()
