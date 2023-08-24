@@ -218,8 +218,8 @@ def pat_unit(data,
     if (best.id <= 10):
         best.reset()
 
-    cluster_size_max_limit = 4
-    n_hits_max_limit = 4
+    cluster_size_max_limit = 3
+    n_hits_max_limit = 6
     cluster_size_counts = calculate_cluster_size(data)
     n_hits_counts = calculate_hits(data)
     n_layers_large_clusters = 0
@@ -231,7 +231,8 @@ def pat_unit(data,
         if l > n_hits_max_limit:
             n_layers_large_hits += 1
     if n_layers_large_clusters > 1:
-    # if n_layers_large_hits > 1:
+        best.reset()
+    if n_layers_large_hits >= 1:
         best.reset()
 
     best.partition=partition
