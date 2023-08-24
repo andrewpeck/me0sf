@@ -96,6 +96,10 @@ def calculate_cluster_size(data):
     cluster_size_per_layer = [max_cluster_size(x) for x in data]
     return cluster_size_per_layer
 
+def calculate_hits(data):
+    n_hits_per_layer = [count_ones(x) for x in data]
+    return n_hits_per_layer
+
 def pat_unit(data,
              strip : int = 0,
              ly_thresh : int = 4,
@@ -206,15 +210,29 @@ def pat_unit(data,
     # (7) apply a layer threshold
     if (partition % 2 != 0):
         ly_thresh += 1
-    if (best.id <= 10):
-        ly_thresh += 1
+    #if (best.id <= 10):
+    #    ly_thresh += 1
     if (best.lc < ly_thresh):
         best.reset()
 
+    if (best.id <= 10):
+        best.reset()
+
+    cluster_size_max_limit = 4
+    n_hits_max_limit = 4
     cluster_size_counts = calculate_cluster_size(data)
-    max_cluster_size = max(cluster_size_counts)
-    #if max_cluster_size > 3:
-    #    best.reset()
+    n_hits_counts = calculate_hits(data)
+    n_layers_large_clusters = 0
+    n_layers_large_hits = 0
+    for l in cluster_size_counts:
+        if l > cluster_size_counts:
+            n_layers_large_clusters += 1
+    for l in n_hits_counts:
+        if l > n_hits_max_limit:
+            n_layers_large_hits += 1
+    if n_layers_large_clusters > 1:
+    # if n_layers_large_hits > 1:
+        best.reset()
 
     best.partition=partition
 
