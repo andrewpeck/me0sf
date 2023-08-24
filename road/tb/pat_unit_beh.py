@@ -225,7 +225,7 @@ def pat_unit(data,
     n_layers_large_clusters = 0
     n_layers_large_hits = 0
     for l in cluster_size_counts:
-        if l > cluster_size_counts:
+        if l > cluster_size_max_limit:
             n_layers_large_clusters += 1
     for l in n_hits_counts:
         if l > n_hits_max_limit:
