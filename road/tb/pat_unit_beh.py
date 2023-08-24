@@ -224,8 +224,9 @@ def pat_unit(data,
         best.reset()
     if n_layers_large_clusters > 1:
         best.reset()
-    #elif n_layers_large_clusters == 1:
-    #    ly_thresh += 1
+    #if n_layers_large_clusters == 1:
+    if n_layers_large_hits == 1:
+        ly_thresh += 1
 
     # (8) apply a layer threshold
     if (partition % 2 != 0):
