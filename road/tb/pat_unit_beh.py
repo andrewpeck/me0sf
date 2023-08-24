@@ -207,7 +207,7 @@ def pat_unit(data,
     # (6) choose the max of all patterns
     best = max(seg_list) # type: ignore
 
-    # (7) remove segments with noisy layers or multiple large clusters
+    # (7) remove segments with multiple noisy layers or multiple large clusters
     cluster_size_max_limit = 3
     n_hits_max_limit = 6
     cluster_size_counts = calculate_cluster_size(data)
@@ -224,8 +224,8 @@ def pat_unit(data,
         best.reset()
     if n_layers_large_clusters > 1:
         best.reset()
-    elif n_layers_large_clusters == 1:
-        ly_thresh += 1
+    #elif n_layers_large_clusters == 1:
+    #    ly_thresh += 1
 
     # (8) apply a layer threshold
     if (partition % 2 != 0):
