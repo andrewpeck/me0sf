@@ -220,8 +220,8 @@ def pat_unit(data,
     for l in n_hits_counts:
         if l > n_hits_max_limit:
             n_layers_large_hits += 1
-    if n_layers_large_hits > 1:
-        best.reset()
+    #if n_layers_large_hits > 1:
+    #    best.reset()
     if n_layers_large_clusters > 1:
         best.reset()
     #if n_layers_large_clusters == 1:
