@@ -212,7 +212,7 @@ def pat_unit(data,
         ly_thresh += 1
     if (best.id <= 12):
         ly_thresh += 1
-    ly_thresh = min(ly_thresh, 6)
+    ly_thresh = min(ly_thresh, 5)
     if (best.lc < ly_thresh):
         best.reset()
 
@@ -233,8 +233,9 @@ def pat_unit(data,
     for l in n_hits_counts:
         if l > n_hits_max_limit:
             n_layers_large_hits += 1
-    #if n_layers_large_clusters > 1:
-    #    best.reset()
+    if (best.id <= 12):
+        if n_layers_large_clusters > 1:
+            best.reset()
     #if n_layers_large_hits > 1:
     #    best.reset()
 
