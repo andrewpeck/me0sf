@@ -236,7 +236,7 @@ def pat_unit(data,
     if (best.id <= 12):
         if n_layers_large_clusters > 0:
             best.reset()
-    else:
+    elif (best.id <= 14):
         if n_layers_large_clusters > 1:
             best.reset()
     #if n_layers_large_hits > 1:
