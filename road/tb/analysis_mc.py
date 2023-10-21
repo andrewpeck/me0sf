@@ -83,6 +83,7 @@ def analysis(root_dat, hits, bx, bx_list, cross_part, verbose, pu, num_or):
     st_effi_passed_pt18 = ROOT.TH1F("st_effi_passed_pt18", "st_effi_passed_pt18",14, array('d',bins)) 
     st_effi_passed_pt19 = ROOT.TH1F("st_effi_passed_pt19", "st_effi_passed_pt19",14, array('d',bins)) 
 
+    # Counters for Efficiency
     n_offline_effi_total = 0
     n_offline_effi_passed = 0
     n_offline_purity_total = 0
@@ -91,7 +92,7 @@ def analysis(root_dat, hits, bx, bx_list, cross_part, verbose, pu, num_or):
     n_st_effi_passed = 0
     n_st_purity_total = 0
     n_st_purity_passed = 0
-    
+
     n_total_events = len(root_dat)
     prev_frac_done = 0
 
