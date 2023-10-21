@@ -359,7 +359,7 @@ def analysis(root_dat, hits, bx, bx_list, cross_part, verbose, pu, num_or):
 
     avg_frac = 0
     for i in range(0,36):
-        frac += float(n_total_event_chamber[i])/float(n_events_base)
+        frac = float(n_total_event_chamber[i])/float(n_events_base)
         avg_frac += frac
         print("  Chamber #%d: %.4f\n\n"%(i, frac))
         file_out.write("  Chamber #%d: %.4f\n"%(i, frac))
