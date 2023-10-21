@@ -469,8 +469,8 @@ def analysis(root_dat, hits, bx, bx_list, cross_part, verbose, pu, num_or):
     me0_h_seg_rate_frac_eta_partition.SetMarkerColor(ROOT.kBlack)
     me0_h_seg_rate_frac_eta_partition.SetLineWidth(2)
     me0_h_seg_rate_frac_eta_partition.SetLineColor(ROOT.kBlack)
-    latex.DrawLatex(0.9, 0.91,plot_text1.c_str())
-    latex.DrawLatex(0.37, 0.91,plot_text2.c_str())
+    latex.DrawLatex(0.9, 0.91,plot_text1)
+    latex.DrawLatex(0.37, 0.91,plot_text2)
     c1.Print("regional_trigger_l1a_fraction_vs_eta_per_eta_partition_%s_bx%s_crosspart_%s_or%d.pdf"%(hits, bx, cross_part, num_or))
 
     c3 = ROOT.TCanvas("c3","test",720,500)
@@ -482,8 +482,8 @@ def analysis(root_dat, hits, bx, bx_list, cross_part, verbose, pu, num_or):
     me0_h_seg_rate_frac_vfat_window.SetMarkerColor(ROOT.kBlack)
     me0_h_seg_rate_frac_vfat_window.SetLineWidth(2)
     me0_h_seg_rate_frac_vfat_window.SetLineColor(ROOT.kBlack)
-    latex.DrawLatex(0.9, 0.91,plot_text1.c_str())
-    latex.DrawLatex(0.37, 0.91,plot_text2.c_str())
+    latex.DrawLatex(0.9, 0.91,plot_text1)
+    latex.DrawLatex(0.37, 0.91,plot_text2)
     c3.Print("regional_trigger_l1a_fraction_vs_eta_per_vfat_window_%s_bx%s_crosspart_%s_or%d.pdf"%(hits, bx, cross_part, num_or))
 
     c5 = ROOT.TCanvas("c5","test",720,500)
@@ -495,8 +495,8 @@ def analysis(root_dat, hits, bx, bx_list, cross_part, verbose, pu, num_or):
     me0_h_seg_rate_frac_vfat_digihits.SetMarkerColor(ROOT.kBlack)
     me0_h_seg_rate_frac_vfat_digihits.SetLineWidth(2)
     me0_h_seg_rate_frac_vfat_digihits.SetLineColor(ROOT.kBlack)
-    latex.DrawLatex(0.9, 0.91,plot_text1.c_str())
-    latex.DrawLatex(0.37, 0.91,plot_text2.c_str())
+    latex.DrawLatex(0.9, 0.91,plot_text1)
+    latex.DrawLatex(0.37, 0.91,plot_text2)
     c5.Print("regional_trigger_l1a_fraction_vs_eta_per_vfat_digihits_%s_bx%s_crosspart_%s_or%d.pdf"%(hits, bx, cross_part, num_or))
 
     file_out.close()
