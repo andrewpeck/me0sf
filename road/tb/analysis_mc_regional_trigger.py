@@ -440,7 +440,7 @@ def analysis(root_dat, hits, bx, bx_list, cross_part, verbose, pu, num_or):
     file_out.write("Efficiency loss with regional triggering per Digi Hits in VFATs in Chambers with >= 1 Segment: \n")
     for i in range(0,8):
         file_out.write("  For eta partition %d = %.4f\n"%(i,effi_loss_per_vfat_digihits[i]))
-    file_out("\n")
+    file_out.write("\n")
 
     plot_file = ROOT.TFile("output_plots_%s_bx%s_crosspart_%s_or%d_regional_trigger.root"%(hits, bx, cross_part, num_or), "recreate")
     plot_file.cd()
