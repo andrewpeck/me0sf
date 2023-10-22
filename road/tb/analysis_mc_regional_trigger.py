@@ -388,11 +388,11 @@ def analysis(root_dat, hits, bx, bx_list, cross_part, verbose, pu, num_or):
         avg_frac_vfat_digihits = 0
 
         for j in range(0,36):
-            avg_frac_eta += float(n_total_event_chamber_eta[j][i])/float(n_events_base)
+            avg_frac_eta += (float(n_total_event_chamber_eta[j][i])/float(n_events_base))
             for k in range(0,6):
                 for l in range(0,3):
-                    avg_frac_vfat_window += (float(n_total_event_chamber_eta_layer_vfat_window[j][i][k][l])/float(n_events_base))
-                    avg_frac_vfat_digihits += (float(n_total_event_chamber_eta_layer_vfat_digihits[j][i][k][l])/float(n_events_base))
+                    avg_frac_vfat_window += ((float(n_total_event_chamber_eta_layer_vfat_window[j][i][k][l])/float(n_events_base)))
+                    avg_frac_vfat_digihits += ((float(n_total_event_chamber_eta_layer_vfat_digihits[j][i][k][l])/float(n_events_base)))
         avg_frac_eta = avg_frac_eta/36.0
         avg_frac_vfat_window = avg_frac_vfat_window/(36.0 * 6.0 * 3.0)
         avg_frac_vfat_digihits = avg_frac_vfat_digihits/(36.0 * 6.0 * 3.0)
