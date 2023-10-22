@@ -442,7 +442,7 @@ def analysis(root_dat, hits, bx, bx_list, cross_part, verbose, pu, num_or):
         file_out.write("  For eta partition %d = %.4f\n"%(i,effi_loss_per_vfat_digihits[i]))
     file_out.write("\n")
 
-    plot_file = ROOT.TFile("output_plots_%s_bx%s_crosspart_%s_or%d_regional_trigger.root"%(hits, bx, cross_part, num_or), "recreate")
+    plot_file = ROOT.TFile("output_regional_trigger_plots_%s_bx%s_crosspart_%s_or%d.root"%(hits, bx, cross_part, num_or), "recreate")
     plot_file.cd()
     me0_h_seg_rate_frac_eta_partition.Write()
     me0_h_seg_rate_frac_vfat_window.Write()
