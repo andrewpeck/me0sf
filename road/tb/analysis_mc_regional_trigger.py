@@ -30,10 +30,10 @@ def analysis(root_dat, hits, bx, bx_list, cross_part, verbose, pu, num_or):
 
     # Counters for Regional Trigger
     n_events_base = 0
-    n_total_event_chamber = 36*[0]
-    n_total_event_chamber_eta = 36*[8*[0]]
-    n_total_event_chamber_eta_layer_vfat_window= 36*[8*[6*[3*[0]]]]
-    n_total_event_chamber_eta_layer_vfat_digihits = 36*[8*[6*[3*[0]]]]
+    n_total_event_chamber = [0 for i in range(0,36)]
+    n_total_event_chamber_eta = [[0 for j in range(0,8)] for i in range(0,36)]
+    n_total_event_chamber_eta_layer_vfat_window= [[[ [0 for l in range(0,3)]for k in range(0,6)] for j in range(0,8)] for i in range(0,36)]
+    n_total_event_chamber_eta_layer_vfat_digihits = [[[ [0 for l in range(0,3)]for k in range(0,6)] for j in range(0,8)] for i in range(0,36)]
 
     n_total_events = len(root_dat)
     prev_frac_done = 0
@@ -248,10 +248,10 @@ def analysis(root_dat, hits, bx, bx_list, cross_part, verbose, pu, num_or):
 
         
         # Regional triggering fractions for online segments
-        n_segments_chamber = 36*[0]
-        n_segments_chamber_eta = 36*[8*[0]]
-        n_segments_chamber_eta_layer_vfat_window = 36*[8*[6*[3*[0]]]]
-        n_segments_chamber_eta_layer_vfat_digihits = 36*[8*[6*[3*[0]]]]
+        n_segments_chamber = [0 for i in range(0,36)]
+        n_segments_chamber_eta = [[0 for j in range(0,8)] for i in range(0,36)]
+        n_segments_chamber_eta_layer_vfat_window = [[[ [0 for l in range(0,3)]for k in range(0,6)] for j in range(0,8)] for i in range(0,36)]
+        n_segments_chamber_eta_layer_vfat_digihits = [[[ [0 for l in range(0,3)]for k in range(0,6)] for j in range(0,8)] for i in range(0,36)]
 
         # Looping over all segments in ME0 in an event
         for chamber in online_segment_chamber: 
@@ -271,8 +271,8 @@ def analysis(root_dat, hits, bx, bx_list, cross_part, verbose, pu, num_or):
                     strip_window_ul = 191
 
                 seg_eta = []
-                seg_eta_layer_vfat_window = 8*[6*[[]]]
-                seg_eta_layer_vfat_digihits = 8*[6*[[]]]
+                seg_eta_layer_vfat_window = [[[] for j in range(0,6)] for i in range(0,8)]
+                seg_eta_layer_vfat_digihits = [[[] for j in range(0,6)] for i in range(0,8)]
 
                 if online_lc < 4:
                     continue
@@ -372,9 +372,9 @@ def analysis(root_dat, hits, bx, bx_list, cross_part, verbose, pu, num_or):
 
     effi_loss = 0
     effi_loss_per_chamber = 0
-    effi_loss_per_eta_partition = 8*[0]
-    effi_loss_per_vfat_window = 8*[0]
-    effi_loss_per_vfat_digihits = 8*[0]
+    effi_loss_per_eta_partition = [0 for i in range(0,8)]
+    effi_loss_per_vfat_window = [0 for i in range(0,8)]
+    effi_loss_per_vfat_digihits = [0 for i in range(0,8)]
     L1A_rate = 750.00*1000 # 750 kHz
     BX = 25.00 * pow(10,-9) # 25 ns
     BX_gap = (1.0/L1A_rate)/BX
