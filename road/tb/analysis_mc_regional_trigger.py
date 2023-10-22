@@ -263,8 +263,8 @@ def analysis(root_dat, hits, bx, bx_list, cross_part, verbose, pu, num_or):
 
                 num_or_to_span = {2:37, 4:19, 8:11, 16:7}
                 max_span = num_or_to_span[num_or]
-                strip_window_ll = online_strip - 18
-                strip_window_ul = online_strip + 18
+                strip_window_ll = online_strip - max_span//2
+                strip_window_ul = online_strip + max_span//2
                 if strip_window_ll < 1:
                     strip_window_ll = 1
                 if strip_window_ul > 191:
@@ -337,15 +337,15 @@ def analysis(root_dat, hits, bx, bx_list, cross_part, verbose, pu, num_or):
             if n_segments_chamber[i] >= 1:
                 n_total_event_chamber[i] += 1
                 n_event_match = 1
-                for j in range(0,8):
-                    if n_segments_chamber_eta[i][j] >= 1:
-                        n_total_event_chamber_eta[i][j] += 1
-                    for k in range(0,6):
-                        for l in range(0,3):
-                            if n_segments_chamber_eta_layer_vfat_window[i][j][k][l] >= 1:
-                                n_total_event_chamber_eta_layer_vfat_window[i][j][k][l] += 1
-                            if n_segments_chamber_eta_layer_vfat_digihits[i][j][k][l] >= 1:
-                                n_total_event_chamber_eta_layer_vfat_digihits[i][j][k][l] += 1
+            for j in range(0,8):
+                if n_segments_chamber_eta[i][j] >= 1:
+                    n_total_event_chamber_eta[i][j] += 1
+                for k in range(0,6):
+                    for l in range(0,3):
+                        if n_segments_chamber_eta_layer_vfat_window[i][j][k][l] >= 1:
+                            n_total_event_chamber_eta_layer_vfat_window[i][j][k][l] += 1
+                        if n_segments_chamber_eta_layer_vfat_digihits[i][j][k][l] >= 1:
+                            n_total_event_chamber_eta_layer_vfat_digihits[i][j][k][l] += 1
         if n_event_match == 1:
             n_events_base += 1
 
@@ -388,7 +388,7 @@ def analysis(root_dat, hits, bx, bx_list, cross_part, verbose, pu, num_or):
         avg_frac_vfat_digihits = 0
 
         for j in range(0,36):
-            avg_frac_eta += float(n_segments_chamber_eta[j][i])/float(n_events_base)
+            avg_frac_eta += float(n_total_event_chamber_eta[j][i])/float(n_events_base)
             for k in range(0,6):
                 for l in range(0,3):
                     avg_frac_vfat_window += (float(n_total_event_chamber_eta_layer_vfat_window[j][i][k][l])/float(n_events_base))
