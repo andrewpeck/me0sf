@@ -278,11 +278,11 @@ def analysis(root_dat, hits, bx, bx_list, cross_part, verbose, pu, num_or):
                     continue
 
                 if seg.partition % 2 != 0:
-                    seg_eta.append((seg.partition // 2))
-                    seg_eta.append((seg.partition // 2) + 1)
+                    seg_eta.append(int(seg.partition // 2))
+                    seg_eta.append(int(seg.partition // 2) + 1)
                     seg.partition = (seg.partition // 2) + 1
                 else:
-                    seg_eta.append((seg.partition // 2))
+                    seg_eta.append(int(seg.partition // 2))
                     seg.partition = (seg.partition // 2)
 
                 for e in seg_eta:
@@ -462,7 +462,7 @@ def analysis(root_dat, hits, bx, bx_list, cross_part, verbose, pu, num_or):
 
     c1 = ROOT.TCanvas("c1","test",720,500)
     c1.SetGrid()
-    c1.DrawFrame(0, 0, 9, 0.05, "#eta PartitionAverage Fraction per VFAT")
+    c1.DrawFrame(0, 0, 9, 0.05, ";#eta Partition;Average Fraction per VFAT")
     me0_h_seg_rate_frac_eta_partition.Draw("same HIST E TEXT")
     me0_h_seg_rate_frac_eta_partition.SetStats(0)
     me0_h_seg_rate_frac_eta_partition.SetMarkerSize(1)
@@ -475,7 +475,7 @@ def analysis(root_dat, hits, bx, bx_list, cross_part, verbose, pu, num_or):
 
     c3 = ROOT.TCanvas("c3","test",720,500)
     c3.SetGrid()
-    c3.DrawFrame(0, 0, 9, 0.02, "#eta PartitionAverage Fraction per VFAT")
+    c3.DrawFrame(0, 0, 9, 0.02, ";#eta Partition;Average Fraction per VFAT")
     me0_h_seg_rate_frac_vfat_window.Draw("same HIST E TEXT")
     me0_h_seg_rate_frac_vfat_window.SetStats(0)
     me0_h_seg_rate_frac_vfat_window.SetMarkerSize(1)
@@ -488,7 +488,7 @@ def analysis(root_dat, hits, bx, bx_list, cross_part, verbose, pu, num_or):
 
     c5 = ROOT.TCanvas("c5","test",720,500)
     c5.SetGrid()
-    c5.DrawFrame(0, 0, 9, 0.05, "#eta PartitionAverage Fraction per VFAT")
+    c5.DrawFrame(0, 0, 9, 0.05, ";#eta Partition;Average Fraction per VFAT")
     me0_h_seg_rate_frac_vfat_digihits.Draw("same HIST E TEXT")
     me0_h_seg_rate_frac_vfat_digihits.SetStats(0)
     me0_h_seg_rate_frac_vfat_digihits.SetMarkerSize(1)
