@@ -411,35 +411,35 @@ def analysis(root_dat, hits, bx, bx_list, cross_part, verbose, pu, num_or):
 
 
     print("")
-    print("Efficiency loss without any mitigation = %.4f%"%effi_loss)
-    print("Efficiency loss with regional triggering per chamber = %.4f%"%effi_loss_per_chamber)
+    print("Efficiency loss without any mitigation = %.4f %s"%(effi_loss,"%"))
+    print("Efficiency loss with regional triggering per chamber = %.4f% %s"%(effi_loss_per_chamber, "%"))
     print("Efficiency loss with regional triggering per eta partition: ")
     for i in range(0,8):
-        print("  For eta partition %d = %.4f%"%(i,effi_loss_per_eta_partition[i]))
+        print("  For eta partition %d = %.4f %s"%(i, effi_loss_per_eta_partition[i], "%"))
     print("")
     print("Efficiency loss with regional triggering per Pattern Window: ")
     for i in range(0,8):
-        print("  For eta partition %d = %.4f%"%(i,effi_loss_per_vfat_window[i]))
+        print("  For eta partition %d = %.4f %s"%(i, effi_loss_per_vfat_window[i], "%"))
     print("")
     print("Efficiency loss with regional triggering per Digi Hits in VFATs in Chambers with >= 1 Segment: ")
     for i in range(0,8):
-        print("  For eta partition %d = %.4f%"%(i,effi_loss_per_vfat_digihits[i]))
+        print("  For eta partition %d = %.4f %s"%(i, effi_loss_per_vfat_digihits[i], "%"))
     print("\n")
 
     file_out.write("\n")
-    file_out.write("Efficiency loss without any mitigation = %.4f%\n\n"%effi_loss)
-    file_out.write("Efficiency loss with regional triggering per chamber = %.4f%\n\n"%effi_loss_per_chamber)
+    file_out.write("Efficiency loss without any mitigation = %.4f %s\n\n"%(effi_loss, "%"))
+    file_out.write("Efficiency loss with regional triggering per chamber = %.4f %s\n\n"%(effi_loss_per_chamber, "%"))
     file_out.write("Efficiency loss with regional triggering per eta partition: \n")
     for i in range(0,8):
-        file_out.write("  For eta partition %d = %.4f%\n"%(i,effi_loss_per_eta_partition[i]))
+        file_out.write("  For eta partition %d = %.4f %s\n"%(i, effi_loss_per_eta_partition[i], "%"))
     file_out.write("\n")
     file_out.write("Efficiency loss with regional triggering per Pattern Window: \n")
     for i in range(0,8):
-        file_out.write("  For eta partition %d = %.4f%\n"%(i,effi_loss_per_vfat_window[i]))
+        file_out.write("  For eta partition %d = %.4f %s\n"%(i, effi_loss_per_vfat_window[i], "%"))
     file_out.write("\n")
     file_out.write("Efficiency loss with regional triggering per Digi Hits in VFATs in Chambers with >= 1 Segment: \n")
     for i in range(0,8):
-        file_out.write("  For eta partition %d = %.4f%\n"%(i,effi_loss_per_vfat_digihits[i]))
+        file_out.write("  For eta partition %d = %.4f %s\n"%(i, effi_loss_per_vfat_digihits[i], "%"))
     file_out.write("\n")
 
     plot_file = ROOT.TFile("output_regional_trigger_plots_%s_bx%s_crosspart_%s_or%d.root"%(hits, bx, cross_part, num_or), "recreate")
