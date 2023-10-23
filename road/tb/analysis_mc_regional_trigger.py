@@ -412,7 +412,7 @@ def analysis(root_dat, hits, bx, bx_list, cross_part, verbose, pu, num_or):
 
     print("")
     print("Efficiency loss without any mitigation = %.4f %s"%(effi_loss,"%"))
-    print("Efficiency loss with regional triggering per chamber = %.4f% %s"%(effi_loss_per_chamber, "%"))
+    print("Efficiency loss with regional triggering per chamber = %.4f %s"%(effi_loss_per_chamber, "%"))
     print("Efficiency loss with regional triggering per eta partition: ")
     for i in range(0,8):
         print("  For eta partition %d = %.4f %s"%(i, effi_loss_per_eta_partition[i], "%"))
