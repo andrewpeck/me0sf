@@ -354,8 +354,8 @@ def analysis(root_dat, hits, bx, bx_list, cross_part, verbose, pu, num_or):
     print("100\% completed\n")
     print("Number of events with at least one segment in at least 1 chamber (L1A events): %d\n"%n_events_base)
     print("Fraction of L1A events with at least 1 segment in: \n\n")
-    file_out.write("Number of events with at least one segment in at least 1 chamber (L1A events): %d"%n_events_base)
-    file_out.write("Fraction of L1A events with at least 1 segment in: \n")
+    file_out.write("Number of events with at least one segment in at least 1 chamber (L1A events): %d\n\n"%n_events_base)
+    file_out.write("Fraction of L1A events with at least 1 segment in: \n\n")
 
     avg_frac = 0
     for i in range(0,36):
