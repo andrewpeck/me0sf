@@ -174,27 +174,24 @@ def create_pat_ly(lower : float, upper : float):
 
     return layer_list
 
+# discard anything below or equal to 8
 # for PATLIST initialization process
 # true patlist; only used for testing pat_unit.vhd emulator
 pat_straight = patdef_t(19, create_pat_ly(-0.4, 0.4))
 pat_l = patdef_t(18, create_pat_ly(0.2, 0.9))
 pat_r = mirror_patdef(pat_l, pat_l.id - 1)
-pat_l2 = patdef_t(16, create_pat_ly(0.5, 1.2))
+pat_l2 = patdef_t(14, create_pat_ly(0.9, 1.7))
 pat_r2 = mirror_patdef(pat_l2, pat_l2.id - 1)
-pat_l3 = patdef_t(14, create_pat_ly(0.9, 1.7))
+pat_l3 = patdef_t(12, create_pat_ly(1.7, 2.7))
 pat_r3 = mirror_patdef(pat_l3, pat_l3.id - 1)
-pat_l4 = patdef_t(12, create_pat_ly(1.4, 2.3))
+pat_l4 = patdef_t(8, create_pat_ly(2.7, 3.8))
 pat_r4 = mirror_patdef(pat_l4, pat_l4.id - 1)
-pat_l5 = patdef_t(10, create_pat_ly(2.0, 3.0))
-pat_r5 = mirror_patdef(pat_l5, pat_l5.id - 1)
-pat_l6 = patdef_t(8, create_pat_ly(2.7, 3.8))
-pat_r6 = mirror_patdef(pat_l6, pat_l6.id - 1)
-pat_l7 = patdef_t(6, create_pat_ly(3.5, 4.7))
-pat_r7 = mirror_patdef(pat_l7, pat_l7.id-1)
-pat_l8 = patdef_t(4, create_pat_ly(4.3, 5.5))
-pat_r8 = mirror_patdef(pat_l8, pat_l8.id-1)
-pat_l9 = patdef_t(2, create_pat_ly(5.4, 7.0))
-pat_r9 = mirror_patdef(pat_l9, pat_l9.id - 1)
+pat_l5 = patdef_t(6, create_pat_ly(3.5, 4.7))
+pat_r5 = mirror_patdef(pat_l5, pat_l5.id-1)
+pat_l6 = patdef_t(4, create_pat_ly(4.3, 5.5))
+pat_r6 = mirror_patdef(pat_l6, pat_l6.id-1)
+pat_l7 = patdef_t(2, create_pat_ly(5.4, 7.0))
+pat_r7 = mirror_patdef(pat_l7, pat_l7.id - 1)
 
 PATLIST = (
     pat_straight,
@@ -211,32 +208,24 @@ PATLIST = (
     pat_l6,
     pat_r6,
     pat_l7,
-    pat_r7,
-    pat_l8,
-    pat_r8,
-    pat_l9,
-    pat_r9)
+    pat_r7,)
 
 PATLIST_LUT = {
-    19: pat_straight,
-    18: pat_l,
-    17: pat_r,
-    16: pat_l2,
-    15: pat_r2,
-    14: pat_l3,
-    13: pat_r3,
-    12: pat_l4,
-    11: pat_r4,
-    10: pat_l5,
-    9: pat_r5,
-    8: pat_l6,
-    7: pat_r6,
-    6: pat_l7,
-    5: pat_r7,
-    4: pat_l8,
-    3: pat_r8,
-    2: pat_l9,
-    1: pat_r}
+    15: pat_straight,
+    14: pat_l,
+    13: pat_r,
+    12: pat_l2,
+    11: pat_r2,
+    10: pat_l3,
+    9: pat_r3,
+    8: pat_l4,
+    7: pat_r4,
+    6: pat_l5,
+    5: pat_r5,
+    4: pat_l6,
+    3: pat_r6,
+    2: pat_l7,
+    1: pat_r7}
 
 def count_ones(x):
     """takes in an integer and counts how many ones are in that integer's binary form"""
