@@ -118,20 +118,20 @@ def pat_unit(data,
     if LAYER_MASK is None:
 
         factor = num_or / 2
-        pat_straight = patdef_t(19, create_pat_ly(-0.4 / factor, 0.4 / factor))
-        pat_l = patdef_t(18, create_pat_ly(0.2 / factor, 0.9 / factor))
+        pat_straight = patdef_t(15, create_pat_ly(-0.4 / factor, 0.4 / factor))
+        pat_l = patdef_t(14, create_pat_ly(0.2 / factor, 0.9 / factor))
         pat_r = mirror_patdef(pat_l, pat_l.id - 1)
-        pat_l2 = patdef_t(16, create_pat_ly(0.9 / factor, 1.7 / factor))
+        pat_l2 = patdef_t(12, create_pat_ly(0.9 / factor, 1.7 / factor))
         pat_r2 = mirror_patdef(pat_l2, pat_l2.id - 1)
-        pat_l3 = patdef_t(14, create_pat_ly(1.7 / factor, 2.7 / factor))
+        pat_l3 = patdef_t(10, create_pat_ly(1.7 / factor, 2.7 / factor))
         pat_r3 = mirror_patdef(pat_l3, pat_l3.id - 1)
-        pat_l4 = patdef_t(12, create_pat_ly(2.7 / factor, 3.8 / factor))
+        pat_l4 = patdef_t(8, create_pat_ly(2.7 / factor, 3.8 / factor))
         pat_r4 = mirror_patdef(pat_l4, pat_l4.id - 1)
-        pat_l5 = patdef_t(10, create_pat_ly(3.5 / factor, 4.7 / factor))
+        pat_l5 = patdef_t(6, create_pat_ly(3.5 / factor, 4.7 / factor))
         pat_r5 = mirror_patdef(pat_l5, pat_l5.id - 1)
-        pat_l6 = patdef_t(8, create_pat_ly(4.3 / factor, 5.5 / factor))
+        pat_l6 = patdef_t(4, create_pat_ly(4.3 / factor, 5.5 / factor))
         pat_r6 = mirror_patdef(pat_l6, pat_l6.id - 1)
-        pat_l7 = patdef_t(6, create_pat_ly(5.4 / factor, 7.0 / factor))
+        pat_l7 = patdef_t(2, create_pat_ly(5.4 / factor, 7.0 / factor))
         pat_r7 = mirror_patdef(pat_l7, pat_l7.id-1)
 
         dynamic_patlist = (
@@ -225,13 +225,13 @@ def pat_unit(data,
     for l in n_hits_counts:
         if l > n_hits_max_limit:
             n_layers_large_hits += 1
-    #if (best.id <= 12):
+    #if (best.id <= 10):
     #    if n_layers_large_clusters > 0:
     #        best.reset()
-    #elif (best.id <= 14):
+    #elif (best.id <= 12):
     #    if n_layers_large_clusters > 1:
     #        best.reset()
-    #elif (best.id <= 18):
+    #elif (best.id <= 14):
     #    if n_layers_large_clusters > 2:
     #        best.reset()
     #if n_layers_large_hits > 1:

@@ -177,12 +177,12 @@ def create_pat_ly(lower : float, upper : float):
 # discard anything below or equal to 8
 # for PATLIST initialization process
 # true patlist; only used for testing pat_unit.vhd emulator
-pat_straight = patdef_t(19, create_pat_ly(-0.4, 0.4))
-pat_l = patdef_t(18, create_pat_ly(0.2, 0.9))
+pat_straight = patdef_t(15, create_pat_ly(-0.4, 0.4))
+pat_l = patdef_t(14, create_pat_ly(0.2, 0.9))
 pat_r = mirror_patdef(pat_l, pat_l.id - 1)
-pat_l2 = patdef_t(14, create_pat_ly(0.9, 1.7))
+pat_l2 = patdef_t(12, create_pat_ly(0.9, 1.7))
 pat_r2 = mirror_patdef(pat_l2, pat_l2.id - 1)
-pat_l3 = patdef_t(12, create_pat_ly(1.7, 2.7))
+pat_l3 = patdef_t(10, create_pat_ly(1.7, 2.7))
 pat_r3 = mirror_patdef(pat_l3, pat_l3.id - 1)
 pat_l4 = patdef_t(8, create_pat_ly(2.7, 3.8))
 pat_r4 = mirror_patdef(pat_l4, pat_l4.id - 1)
