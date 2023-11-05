@@ -123,7 +123,7 @@ def pat_unit(data,
         pat_r = mirror_patdef(pat_l, pat_l.id - 1)
         pat_l2 = patdef_t(12, create_pat_ly(0.9 / factor, 1.7 / factor))
         pat_r2 = mirror_patdef(pat_l2, pat_l2.id - 1)
-        pat_l3 = patdef_t(10, create_pat_ly(1.7 / factor, 2.7 / factor))
+        pat_l3 = patdef_t(10, create_pat_ly(1.4 / factor, 2.3 / factor))
         pat_r3 = mirror_patdef(pat_l3, pat_l3.id - 1)
         pat_l4 = patdef_t(8, create_pat_ly(2.7 / factor, 3.8 / factor))
         pat_r4 = mirror_patdef(pat_l4, pat_l4.id - 1)
@@ -225,13 +225,13 @@ def pat_unit(data,
     for l in n_hits_counts:
         if l > n_hits_max_limit:
             n_layers_large_hits += 1
-    #if (best.id <= 10):
+    #if (best.id <= 8):
     #    if n_layers_large_clusters > 0:
     #        best.reset()
-    #elif (best.id <= 12):
+    #elif (best.id <= 10):
     #    if n_layers_large_clusters > 1:
     #        best.reset()
-    #elif (best.id <= 14):
+    #elif (best.id <= 12):
     #    if n_layers_large_clusters > 2:
     #        best.reset()
     #if n_layers_large_hits > 1:
