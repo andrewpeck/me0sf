@@ -57,6 +57,7 @@ class Segment:
         self.centroid = centroid
         self.substrip = substrip
         self.bend_ang = bend_ang
+        self.mse = None
         self.update_quality()
 
     def reset(self):
@@ -104,6 +105,7 @@ class Segment:
             fit = llse_fit(x, centroids)
             self.bend_ang = fit[0] #m
             self.substrip = fit[1] #b
+            self.mse = fit[2] #mse
 
     def __str__(self):
 
@@ -318,7 +320,6 @@ def llse_fit(x, y):
     x_sum = sum(x)
     y_sum = sum(y)
     n = len(x)
-
     products = 0
     squares = 0
     for i in range(len(x)):
@@ -326,8 +327,14 @@ def llse_fit(x, y):
         squares += (n * x[i] - x_sum) ** 2
     m = 1.0 * products / squares
     b = 1.0 / n * (y_sum - m * x_sum)
-
-    return m, b
+    
+    # calculate mse
+    sse = 0
+    for i in range(len(x)):
+        sse += (y[i] - m * x[i] - b)**2
+    mse = sse / n
+    
+    return m, b, mse
 
 def chunk(in_list, n):
     return [in_list[i * n:(i + 1) * n]

@@ -352,10 +352,18 @@ def analysis(root_dat, hits, bx, bx_list, cross_part, verbose, pu, num_or):
             seglist = process_chamber(data, config)
             seglist_final = []
             #print (seglist)
+            mse_th = 0.5 # threashold to reject a segment based on mse
             for seg in seglist:
+                seg.fit(config.max_span)
+                # todo: think of rules to reject segment based on mse, possible rules:
+                # 1. compute IQR, then reject anything above Q3+1.5*IQR (outliers), but will need all mse to be calculated
+                # 2. hard boundary, but considering data might be different from batch to batch, might not generalize well
+                '''''
+                if seg.mse <= mse_th:
+                    seg.id = 0
+                '''''
                 if seg.id == 0:
                     continue
-                seg.fit(config.max_span)
                 if seg.partition % 2 != 0:
                     seg.partition = (seg.partition // 2) + 1
                 else:
