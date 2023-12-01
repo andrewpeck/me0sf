@@ -94,6 +94,9 @@ def analysis(root_dat, hits, bx, bx_list, cross_part, verbose, pu, num_or):
     n_total_events = len(root_dat)
     prev_frac_done = 0
 
+    mse_th = 0.5 # threashold to reject a segment based on mse
+    mse_collections = [] # collect all mse for analysis of the distribution (only need to run once)
+
     for (ievent, event) in enumerate(root_dat):
         frac_done = (ievent+1)/n_total_events
         if (frac_done - prev_frac_done) >= 0.05:
@@ -354,12 +357,12 @@ def analysis(root_dat, hits, bx, bx_list, cross_part, verbose, pu, num_or):
             seglist = process_chamber(data, config)
             seglist_final = []
             #print (seglist)
-            mse_th = 0.5 # threashold to reject a segment based on mse
             for seg in seglist:
                 seg.fit(config.max_span)
                 # todo: think of rules to reject segment based on mse, possible rules:
                 # 1. compute IQR, then reject anything above Q3+1.5*IQR (outliers), but will need all mse to be calculated
                 # 2. hard boundary, but considering data might be different from batch to batch, might not generalize well
+                mse_collections.append(seg.mse)
                 '''''
                 if seg.mse <= mse_th:
                     seg.id = 0
@@ -1572,6 +1575,9 @@ def analysis(root_dat, hits, bx, bx_list, cross_part, verbose, pu, num_or):
 
     file_out.close()
     plot_file.Close()
+
+    plt.hist(mse_collections)
+    plt.savefig('./mse_histogram.png')
 
 def test_analysis_mc():
     root_dat = read_ntuple(os.path.abspath(os.path.dirname(__file__)) + "/test_data/mc_ntuple.root")
