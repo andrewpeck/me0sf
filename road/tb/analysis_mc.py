@@ -38,10 +38,10 @@ def analysis(root_dat, hits, bx, bx_list, cross_part, verbose, pu, num_or):
     offline_purity_total_eta = ROOT.TH1F("offline_purity_total_eta", "offline_purity_total_eta",8,0.5,8.5) 
     offline_purity_passed_bending = ROOT.TH1F("offline_purity_passed_bending", "offline_purity_passed_bending",14, -7., 7.)
     offline_purity_total_bending = ROOT.TH1F("offline_purity_total_bending", "offline_purity_total_bending",14, -7., 7.) 
-    offline_effi_passed_id = ROOT.TH1F("offline_effi_passed_id", "offline_effi_passed_id",15, 0.5, 15.5)
-    offline_effi_total_id = ROOT.TH1F("offline_effi_total_id", "offline_effi_total_id",15, 0.5, 15.5)
-    offline_purity_passed_id = ROOT.TH1F("offline_purity_passed_id", "offline_purity_passed_id",15, 0.5, 15.5)
-    offline_purity_total_id = ROOT.TH1F("offline_purity_total_id", "offline_purity_total_id",15, 0.5, 15.5)
+    offline_effi_passed_id = ROOT.TH1F("offline_effi_passed_id", "offline_effi_passed_id",17, 0.5, 17.5)
+    offline_effi_total_id = ROOT.TH1F("offline_effi_total_id", "offline_effi_total_id",17, 0.5, 17.5)
+    offline_purity_passed_id = ROOT.TH1F("offline_purity_passed_id", "offline_purity_passed_id",17, 0.5, 17.5)
+    offline_purity_total_id = ROOT.TH1F("offline_purity_total_id", "offline_purity_total_id",17, 0.5, 17.5)
 
     # defining histograms for simtrack vs online
     bins = [0.0,1.0,2.0,3.0,4.0,5.0,10.0,15.0,20.0,25.0,30.0,35.0,40.0,45.0,50.0]
@@ -57,10 +57,10 @@ def analysis(root_dat, hits, bx, bx_list, cross_part, verbose, pu, num_or):
     st_purity_total_eta = ROOT.TH1F("st_purity_total_eta", "st_purity_total_eta",8,0.5,8.5) 
     st_purity_passed_bending = ROOT.TH1F("st_purity_passed_bending", "st_purity_passed_bending",14, -7., 7.)
     st_purity_total_bending = ROOT.TH1F("st_purity_total_bending", "st_purity_total_bending",14, -7., 7.) 
-    st_effi_passed_id = ROOT.TH1F("st_effi_passed_id", "st_effi_passed_id",15, 0.5, 15.5)
-    st_effi_total_id = ROOT.TH1F("st_effi_total_id", "st_effi_total_id",15, 0.5, 15.5)
-    st_purity_passed_id = ROOT.TH1F("st_purity_passed_id", "st_purity_passed_id",15, 0.5, 15.5)
-    st_purity_total_id = ROOT.TH1F("st_purity_total_id", "st_purity_total_id",15, 0.5, 15.5)
+    st_effi_passed_id = ROOT.TH1F("st_effi_passed_id", "st_effi_passed_id",17, 0.5, 17.5)
+    st_effi_total_id = ROOT.TH1F("st_effi_total_id", "st_effi_total_id",17, 0.5, 17.5)
+    st_purity_passed_id = ROOT.TH1F("st_purity_passed_id", "st_purity_passed_id",17, 0.5, 17.5)
+    st_purity_total_id = ROOT.TH1F("st_purity_total_id", "st_purity_total_id",17, 0.5, 17.5)
 
     # define the histograms efficiency vs pt for each pattern (simtracks)
     st_effi_passed_pt1 = ROOT.TH1F("st_effi_passed_pt1", "st_effi_passed_pt1",14, array('d',bins)) 
@@ -78,6 +78,8 @@ def analysis(root_dat, hits, bx, bx_list, cross_part, verbose, pu, num_or):
     st_effi_passed_pt13 = ROOT.TH1F("st_effi_passed_pt13", "st_effi_passed_pt13",14, array('d',bins)) 
     st_effi_passed_pt14 = ROOT.TH1F("st_effi_passed_pt14", "st_effi_passed_pt14",14, array('d',bins)) 
     st_effi_passed_pt15 = ROOT.TH1F("st_effi_passed_pt15", "st_effi_passed_pt15",14, array('d',bins)) 
+    st_effi_passed_pt16 = ROOT.TH1F("st_effi_passed_pt16", "st_effi_passed_pt16",14, array('d',bins)) 
+    st_effi_passed_pt17 = ROOT.TH1F("st_effi_passed_pt17", "st_effi_passed_pt17",14, array('d',bins)) 
 
     # Counters for Efficiency
     n_offline_effi_total = 0
@@ -415,7 +417,7 @@ def analysis(root_dat, hits, bx, bx_list, cross_part, verbose, pu, num_or):
             offline_nlayers = seg_nlayers[i]
             offline_effi_total_bending.Fill(offline_bending_angle)
             offline_effi_total_eta.Fill(offline_eta_partition)
-            for id in range(1,16):
+            for id in range(1,18):
                 offline_effi_total_id.Fill(id)
             n_offline_effi_total += 1
 
@@ -481,7 +483,7 @@ def analysis(root_dat, hits, bx, bx_list, cross_part, verbose, pu, num_or):
             st_effi_total_bending.Fill(st_bending_angle)
             st_effi_total_pt.Fill(st_pt)
             st_effi_total_eta.Fill(st_eta_partition+1)
-            for id in range(1,16):
+            for id in range(1,18):
                 st_effi_total_id.Fill(id)
             n_st_effi_total += 1
 
@@ -544,6 +546,10 @@ def analysis(root_dat, hits, bx, bx_list, cross_part, verbose, pu, num_or):
                             st_effi_passed_pt14.Fill(st_pt)
                         elif online_id == 15:
                             st_effi_passed_pt15.Fill(st_pt)
+                        elif online_id == 16:
+                            st_effi_passed_pt16.Fill(st_pt)
+                        elif online_id == 17:
+                            st_effi_passed_pt17.Fill(st_pt)
 
                         n_st_effi_passed += 1
                         st_effi_mres.Fill(st_bending_angle - online_bending_angle)
@@ -691,7 +697,7 @@ def analysis(root_dat, hits, bx, bx_list, cross_part, verbose, pu, num_or):
 
     c1id = ROOT.TCanvas('', '', 800, 650)
     c1id.SetGrid()
-    c1id.DrawFrame(0, 0, 16, 1.1, ";Pattern ID;Efficiency")
+    c1id.DrawFrame(0, 0, 18, 1.1, ";Pattern ID;Efficiency")
     offline_eff_id = ROOT.TEfficiency(offline_effi_passed_id, offline_effi_total_id)
     offline_eff_id.Draw("same")
     offline_eff_id.SetMarkerStyle(8)
@@ -1075,6 +1081,44 @@ def analysis(root_dat, hits, bx, bx_list, cross_part, verbose, pu, num_or):
         c_pt_15.Print("st_eff_pt_id15_%s_bx%s_crosspart_%s_or%d.pdf"%(hits, bx, cross_part, num_or))
         st_eff_pt_15.Write()
 
+        c_pt_16 = ROOT.TCanvas('', '', 800, 650)
+        c_pt_16.SetGrid()
+        c_pt_16.DrawFrame(0, 0, 50, 1.1, ";pT (GeV);Efficiency")
+        st_eff_pt_16 = ROOT.TEfficiency(st_effi_passed_pt16, st_effi_total_pt)
+        st_eff_pt_16.Draw("same")
+        st_eff_pt_16.SetMarkerStyle(8)
+        st_eff_pt_16.SetMarkerSize(1)
+        st_eff_pt_16.SetMarkerColor(1)
+        st_eff_pt_16.SetLineWidth(1)
+        st_eff_pt_16.SetLineColor(1)
+        ROOT.gPad.Update()
+        st_eff_pt_16.GetPaintedGraph().GetYaxis().SetLabelSize(0.04)
+        st_eff_pt_16.GetPaintedGraph().GetXaxis().SetLabelSize(0.04)
+        ROOT.gPad.Update()
+        latex.DrawLatex(0.9, 0.91,plot_text1)
+        latex.DrawLatex(0.42, 0.91,plot_text2)
+        c_pt_16.Print("st_eff_pt_id16_%s_bx%s_crosspart_%s_or%d.pdf"%(hits, bx, cross_part, num_or))
+        st_eff_pt_16.Write()
+
+        c_pt_17 = ROOT.TCanvas('', '', 800, 650)
+        c_pt_17.SetGrid()
+        c_pt_17.DrawFrame(0, 0, 50, 1.1, ";pT (GeV);Efficiency")
+        st_eff_pt_17 = ROOT.TEfficiency(st_effi_passed_pt17, st_effi_total_pt)
+        st_eff_pt_17.Draw("same")
+        st_eff_pt_17.SetMarkerStyle(8)
+        st_eff_pt_17.SetMarkerSize(1)
+        st_eff_pt_17.SetMarkerColor(1)
+        st_eff_pt_17.SetLineWidth(1)
+        st_eff_pt_17.SetLineColor(1)
+        ROOT.gPad.Update()
+        st_eff_pt_17.GetPaintedGraph().GetYaxis().SetLabelSize(0.04)
+        st_eff_pt_17.GetPaintedGraph().GetXaxis().SetLabelSize(0.04)
+        ROOT.gPad.Update()
+        latex.DrawLatex(0.9, 0.91,plot_text1)
+        latex.DrawLatex(0.42, 0.91,plot_text2)
+        c_pt_17.Print("st_eff_pt_id17_%s_bx%s_crosspart_%s_or%d.pdf"%(hits, bx, cross_part, num_or))
+        st_eff_pt_17.Write()
+
         c_pt_all = ROOT.TCanvas('', '', 800, 650)
         c_pt_all.SetGrid()
         c_pt_all.DrawFrame(0, 0, 50, 1.1, ";pT (GeV);Efficiency")
@@ -1093,6 +1137,8 @@ def analysis(root_dat, hits, bx, bx_list, cross_part, verbose, pu, num_or):
         st_eff_pt_13.Draw("same")
         st_eff_pt_14.Draw("same")
         st_eff_pt_15.Draw("same")
+        st_eff_pt_16.Draw("same")
+        st_eff_pt_17.Draw("same")
 
         st_eff_pt_1.SetMarkerColor(3)
         st_eff_pt_1.SetLineColor(3)
@@ -1124,6 +1170,10 @@ def analysis(root_dat, hits, bx, bx_list, cross_part, verbose, pu, num_or):
         st_eff_pt_14.SetLineColor(41)
         st_eff_pt_15.SetMarkerColor(42)
         st_eff_pt_15.SetLineColor(42)
+        st_eff_pt_16.SetMarkerColor(45)
+        st_eff_pt_16.SetLineColor(45)
+        st_eff_pt_17.SetMarkerColor(46)
+        st_eff_pt_17.SetLineColor(46)
         ROOT.gPad.Update()
         leg = ROOT.TLegend(0.8,0.1,0.9,0.6)
         leg.AddEntry(st_eff_pt_1,"ID 1","l")
@@ -1141,6 +1191,8 @@ def analysis(root_dat, hits, bx, bx_list, cross_part, verbose, pu, num_or):
         leg.AddEntry(st_eff_pt_13,"ID 13","l")
         leg.AddEntry(st_eff_pt_14,"ID 14","l")
         leg.AddEntry(st_eff_pt_15,"ID 15","l")
+        leg.AddEntry(st_eff_pt_16,"ID 16","l")
+        leg.AddEntry(st_eff_pt_17,"ID 17","l")
         leg.Draw()
         latex.DrawLatex(0.9, 0.91,plot_text1)
         latex.DrawLatex(0.42, 0.91,plot_text2)
@@ -1195,6 +1247,12 @@ def analysis(root_dat, hits, bx, bx_list, cross_part, verbose, pu, num_or):
         st_eff_hist_15 = st_effi_passed_pt15.Clone()
         st_eff_hist_15.SetName("st_eff_hist_15")
         st_eff_hist_15.Divide(st_effi_total_pt)
+        st_eff_hist_16 = st_effi_passed_pt16.Clone()
+        st_eff_hist_16.SetName("st_eff_hist_16")
+        st_eff_hist_16.Divide(st_effi_total_pt)
+        st_eff_hist_17 = st_effi_passed_pt17.Clone()
+        st_eff_hist_17.SetName("st_eff_hist_17")
+        st_eff_hist_17.Divide(st_effi_total_pt)
 
         st_eff_hist_1.SetFillColor(3)
         st_eff_hist_2.SetFillColor(2)
@@ -1211,6 +1269,8 @@ def analysis(root_dat, hits, bx, bx_list, cross_part, verbose, pu, num_or):
         st_eff_hist_13.SetFillColor(39)
         st_eff_hist_14.SetFillColor(41)
         st_eff_hist_15.SetFillColor(42)
+        st_eff_hist_16.SetFillColor(45)
+        st_eff_hist_17.SetFillColor(46)
 
         st_eff_stack_pt.Add(st_eff_hist_1)
         st_eff_stack_pt.Add(st_eff_hist_2)
@@ -1227,6 +1287,8 @@ def analysis(root_dat, hits, bx, bx_list, cross_part, verbose, pu, num_or):
         st_eff_stack_pt.Add(st_eff_hist_13)
         st_eff_stack_pt.Add(st_eff_hist_14)
         st_eff_stack_pt.Add(st_eff_hist_15)
+        st_eff_stack_pt.Add(st_eff_hist_16)
+        st_eff_stack_pt.Add(st_eff_hist_17)
         st_eff_stack_pt.Draw("same")
         ROOT.gPad.Update()
         leg2 = ROOT.TLegend(0.8,0.1,0.9,0.6)
@@ -1245,6 +1307,8 @@ def analysis(root_dat, hits, bx, bx_list, cross_part, verbose, pu, num_or):
         leg2.AddEntry(st_eff_hist_13,"ID 13", "f")
         leg2.AddEntry(st_eff_hist_14,"ID 14", "f")
         leg2.AddEntry(st_eff_hist_15,"ID 15", "f")
+        leg2.AddEntry(st_eff_hist_16,"ID 16", "f")
+        leg2.AddEntry(st_eff_hist_17,"ID 17", "f")
         leg2.Draw()
         latex.DrawLatex(0.9, 0.91,plot_text1)
         latex.DrawLatex(0.42, 0.91,plot_text2)
@@ -1271,7 +1335,7 @@ def analysis(root_dat, hits, bx, bx_list, cross_part, verbose, pu, num_or):
 
         c6id = ROOT.TCanvas('', '', 800, 650)
         c6id.SetGrid()
-        c6id.DrawFrame(0, 0, 16, 1.1, ";Pattern ID;Efficiency")
+        c6id.DrawFrame(0, 0, 18, 1.1, ";Pattern ID;Efficiency")
         st_eff_id = ROOT.TEfficiency(st_effi_passed_id, st_effi_total_id)
         st_eff_id.Draw("same")
         st_eff_id.SetMarkerStyle(8)
@@ -1370,7 +1434,7 @@ def analysis(root_dat, hits, bx, bx_list, cross_part, verbose, pu, num_or):
 
     c10id = ROOT.TCanvas('', '', 800, 650)
     c10id.SetGrid()
-    c10id.DrawFrame(0, 0, 16, 1.1, ";Pattern ID;Purity")
+    c10id.DrawFrame(0, 0, 18, 1.1, ";Pattern ID;Purity")
     st_purity_id = ROOT.TEfficiency(st_purity_passed_id, st_purity_total_id)
     st_purity_id.Draw("same")
     st_purity_id.SetMarkerStyle(8)
@@ -1427,7 +1491,7 @@ def analysis(root_dat, hits, bx, bx_list, cross_part, verbose, pu, num_or):
 
     c10_offid = ROOT.TCanvas('', '', 800, 650)
     c10_offid.SetGrid()
-    c10_offid.DrawFrame(0, 0, 16, 1.1, ";Pattern ID;Purity")
+    c10_offid.DrawFrame(0, 0, 18, 1.1, ";Pattern ID;Purity")
     offline_purity_id = ROOT.TEfficiency(offline_purity_passed_id, offline_purity_total_id)
     offline_purity_id.Draw("same")
     offline_purity_id.SetMarkerStyle(8)

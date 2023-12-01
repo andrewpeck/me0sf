@@ -21,21 +21,23 @@ if __name__ == "__main__":
     num_or_to_span = {2:37, 4:19, 8:11, 16:7}
     input_max_span = num_or_to_span[num_or]
     factor = num_or / 2
-    pat_straight = patdef_t(15, create_pat_ly(-0.4 / factor, 0.4 / factor))
-    pat_l = patdef_t(14, create_pat_ly(0.2 / factor, 0.9 / factor))
+    pat_straight = patdef_t(17, create_pat_ly(-0.4 / factor, 0.4 / factor))
+    pat_l = patdef_t(16, create_pat_ly(0.2 / factor, 0.9 / factor))
     pat_r = mirror_patdef(pat_l, pat_l.id - 1)
-    pat_l2 = patdef_t(12, create_pat_ly(0.9 / factor, 1.7 / factor))
+    pat_l2 = patdef_t(14, create_pat_ly(0.9 / factor, 1.7 / factor))
     pat_r2 = mirror_patdef(pat_l2, pat_l2.id - 1)
-    pat_l3 = patdef_t(10, create_pat_ly(1.4 / factor, 2.3 / factor))
+    pat_l3 = patdef_t(12, create_pat_ly(1.4 / factor, 2.3 / factor))
     pat_r3 = mirror_patdef(pat_l3, pat_l3.id - 1)
-    pat_l4 = patdef_t(8, create_pat_ly(2.7 / factor, 3.8 / factor))
+    pat_l4 = patdef_t(10, create_pat_ly(2.0 / factor, 3.0 / factor))
     pat_r4 = mirror_patdef(pat_l4, pat_l4.id - 1)
-    pat_l5 = patdef_t(6, create_pat_ly(3.5 / factor, 4.7 / factor))
+    pat_l5 = patdef_t(8, create_pat_ly(2.7 / factor, 3.8 / factor))
     pat_r5 = mirror_patdef(pat_l5, pat_l5.id - 1)
-    pat_l6 = patdef_t(4, create_pat_ly(4.3 / factor, 5.5 / factor))
+    pat_l6 = patdef_t(6, create_pat_ly(3.5 / factor, 4.7 / factor))
     pat_r6 = mirror_patdef(pat_l6, pat_l6.id - 1)
-    pat_l7 = patdef_t(2, create_pat_ly(5.4 / factor, 7.0 / factor))
-    pat_r7 = mirror_patdef(pat_l7, pat_l7.id-1)
+    pat_l7 = patdef_t(4, create_pat_ly(4.3 / factor, 5.5 / factor))
+    pat_r7 = mirror_patdef(pat_l7, pat_l7.id - 1)
+    pat_l8 = patdef_t(2, create_pat_ly(5.4 / factor, 7.0 / factor))
+    pat_r8 = mirror_patdef(pat_l8, pat_l8.id - 1)
 
     dynamic_patlist = (
         pat_straight,
@@ -52,7 +54,9 @@ if __name__ == "__main__":
         pat_l6,
         pat_r6,
         pat_l7,
-        pat_r7)
+        pat_r7,
+        pat_l8,
+        pat_r8)
 
     pat_id_list = [pat.id for pat in dynamic_patlist]
     calculate_global_layer_mask(dynamic_patlist, input_max_span)
@@ -67,7 +71,7 @@ if __name__ == "__main__":
 
 '''''
 Emulator patlist:
-Pattern ID: 15
+Pattern ID: 17
 ly5 -----------------XXX-----------------
 
 ly4 -----------------XXX-----------------
@@ -82,7 +86,7 @@ ly0 -----------------XXX-----------------
 
 
 
-Pattern ID: 14
+Pattern ID: 16
 ly5 ------------------XXXX---------------
 
 ly4 ------------------XXX----------------
@@ -97,7 +101,7 @@ ly0 ---------------XXXX------------------
 
 
 
-Pattern ID: 13
+Pattern ID: 15
 ly5 ---------------XXXX------------------
 
 ly4 ----------------XXX------------------
@@ -112,7 +116,7 @@ ly0 ------------------XXXX---------------
 
 
 
-Pattern ID: 12
+Pattern ID: 14
 ly5 --------------------XXXX-------------
 
 ly4 -------------------XXX---------------
@@ -127,7 +131,7 @@ ly0 -------------XXXX--------------------
 
 
 
-Pattern ID: 11
+Pattern ID: 13
 ly5 -------------XXXX--------------------
 
 ly4 ---------------XXX-------------------
@@ -142,7 +146,7 @@ ly0 --------------------XXXX-------------
 
 
 
-Pattern ID: 10
+Pattern ID: 12
 ly5 ---------------------XXXX------------
 
 ly4 --------------------XXX--------------
@@ -157,7 +161,7 @@ ly0 ------------XXXX---------------------
 
 
 
-Pattern ID: 9
+Pattern ID: 11
 ly5 ------------XXXX---------------------
 
 ly4 --------------XXX--------------------
@@ -169,6 +173,36 @@ ly2 ------------------XXX----------------
 ly1 --------------------XXX--------------
 
 ly0 ---------------------XXXX------------
+
+
+
+Pattern ID: 10
+ly5 -----------------------XXXX----------
+
+ly4 ---------------------XXX-------------
+
+ly3 -------------------XX----------------
+
+ly2 ----------------XX-------------------
+
+ly1 -------------XXX---------------------
+
+ly0 ----------XXXX-----------------------
+
+
+
+Pattern ID: 9
+ly5 ----------XXXX-----------------------
+
+ly4 -------------XXX---------------------
+
+ly3 ----------------XX-------------------
+
+ly2 -------------------XX----------------
+
+ly1 ---------------------XXX-------------
+
+ly0 -----------------------XXXX----------
 
 
 
@@ -289,6 +323,5 @@ ly2 --------------------XXX--------------
 ly1 --------------------------XXXX-------
 
 ly0 -------------------------------XXXXXX
-
 
 '''''

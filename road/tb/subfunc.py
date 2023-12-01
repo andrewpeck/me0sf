@@ -186,14 +186,16 @@ pat_l2 = patdef_t(12, create_pat_ly(0.9, 1.7))
 pat_r2 = mirror_patdef(pat_l2, pat_l2.id - 1)
 pat_l3 = patdef_t(10, create_pat_ly(1.4, 2.3))
 pat_r3 = mirror_patdef(pat_l3, pat_l3.id - 1)
-pat_l4 = patdef_t(8, create_pat_ly(2.7, 3.8))
+pat_l4 = patdef_t(10, create_pat_ly(2.0, 3.0))
 pat_r4 = mirror_patdef(pat_l4, pat_l4.id - 1)
-pat_l5 = patdef_t(6, create_pat_ly(3.5, 4.7))
-pat_r5 = mirror_patdef(pat_l5, pat_l5.id-1)
-pat_l6 = patdef_t(4, create_pat_ly(4.3, 5.5))
+pat_l5 = patdef_t(8, create_pat_ly(2.7, 3.8))
+pat_r5 = mirror_patdef(pat_l5, pat_l5.id - 1)
+pat_l6 = patdef_t(6, create_pat_ly(3.5, 4.7))
 pat_r6 = mirror_patdef(pat_l6, pat_l6.id-1)
-pat_l7 = patdef_t(2, create_pat_ly(5.4, 7.0))
-pat_r7 = mirror_patdef(pat_l7, pat_l7.id - 1)
+pat_l7 = patdef_t(4, create_pat_ly(4.3, 5.5))
+pat_r7 = mirror_patdef(pat_l7, pat_l7.id-1)
+pat_l8 = patdef_t(2, create_pat_ly(5.4, 7.0))
+pat_r8 = mirror_patdef(pat_l8, pat_l8.id - 1)
 
 PATLIST = (
     pat_straight,
@@ -210,24 +212,28 @@ PATLIST = (
     pat_l6,
     pat_r6,
     pat_l7,
-    pat_r7,)
+    pat_r7,
+    pat_l8,
+    pat_r8)
 
 PATLIST_LUT = {
-    15: pat_straight,
-    14: pat_l,
-    13: pat_r,
-    12: pat_l2,
-    11: pat_r2,
-    10: pat_l3,
-    9: pat_r3,
-    8: pat_l4,
-    7: pat_r4,
-    6: pat_l5,
-    5: pat_r5,
-    4: pat_l6,
-    3: pat_r6,
-    2: pat_l7,
-    1: pat_r7}
+    17: pat_straight,
+    16: pat_l,
+    15: pat_r,
+    14: pat_l2,
+    13: pat_r2,
+    12: pat_l3,
+    11: pat_r3,
+    10: pat_l4,
+    9: pat_r4,
+    8: pat_l5,
+    7: pat_r5,
+    6: pat_l6,
+    5: pat_r6,
+    4: pat_l7,
+    3: pat_r7,
+    2: pat_l8,
+    1: pat_r8}
 
 def count_ones(x):
     """takes in an integer and counts how many ones are in that integer's binary form"""
