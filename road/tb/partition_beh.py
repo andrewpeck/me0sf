@@ -94,7 +94,8 @@ def cancel_edges(segments : List[Segment],
 
 def process_partition(partition_data : List[int],
                       partition : int,
-                      config : Config):
+                      config : Config, 
+                      partition_bx_data):
 
     '''takes in partition data, a group size, and a ghost width to return a
     smaller data set, using ghost edge cancellation and segment quality
@@ -108,7 +109,7 @@ def process_partition(partition_data : List[int],
 
     '''
 
-    segments = pat_mux(partition_data, partition=partition, config=config)
+    segments = pat_mux(partition_data, partition=partition, config=config, partition_bx_data=partition_bx_data)
 
     if (config.deghost_pre):
         segments = cancel_edges(segments=segments,

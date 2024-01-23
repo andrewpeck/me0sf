@@ -58,7 +58,7 @@ def cross_partition_cancellation(segments : List[List[Segment]],
 
     return segments
 
-def process_chamber(chamber_data : List[List[int]], config : Config):
+def process_chamber(chamber_data : List[List[int]], config : Config, chamber_bx_data):
 
     # gather segments from each partition
     # this will return a 8 x N list of segments
@@ -96,7 +96,7 @@ def process_chamber(chamber_data : List[List[int]], config : Config):
 
         data = chamber_data
 
-    datazip  = zip(data, range(len(data)), repeat(config))
+    datazip  = zip(data, range(len(data)), repeat(config), chamber_bx_data)
 
     # for some reason multi-processing fails with questasim, generating an error
     # such as:

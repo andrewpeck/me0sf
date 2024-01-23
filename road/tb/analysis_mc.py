@@ -96,6 +96,7 @@ def analysis(root_dat, hits, bx, bx_list, cross_part, verbose, pu, num_or):
 
     mse_th = 0.75 # threashold to reject a segment based on mse
     #mse_collections = [] # collect all mse for analysis of the distribution (only need to run once)
+    seg_bx_collections = []
 
     for (ievent, event) in enumerate(root_dat):
         frac_done = (ievent+1)/n_total_events
@@ -271,6 +272,9 @@ def analysis(root_dat, hits, bx, bx_list, cross_part, verbose, pu, num_or):
         # 6 ->   11     12    13
         # 7 ->   13     14
 
+        # initialize the bx_data, bx data will be inserted based on different input
+        bx_data = np.full((36, 8, 6, 192), -9999)
+
         # loop every hit inside an event
         if hits == "rec":
             for hit in range(len(rechit_region)):
@@ -283,6 +287,8 @@ def analysis(root_dat, hits, bx, bx_list, cross_part, verbose, pu, num_or):
                 sbit_idx = int(rechit_sbit[hit])
                 if rechit_bx[hit] not in bx_list:
                     continue
+                else:
+                    bx_data[chamb_idx, part_idx, layer_idx, sbit_idx] = rechit_bx[hit]
 
                 # insert the hit
                 datlist[chamb_idx, part_idx, 0][layer_idx] = (datlist[chamb_idx, part_idx, 0][layer_idx]) | (1 << sbit_idx)
@@ -310,6 +316,8 @@ def analysis(root_dat, hits, bx, bx_list, cross_part, verbose, pu, num_or):
                 sbit_idx = int(digihit_sbit[hit])
                 if digihit_bx[hit] not in bx_list:
                     continue
+                else:
+                    bx_data[chamb_idx, part_idx, layer_idx, sbit_idx] = digihit_bx[hit]
                 
                 # insert the hit
                 datlist[chamb_idx, part_idx, 0][layer_idx] = (datlist[chamb_idx, part_idx, 0][layer_idx]) | (1 << sbit_idx)
@@ -329,7 +337,6 @@ def analysis(root_dat, hits, bx, bx_list, cross_part, verbose, pu, num_or):
         # Find segments per chamber
         online_segment_chamber = {}
         for (chamber_nr, dat_w_segs) in enumerate(datlist):
-           
             online_segment_chamber[chamber_nr] = []
             #print ("  Chamber %d"%chamber_nr)
             seg_m_b = [dat[1] for dat in dat_w_segs]
@@ -344,19 +351,17 @@ def analysis(root_dat, hits, bx, bx_list, cross_part, verbose, pu, num_or):
                     break
             if not non_zero_data:
                 continue
-            #print (data)
+            chamber_bx_data = bx_data[chamber_nr, :, :, :]
 
             config = Config()
             config.num_outputs = 10
             config.cross_part_seg_width = 4
             config.ghost_width = 10
             num_or_to_span = {2:37, 4:19, 8:11, 16:7}
-            #num_or = 4
             config.max_span = num_or_to_span[num_or]
             config.num_or = num_or
-            seglist = process_chamber(data, config)
+            seglist = process_chamber(data, config, chamber_bx_data)
             seglist_final = []
-            #print (seglist)
             for seg in seglist:
                 seg.fit(config.max_span)
                 if seg.mse is not None and seg.mse >= mse_th:
@@ -365,6 +370,8 @@ def analysis(root_dat, hits, bx, bx_list, cross_part, verbose, pu, num_or):
                     continue
                 #mse_collections.append(seg.mse)
                 #print(seg.mse)
+                seg_bx_collections.append(seg.bx)
+                print(seg.bx)
                 if seg.partition % 2 != 0:
                     seg.partition = (seg.partition // 2) + 1
                 else:
@@ -1574,6 +1581,9 @@ def analysis(root_dat, hits, bx, bx_list, cross_part, verbose, pu, num_or):
 
     #plt.hist(mse_collections)
     #plt.savefig('./mse_histogram.png')
+
+    plt.hist(seg_bx_collections)
+    plt.savefig('./seg_bx_collections.png')
 
 def test_analysis_mc():
     root_dat = read_ntuple(os.path.abspath(os.path.dirname(__file__)) + "/test_data/mc_ntuple.root")

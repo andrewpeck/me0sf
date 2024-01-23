@@ -13,7 +13,7 @@ def parse_data(data, strip, max_span):
         parsed_data = (data >> shift) & (2**max_span - 1)
     return parsed_data
 
-def pat_mux(partition_data, partition, config : Config):
+def pat_mux(partition_data, partition, config : Config, partition_bx_data):
     """
     takes in a list of integers for the partition data in each layer,
     the MAX_SPAN of each pat_unit, and the partition width to return a list of the
@@ -21,6 +21,7 @@ def pat_mux(partition_data, partition, config : Config):
     """
 
     fn = lambda strip : pat_unit(extract_data_window(partition_data, strip, config.max_span),
+                                 partition_bx_data = partition_bx_data,
                                  ly_thresh = config.ly_thresh,
                                  strip=strip,
                                  partition=partition, 

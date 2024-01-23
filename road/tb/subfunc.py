@@ -47,8 +47,7 @@ class Segment:
     ignore_bend = False
 
     def __init__(self, lc, id, hc=0, strip=0, partition=0, centroid=None,
-                 substrip=None, bend_ang=None):
-
+                 substrip=None, bend_ang=None, bx=-9999):
         self.hc = hc
         self.lc = lc
         self.id = id
@@ -58,6 +57,7 @@ class Segment:
         self.substrip = substrip
         self.bend_ang = bend_ang
         self.mse = None
+        self.bx = -9999
         self.update_quality()
 
     def reset(self):
@@ -294,7 +294,7 @@ def find_ones(data):
             ones.append(cnt+1)
         data = data >> 1
         cnt = cnt + 1
-
+    # note that the positions returned are in 1-index system
     return ones
 
 def find_centroid(data : int):
@@ -305,7 +305,7 @@ def find_centroid(data : int):
     if len(ones)==0:
         return 0
 
-    return (1.0 * sum(ones)) / len(ones)
+    return ((1.0 * sum(ones)) / len(ones)), ones
 
 def generate_combinations(nbits : int):
     return (nbits, tuple(range(2**nbits)))
