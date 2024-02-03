@@ -73,6 +73,8 @@ def calculate_centroids(single_pattern_masked_data : List[int], partition_bx_dat
         centroids.append(cur_centroid)
         for hit_index in hits_indices:
             bxs.append(partition_bx_data[layer_index, hit_index-1])
+    if len(bxs) == 0:
+        return centroids, 0
     return centroids, np.mean(bxs)
 
 def calculate_hit_count(masked_data : List[int], light : bool = False) -> int:
@@ -108,7 +110,7 @@ def calculate_hits(data):
     return n_hits_per_layer
 
 def pat_unit(data,
-             partition_bx_data,
+             bx_data,
              strip : int = 0,
              ly_thresh : int = 4,
              partition : int = -1,
@@ -200,7 +202,7 @@ def pat_unit(data,
         centroids = []
         bxs = []
         for single_pattern_masked_data in masked_data:
-            cur_pattern_centroids, cur_pattern_bx = calculate_centroids(single_pattern_masked_data, partition_bx_data)
+            cur_pattern_centroids, cur_pattern_bx = calculate_centroids(single_pattern_masked_data, bx_data)
             centroids.append(cur_pattern_centroids)
             bxs.append(cur_pattern_bx)
         

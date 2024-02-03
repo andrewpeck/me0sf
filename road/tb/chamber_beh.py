@@ -68,12 +68,14 @@ def process_chamber(chamber_data : List[List[int]], config : Config, chamber_bx_
         num_finders = 15
 
         data = [[0 for _ in range(6)] for _ in range(num_finders)]
+        processed_chamber_bx_data = [[[-9999 for _ in range(192)] for _ in range(6)] for _ in range(num_finders)]
 
         for finder in range(num_finders):
 
             # even finders are simple, just take the partition
             if finder % 2 == 0:
                 data[finder] = chamber_data[finder//2]
+                processed_chamber_bx_data[finder] = chamber_bx_data[finder//2]
 
             # odd finders are the OR of two adjacent partitions
             else:
@@ -92,11 +94,17 @@ def process_chamber(chamber_data : List[List[int]], config : Config, chamber_bx_
                     data[finder][4] = chamber_data[finder//2][4]
                     data[finder][5] = chamber_data[finder//2][5]
 
+                    processed_chamber_bx_data[finder][0] = chamber_bx_data[finder//2+1][0]
+                    processed_chamber_bx_data[finder][1] = chamber_bx_data[finder//2+1][1]
+                    processed_chamber_bx_data[finder][2] = [(chamber_data[finder//2][2][i] + chamber_data[finder//2+1][2][i]) / 2 for i in range(len(chamber_data[finder//2][2]))]
+                    processed_chamber_bx_data[finder][3] = [(chamber_data[finder//2][3][i] + chamber_data[finder//2+1][3][i]) / 2 for i in range(len(chamber_data[finder//2][3]))]
+                    processed_chamber_bx_data[finder][4] = chamber_bx_data[finder//2][4]
+                    processed_chamber_bx_data[finder][5] = chamber_bx_data[finder//2][5]
     else:
 
         data = chamber_data
 
-    datazip  = zip(data, range(len(data)), repeat(config), chamber_bx_data)
+    datazip  = zip(data, range(len(data)), repeat(config), processed_chamber_bx_data)
 
     # for some reason multi-processing fails with questasim, generating an error
     # such as:

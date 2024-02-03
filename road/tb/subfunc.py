@@ -303,7 +303,7 @@ def find_centroid(data : int):
     ones = find_ones(data)
 
     if len(ones)==0:
-        return 0
+        return 0, ones
 
     return ((1.0 * sum(ones)) / len(ones)), ones
 

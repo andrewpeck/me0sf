@@ -273,7 +273,9 @@ def analysis(root_dat, hits, bx, bx_list, cross_part, verbose, pu, num_or):
         # 7 ->   13     14
 
         # initialize the bx_data, bx data will be inserted based on different input
-        bx_data = np.full((36, 8, 6, 192), -9999)
+        # todo : 
+        #bx_data = np.full((36, 8, 6, 192), -9999)
+        bx_data = [[[[ -9999 for _ in range(192)] for _ in range(6)] for _ in range(8)] for _ in range(36)]
 
         # loop every hit inside an event
         if hits == "rec":
@@ -287,8 +289,7 @@ def analysis(root_dat, hits, bx, bx_list, cross_part, verbose, pu, num_or):
                 sbit_idx = int(rechit_sbit[hit])
                 if rechit_bx[hit] not in bx_list:
                     continue
-                else:
-                    bx_data[chamb_idx, part_idx, layer_idx, sbit_idx] = rechit_bx[hit]
+                bx_data[chamb_idx][part_idx][layer_idx][sbit_idx] = rechit_bx[hit]
 
                 # insert the hit
                 datlist[chamb_idx, part_idx, 0][layer_idx] = (datlist[chamb_idx, part_idx, 0][layer_idx]) | (1 << sbit_idx)
@@ -317,7 +318,7 @@ def analysis(root_dat, hits, bx, bx_list, cross_part, verbose, pu, num_or):
                 if digihit_bx[hit] not in bx_list:
                     continue
                 else:
-                    bx_data[chamb_idx, part_idx, layer_idx, sbit_idx] = digihit_bx[hit]
+                    bx_data[chamb_idx][part_idx][layer_idx][sbit_idx] = digihit_bx[hit]
                 
                 # insert the hit
                 datlist[chamb_idx, part_idx, 0][layer_idx] = (datlist[chamb_idx, part_idx, 0][layer_idx]) | (1 << sbit_idx)
@@ -351,7 +352,7 @@ def analysis(root_dat, hits, bx, bx_list, cross_part, verbose, pu, num_or):
                     break
             if not non_zero_data:
                 continue
-            chamber_bx_data = bx_data[chamber_nr, :, :, :]
+            chamber_bx_data = bx_data[chamber_nr][:][:][:]
 
             config = Config()
             config.num_outputs = 10
