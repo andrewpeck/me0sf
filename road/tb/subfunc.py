@@ -57,7 +57,7 @@ class Segment:
         self.substrip = substrip
         self.bend_ang = bend_ang
         self.mse = None
-        self.bx = -9999
+        self.bx = bx
         self.update_quality()
 
     def reset(self):

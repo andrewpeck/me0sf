@@ -319,6 +319,7 @@ def analysis(root_dat, hits, bx, bx_list, cross_part, verbose, pu, num_or):
                     continue
                 else:
                     bx_data[chamb_idx][part_idx][layer_idx][sbit_idx] = digihit_bx[hit]
+                    #print(digihit_bx[hit])
                 
                 # insert the hit
                 datlist[chamb_idx, part_idx, 0][layer_idx] = (datlist[chamb_idx, part_idx, 0][layer_idx]) | (1 << sbit_idx)
@@ -1582,7 +1583,7 @@ def analysis(root_dat, hits, bx, bx_list, cross_part, verbose, pu, num_or):
 
     #plt.hist(mse_collections)
     #plt.savefig('./mse_histogram.png')
-
+    print(seg_bx_collections)
     plt.hist(seg_bx_collections)
     plt.savefig('./seg_bx_collections.png')
 

@@ -72,9 +72,12 @@ def calculate_centroids(single_pattern_masked_data : List[int], partition_bx_dat
         cur_centroid, hits_indices = find_centroid(layer)
         centroids.append(cur_centroid)
         for hit_index in hits_indices:
-            bxs.append(partition_bx_data[layer_index, hit_index-1])
+            bxs.append(partition_bx_data[layer_index][hit_index-1])
+            #print(partition_bx_data[layer_index][hit_index-1])
     if len(bxs) == 0:
-        return centroids, 0
+        return centroids, -9999
+    #print(bxs)
+    #print(np.mean(bxs))
     return centroids, np.mean(bxs)
 
 def calculate_hit_count(masked_data : List[int], light : bool = False) -> int:
@@ -203,9 +206,10 @@ def pat_unit(data,
         bxs = []
         for single_pattern_masked_data in masked_data:
             cur_pattern_centroids, cur_pattern_bx = calculate_centroids(single_pattern_masked_data, bx_data)
+            #print(cur_pattern_bx)
             centroids.append(cur_pattern_centroids)
             bxs.append(cur_pattern_bx)
-        
+    #print(bxs)
     # (5) process segments
     seg_list = [Segment(lc=lc,
                         hc=hc,
@@ -219,7 +223,7 @@ def pat_unit(data,
 
     # (6) choose the max of all patterns
     best = max(seg_list) # type: ignore
-
+    #print(best.bx)
     # (7) apply a layer threshold
     if (partition % 2 != 0):
         ly_thresh += 1
