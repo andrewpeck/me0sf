@@ -373,7 +373,7 @@ def analysis(root_dat, hits, bx, bx_list, cross_part, verbose, pu, num_or):
                 #mse_collections.append(seg.mse)
                 #print(seg.mse)
                 seg_bx_collections.append(seg.bx)
-                print(seg.bx)
+                #print(seg.bx)
                 if seg.partition % 2 != 0:
                     seg.partition = (seg.partition // 2) + 1
                 else:
