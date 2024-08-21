@@ -1583,7 +1583,7 @@ def analysis(root_dat, hits, bx, bx_list, cross_part, verbose, pu, num_or):
 
     #plt.hist(mse_collections)
     #plt.savefig('./mse_histogram.png')
-    print(seg_bx_collections)
+    #print(seg_bx_collections)
     plt.hist(seg_bx_collections)
     plt.savefig('./seg_bx_collections.png')
 
