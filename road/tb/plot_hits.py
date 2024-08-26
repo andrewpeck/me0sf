@@ -164,7 +164,7 @@ if __name__ == "__main__":
     args = parser.parse_args()
 
     # read in the data
-    root_dat = read_ntuple(args.file_path)
+    root_dat = read_ntuple(args.file_path, 0, 1000)
 
     if int(args.num_or) < 2:
         print ("At least 2 strips OR-ed together")
