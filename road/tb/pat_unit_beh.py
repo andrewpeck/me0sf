@@ -260,7 +260,7 @@ def pat_unit(data,
         if (best.lc - n_layers_large_clusters_low) < 3:
             best.reset()
     if best.partition >= 9:
-        if n_layers_large_hits >= 1:
+        if (best.lc - n_layers_large_hits) < 3:
             best.reset()
 
     best.partition=partition
