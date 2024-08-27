@@ -250,8 +250,8 @@ def pat_unit(data,
     for l in n_hits_counts:
         if l > n_hits_max_limit:
             n_layers_large_hits += 1
-    if best.partition >= 5:
-        if n_layers_large_clusters >= 1:
+    if best.partition >= 6:
+        if n_layers_large_clusters > 1:
             best.reset()
     #if (best.lc - n_layers_large_clusters) < 3:
     #if n_layers_large_clusters > 1:
