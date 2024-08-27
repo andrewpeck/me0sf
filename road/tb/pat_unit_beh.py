@@ -238,26 +238,30 @@ def pat_unit(data,
         best.reset()
 
     # (9) remove segments with large clusters for wide segments
-    cluster_size_max_limit = 3
+    cluster_size_max_limit_low = 3
+    cluster_size_max_limit_high = 5
     n_hits_max_limit = 6
     cluster_size_counts = calculate_cluster_size(data)
     n_hits_counts = calculate_hits(data)
-    n_layers_large_clusters = 0
+    n_layers_large_clusters_low = 0
+    n_layers_large_clusters_high = 0
     n_layers_large_hits = 0
     for l in cluster_size_counts:
-        if l > cluster_size_max_limit:
-            n_layers_large_clusters += 1
+        if l > cluster_size_max_limit_low:
+            n_layers_large_clusters_low += 1
+        if l > cluster_size_max_limit_high:
+            n_layers_large_clusters_high += 1
     for l in n_hits_counts:
         if l > n_hits_max_limit:
             n_layers_large_hits += 1
+    if cluster_size_max_limit_high >= 1:
+        best.reset()
     if best.partition >= 11:
-        if n_layers_large_clusters > 1:
+        if (best.lc - n_layers_large_clusters_low) < 3:
             best.reset()
-    #if (best.lc - n_layers_large_clusters) < 3:
-    #if n_layers_large_clusters > 1:
-    #    best.reset()
-    #if n_layers_large_hits > 0:
-    #    best.reset()
+    if best.partition >= 9:
+        if n_layers_large_hits >= 1:
+            best.reset()
 
     best.partition=partition
 
