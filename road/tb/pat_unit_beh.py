@@ -259,8 +259,11 @@ def pat_unit(data,
     #elif (best.id <= 16):
     #    if n_layers_large_clusters > 2:
     #        best.reset()
-    #if n_layers_large_hits > 1:
-    #    best.reset()
+    #if (best.lc - n_layers_large_clusters) < 3:
+    if n_layers_large_clusters > 1:
+        best.reset()
+    if n_layers_large_hits > 0:
+        best.reset()
 
     best.partition=partition
 
