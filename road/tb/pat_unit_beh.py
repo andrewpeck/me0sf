@@ -248,12 +248,12 @@ def pat_unit(data,
             best.reset()
 
     # (9) remove segments with large clusters for wide segments - ONLY NEEDED FOR PU200
-    cluster_size_max_limits = [3, 6, 9, 12]
-    n_hits_max_limits = [3, 6, 9, 12]
+    cluster_size_max_limits = [3, 6, 9, 12, 15]
+    n_hits_max_limits = [3, 6, 9, 12, 15]
     cluster_size_counts = calculate_cluster_size(data)
     n_hits_counts = calculate_hits(data)
-    n_layers_large_clusters = [0, 0, 0, 0]
-    n_layers_large_hits = [0, 0, 0, 0]
+    n_layers_large_clusters = [0, 0, 0, 0, 0]
+    n_layers_large_hits = [0, 0, 0, 0, 0]
     for i, threshold in enumerate(cluster_size_max_limits):
         for l in cluster_size_counts:
             if l > threshold:
@@ -276,18 +276,19 @@ def pat_unit(data,
     best.nlayers_withnoiseg15 = n_layers_large_hits[3]
     '''
 
-    #if partition >= 11:
-    #    if n_layers_large_clusters[2] >= 1:
-    #        best.reset()
+    if partition >= 11:
+        if n_layers_large_clusters[4] >= 1:
+            best.reset()
     #    if (best.lc - n_layers_large_clusters[0]) < 4:
     #        best.reset()
-    #else:
-    #    if n_layers_large_clusters[1] >= 1:
-    #        best.reset()
+    else:
+        if n_layers_large_clusters[3] >= 1:
+            best.reset()
     #if partition >= 9:
-    #    if n_layers_large_hits[3] >= 1:
+    #    if (best.lc - n_layers_large_hits[2]) < 3:
     #        best.reset()
-    #    if (best.lc - n_layers_large_hits[1]) < 4:
+    #else:
+    #    if (best.lc - n_layers_large_hits[1]) < 3:
     #        best.reset()
 
     best.partition=partition
