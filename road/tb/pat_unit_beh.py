@@ -238,26 +238,36 @@ def pat_unit(data,
         best.reset()
 
     # (9) remove segments with large clusters for wide segments - ONLY NEEDED FOR PU200
-    cluster_size_max_limit_low = 3
-    cluster_size_max_limit_high = 15
-    n_hits_max_limit = 15
+    cluster_size_max_limits = [3, 5, 10, 15]
+    n_hits_max_limits = [3, 5, 10, 15]
     cluster_size_counts = calculate_cluster_size(data)
     n_hits_counts = calculate_hits(data)
-    n_layers_large_clusters_low = 0
-    n_layers_large_clusters_high = 0
-    n_layers_large_hits = 0
-    for l in cluster_size_counts:
-        if l > cluster_size_max_limit_low:
-            n_layers_large_clusters_low += 1
-        if l > cluster_size_max_limit_high:
-            n_layers_large_clusters_high += 1
-    for l in n_hits_counts:
-        if l > n_hits_max_limit:
-            n_layers_large_hits += 1
-    if n_layers_large_clusters_high >= 1:
-        best.reset()
-    if n_layers_large_hits >= 1:
-        best.reset()
+    n_layers_large_clusters = [0, 0, 0, 0]
+    n_layers_large_hits = [0, 0, 0, 0]
+    for i, threshold in enumerate(cluster_size_max_limits):
+        for l in cluster_size_counts:
+            if l > threshold:
+                n_layers_large_clusters[i] += 1
+    for i, threshold in enumerate(n_hits_max_limits):
+        for l in n_hits_counts:
+            if l > threshold:
+                n_layers_large_hits[i] += 1
+
+    best.max_cluster_size = max(cluster_size_counts)
+    best.max_noise = max(n_hits_counts)
+    best.nlayers_withcsg3 = n_layers_large_clusters[0]
+    best.nlayers_withcsg5 = n_layers_large_clusters[1]
+    best.nlayers_withcsg10 = n_layers_large_clusters[2]
+    best.nlayers_withcsg15 = n_layers_large_clusters[3]
+    best.nlayers_withnoiseg3 = n_layers_large_hits[0]
+    best.nlayers_withnoiseg5 = n_layers_large_hits[1]
+    best.nlayers_withnoiseg10 = n_layers_large_hits[2]
+    best.nlayers_withnoiseg15 = n_layers_large_hits[3]
+
+    #if n_layers_large_clusters_high >= 1:
+    #    best.reset()
+    #if n_layers_large_hits >= 1:
+    #    best.reset()
     #if best.partition >= 11:
     #    if (best.lc - n_layers_large_clusters_low) < 3:
     #        best.reset()

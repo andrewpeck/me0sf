@@ -47,7 +47,10 @@ class Segment:
     ignore_bend = False
 
     def __init__(self, lc, id, hc=0, strip=0, partition=0, centroid=None,
-                 substrip=None, bend_ang=None, bx=-9999):
+                 substrip=None, bend_ang=None, mse = None, bx=-9999,
+                 max_cluster_size = None, max_noise = None,
+                 nlayers_withcsg3 = None, nlayers_withcsg5 = None, nlayers_withcsg10 = None, nlayers_withcsg15 = None,
+                 nlayers_withnoiseg3 = None, nlayers_withnoiseg5 = None, nlayers_withnoiseg10 = None, nlayers_withnoiseg15 = None):
         self.hc = hc
         self.lc = lc
         self.id = id
@@ -56,8 +59,18 @@ class Segment:
         self.centroid = centroid
         self.substrip = substrip
         self.bend_ang = bend_ang
-        self.mse = None
+        self.mse = mse
         self.bx = bx
+        self.max_cluster_size = max_cluster_size
+        self.max_noise = max_noise
+        self.nlayers_withcsg3 = nlayers_withcsg3
+        self.nlayers_withcsg5 = nlayers_withcsg5
+        self.nlayers_withcsg10 = nlayers_withcsg10
+        self.nlayers_withcsg15 = nlayers_withcsg15
+        self.nlayers_withnoiseg3 = nlayers_withnoiseg3
+        self.nlayers_withnoiseg5 = nlayers_withnoiseg5
+        self.nlayers_withnoiseg10 = nlayers_withnoiseg10
+        self.nlayers_withnoiseg15 = nlayers_withnoiseg15
         self.update_quality()
 
     def reset(self):
