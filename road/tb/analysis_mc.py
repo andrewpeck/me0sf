@@ -1672,8 +1672,7 @@ def analysis(root_dat, hits, bx, bx_list, cross_part, verbose, pu, num_or):
     c12a.Print("num_seg_per_chamber_offline_%s_bx%s_crosspart_%s_or%d_log.pdf"%(hits, bx, cross_part, num_or))
     num_seg_per_chamber_offline.Write()
 
-
-
+    '''
     c_max_cluster_size_p = ROOT.TCanvas('', '', 800, 650)
     c_max_cluster_size_p.SetGrid()
     c_max_cluster_size_p.DrawFrame(0, 0, 38, 1.1, ";Max Cluster Size;Purity")
@@ -2059,7 +2058,7 @@ def analysis(root_dat, hits, bx, bx_list, cross_part, verbose, pu, num_or):
     latex.DrawLatex(0.42, 0.91,plot_text2)
     c_nlayers_withnoiseg15_e.Print("st_effi_nlayers_withnoiseg15_%s_bx%s_crosspart_%s_or%d.pdf"%(hits, bx, cross_part, num_or))
     st_effi_nlayers_withnoiseg15.Write()
-
+    '''
 
     file_out.close()
     plot_file.Close()
