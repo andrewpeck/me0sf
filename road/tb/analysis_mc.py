@@ -62,6 +62,7 @@ def analysis(root_dat, hits, bx, bx_list, cross_part, verbose, pu, num_or):
     st_purity_passed_id = ROOT.TH1F("st_purity_passed_id", "st_purity_passed_id",17, 0.5, 17.5)
     st_purity_total_id = ROOT.TH1F("st_purity_total_id", "st_purity_total_id",17, 0.5, 17.5)
 
+    '''
     st_effi_passed_max_cluster_size = ROOT.TH1F("st_effi_passed_max_cluster_size", "st_effi_passed_max_cluster_size", 37, 0.5, 37.5)
     st_effi_total_max_cluster_size = ROOT.TH1F("st_effi_total_max_cluster_size", "st_effi_total_max_cluster_size", 37, 0.5, 37.5)
     st_effi_passed_max_noise = ROOT.TH1F("st_effi_passed_max_noise", "st_effi_passed_max_noise", 37, 0.5, 37.5)
@@ -102,6 +103,7 @@ def analysis(root_dat, hits, bx, bx_list, cross_part, verbose, pu, num_or):
     st_purity_total_nlayers_withnoiseg10 = ROOT.TH1F("st_purity_total_nlayers_withnoiseg10", "st_purity_total_nlayers_withnoiseg10", 6, 0.5, 6.5)
     st_purity_passed_nlayers_withnoiseg15 = ROOT.TH1F("st_purity_passed_nlayers_withnoiseg15", "st_purity_passed_nlayers_withnoiseg15", 6, 0.5, 6.5)
     st_purity_total_nlayers_withnoiseg15 = ROOT.TH1F("st_purity_total_nlayers_withnoiseg15", "st_purity_total_nlayers_withnoiseg15", 6, 0.5, 6.5)
+    '''
 
     # define the histograms efficiency vs pt for each pattern (simtracks)
     st_effi_passed_pt1 = ROOT.TH1F("st_effi_passed_pt1", "st_effi_passed_pt1",14, array('d',bins)) 
@@ -534,6 +536,7 @@ def analysis(root_dat, hits, bx, bx_list, cross_part, verbose, pu, num_or):
             st_effi_total_eta.Fill(st_eta_partition+1)
             for id in range(1,18):
                 st_effi_total_id.Fill(id)
+            '''
             for counts in range(1,38):
                 st_effi_total_max_cluster_size.Fill(counts)
                 st_effi_total_max_noise.Fill(counts)
@@ -546,6 +549,7 @@ def analysis(root_dat, hits, bx, bx_list, cross_part, verbose, pu, num_or):
                 st_effi_total_nlayers_withnoiseg5.Fill(l)
                 st_effi_total_nlayers_withnoiseg10.Fill(l)
                 st_effi_total_nlayers_withnoiseg15.Fill(l)
+            '''
 
             n_st_effi_total += 1
 
@@ -577,7 +581,7 @@ def analysis(root_dat, hits, bx, bx_list, cross_part, verbose, pu, num_or):
                         st_effi_passed_pt.Fill(st_pt)
                         st_effi_passed_eta.Fill(st_eta_partition+1)
                         st_effi_passed_id.Fill(online_id)
-
+                        '''
                         st_effi_passed_max_cluster_size.Fill(seg.max_cluster_size)
                         st_effi_passed_max_noise.Fill(seg.max_noise)
                         st_effi_passed_nlayers_withcsg3.Fill(seg.nlayers_withcsg3)
@@ -588,6 +592,7 @@ def analysis(root_dat, hits, bx, bx_list, cross_part, verbose, pu, num_or):
                         st_effi_passed_nlayers_withnoiseg5.Fill(seg.nlayers_withnoiseg5)
                         st_effi_passed_nlayers_withnoiseg10.Fill(seg.nlayers_withnoiseg10)
                         st_effi_passed_nlayers_withnoiseg15.Fill(seg.nlayers_withnoiseg15)
+                        '''
 
                         if online_id == 1:
                             st_effi_passed_pt1.Fill(st_pt)
@@ -653,6 +658,7 @@ def analysis(root_dat, hits, bx, bx_list, cross_part, verbose, pu, num_or):
                 st_purity_total_eta.Fill(online_eta_partition+1)
                 st_purity_total_bending.Fill(online_bending_angle)
                 st_purity_total_id.Fill(online_id)
+                '''
                 st_purity_total_max_cluster_size.Fill(seg.max_cluster_size)
                 st_purity_total_max_noise.Fill(seg.max_noise)
                 st_purity_total_nlayers_withcsg3.Fill(seg.nlayers_withcsg3)
@@ -663,6 +669,7 @@ def analysis(root_dat, hits, bx, bx_list, cross_part, verbose, pu, num_or):
                 st_purity_total_nlayers_withnoiseg5.Fill(seg.nlayers_withnoiseg5)
                 st_purity_total_nlayers_withnoiseg10.Fill(seg.nlayers_withnoiseg10)
                 st_purity_total_nlayers_withnoiseg15.Fill(seg.nlayers_withnoiseg15)
+                '''
                 offline_purity_total_eta.Fill(online_eta_partition+1)
                 offline_purity_total_bending.Fill(online_bending_angle)
                 offline_purity_total_id.Fill(online_id)
@@ -704,6 +711,7 @@ def analysis(root_dat, hits, bx, bx_list, cross_part, verbose, pu, num_or):
                             st_purity_passed_eta.Fill(online_eta_partition+1)
                             st_purity_passed_bending.Fill(online_bending_angle)
                             st_purity_passed_id.Fill(online_id)
+                            '''
                             st_purity_passed_max_cluster_size.Fill(seg.max_cluster_size)
                             st_purity_passed_max_noise.Fill(seg.max_noise)
                             st_purity_passed_nlayers_withcsg3.Fill(seg.nlayers_withcsg3)
@@ -714,6 +722,7 @@ def analysis(root_dat, hits, bx, bx_list, cross_part, verbose, pu, num_or):
                             st_purity_passed_nlayers_withnoiseg5.Fill(seg.nlayers_withnoiseg5)
                             st_purity_passed_nlayers_withnoiseg10.Fill(seg.nlayers_withnoiseg10)
                             st_purity_passed_nlayers_withnoiseg15.Fill(seg.nlayers_withnoiseg15)
+                            '''
                             n_st_purity_passed += 1
                             break
 
