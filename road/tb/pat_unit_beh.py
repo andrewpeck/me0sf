@@ -229,6 +229,8 @@ def pat_unit(data,
         ly_thresh += 1
     if (best.id <= 12):
         ly_thresh += 1
+    if (partition >= 11): # for PU 200
+        ly_thresh += 1
     ly_thresh = min(ly_thresh, 5)
     if (best.lc < ly_thresh):
         best.reset()
@@ -236,10 +238,13 @@ def pat_unit(data,
     # (8) remove very wide segments
     if (best.id <= 10):
         best.reset()
+    if (partition >= 11): # for PU 200
+        if (best.id <= 12):
+            best.reset()
 
     # (9) remove segments with large clusters for wide segments - ONLY NEEDED FOR PU200
-    cluster_size_max_limits = [3, 5, 10, 15]
-    n_hits_max_limits = [3, 5, 10, 15]
+    cluster_size_max_limits = [3, 6, 9, 12]
+    n_hits_max_limits = [3, 6, 9, 12]
     cluster_size_counts = calculate_cluster_size(data)
     n_hits_counts = calculate_hits(data)
     n_layers_large_clusters = [0, 0, 0, 0]
@@ -255,6 +260,7 @@ def pat_unit(data,
 
     best.max_cluster_size = max(cluster_size_counts)
     best.max_noise = max(n_hits_counts)
+    '''
     best.nlayers_withcsg3 = n_layers_large_clusters[0]
     best.nlayers_withcsg5 = n_layers_large_clusters[1]
     best.nlayers_withcsg10 = n_layers_large_clusters[2]
@@ -263,16 +269,20 @@ def pat_unit(data,
     best.nlayers_withnoiseg5 = n_layers_large_hits[1]
     best.nlayers_withnoiseg10 = n_layers_large_hits[2]
     best.nlayers_withnoiseg15 = n_layers_large_hits[3]
+    '''
 
-    #if n_layers_large_clusters_high >= 1:
-    #    best.reset()
-    #if n_layers_large_hits >= 1:
-    #    best.reset()
-    #if best.partition >= 11:
-    #    if (best.lc - n_layers_large_clusters_low) < 3:
+    #if partition >= 11:
+    #    if n_layers_large_clusters[2] >= 1:
     #        best.reset()
-    #if best.partition >= 9:
-    #    if (best.lc - n_layers_large_hits) < 3:
+    #    if (best.lc - n_layers_large_clusters[0]) < 4:
+    #        best.reset()
+    #else:
+    #    if n_layers_large_clusters[1] >= 1:
+    #        best.reset()
+    #if partition >= 9:
+    #    if n_layers_large_hits[3] >= 1:
+    #        best.reset()
+    #    if (best.lc - n_layers_large_hits[1]) < 4:
     #        best.reset()
 
     best.partition=partition
