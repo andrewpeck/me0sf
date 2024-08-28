@@ -239,7 +239,7 @@ def pat_unit(data,
     if (best.id <= 10):
         best.reset()
     if (partition >= 11): # for PU 200
-        if (best.id <= 12):
+        if (best.id <= 14):
             best.reset()
 
     # (9) remove segments with large clusters for wide segments - ONLY NEEDED FOR PU200
