@@ -237,10 +237,10 @@ def pat_unit(data,
     if (best.id <= 10):
         best.reset()
 
-    # (9) remove segments with large clusters for wide segments
+    # (9) remove segments with large clusters for wide segments - ONLY NEEDED FOR PU200
     cluster_size_max_limit_low = 3
-    cluster_size_max_limit_high = 10
-    n_hits_max_limit = 6
+    cluster_size_max_limit_high = 15
+    n_hits_max_limit = 15
     cluster_size_counts = calculate_cluster_size(data)
     n_hits_counts = calculate_hits(data)
     n_layers_large_clusters_low = 0
@@ -254,7 +254,9 @@ def pat_unit(data,
     for l in n_hits_counts:
         if l > n_hits_max_limit:
             n_layers_large_hits += 1
-    if n_layers_large_clusters_high >= 1:
+    if n_layers_large_clusters_high > 1:
+        best.reset()
+    if n_layers_large_hits > 1:
         best.reset()
     #if best.partition >= 11:
     #    if (best.lc - n_layers_large_clusters_low) < 3:
