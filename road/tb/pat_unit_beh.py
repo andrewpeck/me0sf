@@ -224,14 +224,19 @@ def pat_unit(data,
     # (6) choose the max of all patterns
     best = max(seg_list) # type: ignore
     #print(best.bx)
+    
     # (7) apply a layer threshold
     if (partition % 2 != 0):
         ly_thresh += 1
     if (best.id <= 12):
         ly_thresh += 1
-    if (partition >= 11): # for PU 200
+    if (partition >= 7): # for PU 200
         ly_thresh += 1
-    ly_thresh = min(ly_thresh, 5)
+    if (partition >=11):
+        ly_thresh = 6 # for PU 200
+    else:
+        ly_thresh = min(ly_thresh, 5)
+
     if (best.lc < ly_thresh):
         best.reset()
 
