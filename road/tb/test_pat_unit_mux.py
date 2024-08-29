@@ -68,7 +68,7 @@ async def pat_unit_mux_test(dut, NLOOPS=500, test="WALKING1"):
     config = Config()
     config.skip_centroids = True
     config.max_span=get_max_span_from_dut(dut)
-    config.ly_thresh=6
+    #config.ly_thresh=6
     config.width=dut.WIDTH.value
     dut.ly_thresh.value = config.ly_thresh
 
@@ -77,7 +77,7 @@ async def pat_unit_mux_test(dut, NLOOPS=500, test="WALKING1"):
     #--------------------------------------------------------------------------------
 
     checkfn = lambda : dut.segments_o[0].lc.value.is_resolvable and \
-        dut.segments_o[0].lc.value.integer >= config.ly_thresh
+        dut.segments_o[0].lc.value.integer >= config.ly_thresh[dut.segments_o[0].id.value.integer]
 
     def setfn(dut, x):
         dut.ly0.value = x

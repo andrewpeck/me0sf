@@ -8,7 +8,7 @@ LAYER_MASK = None
 
 class Config:
     skip_centroids : bool = False
-    ly_thresh : int = 4
+    ly_thresh : list[int] = [7, 7, 7, 7, 7, 7, 7, 7, 7, 7, 5, 5, 4, 4, 4, 4, 4]
     max_span : int = 37
     width : int = 192
     deghost_pre : bool = True

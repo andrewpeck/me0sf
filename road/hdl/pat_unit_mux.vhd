@@ -35,7 +35,7 @@ entity pat_unit_mux is
 
     VERBOSE : boolean := false;
 
-    DISABLE_PEAKING : boolean := false;
+    DISABLE_PEAKING : boolean := true;
 
     LY0_SPAN : natural := get_max_span(patdef_array);
     LY1_SPAN : natural := get_max_span(patdef_array);
@@ -58,7 +58,7 @@ entity pat_unit_mux is
 
     clock : in std_logic;
 
-    ly_thresh : in std_logic_vector (2 downto 0);
+    ly_thresh : in ly_thresh_t;
 
     dav_i : in  std_logic;
     dav_o : out std_logic := '0';

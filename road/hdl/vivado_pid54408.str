@@ -2944,3 +2944,96 @@ selectCodeEditor("pat_unit.vhd", 1052, 486); // bP
 // HMemoryUtils.trashcanNow. Engine heap size: 9,556 MB. GUI used memory: 291 MB. Current time: 8/29/24, 9:40:29 AM PDT
 // HMemoryUtils.trashcanNow. Engine heap size: 9,556 MB. GUI used memory: 291 MB. Current time: 8/29/24, 10:10:29 AM PDT
 // HMemoryUtils.trashcanNow. Engine heap size: 9,556 MB. GUI used memory: 292 MB. Current time: 8/29/24, 10:40:29 AM PDT
+// HMemoryUtils.trashcanNow. Engine heap size: 9,556 MB. GUI used memory: 292 MB. Current time: 8/29/24, 11:10:29 AM PDT
+// Elapsed time: 63691 seconds
+selectMenu(PAResourceItoN.MainMenuMgr_FILE, "File"); // af
+selectMenu(PAResourceItoN.MainMenuMgr_PROJECT, "Project"); // ak
+dismissMenu(PAResourceItoN.MainMenuMgr_FILE, "File"); // af
+selectMenu(PAResourceItoN.MainMenuMgr_EDIT, "Edit"); // af
+dismissMenu(PAResourceItoN.MainMenuMgr_EDIT, "Edit"); // af
+selectMenu(PAResourceItoN.MainMenuMgr_FILE, "File"); // af
+dismissMenu(PAResourceItoN.MainMenuMgr_FILE, "File"); // af
+selectMenu(PAResourceItoN.MainMenuMgr_EDIT, "Edit"); // af
+dismissMenu(PAResourceItoN.MainMenuMgr_EDIT, "Edit"); // af
+selectMenu(PAResourceItoN.MainMenuMgr_TOOLS, "Tools"); // af
+dismissMenu(PAResourceItoN.MainMenuMgr_TOOLS, "Tools"); // af
+selectMenu(PAResourceItoN.MainMenuMgr_REPORTS, "Reports"); // af
+dismissMenu(PAResourceItoN.MainMenuMgr_REPORTS, "Reports"); // af
+selectMenu(PAResourceItoN.MainMenuMgr_WINDOW, "Window"); // af
+dismissMenu(PAResourceItoN.MainMenuMgr_WINDOW, "Window"); // af
+selectMenu(PAResourceItoN.MainMenuMgr_REPORTS, "Reports"); // af
+dismissMenu(PAResourceItoN.MainMenuMgr_REPORTS, "Reports"); // af
+selectMenu(PAResourceItoN.MainMenuMgr_TOOLS, "Tools"); // af
+dismissMenu(PAResourceItoN.MainMenuMgr_TOOLS, "Tools"); // af
+selectMenu(PAResourceItoN.MainMenuMgr_FILE, "File"); // af
+dismissMenu(PAResourceItoN.MainMenuMgr_FILE, "File"); // af
+selectMenu(PAResourceItoN.MainMenuMgr_EDIT, "Edit"); // af
+dismissMenu(PAResourceItoN.MainMenuMgr_EDIT, "Edit"); // af
+selectMenu(PAResourceItoN.MainMenuMgr_HELP, "Help"); // af
+dismissMenu(PAResourceItoN.MainMenuMgr_HELP, "Help"); // af
+selectMenu(PAResourceItoN.MainMenuMgr_VIEW, "View"); // af
+dismissMenu(PAResourceItoN.MainMenuMgr_VIEW, "View"); // af
+selectMenu(RDIResource.MainWinMenuMgr_LAYOUT, "Layout"); // af
+dismissMenu(RDIResource.MainWinMenuMgr_LAYOUT, "Layout"); // af
+selectMenu(PAResourceItoN.MainMenuMgr_FILE, "File"); // af
+selectMenu(PAResourceItoN.MainMenuMgr_PROJECT, "Project"); // ak
+selectMenu(PAResourceItoN.MainMenuMgr_CONSTRAINTS, "Constraints"); // ak
+selectMenu(PAResourceItoN.MainMenuMgr_CHECKPOINT, "Checkpoint"); // ak
+selectMenu(PAResourceItoN.MainMenuMgr_CONSTRAINTS, "Constraints"); // ak
+selectMenu(PAResourceItoN.MainMenuMgr_CHECKPOINT, "Checkpoint"); // ak
+selectMenu(PAResourceItoN.MainMenuMgr_IP, "IP"); // ak
+selectMenu(PAResourceItoN.MainMenuMgr_TEXT_EDITOR, "Text Editor"); // ak
+selectMenu(PAResourceItoN.MainMenuMgr_IMPORT, "Import"); // ak
+selectMenu(PAResourceItoN.MainMenuMgr_EXPORT, "Export"); // ak
+selectMenu(PAResourceItoN.MainMenuMgr_EXPORT, "Export"); // ak
+selectMenu(PAResourceItoN.MainMenuMgr_IMPORT, "Import"); // ak
+selectMenu(PAResourceItoN.MainMenuMgr_TEXT_EDITOR, "Text Editor"); // ak
+selectMenu(PAResourceItoN.MainMenuMgr_IP, "IP"); // ak
+selectMenu(PAResourceItoN.MainMenuMgr_CHECKPOINT, "Checkpoint"); // ak
+selectMenu(PAResourceItoN.MainMenuMgr_CONSTRAINTS, "Constraints"); // ak
+selectMenu(PAResourceItoN.MainMenuMgr_PROJECT, "Project"); // ak
+dismissMenu(PAResourceItoN.MainMenuMgr_FILE, "File"); // af
+selectMenu(PAResourceItoN.MainMenuMgr_FLOW, "Flow"); // af
+dismissMenu(PAResourceItoN.MainMenuMgr_FLOW, "Flow"); // af
+selectMenu(PAResourceItoN.MainMenuMgr_EDIT, "Edit"); // af
+dismissMenu(PAResourceItoN.MainMenuMgr_EDIT, "Edit"); // af
+selectMenu(PAResourceItoN.MainMenuMgr_FLOW, "Flow"); // af
+dismissMenu(PAResourceItoN.MainMenuMgr_FLOW, "Flow"); // af
+selectMenu(PAResourceItoN.MainMenuMgr_TOOLS, "Tools"); // af
+selectMenu(PAResourceItoN.MainMenuMgr_IO_PLANNING, "I/O Planning"); // ak
+selectMenu(PAResourceItoN.MainMenuMgr_TIMING, "Timing"); // ak
+selectMenuItem(PAResourceCommand.PACommandNames_CONFIG_BITSTREAM, "Edit Device Properties..."); // an
+dismissMenu(PAResourceItoN.MainMenuMgr_TOOLS, "Tools"); // af
+// Run Command: PAResourceCommand.PACommandNames_CONFIG_BITSTREAM
+// a (cs): Edit Device Properties: addNotify
+// 'J' command handler elapsed time: 4 seconds
+dismissDialog("Edit Device Properties"); // a
+selectMenu(PAResourceItoN.MainMenuMgr_HELP, "Help"); // af
+dismissMenu(PAResourceItoN.MainMenuMgr_HELP, "Help"); // af
+selectMenu(PAResourceItoN.MainMenuMgr_VIEW, "View"); // af
+dismissMenu(PAResourceItoN.MainMenuMgr_VIEW, "View"); // af
+selectMenu(RDIResource.MainWinMenuMgr_LAYOUT, "Layout"); // af
+dismissMenu(RDIResource.MainWinMenuMgr_LAYOUT, "Layout"); // af
+selectMenu(PAResourceItoN.MainMenuMgr_WINDOW, "Window"); // af
+selectMenuItem(PAResourceCommand.PACommandNames_PROJECT_SUMMARY, "Project Summary"); // an
+dismissMenu(PAResourceItoN.MainMenuMgr_WINDOW, "Window"); // af
+// Run Command: PAResourceCommand.PACommandNames_PROJECT_SUMMARY
+selectButton(RDIResourceCommand.RDICommands_SETTINGS, "xcvu13p-figd2104-2-e"); // h
+selectButton(RDIResourceCommand.RDICommands_SETTINGS, "xcvu13p-figd2104-2-e"); // h
+// Run Command: RDIResourceCommand.RDICommands_SETTINGS
+// d (cs): Settings: addNotify
+selectButton(RDIResource.BaseDialog_CANCEL, "Cancel"); // a
+dismissDialog("Settings"); // d
+selectButton(RDIResourceCommand.RDICommands_SETTINGS, "xcvu13p-figd2104-2-e"); // h
+selectButton(RDIResourceCommand.RDICommands_SETTINGS, "xcvu13p-figd2104-2-e"); // h
+// Run Command: RDIResourceCommand.RDICommands_SETTINGS
+// d (cs): Settings: addNotify
+setText(PAResourceQtoS.SettingsProjectGeneralPage_CHOOSE_DEVICE_FOR_YOUR_PROJECT, "xcvu13p-figd2104-2-e (active)"); // aa
+dismissDialog("Settings"); // d
+// HMemoryUtils.trashcanNow. Engine heap size: 9,560 MB. GUI used memory: 279 MB. Current time: 8/29/24, 11:40:29 AM PDT
+// HMemoryUtils.trashcanNow. Engine heap size: 9,560 MB. GUI used memory: 279 MB. Current time: 8/29/24, 12:10:29 PM PDT
+// HMemoryUtils.trashcanNow. Engine heap size: 9,560 MB. GUI used memory: 279 MB. Current time: 8/29/24, 12:40:29 PM PDT
+// HMemoryUtils.trashcanNow. Engine heap size: 9,560 MB. GUI used memory: 279 MB. Current time: 8/29/24, 1:10:29 PM PDT
+// HMemoryUtils.trashcanNow. Engine heap size: 9,560 MB. GUI used memory: 279 MB. Current time: 8/29/24, 1:40:30 PM PDT
+// HMemoryUtils.trashcanNow. Engine heap size: 9,560 MB. GUI used memory: 279 MB. Current time: 8/29/24, 2:10:30 PM PDT
+// HMemoryUtils.trashcanNow. Engine heap size: 9,560 MB. GUI used memory: 279 MB. Current time: 8/29/24, 2:40:30 PM PDT
