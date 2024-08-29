@@ -735,10 +735,20 @@ def analysis(root_dat, hits, bx, bx_list, cross_part, verbose, pu, num_or):
                     continue
                 file_out_summary.write("    Chamber %d: "%chamber)
                 eta_partition_list = []
+                pattern_id_list = []
+                pt_list = []
                 for seg in online_segment_chamber[chamber]:
                     eta_partition_list.append(seg.partition)
-                eta_partition_list_sorted = sorted(eta_partition_list)
+                    pattern_id_list.append(seg.id)
+                eta_partition_pattern_id_zip = zip(eta_partition_list, pattern_id_list)
+                eta_partition_pattern_id_zip_sorted = sorted(eta_partition_pattern_id_zip)
+                eta_partition_list_sorted, pattern_id_list_sorted = zip(*eta_partition_pattern_id_zip_sorted)
+                eta_partition_list_sorted = list(eta_partition_list_sorted)
+                pattern_id_list_sorted = list(pattern_id_list_sorted)
                 file_out_summary.write(', '.join(str(x) for x in eta_partition_list_sorted))
+                file_out_summary.write(" (Pattern IDs: ")
+                file_out_summary.write(', '.join(str(x) for x in pattern_id_list_sorted))
+                file_out_summary.write(")")
                 file_out_summary.write("\n")
             file_out_summary.write("\n")
             file_out_summary.write("  Sim Tracks: \n")
@@ -756,8 +766,16 @@ def analysis(root_dat, hits, bx, bx_list, cross_part, verbose, pu, num_or):
                     if chamber != track_chamber_nr[i]:
                         continue
                     eta_partition_list.append(track_eta_partition[i])
-                eta_partition_list_sorted = sorted(eta_partition_list)
+                    pt_list.append(track_pt[i])
+                eta_partition_pt_zip = zip(eta_partition_list, pt_list)
+                eta_partition_pt_zip_sorted = sorted(eta_partition_pt_zip)
+                eta_partition_list_sorted, pt_list_sorted = zip(*eta_partition_pt_zip_sorted)
+                eta_partition_list_sorted = list(eta_partition_list_sorted)
+                pt_list_sorted = list(pt_list_sorted)
                 file_out_summary.write(', '.join(str(x) for x in eta_partition_list_sorted))
+                file_out_summary.write(" (pT: ")
+                file_out_summary.write(', '.join(str(x) for x in pt_list_sorted))
+                file_out_summary.write(")")
                 file_out_summary.write("\n")
         file_out_summary.write("\n\n")
     print ("")
