@@ -731,7 +731,7 @@ def analysis(root_dat, hits, bx, bx_list, cross_part, verbose, pu, num_or):
         if verbose:
             file_out_summary.write("  Online Segments: \n")
             for chamber in range(0, 36):
-                if len(online_segment_chamber[chamber]) != 0:
+                if len(online_segment_chamber[chamber]) == 0:
                     continue
                 file_out_summary.write("    Chamber %d: "%chamber)
                 eta_partition_list = []
