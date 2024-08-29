@@ -22,6 +22,7 @@ from subfunc import *
 def analysis(root_dat, hits, bx, bx_list, cross_part, verbose, pu, num_or):
     # Output text file
     file_out = open("output_log_%s_bx%s_crosspart_%s_or%d.txt"%(hits, bx, cross_part, num_or), "w")
+    file_out_summary = open("output_log_%s_bx%s_crosspart_%s_or%d_summary.txt"%(hits, bx, cross_part, num_or), "w")
 
     # Nr. of segments per chamber per event
     num_seg_per_chamber = ROOT.TH1D("num_seg_per_chamber","Fraction of Events vs Number of Segments per Chamber",13,-0.5,12.5)
@@ -150,6 +151,7 @@ def analysis(root_dat, hits, bx, bx_list, cross_part, verbose, pu, num_or):
         #    continue
         if verbose:
             file_out.write("Event number = %d\n"%ievent)
+            file_out_summary.write("Event number = %d\n"%ievent)
 
         # read simhit info
         simhit_region = event["me0_sim_hit_region_i"]
@@ -726,6 +728,34 @@ def analysis(root_dat, hits, bx, bx_list, cross_part, verbose, pu, num_or):
                             n_st_purity_passed += 1
                             break
 
+        if verbose:
+            print ("  Online Segments: ")
+            for chamber in range(0, 36):
+                if chamber not in online_segment_chamber:
+                    continue
+                file_out_summary.write("    Chamber %d: "%chamber)
+                eta_partition_list = []
+                for seg in online_segment_chamber[chamber]:
+                    eta_partition_list.append(seg.partition)
+                eta_partition_list_sorted = sorted(eta_partition_list)
+                file_out_summary.write(', '.join(str(x) for x in eta_partition_list_sorted))
+                file_out_summary.write("\n")
+            file_out_summary.write("\n")
+            print ("  Sim Tracks: ")
+            for chamber in range(0, 36):
+                for i in range(0, n_me0_track):
+                    if chamber == track_chamber_nr[i]:
+                        break
+                file_out_summary.write("    Chamber %d: "%chamber)
+                eta_partition_list = []
+                for i in range(0, n_me0_track):
+                    if chamber != track_chamber_nr[i]:
+                        continue
+                    eta_partition_list.append(track_eta_partition[i])
+                eta_partition_list_sorted = sorted(eta_partition_list)
+                file_out_summary.write(', '.join(str(x) for x in eta_partition_list_sorted))
+                file_out_summary.write("\n")
+        file_out_summary.write("\n\n")
     print ("")
 
     # Overall efficiency
@@ -2061,6 +2091,7 @@ def analysis(root_dat, hits, bx, bx_list, cross_part, verbose, pu, num_or):
     '''
 
     file_out.close()
+    file_out_summary.close()
     plot_file.Close()
 
     #plt.hist(mse_collections)

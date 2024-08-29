@@ -276,14 +276,13 @@ def pat_unit(data,
     best.nlayers_withnoiseg15 = n_layers_large_hits[3]
     '''
 
-    if partition >= 11:
-        if n_layers_large_clusters[4] >= 1:
-            best.reset()
+    #if n_layers_large_clusters[4] >= 1:
+    #        best.reset()
+    #if partition >= 11:
+    #    if n_layers_large_clusters[4] >= 1:
+    #        best.reset()
     #    if (best.lc - n_layers_large_clusters[0]) < 4:
     #        best.reset()
-    else:
-        if n_layers_large_clusters[3] >= 1:
-            best.reset()
     #if partition >= 9:
     #    if (best.lc - n_layers_large_hits[2]) < 3:
     #        best.reset()
