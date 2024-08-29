@@ -2134,12 +2134,15 @@ if __name__ == "__main__":
     #parser.add_argument("-c", "--cross_part", action="store", dest="cross_part", help="cross_part = 'full' or 'partial' or 'none'")
     parser.add_argument("-v", "--verbose", action="store_true", dest="verbose", help="whether to print all track segment matching info")
     parser.add_argument("-p", "--pu", action="store", dest="pu", help="PU")
-    parser.add_argument("-n", "--nevents", action="store", dest="nevents", default = "1000", help="Nr. of events to analyze")
+    parser.add_argument("-n", "--nevents", action="store", dest="nevents", default = "all", help="Nr. of events to analyze")
     parser.add_argument("-o", "--num_or", action="store", dest="num_or", default = "2", help="number of strips that are OR-ed together")
     args = parser.parse_args()
 
     # read in the data
-    root_dat = read_ntuple(args.file_path, 0, int(args.nevents))
+    if args.nevents == "all":
+        root_dat = read_ntuple(args.file_path)
+    else:
+        root_dat = read_ntuple(args.file_path, 0, int(args.nevents))
 
     if int(args.num_or) < 2:
         print ("At least 2 strips OR-ed together")
