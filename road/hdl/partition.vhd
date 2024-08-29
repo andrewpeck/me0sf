@@ -55,7 +55,7 @@ entity partition is
     dav_o_phase : out natural range 0 to 7 := 0;
     -- synthesis translate_on
 
-    ly_thresh : in std_logic_vector (2 downto 0);
+    ly_thresh : in ly_thresh_t;
 
     --------------------------------------------------------------------------------
     -- Inputs

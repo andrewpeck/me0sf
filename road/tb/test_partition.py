@@ -71,7 +71,7 @@ async def partition_test(dut, NLOOPS=1000, test="SEGMENTS"):
     #--------------------------------------------------------------------------------
 
     checkfn = lambda : dut.segments_o[0].lc.value.is_resolvable and \
-        dut.segments_o[0].lc.value.integer >= config.ly_thresh
+        dut.segments_o[0].lc.value.integer >= config.ly_thresh[dut.segments_o[0].id.value.integer]
 
     def setfn(dut, x):
         dut.partition_i.value = [x for _ in range(6)]
