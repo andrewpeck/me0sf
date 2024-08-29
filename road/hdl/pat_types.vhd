@@ -62,7 +62,7 @@ package pat_types is
    attribute w of LC_BITS : constant is 32;
 
    -- PID_BITS: number of bits to cnt the pids
-   constant PID_BITS : integer := 4;
+   constant PID_BITS : integer := 5;
    attribute w of PID_BITS : constant is 32;
 
    -- CENTROID_BITS: number of bits to cnt the centroid
@@ -140,7 +140,7 @@ package pat_types is
       hc : unsigned(HC_BITS-1 downto 0);
       id : unsigned(PID_BITS-1 downto 0);
    end record pat_unit_pre_t;
-   attribute w of pat_unit_pre_t : type is 11;
+   attribute w of pat_unit_pre_t : type is LC_BITS+HC_BITS+PID_BITS;
    function width(x: pat_unit_pre_t) return natural;
    function convert(x: pat_unit_pre_t; tpl: std_logic_vector) return std_logic_vector;
    function convert(x: std_logic_vector; tpl: pat_unit_pre_t) return pat_unit_pre_t;
@@ -150,7 +150,7 @@ package pat_types is
       lc : unsigned(LC_BITS-1 downto 0);
       id : unsigned(PID_BITS-1 downto 0);
    end record pat_unit_t;
-   attribute w of pat_unit_t : type is 7;
+   attribute w of pat_unit_t : type is LC_BITS+PID_BITS;
    function width(x: pat_unit_t) return natural;
    function convert(x: pat_unit_t; tpl: std_logic_vector) return std_logic_vector;
    function convert(x: std_logic_vector; tpl: pat_unit_t) return pat_unit_t;
@@ -161,7 +161,7 @@ package pat_types is
       id : unsigned(PID_BITS-1 downto 0);
       strip : unsigned(STRIP_BITS-1 downto 0);
    end record pat_unit_mux_t;
-   attribute w of pat_unit_mux_t : type is 15;
+   attribute w of pat_unit_mux_t : type is LC_BITS+PID_BITS+STRIP_BITS;
    function width(x: pat_unit_mux_t) return natural;
    function convert(x: pat_unit_mux_t; tpl: std_logic_vector) return std_logic_vector;
    function convert(x: std_logic_vector; tpl: pat_unit_mux_t) return pat_unit_mux_t;
@@ -173,7 +173,7 @@ package pat_types is
       strip : unsigned(7 downto 0);
       partition : unsigned(PARTITION_BITS-1 downto 0);
    end record segment_t;
-   attribute w of segment_t : type is 19;
+   attribute w of segment_t : type is LC_BITS+PID_BITS+8+PARTITION_BITS;
    function width(x: segment_t) return natural;
    function convert(x: segment_t; tpl: std_logic_vector) return std_logic_vector;
    function convert(x: std_logic_vector; tpl: segment_t) return segment_t;

@@ -42,7 +42,7 @@ async def pat_unit_test(dut, test="SEGMENTS"):
     # constants
     LY_CNT = 6
     N_NOISE = 1
-    LY_THRESH = 4
+    LY_THRESH = [7, 7, 7, 7, 7, 7, 7, 7, 7, 7, 5, 5, 4, 4, 4, 4, 4] 
 
     #--------------------------------------------------------------------------------
     #
@@ -51,7 +51,7 @@ async def pat_unit_test(dut, test="SEGMENTS"):
     set_dut_inputs(dut, [0 for _ in range(6)])
 
     # set layer count threshold
-    dut.ly_thresh.value = LY_THRESH
+    dut.ly_thresh.value = [7, 7, 7, 7, 7, 7, 7, 7, 7, 7, 5, 5, 4, 4, 4, 4, 4]
 
     # set MAX_SPAN from firmware
     # should be a number approx 37

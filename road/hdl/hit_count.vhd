@@ -34,81 +34,89 @@ architecture behavioral of hit_count is
     end loop;
     return n_ones;
   end function count_ones;
+  
+--  function count_ones_NEW(slv : std_logic_vector) return unsigned is
+--    variable n_ones : natural := 0;
+--    variable sum : unsigned (2 downto 0);
+--  begin
+--    sum := unsigned("00"&slv(5 to 5)) + unsigned("00"&slv(4 to 4)) + unsigned("00"&slv(3 to 3)) + unsigned("00"&slv(2 to 2)) + unsigned("00"&slv(1 to 1)) + unsigned("00"&slv(0 to 0));
+--    return sum;
+--  end function count_ones_NEW;
 
   -- this ugly function reduces the LUT count by about 18 LUT / pat unit
   -- (6912 LUTs total) compared to a more straightforward implementation
-  function count6_floor (slv : std_logic_vector (5 downto 0))
-    return natural is
-    variable n_ones : natural := 0;
-  begin
-    case slv is
-      when "000000" => return 0;
-      when "000001" => return 0;
-      when "000010" => return 0;
-      when "000011" => return 0;
-      when "000100" => return 0;
-      when "000101" => return 0;
-      when "000110" => return 0;
-      when "000111" => return 0;
-      when "001000" => return 0;
-      when "001001" => return 0;
-      when "001010" => return 0;
-      when "001011" => return 0;
-      when "001100" => return 0;
-      when "001101" => return 0;
-      when "001110" => return 0;
-      when "001111" => return 1;
-      when "010000" => return 0;
-      when "010001" => return 0;
-      when "010010" => return 0;
-      when "010011" => return 0;
-      when "010100" => return 0;
-      when "010101" => return 0;
-      when "010110" => return 0;
-      when "010111" => return 1;
-      when "011000" => return 0;
-      when "011001" => return 0;
-      when "011010" => return 0;
-      when "011011" => return 1;
-      when "011100" => return 0;
-      when "011101" => return 1;
-      when "011110" => return 1;
-      when "011111" => return 2;
-      when "100000" => return 0;
-      when "100001" => return 0;
-      when "100010" => return 0;
-      when "100011" => return 0;
-      when "100100" => return 0;
-      when "100101" => return 0;
-      when "100110" => return 0;
-      when "100111" => return 1;
-      when "101000" => return 0;
-      when "101001" => return 0;
-      when "101010" => return 0;
-      when "101011" => return 1;
-      when "101100" => return 0;
-      when "101101" => return 1;
-      when "101110" => return 1;
-      when "101111" => return 2;
-      when "110000" => return 0;
-      when "110001" => return 0;
-      when "110010" => return 0;
-      when "110011" => return 1;
-      when "110100" => return 0;
-      when "110101" => return 1;
-      when "110110" => return 1;
-      when "110111" => return 2;
-      when "111000" => return 0;
-      when "111001" => return 1;
-      when "111010" => return 1;
-      when "111011" => return 2;
-      when "111100" => return 1;
-      when "111101" => return 2;
-      when "111110" => return 2;
-      when "111111" => return 3;
-      when others   => return 0;
-    end case;
-  end function count6_floor;
+--  function count6_floor (slv : std_logic_vector (5 downto 0))
+--    return natural is
+--    variable n_ones : natural := 0;
+--  begin
+--    case slv is
+--      when "000000" => return 0;
+--      when "000001" => return 0;
+--      when "000010" => return 0;
+--      when "000011" => return 0;
+--      when "000100" => return 0;
+--      when "000101" => return 0;
+--      when "000110" => return 0;
+--      when "000111" => return 0;
+--      when "001000" => return 0;
+--      when "001001" => return 0;
+--      when "001010" => return 0;
+--      when "001011" => return 0;
+--      when "001100" => return 0;
+--      when "001101" => return 0;
+--      when "001110" => return 0;
+--      when "001111" => return 1;
+--      when "010000" => return 0;
+--      when "010001" => return 0;
+--      when "010010" => return 0;
+--      when "010011" => return 0;
+--      when "010100" => return 0;
+--      when "010101" => return 0;
+--      when "010110" => return 0;
+--      when "010111" => return 1;
+--      when "011000" => return 0;
+--      when "011001" => return 0;
+--      when "011010" => return 0;
+--      when "011011" => return 1;
+--      when "011100" => return 0;
+--      when "011101" => return 1;
+--      when "011110" => return 1;
+--      when "011111" => return 2;
+--      when "100000" => return 0;
+--      when "100001" => return 0;
+--      when "100010" => return 0;
+--      when "100011" => return 0;
+--      when "100100" => return 0;
+--      when "100101" => return 0;
+--      when "100110" => return 0;
+--      when "100111" => return 1;
+--      when "101000" => return 0;
+--      when "101001" => return 0;
+--      when "101010" => return 0;
+--      when "101011" => return 1;
+--      when "101100" => return 0;
+--      when "101101" => return 1;
+--      when "101110" => return 1;
+--      when "101111" => return 2;
+--      when "110000" => return 0;
+--      when "110001" => return 0;
+--      when "110010" => return 0;
+--      when "110011" => return 1;
+--      when "110100" => return 0;
+--      when "110101" => return 1;
+--      when "110110" => return 1;
+--      when "110111" => return 2;
+--      when "111000" => return 0;
+--      when "111001" => return 1;
+--      when "111010" => return 1;
+--      when "111011" => return 2;
+--      when "111100" => return 1;
+--      when "111101" => return 2;
+--      when "111110" => return 2;
+--      when "111111" => return 3;
+--      when others   => return 0;
+--    end case;
+--  end function count6_floor;
 
   function hc_quality (cnt : natural) return natural is
   begin

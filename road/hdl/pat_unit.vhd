@@ -47,7 +47,7 @@ entity pat_unit is
     dav_i : in  std_logic;
     dav_o : out std_logic;
 
-    ly_thresh : in std_logic_vector (2 downto 0);
+    ly_thresh : in ly_thresh_t;
 
     ly0 : in std_logic_vector (LY0_SPAN-1 downto 0);
     ly1 : in std_logic_vector (LY1_SPAN-1 downto 0);
@@ -211,12 +211,28 @@ begin
   --------------------------------------------------------------------------------
 
   process (clock) is
+  --variable increase_thresh : std_logic_vector (2 downto 0) := "000";
   begin
     if (rising_edge(clock)) then
 
       dav_o <= priority_dav;
 
-      if (best.lc >= to_integer(unsigned(ly_thresh))) then
+--      if (best.id = 11 or best.id = 12) then
+--        increase_thresh := "001";
+--      else
+--        increase_thresh := "000";
+--      end if;
+
+--      if (best.id >= 11 and best.lc >= (unsigned(ly_thresh) + unsigned(increase_thresh)) ) then
+--        pat_o.lc <= best.lc;
+--        pat_o.id <= best.id;
+--      else
+--        pat_o <= zero(pat_o);
+--      end if;
+--report "FW id is: " & integer'image(to_integer(best.id)) severity note;
+--report "FW threshold is: " & integer'image(to_integer(unsigned(ly_thresh(to_integer(best.id))))) severity note;
+
+      if (best.lc >= unsigned(ly_thresh(to_integer(best.id)))) then
         pat_o.lc <= best.lc;
         pat_o.id <= best.id;
       else

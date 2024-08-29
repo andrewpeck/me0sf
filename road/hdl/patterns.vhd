@@ -18,11 +18,11 @@ use work.pat_types.all;
 package patterns is
 
   constant pat_straight : patdef_t := (
-    id  => 15,
+    id  => 16,
     ly0 => (lo => -1, hi => 1),
     ly1 => (lo => -1, hi => 1),
     ly2 => (lo => -1, hi => 1),
-    ly3 => (lo =>  0, hi => 0),
+    ly3 => (lo => -1, hi => 1),
     ly4 => (lo => -1, hi => 1),
     ly5 => (lo => -1, hi => 1)
     );
@@ -30,13 +30,13 @@ package patterns is
   --------------------------------------------------------------------------------
 
   constant pat_l : patdef_t := (
-    id  => 13,
-    ly0 => (lo => -4, hi => -1),
-    ly1 => (lo => -3, hi => 0),
-    ly2 => (lo => -1, hi => 1),
-    ly3 => (lo => -1, hi => 1),
-    ly4 => (lo => 0, hi => 3),
-    ly5 => (lo => 1, hi => 4)
+    id  => 15,
+    ly0 => (lo => -3, hi => 0),
+    ly1 => (lo => -2, hi => 0),
+    ly2 => (lo => -1, hi => 0),
+    ly3 => (lo => 0, hi => 1),
+    ly4 => (lo => 0, hi => 2),
+    ly5 => (lo => 0, hi => 3)
     );
 
   constant pat_r : patdef_t := mirror_patdef (pat_l, pat_l.id-1);
@@ -44,12 +44,12 @@ package patterns is
   --------------------------------------------------------------------------------
 
   constant pat_l2 : patdef_t := (
-    id  => 11,
+    id  => 13,
     ly0 => (lo => -5, hi => -2),
-    ly1 => (lo => -4, hi => 1),
-    ly2 => (lo => -1, hi => 1),
-    ly3 => (lo => -1, hi => 1),
-    ly4 => (lo => 1, hi => 4),
+    ly1 => (lo => -3, hi => -1),
+    ly2 => (lo => -1, hi => 0),
+    ly3 => (lo => 0, hi => 1),
+    ly4 => (lo => 1, hi => 3),
     ly5 => (lo => 2, hi => 5)
     );
 
@@ -58,13 +58,13 @@ package patterns is
   --------------------------------------------------------------------------------
 
   constant pat_l3 : patdef_t := (
-    id  => 9,
-    ly0 => (lo => -8, hi => -5),
-    ly1 => (lo => -7, hi => -4),
-    ly2 => (lo => -3, hi => 0),
-    ly3 => (lo => -2, hi => 2),
-    ly4 => (lo => 4, hi => 7),
-    ly5 => (lo => 5, hi => 8)
+    id  => 11,
+    ly0 => (lo => -6, hi => -3),
+    ly1 => (lo => -4, hi => -2),
+    ly2 => (lo => -2, hi => 0),
+    ly3 => (lo => 0, hi => 2),
+    ly4 => (lo => 2, hi => 4),
+    ly5 => (lo => 3, hi => 6)
     );
 
   constant pat_r3 : patdef_t := mirror_patdef (pat_l3, pat_l3.id-1);
@@ -72,12 +72,12 @@ package patterns is
   --------------------------------------------------------------------------------
 
   constant pat_l4 : patdef_t := (
-    id  => 7,
+    id  => 9,
     ly0 => (lo => -8, hi => -5),
-    ly1 => (lo => -7, hi => -4),
-    ly2 => (lo => -3, hi => 0),
-    ly3 => (lo => -2, hi => 2),
-    ly4 => (lo => 4, hi => 7),
+    ly1 => (lo => -5, hi => -3),
+    ly2 => (lo => -2, hi => -1),
+    ly3 => (lo => 1, hi => 2),
+    ly4 => (lo => 3, hi => 5),
     ly5 => (lo => 5, hi => 8)
     );
 
@@ -86,13 +86,13 @@ package patterns is
   --------------------------------------------------------------------------------
 
   constant pat_l5 : patdef_t := (
-    id  => 5,
-    ly0 => (lo => -11, hi => -8),
-    ly1 => (lo => -9, hi => -5),
-    ly2 => (lo => -3, hi => 0),
-    ly3 => (lo => 0, hi => 3),
-    ly4 => (lo => 5, hi => 9),
-    ly5 => (lo => 8, hi => 11)
+    id  => 7,
+    ly0 => (lo => -10, hi => -6),
+    ly1 => (lo => -6, hi => -4),
+    ly2 => (lo => -2, hi => -1),
+    ly3 => (lo => 1, hi => 2),
+    ly4 => (lo => 4, hi => 6),
+    ly5 => (lo => 6, hi => 10)
     );
 
   constant pat_r5 : patdef_t := mirror_patdef (pat_l5, pat_l5.id-1);
@@ -100,13 +100,13 @@ package patterns is
   --------------------------------------------------------------------------------
 
   constant pat_l6 : patdef_t := (
-    id  => 3,
-    ly0 => (lo => -15, hi => -11),
-    ly1 => (lo => -11, hi => -9),
-    ly2 => (lo => -9, hi => 4),
-    ly3 => (lo => 4, hi => 9),
-    ly4 => (lo => 9, hi => 11),
-    ly5 => (lo => 11, hi => 15)
+    id  => 5,
+    ly0 => (lo => -12, hi => -8),
+    ly1 => (lo => -8, hi => -5),
+    ly2 => (lo => -3, hi => -1),
+    ly3 => (lo => 1, hi => 3),
+    ly4 => (lo => 5, hi => 8),
+    ly5 => (lo => 8, hi => 12)
     );
 
   constant pat_r6 : patdef_t := mirror_patdef (pat_l6, pat_l6.id-1);
@@ -114,20 +114,32 @@ package patterns is
   --------------------------------------------------------------------------------
 
   constant pat_l7 : patdef_t := (
-    id  => 1,
-    ly0 => (lo => -18, hi => -10),
-    ly1 => (lo => -14, hi => -6),
-    ly2 => (lo => -9, hi => 2),
-    ly3 => (lo => 2, hi => 9),
-    ly4 => (lo => 6, hi => 14),
-    ly5 => (lo => 10, hi => 18)
+    id  => 3,
+    ly0 => (lo => -14, hi => -10),
+    ly1 => (lo => -9, hi => -6),
+    ly2 => (lo => -3, hi => -2),
+    ly3 => (lo => 2, hi => 3),
+    ly4 => (lo => 6, hi => 9),
+    ly5 => (lo => 10, hi => 14)
     );
 
   constant pat_r7 : patdef_t := mirror_patdef (pat_l7, pat_l7.id-1);
 
   --------------------------------------------------------------------------------
+  
+  constant pat_l8 : patdef_t := (
+    id  => 1,
+    ly0 => (lo => -18, hi => -13),
+    ly1 => (lo => -11, hi => -8),
+    ly2 => (lo => -4, hi => -2),
+    ly3 => (lo => 2, hi => 4),
+    ly4 => (lo => 8, hi => 11),
+    ly5 => (lo => 13, hi => 18)
+    );
 
-  constant NUM_PATTERNS : integer := 15;
+  constant pat_r8 : patdef_t := mirror_patdef (pat_l8, pat_l8.id-1);
+
+  --------------------------------------------------------------------------------
 
   constant patdef_array : patdef_array_t
     (NUM_PATTERNS-1 downto 0) := (pat_straight,
@@ -137,7 +149,8 @@ package patterns is
                                   pat_l4, pat_r4,
                                   pat_l5, pat_r5,
                                   pat_l6, pat_r6,
-                                  pat_l7, pat_r7
+                                  pat_l7, pat_r7,
+                                  pat_l8, pat_r8
                                   );
 
   procedure print_pattern (pat : patdef_t);
