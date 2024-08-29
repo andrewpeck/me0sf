@@ -729,7 +729,7 @@ def analysis(root_dat, hits, bx, bx_list, cross_part, verbose, pu, num_or):
                             break
 
         if verbose:
-            print ("  Online Segments: ")
+            file_out_summary.write("  Online Segments: ")
             for chamber in range(0, 36):
                 if chamber not in online_segment_chamber:
                     continue
@@ -741,7 +741,7 @@ def analysis(root_dat, hits, bx, bx_list, cross_part, verbose, pu, num_or):
                 file_out_summary.write(', '.join(str(x) for x in eta_partition_list_sorted))
                 file_out_summary.write("\n")
             file_out_summary.write("\n")
-            print ("  Sim Tracks: ")
+            file_out_summary.write("  Sim Tracks: ")
             for chamber in range(0, 36):
                 for i in range(0, n_me0_track):
                     if chamber == track_chamber_nr[i]:
