@@ -243,7 +243,7 @@ def pat_unit(data,
     # (8) remove very wide segments
     if (best.id <= 14):
         best.reset()
-    if (partition >= 11): # for PU 200
+    if (partition >= 9): # for PU 200
         if (best.id <= 16):
             best.reset()
 
