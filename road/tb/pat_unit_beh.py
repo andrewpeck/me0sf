@@ -230,9 +230,9 @@ def pat_unit(data,
         ly_thresh += 1
     if (best.id <= 12):
         ly_thresh += 1
-    if (partition >= 7): # for PU 200
+    if (partition >= 5): # for PU 200
         ly_thresh += 1
-    if (partition >=11):
+    if (partition >=13):
         ly_thresh = 6 # for PU 200
     else:
         ly_thresh = min(ly_thresh, 5)
@@ -241,10 +241,10 @@ def pat_unit(data,
         best.reset()
 
     # (8) remove very wide segments
-    if (best.id <= 10):
+    if (best.id <= 14):
         best.reset()
     if (partition >= 11): # for PU 200
-        if (best.id <= 14):
+        if (best.id <= 16):
             best.reset()
 
     # (9) remove segments with large clusters for wide segments - ONLY NEEDED FOR PU200
@@ -277,7 +277,7 @@ def pat_unit(data,
     '''
 
     #if n_layers_large_clusters[4] >= 1:
-    #        best.reset()
+    #    best.reset()
     #if partition >= 11:
     #    if n_layers_large_clusters[4] >= 1:
     #        best.reset()
