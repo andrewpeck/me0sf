@@ -17,7 +17,7 @@ from chamber_beh import process_chamber
 from datagen import datagen
 from subfunc import Config
 from tb_common import (get_max_span_from_dut, get_segments_from_dut,
-                       monitor_dav, setup)
+                       monitor_dav, setup, measure_latency)
 
 @cocotb.test() # type: ignore
 async def chamber_test_ff(dut, nloops=20):
@@ -52,7 +52,6 @@ async def chamber_test(dut, test, nloops=512, verbose=False):
     '''
     Test the chamber.vhd module
     '''
-
     #random.seed(56) # chloe's favorite number
 
     # setup the dut and extract constants from it
@@ -73,7 +72,7 @@ async def chamber_test(dut, test, nloops=512, verbose=False):
     config.deghost_post = dut.partition_gen[0].partition_inst.DEGHOST_POST.value
     config.group_width = dut.partition_gen[0].partition_inst.S0_WIDTH.value
     config.num_outputs= dut.NUM_SEGMENTS.value
-    config.ly_thresh = 6
+    config.ly_thresh = [7, 7, 7, 7, 7, 7, 7, 7, 7, 7, 5, 5, 4, 4, 4, 4, 4]
     config.cross_part_seg_width = 0 # set to zero to disable until implmented in fw
 
     NUM_PARTITIONS = 8
@@ -87,17 +86,16 @@ async def chamber_test(dut, test, nloops=512, verbose=False):
         await RisingEdge(dut.clock)
 
     # measure latency by putting some s-bits on a strip and waiting to see the output
-    meas_latency=-1
-    for i in range(128):
-        dut.sbits_i.value = [[1 for _ in range(6)] for _ in range(NUM_PARTITIONS)]
-        await RisingEdge(dut.clock)
-        if dut.segments_o[0].lc.value.is_resolvable and \
-           dut.segments_o[0].lc.value.integer >= config.ly_thresh:
-            meas_latency = i/8.0
-            print(f"Latency={i} clocks ({meas_latency} bx)")
-            break
 
-    LATENCY = ceil(meas_latency)
+    checkfn = lambda : dut.segments_o[0].lc.value.is_resolvable and \
+        dut.segments_o[0].lc.value.integer >= config.ly_thresh[dut.segments_o[0].id.value.integer]
+
+    def setfn(dut, x):
+        dut.sbits_i.value = [[x for _ in range(6)] for _ in range(NUM_PARTITIONS)]
+
+    meas_latency = await measure_latency(dut, checkfn, setfn)
+
+    LATENCY = ceil(meas_latency)-1
 
     # flush the bufers
     dut.sbits_i.value = NULL()
@@ -303,7 +301,7 @@ def test_chamber():
         compile_args=["-2008"],
         toplevel="chamber",  # top level HDL
         toplevel_lang="vhdl",
-        sim_args=["-do", "set NumericStdNoWarnings 1;"],
+        sim_args=["-suppress", "14408", "-do", "set NumericStdNoWarnings 1;"],
         parameters=parameters,
         gui=0)
 

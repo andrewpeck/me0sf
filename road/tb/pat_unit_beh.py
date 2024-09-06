@@ -106,9 +106,8 @@ def pat_unit(data,
     # for robustness concern, other codes might use PATLIST, so we kept the default PATLIST in subfunc
     # however, this could cause inconsistent issue, becareful! OR find a way to modify PATLIST
     global LAYER_MASK
-
-    if LAYER_MASK is None:
-
+    
+    if LAYER_MASK is None: 
         factor = num_or / 2
         pat_straight = patdef_t(16, create_pat_ly(-0.4 / factor, 0.4 / factor))
         pat_l = patdef_t(15, create_pat_ly(0.2 / factor, 0.9 / factor))
@@ -129,7 +128,6 @@ def pat_unit(data,
         pat_r8 = mirror_patdef(pat_l8, pat_l8.id-1)
         pat_l9 = patdef_t(1, create_pat_ly(5.4 / factor, 7.0 / factor))
         pat_r9 = mirror_patdef(pat_l9, pat_l9.id - 1)
-
         dynamic_patlist = (
             pat_straight,
             pat_l,
@@ -153,6 +151,7 @@ def pat_unit(data,
 
         # first make the PATLIST appropriate
         calculate_global_layer_mask(dynamic_patlist, input_max_span)
+        
 
     """
     takes in sample data for each layer and returns best segment
@@ -204,7 +203,6 @@ def pat_unit(data,
     #print("threshold is: " + str(ly_thresh[best.id]))
     if (best.lc < ly_thresh[best.id] or best.id < 10 or (best.id == 10 or best.id == 11) and best.lc < 5):
         best.reset()
-
     best.partition=partition
 
     # debug output

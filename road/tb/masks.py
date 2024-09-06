@@ -2,7 +2,7 @@
 import math
 from subfunc import *
 from printly_dat import printly_dat
-from pat_unit_beh import get_ly_mask, calculate_global_layer_mask
+from pat_unit_beh import *
 
 def calculate_global_layer_mask(patlist, max_span):
     """create layer masks for patterns in patlist"""
@@ -16,7 +16,7 @@ def print_my_masks(pats_m, pat_id_list, max_span):
         print("\n")
 
 if __name__ == "__main__":
-
+    
     num_or = 2
     num_or_to_span = {2:37, 4:19, 8:11, 16:7}
     input_max_span = num_or_to_span[num_or]
@@ -24,8 +24,8 @@ if __name__ == "__main__":
     pat_straight = patdef_t(19, create_pat_ly(-0.4 / factor, 0.4 / factor))
     pat_l = patdef_t(18, create_pat_ly(0.2 / factor, 0.9 / factor))
     pat_r = mirror_patdef(pat_l, pat_l.id - 1)
-    pat_l2 = patdef_t(16, create_pat_ly(0.5 / factor, 1.2 / factor))
-    pat_r2 = mirror_patdef(pat_l2, pat_l2.id - 1)
+    #pat_l2 = patdef_t(16, create_pat_ly(0.5 / factor, 1.2 / factor))
+    #pat_r2 = mirror_patdef(pat_l2, pat_l2.id - 1)
     pat_l3 = patdef_t(14, create_pat_ly(0.9 / factor, 1.7 / factor))
     pat_r3 = mirror_patdef(pat_l3, pat_l3.id - 1)
     pat_l4 = patdef_t(12, create_pat_ly(1.4 / factor, 2.3 / factor))
@@ -45,8 +45,8 @@ if __name__ == "__main__":
         pat_straight,
         pat_l,
         pat_r,
-        pat_l2,
-        pat_r2,
+        #pat_l2,
+        #pat_r2,
         pat_l3,
         pat_r3,
         pat_l4,
@@ -65,7 +65,7 @@ if __name__ == "__main__":
     pat_id_list = [pat.id for pat in dynamic_patlist]
     calculate_global_layer_mask(dynamic_patlist, input_max_span)
 
-    global LAYER_MASK
+    
 
     print_my_masks(LAYER_MASK, pat_id_list, input_max_span)
     print("num_or:", num_or)

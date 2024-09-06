@@ -207,6 +207,7 @@ def test_pat_unit_mux():
     parameters = {}
     parameters["MUX_FACTOR"] = 8
     parameters["DEADTIME"]   = 0
+    parameters["DISABLE_PEAKING"] = True
 
     os.environ["SIM"] = "questa"
     #os.environ["COCOTB_RESULTS_FILE"] = f"../log/{module}.xml"

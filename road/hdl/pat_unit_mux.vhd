@@ -35,7 +35,7 @@ entity pat_unit_mux is
 
     VERBOSE : boolean := false;
 
-    DISABLE_PEAKING : boolean := true;
+    DISABLE_PEAKING : boolean := false;
 
     LY0_SPAN : natural := get_max_span(patdef_array);
     LY1_SPAN : natural := get_max_span(patdef_array);

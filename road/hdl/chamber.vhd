@@ -33,7 +33,7 @@ use ieee.math_real.all;
 
 entity chamber is
   generic (
-    DISABLE_PEAKING : boolean := false;  -- true to disable peaking logic; useful for simulation until the tb is updated
+    DISABLE_PEAKING : boolean := true;  -- true to disable peaking logic; useful for simulation until the tb is updated
     X_PRT_EN        : boolean := true;   -- true to enable x-prt segment finding
     EN_NON_POINTING : boolean := false;  -- true to enable x-prt segment finding on non-pointing muons
     NUM_SEGMENTS    : integer := 4;      -- number of output segments
@@ -56,7 +56,7 @@ entity chamber is
     clock             : in  std_logic;                     -- MUST BE 320MHZ
     clock40           : in  std_logic;                     -- MUST BE  40MHZ
 
-    ly_thresh         : in  std_logic_vector (2 downto 0); -- Layer threshold, 0 to 6
+    ly_thresh         : in  ly_thresh_t; -- Layer threshold, 0 to 6
 
     dav_i             : in  std_logic;
     dav_o             : out std_logic;

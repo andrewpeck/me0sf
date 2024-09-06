@@ -161,7 +161,7 @@ def test_chamber_beh():
     config.deghost_post = False
     config.group_width = 8
     config.num_outputs= 4
-    config.ly_thresh = 4
+    config.ly_thresh = [7, 7, 7, 7, 7, 7, 7, 7, 7, 7, 5, 5, 4, 4, 4, 4, 4]
     config.cross_part_seg_width = 0
     config.skip_centroids = True
 

@@ -136,7 +136,7 @@ def test_process_partition():
     data = [1]*6
 
     config = Config();
-    config.ly_thresh=6
+    config.ly_thresh=[7, 7, 7, 7, 7, 7, 7, 7, 7, 7, 5, 5, 4, 4, 4, 4, 4]
     config.deghost_pre=True
 
     part = process_partition(data, partition=0, config=config)
