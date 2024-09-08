@@ -1741,7 +1741,7 @@ def analysis(root_dat, hits, bx, bx_list, cross_part, verbose, pu, num_or):
 
     c13a = ROOT.TCanvas('', '', 800, 650)
     c13a.SetGrid()
-    c13a.DrawFrame(0, 0, 9, 20, ";#eta Partition;Nr. of Fakes per Chamber per BX")
+    c13a.DrawFrame(0, 0, 9, 0.1, ";#eta Partition;Nr. of Fakes per Chamber per BX")
     num_bkg_seg_per_chamber_per_event_eta.Scale(1/(36.0*n_total_events))
     num_bkg_seg_per_chamber_per_event_eta.Draw("same HE")
     num_bkg_seg_per_chamber_per_event_eta.SetMarkerStyle(8)
