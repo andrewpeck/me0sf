@@ -28,6 +28,9 @@ def analysis(root_dat, hits, bx, bx_list, cross_part, verbose, pu, num_or):
     num_seg_per_chamber = ROOT.TH1D("num_seg_per_chamber","Fraction of Events vs Number of Segments per Chamber",13,-0.5,12.5)
     num_seg_per_chamber_offline = ROOT.TH1D("num_seg_per_chamber_offline","Fraction of Events vs Number of Segments per Chamber",13,-0.5,12.5)
 
+    # Nr. of background segments per chamber per event
+    num_bkg_seg_per_chamber_per_event_eta = ROOT.TH1F("num_bkg_seg_per_chamber_per_event_eta", "num_bkg_seg_per_chamber_per_event_eta",8,0.5,8.5)
+
     # defining histograms for offline vs online
     offline_effi_passed_bending = ROOT.TH1F("offline_effi_passed_bending", "offline_effi_passed_bending",14, -7., 7.)
     offline_effi_total_bending = ROOT.TH1F("offline_effi_total_bending", "offline_effi_total_bending",14, -7., 7.) 
@@ -134,6 +137,7 @@ def analysis(root_dat, hits, bx, bx_list, cross_part, verbose, pu, num_or):
     n_st_effi_passed = 0
     n_st_purity_total = 0
     n_st_purity_passed = 0
+    n_bkg_seg_per_chamber_per_event = 0
 
     n_total_events = len(root_dat)
     prev_frac_done = 0
@@ -697,6 +701,7 @@ def analysis(root_dat, hits, bx, bx_list, cross_part, verbose, pu, num_or):
                             n_offline_purity_passed += 1
                             break
 
+                match_found = 0
                 for i in range(0, n_me0_track):
                     st_chamber = track_chamber_nr[i]
                     st_eta_partition = track_eta_partition[i]
@@ -726,7 +731,11 @@ def analysis(root_dat, hits, bx, bx_list, cross_part, verbose, pu, num_or):
                             st_purity_passed_nlayers_withnoiseg15.Fill(seg.nlayers_withnoiseg15)
                             '''
                             n_st_purity_passed += 1
+                            match_found = 1
                             break
+                if match_found == 0:
+                    num_bkg_seg_per_chamber_per_event_eta.Fill(online_eta_partition+1)
+                    n_bkg_seg_per_chamber_per_event += 1
 
         if verbose:
             file_out_summary.write("  Online Segments: \n")
@@ -794,6 +803,12 @@ def analysis(root_dat, hits, bx, bx_list, cross_part, verbose, pu, num_or):
         st_purity =  n_st_purity_passed/n_st_purity_total
         print ("Overall purity w.r.t sim tracks = %.4f\n"%(st_purity))
         file_out.write("Overall purity w.r.t sim tracks = %.4f\n\n"%(st_purity))
+    n_bkg_seg_per_chamber_per_event /= (36.0*n_total_events)
+    print ("Number of Fake segments per chamber per event = %/4f\n"%n_bkg_seg_per_chamber_per_event)
+    file_out.write("Number of Fake segments per chamber per event = %/4f\n\n"%n_bkg_seg_per_chamber_per_event)
+    rate_bkg_seg_per_chamber_per_event = (n_bkg_seg_per_chamber_per_event*1000) / (25.0)
+    print ("Rate of Fake segments per chamber per event = %/4f MHz\n"%rate_bkg_seg_per_chamber_per_event)
+    file_out.write("Rate of Fake segments per chamber per event = %/4f MHz\n\n"%rate_bkg_seg_per_chamber_per_event)
 
     plot_file = ROOT.TFile("output_plots_%s_bx%s_crosspart_%s_or%d.root"%(hits, bx, cross_part, num_or), "recreate")
     plot_file.cd()
@@ -1723,6 +1738,26 @@ def analysis(root_dat, hits, bx, bx_list, cross_part, verbose, pu, num_or):
     latex.DrawLatex(0.42, 0.91,plot_text2)
     c12a.Print("num_seg_per_chamber_offline_%s_bx%s_crosspart_%s_or%d_log.pdf"%(hits, bx, cross_part, num_or))
     num_seg_per_chamber_offline.Write()
+
+    c13a = ROOT.TCanvas('', '', 800, 650)
+    c13a.SetGrid()
+    c13a.DrawFrame(0, 0, 9, 20, ";#eta Partition;Nr. of Fakes per Chamber per BX")
+    num_bkg_seg_per_chamber_per_event_eta.Scale(1/(36.0*n_total_events))
+    num_bkg_seg_per_chamber_per_event_eta.Draw("same")
+    num_bkg_seg_per_chamber_per_event_eta.SetMarkerStyle(8)
+    num_bkg_seg_per_chamber_per_event_eta.SetMarkerSize(1)
+    num_bkg_seg_per_chamber_per_event_eta.SetMarkerColor(1)
+    num_bkg_seg_per_chamber_per_event_eta.SetLineWidth(1)
+    num_bkg_seg_per_chamber_per_event_eta.SetLineColor(1)
+    ROOT.gPad.Update()
+    num_bkg_seg_per_chamber_per_event_eta.GetPaintedGraph().GetYaxis().SetLabelSize(0.04)
+    num_bkg_seg_per_chamber_per_event_eta.GetPaintedGraph().GetXaxis().SetLabelSize(0.04)
+    ROOT.gPad.Update()
+    latex.DrawLatex(0.9, 0.91,plot_text1)
+    latex.DrawLatex(0.42, 0.91,plot_text2)
+    c13a.Print("num_bkg_seg_per_chamber_per_event_eta_%s_bx%s_crosspart_%s_or%d.pdf"%(hits, bx, cross_part, num_or))
+    num_bkg_seg_per_chamber_per_event_eta.Write()
+
 
     '''
     c_max_cluster_size_p = ROOT.TCanvas('', '', 800, 650)
