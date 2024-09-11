@@ -830,6 +830,7 @@ def analysis(root_dat, hits, bx, bx_list, cross_part, verbose, pu, num_or):
     plot_file.cd()
 
     # Plotting
+    ROOT.gStyle.SetOptStat(0)
     latex = ROOT.TLatex()
     latex.SetNDC()
     latex.SetTextAlign(31)
