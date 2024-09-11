@@ -1803,9 +1803,9 @@ def analysis(root_dat, hits, bx, bx_list, cross_part, verbose, pu, num_or):
     c12a.Print("num_seg_per_chamber_offline_%s_bx%s_crosspart_%s_or%d_log.pdf"%(hits, bx, cross_part, num_or))
     num_seg_per_chamber_offline.Write()
 
-    ROOT.gStyle.SetOptStat(0)
     c13a = ROOT.TCanvas('', '', 800, 650)
     c13a.SetGrid()
+    num_bkg_seg_per_chamber_per_event_eta.SetStats(False)
     #c13a.DrawFrame(0, 0, 9, 0.1, ";#eta Partition;Nr. of Fakes per Chamber per BX")
     num_bkg_seg_per_chamber_per_event_eta.SetTitle("")
     num_bkg_seg_per_chamber_per_event_eta.SetXTitle("#eta Partition")
