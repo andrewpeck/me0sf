@@ -202,33 +202,33 @@ def analysis(root_dat, hits, bx, bx_list, cross_part, verbose, pu, num_or):
         digihit_strip = []
         digihit_sbit = []
         digihit_bx = []
-        for i in range(0, len(digihit_region)):
-            if digihit_eta_partition[i] == 0:
-                if digihit_strip[i] in [0, 383]:
+        for i in range(0, len(digihit_region_orig)):
+            if digihit_eta_partition_orig[i] == 0:
+                if digihit_strip_orig[i] in [0, 383]:
                     continue
-                if digihit_strip[i] == 8:
+                if digihit_strip_orig[i] == 8:
                     digihit_sbit[i] = 3
-                elif digihit_strip[i] == 6:
+                elif digihit_strip_orig[i] == 6:
                     digihit_sbit[i] = 2
-                elif digihit_strip[i] == 4:
+                elif digihit_strip_orig[i] == 4:
                     digihit_sbit[i] = 1
-                elif digihit_strip[i] == 2:
+                elif digihit_strip_orig[i] == 2:
                     digihit_sbit[i] = 0
-                elif digihit_strip[i] == 375:
+                elif digihit_strip_orig[i] == 375:
                     digihit_sbit[i] = 188
-                elif digihit_strip[i] == 377:
+                elif digihit_strip_orig[i] == 377:
                     digihit_sbit[i] = 189
-                elif digihit_strip[i] == 379:
+                elif digihit_strip_orig[i] == 379:
                     digihit_sbit[i] = 190
-                elif digihit_strip[i] == 381:
+                elif digihit_strip_orig[i] == 381:
                     digihit_sbit[i] = 191
-            digihit_region.append(digihit_region_orig)
-            digihit_chamber.append(digihit_chamber_orig)
-            digihit_eta_partition.append(digihit_eta_partition_orig)
-            digihit_layer.append(digihit_layer_orig)
-            digihit_strip.append(digihit_strip_orig)
-            digihit_sbit.append(digihit_sbit_orig)
-            digihit_bx.append(digihit_bx_orig)
+            digihit_region.append(digihit_region_orig[i])
+            digihit_chamber.append(digihit_chamber_orig[i])
+            digihit_eta_partition.append(digihit_eta_partition_orig[i])
+            digihit_layer.append(digihit_layer_orig[i])
+            digihit_strip.append(digihit_strip_orig[i])
+            digihit_sbit.append(digihit_sbit_orig[i])
+            digihit_bx.append(digihit_bx_orig[i])
             
         # read rechit info
         rechit_region = event["me0_rec_hit_region_i"]
