@@ -12,6 +12,7 @@ import matplotlib.pyplot as plt
 import numpy as np
 import ROOT
 import uproot
+import awkward as ak
 
 import event_display as disp
 from chamber_beh import process_chamber
@@ -194,6 +195,14 @@ def analysis(root_dat, hits, bx, bx_list, cross_part, verbose, pu, num_or):
         digihit_sbit_orig = np.floor(event["me0_digi_hit_strip_i"] / num_or)
         digihit_bx_orig = event["me0_digi_hit_bx_i"]
 
+        digihit_region_orig = ak.without_parameters(digihit_region_orig).to_list() 
+        digihit_chamber_orig = ak.without_parameters(digihit_chamber_orig).to_list() 
+        digihit_eta_partition_orig = ak.without_parameters(digihit_eta_partition_orig).to_list() 
+        digihit_layer_orig = ak.without_parameters(digihit_layer_orig).to_list() 
+        digihit_strip_orig = ak.without_parameters(digihit_strip_orig).to_list() 
+        digihit_sbit_orig = ak.without_parameters(digihit_sbit_orig).to_list() 
+        digihit_bx_orig = ak.without_parameters(digihit_bx_orig).to_list() 
+
         # Reproducing S-bit mapping issue on ROB
         digihit_region = []
         digihit_chamber = []
@@ -229,6 +238,14 @@ def analysis(root_dat, hits, bx, bx_list, cross_part, verbose, pu, num_or):
             digihit_strip.append(digihit_strip_orig[i])
             digihit_sbit.append(digihit_sbit_orig[i])
             digihit_bx.append(digihit_bx_orig[i])
+
+        digihit_region = ak.Array(digihit_region)
+        digihit_chamber = ak.Array(digihit_chamber)
+        digihit_eta_partition = ak.Array(digihit_eta_partition)
+        digihit_layer = ak.Array(digihit_layer)
+        digihit_strip = ak.Array(digihit_strip)
+        digihit_sbit = ak.Array(digihit_sbit)
+        digihit_bx = ak.Array(digihit_bx)
             
         # read rechit info
         rechit_region = event["me0_rec_hit_region_i"]
