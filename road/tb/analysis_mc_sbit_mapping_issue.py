@@ -207,21 +207,21 @@ def analysis(root_dat, hits, bx, bx_list, cross_part, verbose, pu, num_or):
                 if digihit_strip_orig[i] in [0, 383]:
                     continue
                 if digihit_strip_orig[i] == 8:
-                    digihit_sbit[i] = 3
+                    digihit_sbit_orig[i] = 3
                 elif digihit_strip_orig[i] == 6:
-                    digihit_sbit[i] = 2
+                    digihit_sbit_orig[i] = 2
                 elif digihit_strip_orig[i] == 4:
-                    digihit_sbit[i] = 1
+                    digihit_sbit_orig[i] = 1
                 elif digihit_strip_orig[i] == 2:
-                    digihit_sbit[i] = 0
+                    digihit_sbit_orig[i] = 0
                 elif digihit_strip_orig[i] == 375:
-                    digihit_sbit[i] = 188
+                    digihit_sbit_orig[i] = 188
                 elif digihit_strip_orig[i] == 377:
-                    digihit_sbit[i] = 189
+                    digihit_sbit_orig[i] = 189
                 elif digihit_strip_orig[i] == 379:
-                    digihit_sbit[i] = 190
+                    digihit_sbit_orig[i] = 190
                 elif digihit_strip_orig[i] == 381:
-                    digihit_sbit[i] = 191
+                    digihit_sbit_orig[i] = 191
             digihit_region.append(digihit_region_orig[i])
             digihit_chamber.append(digihit_chamber_orig[i])
             digihit_eta_partition.append(digihit_eta_partition_orig[i])
