@@ -281,12 +281,6 @@ def analysis(root_dat, hits, bx, bx_list, cross_part, verbose, pu, num_or):
 
         # Find the bending angle for sim tracks that are valid
         for i in me0_tracks:
-            # using the first hit's region and chamber as the track's region and chamber
-            if simhit_region[track_hit_index[i][0]] == 1:
-                track_chamber_nr.append(18 + simhit_chamber[track_hit_index[i][0]])
-            else:
-                track_chamber_nr.append(simhit_chamber[track_hit_index[i][0]])
-
             top_layer_sbit = 0
             top_layer = 0
             bot_layer_sbit = 0
@@ -308,26 +302,38 @@ def analysis(root_dat, hits, bx, bx_list, cross_part, verbose, pu, num_or):
             delta_layer = top_layer - bot_layer
             bending_angle = delta_sbit/delta_layer
             substrip = (top_layer_sbit + bot_layer_sbit)/2.0
+
+            eta_partition_list_sorted = eta_partition_list
+            eta_partition_list_sorted.sort(reverse=True)
+            eta_partition = max(eta_partition_list_sorted,key=eta_partition_list_sorted.count)
+
+            if eta_partition not in [0,1]:
+                continue
+            if eta_partition == 1:
+                if set(eta_partition_list_sorted) != {0, 1}:
+                    continue    
+            if (substrip > 37) and (substrip < 154):
+                continue
+
+            track_eta_partition.append(eta_partition)
             track_bending_angle.append(bending_angle)
             track_pt.append(track_sim_pt[i])
             track_substrip.append(substrip)
-            eta_partition_list_sorted = eta_partition_list
-            eta_partition_list_sorted.sort(reverse=True)
-            track_eta_partition.append(max(eta_partition_list_sorted,key=eta_partition_list_sorted.count))
             track_nhits.append(len(track_hit_index[i]))
             nlayers = 0
             for l in nlayers_hit:
                 if l > 0:
                     nlayers += 1
             track_nlayers.append(nlayers)
+            # using the first hit's region and chamber as the track's region and chamber
+            if simhit_region[track_hit_index[i][0]] == 1:
+                track_chamber_nr.append(18 + simhit_chamber[track_hit_index[i][0]])
+            else:
+                track_chamber_nr.append(simhit_chamber[track_hit_index[i][0]])
+        n_me0_track = len(track_chamber_nr)
         
         # Find the bending angle for rechit
         for i in range(0, n_offline_seg):
-            if seg_region[i] == 1:
-                seg_chamber_nr.append(18 + seg_chamber[i])
-            else:
-                seg_chamber_nr.append(seg_chamber[i])
-
             top_layer_sbit = 0
             top_layer = 0
             bot_layer_sbit = 0
@@ -349,17 +355,33 @@ def analysis(root_dat, hits, bx, bx_list, cross_part, verbose, pu, num_or):
             delta_layer = top_layer - bot_layer
             bending_angle = delta_sbit/delta_layer
             substrip = (top_layer_sbit + bot_layer_sbit)/2.0
-            seg_bending_angle.append(bending_angle)
-            seg_substrip.append(substrip)
+
             eta_partition_list_sorted = eta_partition_list
             eta_partition_list_sorted.sort(reverse=True)
-            seg_eta_partition.append(max(eta_partition_list_sorted,key=eta_partition_list_sorted.count))
+            eta_partition = max(eta_partition_list_sorted,key=eta_partition_list_sorted.count)
+
+            if eta_partition not in [0,1]:
+                continue
+            if eta_partition == 1:
+                if set(eta_partition_list_sorted) != {0, 1}:
+                    continue    
+            if (substrip > 37) and (substrip < 154):
+                continue
+
+            seg_eta_partition.append(eta_partition)
+            seg_bending_angle.append(bending_angle)
+            seg_substrip.append(substrip)
             seg_nrechits.append(len(seg_rechit_index[i]))
             nlayers = 0
             for l in nlayers_hit:
                 if l > 0:
                     nlayers += 1
             seg_nlayers.append(nlayers)
+            if seg_region[i] == 1:
+                seg_chamber_nr.append(18 + seg_chamber[i])
+            else:
+                seg_chamber_nr.append(seg_chamber[i])
+        n_offline_seg = len(seg_chamber_nr)
 
         # initialize the dat_list that will be used as input of emulator
         # 36 * 8 * 2 * [6, 2]
@@ -477,6 +499,10 @@ def analysis(root_dat, hits, bx, bx_list, cross_part, verbose, pu, num_or):
                 seg.fit(config.max_span)
                 if seg.mse is not None and seg.mse >= mse_th:
                     seg.id = 0
+                if seg.partition not in [0,1]:
+                    seg.id = 0
+                if (seg.substrip+seg.strip > 37) and (seg.substrip+seg.strip < 154):
+                    seg.id = 0
                 if seg.id == 0:
                     continue
                 #mse_collections.append(seg.mse)
@@ -489,21 +515,21 @@ def analysis(root_dat, hits, bx, bx_list, cross_part, verbose, pu, num_or):
                     seg.partition = (seg.partition // 2)
                 #print (seg)
                 seglist_final.append(seg)
-                if (seg.partition in [0,1]) and ((seg.substrip+seg.strip <= 37) or (seg.substrip+seg.strip >= 154)):
-                    if verbose:
-                        file_out.write("  Online Segment in Chamber (0-17 for region -1, 18-35 for region 1) %d:\n "%chamber_nr)
-                        file_out.write("    Eta Partition = %d, Center Strip = %.4f, Bending angle = %.4f, ID = %d, Hit count = %d, Layer count = %d, Quality = %d\n"%(seg.partition, seg.substrip+seg.strip, seg.bend_ang, seg.id, seg.hc, seg.lc, seg.quality))
-                        file_out.write("\n")
+                #if (seg.partition in [0,1]) and ((seg.substrip+seg.strip <= 37) or (seg.substrip+seg.strip >= 154)):
+                if verbose:
+                    file_out.write("  Online Segment in Chamber (0-17 for region -1, 18-35 for region 1) %d:\n "%chamber_nr)
+                    file_out.write("    Eta Partition = %d, Center Strip = %.4f, Bending angle = %.4f, ID = %d, Hit count = %d, Layer count = %d, Quality = %d\n"%(seg.partition, seg.substrip+seg.strip, seg.bend_ang, seg.id, seg.hc, seg.lc, seg.quality))
+                    file_out.write("\n")
             online_segment_chamber[chamber_nr] = seglist_final
 
             for i in range(0, n_offline_seg):
                 if seg_chamber_nr[i] != chamber_nr:
                     continue
-                if (seg_eta_partition[i] in [0,1]) and ((seg_substrip[i] <= 37) or (seg_substrip[i] >= 154)):
-                    if verbose:
-                        file_out.write("  Offline Segment in Chamber (0-17 for region -1, 18-35 for region 1) %d:\n "%chamber_nr)
-                        file_out.write("     Eta Partition = %d, Center Strip = %.4f, Bending angle = %.4f, Hit count = %d, Layer_count = %d\n"%(seg_eta_partition[i], seg_substrip[i], seg_bending_angle[i], seg_nrechits[i], seg_nlayers[i]))
-                        file_out.write("\n")
+                #if (seg_eta_partition[i] in [0,1]) and ((seg_substrip[i] <= 37) or (seg_substrip[i] >= 154)):
+                if verbose:
+                    file_out.write("  Offline Segment in Chamber (0-17 for region -1, 18-35 for region 1) %d:\n "%chamber_nr)
+                    file_out.write("     Eta Partition = %d, Center Strip = %.4f, Bending angle = %.4f, Hit count = %d, Layer_count = %d\n"%(seg_eta_partition[i], seg_substrip[i], seg_bending_angle[i], seg_nrechits[i], seg_nlayers[i]))
+                    file_out.write("\n")
 
             #for i in range(0, n_me0_track):
             #    if track_chamber_nr[i] != chamber_nr:
@@ -712,11 +738,11 @@ def analysis(root_dat, hits, bx, bx_list, cross_part, verbose, pu, num_or):
                         st_effi_sres.Fill(st_substrip - online_substrip)
                         track_match = 1
                         track_matched_index.append(j)
-                        if (st_eta_partition in [0,1]) and ((st_substrip <= 37) or (st_substrip >= 154)):
-                            if verbose:
-                                file_out.write("    Sim Track: Chamber = %d: , Eta Partition = %d, Center Strip = %.4f, Bending angle = %.4f, Hit count = %d, Layer_count = %d, pT = %.4f\n"%(st_chamber, st_eta_partition, st_substrip, st_bending_angle, st_nrechits, st_nlayers, st_pt))
-                                file_out.write("    Online segment: Chamber = %d: , Eta Partition = %d, Center Strip = %.4f, Bending angle = %.4f, ID = %d, Hit count = %d, Layer count = %d, Quality = %d\n"%(st_chamber, online_eta_partition, online_substrip, online_bending_angle, online_id, online_hc, online_lc, online_quality))
-                                file_out.write("\n")
+                        #if (st_eta_partition in [0,1]) and ((st_substrip <= 37) or (st_substrip >= 154)):
+                        if verbose:
+                            file_out.write("    Sim Track: Chamber = %d: , Eta Partition = %d, Center Strip = %.4f, Bending angle = %.4f, Hit count = %d, Layer_count = %d, pT = %.4f\n"%(st_chamber, st_eta_partition, st_substrip, st_bending_angle, st_nrechits, st_nlayers, st_pt))
+                            file_out.write("    Online segment: Chamber = %d: , Eta Partition = %d, Center Strip = %.4f, Bending angle = %.4f, ID = %d, Hit count = %d, Layer count = %d, Quality = %d\n"%(st_chamber, online_eta_partition, online_substrip, online_bending_angle, online_id, online_hc, online_lc, online_quality))
+                            file_out.write("\n")
                         break
             if track_match == 0:
                 unmatched_st_index.append(i)
