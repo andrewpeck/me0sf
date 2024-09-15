@@ -1846,7 +1846,7 @@ def analysis(root_dat, hits, bx, bx_list, cross_part, verbose, pu, num_or):
 
     cg = ROOT.TCanvas('', '', 800, 650)
     cg.SetGrid()
-    st_pt_bending_total = ROOT.TGraph(len(track_bending_angle), track_bending_angle, track_pt)
+    st_pt_bending_total = ROOT.TGraph(len(track_bending_angle), array('d', track_bending_angle), array('d', track_pt))
     st_pt_bending_total.SetStats(False)
     st_pt_bending_total.SetTitle("")
     st_pt_bending_total.SetXTitle("Bending Angle (sbits/layer)")
