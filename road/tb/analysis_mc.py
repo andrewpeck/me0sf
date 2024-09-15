@@ -29,11 +29,11 @@ def analysis(root_dat, hits, bx, bx_list, cross_part, verbose, pu, num_or):
     num_seg_per_chamber_offline = ROOT.TH1D("num_seg_per_chamber_offline","Fraction of Events vs Number of Segments per Chamber",13,-0.5,12.5)
 
     # Nr. of background segments per chamber per event
-    bins_bending = [-4.0, -3.0, -2.5, -2.0, -1.8, -1.6, -1.4, -1.2, -1.0, -0.9, -0.8, -0.7, -0.6, -0.5, -0.4, -0.3, -0.2, -0.1, 0.0, 0.1, 0.2, 0.3, 0.4, 0.5, 0.6, 0.7, 0.8, 0.9, 1.0, 1.2, 1.4, 1.6, 1.8, 2.0, 2.5, 3.0, 4.0]
     num_bkg_seg_per_chamber_per_event_eta = ROOT.TH1F("num_bkg_seg_per_chamber_per_event_eta", "num_bkg_seg_per_chamber_per_event_eta",8,0.5,8.5)
-    num_bkg_seg_per_chamber_per_event_bending = ROOT.TH1F("num_bkg_seg_per_chamber_per_event_bending", "num_bkg_seg_per_chamber_per_event_bending",36, array('d',bins_bending))
+    num_bkg_seg_per_chamber_per_event_bending = ROOT.TH1F("num_bkg_seg_per_chamber_per_event_bending", "num_bkg_seg_per_chamber_per_event_bending",80,-4,4)
 
     # defining histograms for offline vs online
+    bins_bending = [-4.0, -3.0, -2.5, -2.0, -1.8, -1.6, -1.4, -1.2, -1.0, -0.9, -0.8, -0.7, -0.6, -0.5, -0.4, -0.3, -0.2, -0.1, 0.0, 0.1, 0.2, 0.3, 0.4, 0.5, 0.6, 0.7, 0.8, 0.9, 1.0, 1.2, 1.4, 1.6, 1.8, 2.0, 2.5, 3.0, 4.0]
     offline_effi_passed_bending = ROOT.TH1F("offline_effi_passed_bending", "offline_effi_passed_bending",36, array('d',bins_bending))
     offline_effi_total_bending = ROOT.TH1F("offline_effi_total_bending", "offline_effi_total_bending",36, array('d',bins_bending)) 
     offline_effi_passed_eta = ROOT.TH1F("offline_effi_passed_eta", "offline_effi_passed_eta",8,0.5,8.5)
@@ -1846,6 +1846,7 @@ def analysis(root_dat, hits, bx, bx_list, cross_part, verbose, pu, num_or):
 
     cg = ROOT.TCanvas('', '', 800, 650)
     cg.SetGrid()
+    cg.DrawFrame(-4, 0, 4, 200, ";Bending Angle (sbits/layer);pT (GeV)")
     st_pt_bending_total = ROOT.TGraph(len(track_bending_angle), array('d', track_bending_angle), array('d', track_pt))
     st_pt_bending_total.SetStats(False)
     st_pt_bending_total.SetTitle("")
