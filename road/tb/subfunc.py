@@ -170,6 +170,7 @@ def create_pat_ly(lower : float, upper : float):
     """
 
     layer_list = [hi_lo_t(-1,-1)]*6
+    size = []
 
     for i in range(6):
 
@@ -185,6 +186,13 @@ def create_pat_ly(lower : float, upper : float):
         if abs(lo) < 0.1:
             lo = 0 
 
+        if abs(lower) != abs(upper):
+            if i==3 and (ceil(hi)-floor(lo)+1) < size[i-1]:
+                lo -= 1
+            elif i==2 and (ceil(hi)-floor(lo)+1) < size[i-1]:
+                hi += 1
+        size.append(ceil(hi)-floor(lo)+1)
+
         layer_list[i] = hi_lo_t(ceil(hi), floor(lo))
 
     return layer_list
@@ -192,12 +200,35 @@ def create_pat_ly(lower : float, upper : float):
 # discard anything below or equal to 8
 # for PATLIST initialization process
 # true patlist; only used for testing pat_unit.vhd emulator
+
+# OLD
+'''
 pat_straight = patdef_t(17, create_pat_ly(-0.4, 0.4))
 pat_l = patdef_t(16, create_pat_ly(0.2, 0.9))
 pat_r = mirror_patdef(pat_l, pat_l.id - 1)
 pat_l2 = patdef_t(14, create_pat_ly(0.9, 1.7))
 pat_r2 = mirror_patdef(pat_l2, pat_l2.id - 1)
 pat_l3 = patdef_t(12, create_pat_ly(1.4, 2.3))
+pat_r3 = mirror_patdef(pat_l3, pat_l3.id - 1)
+pat_l4 = patdef_t(10, create_pat_ly(2.0, 3.0))
+pat_r4 = mirror_patdef(pat_l4, pat_l4.id - 1)
+pat_l5 = patdef_t(8, create_pat_ly(2.7, 3.8))
+pat_r5 = mirror_patdef(pat_l5, pat_l5.id - 1)
+pat_l6 = patdef_t(6, create_pat_ly(3.5, 4.7))
+pat_r6 = mirror_patdef(pat_l6, pat_l6.id-1)
+pat_l7 = patdef_t(4, create_pat_ly(4.3, 5.5))
+pat_r7 = mirror_patdef(pat_l7, pat_l7.id-1)
+pat_l8 = patdef_t(2, create_pat_ly(5.4, 7.0))
+pat_r8 = mirror_patdef(pat_l8, pat_l8.id - 1)
+'''
+
+# NEW
+pat_straight = patdef_t(17, create_pat_ly(-0.4, 0.4))
+pat_l = patdef_t(16, create_pat_ly(0.2, 0.9))
+pat_r = mirror_patdef(pat_l, pat_l.id - 1)
+pat_l2 = patdef_t(14, create_pat_ly(0.9, 1.7))
+pat_r2 = mirror_patdef(pat_l2, pat_l2.id - 1)
+pat_l3 = patdef_t(12, create_pat_ly(1.3, 2.3))
 pat_r3 = mirror_patdef(pat_l3, pat_l3.id - 1)
 pat_l4 = patdef_t(10, create_pat_ly(2.0, 3.0))
 pat_r4 = mirror_patdef(pat_l4, pat_l4.id - 1)

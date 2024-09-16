@@ -131,12 +131,35 @@ def pat_unit(data,
     if LAYER_MASK is None:
 
         factor = num_or / 2
+
+        # OLD
+        '''
         pat_straight = patdef_t(17, create_pat_ly(-0.4 / factor, 0.4 / factor))
         pat_l = patdef_t(16, create_pat_ly(0.2 / factor, 0.9 / factor))
         pat_r = mirror_patdef(pat_l, pat_l.id - 1)
         pat_l2 = patdef_t(14, create_pat_ly(0.9 / factor, 1.7 / factor))
         pat_r2 = mirror_patdef(pat_l2, pat_l2.id - 1)
         pat_l3 = patdef_t(12, create_pat_ly(1.4 / factor, 2.3 / factor))
+        pat_r3 = mirror_patdef(pat_l3, pat_l3.id - 1)
+        pat_l4 = patdef_t(10, create_pat_ly(2.0 / factor, 3.0 / factor))
+        pat_r4 = mirror_patdef(pat_l4, pat_l4.id - 1)
+        pat_l5 = patdef_t(8, create_pat_ly(2.7 / factor, 3.8 / factor))
+        pat_r5 = mirror_patdef(pat_l5, pat_l5.id - 1)
+        pat_l6 = patdef_t(6, create_pat_ly(3.5 / factor, 4.7 / factor))
+        pat_r6 = mirror_patdef(pat_l6, pat_l6.id - 1)
+        pat_l7 = patdef_t(4, create_pat_ly(4.3 / factor, 5.5 / factor))
+        pat_r7 = mirror_patdef(pat_l7, pat_l7.id - 1)
+        pat_l8 = patdef_t(2, create_pat_ly(5.4 / factor, 7.0 / factor))
+        pat_r8 = mirror_patdef(pat_l8, pat_l8.id - 1)
+        '''
+
+        # NEW
+        pat_straight = patdef_t(17, create_pat_ly(-0.4 / factor, 0.4 / factor))
+        pat_l = patdef_t(16, create_pat_ly(0.2 / factor, 0.9 / factor))
+        pat_r = mirror_patdef(pat_l, pat_l.id - 1)
+        pat_l2 = patdef_t(14, create_pat_ly(0.9 / factor, 1.7 / factor))
+        pat_r2 = mirror_patdef(pat_l2, pat_l2.id - 1)
+        pat_l3 = patdef_t(12, create_pat_ly(1.3 / factor, 2.3 / factor))
         pat_r3 = mirror_patdef(pat_l3, pat_l3.id - 1)
         pat_l4 = patdef_t(10, create_pat_ly(2.0 / factor, 3.0 / factor))
         pat_r4 = mirror_patdef(pat_l4, pat_l4.id - 1)
