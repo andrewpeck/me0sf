@@ -573,6 +573,8 @@ def analysis(root_dat, hits, bx, bx_list, cross_part, verbose, pu, num_or):
         if verbose:
             file_out.write("  SimTrack - Online Segment Matching: \n")
         unmatched_st_index = []
+        online_seg_sim_track_matched_pt = []
+        online_seg_sim_track_matched_bending_angle = []
         # Checking efficiency w.r.t sim tracks
         for i in range(0, n_me0_track):
             st_chamber = track_chamber_nr[i]
@@ -642,6 +644,10 @@ def analysis(root_dat, hits, bx, bx_list, cross_part, verbose, pu, num_or):
                         st_effi_passed_pt_eta.Fill(st_pt, st_eta_partition+1)
                         st_effi_passed_eta.Fill(st_eta_partition+1)
                         st_effi_passed_id.Fill(online_id)
+
+                        online_seg_sim_track_matched_pt.append(st_pt)
+                        online_seg_sim_track_matched_bending_angle.append(online_bending_angle)
+
                         '''
                         st_effi_passed_max_cluster_size.Fill(seg.max_cluster_size)
                         st_effi_passed_max_noise.Fill(seg.max_noise)
@@ -2168,9 +2174,9 @@ def analysis(root_dat, hits, bx, bx_list, cross_part, verbose, pu, num_or):
     cg = ROOT.TCanvas('', '', 800, 650)
     cg.SetGrid()
     cg.DrawFrame(-2, 0, 2, 200, ";Bending Angle (sbits/layer);pT (GeV)")
-    track_bending_angle = [float(x) for x in track_bending_angle]
-    track_pt = [float(x) for x in track_pt]
-    st_pt_bending_total = ROOT.TGraph(len(track_bending_angle), array('d', track_bending_angle), array('d', track_pt))
+    online_seg_sim_track_matched_pt = [float(x) for x in online_seg_sim_track_matched_pt]
+    online_seg_sim_track_matched_bending_angle = [float(x) for x in online_seg_sim_track_matched_bending_angle]
+    st_pt_bending_total = ROOT.TGraph(len(online_seg_sim_track_matched_bending_angle), array('d', online_seg_sim_track_matched_bending_angle), array('d', online_seg_sim_track_matched_pt))
     st_pt_bending_total.SetStats(False)
     st_pt_bending_total.SetTitle("")
     st_pt_bending_total.GetXaxis().SetTitle("Bending Angle (sbits/layer)")
