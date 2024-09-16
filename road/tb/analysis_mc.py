@@ -50,24 +50,24 @@ def analysis(root_dat, hits, bx, bx_list, cross_part, verbose, pu, num_or):
     num_bkg_seg_per_chamber_per_event_bending17 = ROOT.TH1F("num_bkg_seg_per_chamber_per_event_bending17", "num_bkg_seg_per_chamber_per_event_bending17",80,-4,4) 
 
     # Nr. of signal segments per chamber per event
-    num_signal_seg_per_chamber_per_event_bending = ROOT.TH1F("num_signal_seg_per_chamber_per_event_bending", "num_signal_seg_per_chamber_per_event_bending",80,-4,4)
-    num_signal_seg_per_chamber_per_event_bending1 = ROOT.TH1F("num_signal_seg_per_chamber_per_event_bending1", "num_signal_seg_per_chamber_per_event_bending1",80,-4,4) 
-    num_signal_seg_per_chamber_per_event_bending2 = ROOT.TH1F("num_signal_seg_per_chamber_per_event_bending2", "num_signal_seg_per_chamber_per_event_bending2",80,-4,4) 
-    num_signal_seg_per_chamber_per_event_bending3 = ROOT.TH1F("num_signal_seg_per_chamber_per_event_bending3", "num_signal_seg_per_chamber_per_event_bending3",80,-4,4) 
-    num_signal_seg_per_chamber_per_event_bending4 = ROOT.TH1F("num_signal_seg_per_chamber_per_event_bending4", "num_signal_seg_per_chamber_per_event_bending4",80,-4,4) 
-    num_signal_seg_per_chamber_per_event_bending5 = ROOT.TH1F("num_signal_seg_per_chamber_per_event_bending5", "num_signal_seg_per_chamber_per_event_bending5",80,-4,4) 
-    num_signal_seg_per_chamber_per_event_bending6 = ROOT.TH1F("num_signal_seg_per_chamber_per_event_bending6", "num_signal_seg_per_chamber_per_event_bending6",80,-4,4) 
-    num_signal_seg_per_chamber_per_event_bending7 = ROOT.TH1F("num_signal_seg_per_chamber_per_event_bending7", "num_signal_seg_per_chamber_per_event_bending7",80,-4,4) 
-    num_signal_seg_per_chamber_per_event_bending8 = ROOT.TH1F("num_signal_seg_per_chamber_per_event_bending8", "num_signal_seg_per_chamber_per_event_bending8",80,-4,4) 
-    num_signal_seg_per_chamber_per_event_bending9 = ROOT.TH1F("num_signal_seg_per_chamber_per_event_bending9", "num_signal_seg_per_chamber_per_event_bending9",80,-4,4) 
-    num_signal_seg_per_chamber_per_event_bending10 = ROOT.TH1F("num_signal_seg_per_chamber_per_event_bending10", "num_signal_seg_per_chamber_per_event_bending10",80,-4,4) 
-    num_signal_seg_per_chamber_per_event_bending11 = ROOT.TH1F("num_signal_seg_per_chamber_per_event_bending11", "num_signal_seg_per_chamber_per_event_bending11",80,-4,4) 
-    num_signal_seg_per_chamber_per_event_bending12 = ROOT.TH1F("num_signal_seg_per_chamber_per_event_bending12", "num_signal_seg_per_chamber_per_event_bending12",80,-4,4) 
-    num_signal_seg_per_chamber_per_event_bending13 = ROOT.TH1F("num_signal_seg_per_chamber_per_event_bending13", "num_signal_seg_per_chamber_per_event_bending13",80,-4,4) 
-    num_signal_seg_per_chamber_per_event_bending14 = ROOT.TH1F("num_signal_seg_per_chamber_per_event_bending14", "num_signal_seg_per_chamber_per_event_bending14",80,-4,4) 
-    num_signal_seg_per_chamber_per_event_bending15 = ROOT.TH1F("num_signal_seg_per_chamber_per_event_bending15", "num_signal_seg_per_chamber_per_event_bending15",80,-4,4) 
-    num_signal_seg_per_chamber_per_event_bending16 = ROOT.TH1F("num_signal_seg_per_chamber_per_event_bending16", "num_signal_seg_per_chamber_per_event_bending16",80,-4,4) 
-    num_signal_seg_per_chamber_per_event_bending17 = ROOT.TH1F("num_signal_seg_per_chamber_per_event_bending17", "num_signal_seg_per_chamber_per_event_bending17",80,-4,4) 
+    num_signal_seg_per_chamber_per_event_bending = ROOT.TH1F("num_signal_seg_per_chamber_per_event_bending", "num_signal_seg_per_chamber_per_event_bending",40,-2,2)
+    num_signal_seg_per_chamber_per_event_bending1 = ROOT.TH1F("num_signal_seg_per_chamber_per_event_bending1", "num_signal_seg_per_chamber_per_event_bending1",40,-2,2) 
+    num_signal_seg_per_chamber_per_event_bending2 = ROOT.TH1F("num_signal_seg_per_chamber_per_event_bending2", "num_signal_seg_per_chamber_per_event_bending2",40,-2,2) 
+    num_signal_seg_per_chamber_per_event_bending3 = ROOT.TH1F("num_signal_seg_per_chamber_per_event_bending3", "num_signal_seg_per_chamber_per_event_bending3",40,-2,2) 
+    num_signal_seg_per_chamber_per_event_bending4 = ROOT.TH1F("num_signal_seg_per_chamber_per_event_bending4", "num_signal_seg_per_chamber_per_event_bending4",40,-2,2) 
+    num_signal_seg_per_chamber_per_event_bending5 = ROOT.TH1F("num_signal_seg_per_chamber_per_event_bending5", "num_signal_seg_per_chamber_per_event_bending5",40,-2,2) 
+    num_signal_seg_per_chamber_per_event_bending6 = ROOT.TH1F("num_signal_seg_per_chamber_per_event_bending6", "num_signal_seg_per_chamber_per_event_bending6",40,-2,2) 
+    num_signal_seg_per_chamber_per_event_bending7 = ROOT.TH1F("num_signal_seg_per_chamber_per_event_bending7", "num_signal_seg_per_chamber_per_event_bending7",40,-2,2) 
+    num_signal_seg_per_chamber_per_event_bending8 = ROOT.TH1F("num_signal_seg_per_chamber_per_event_bending8", "num_signal_seg_per_chamber_per_event_bending8",40,-2,2) 
+    num_signal_seg_per_chamber_per_event_bending9 = ROOT.TH1F("num_signal_seg_per_chamber_per_event_bending9", "num_signal_seg_per_chamber_per_event_bending9",40,-2,2) 
+    num_signal_seg_per_chamber_per_event_bending10 = ROOT.TH1F("num_signal_seg_per_chamber_per_event_bending10", "num_signal_seg_per_chamber_per_event_bending10",40,-2,2) 
+    num_signal_seg_per_chamber_per_event_bending11 = ROOT.TH1F("num_signal_seg_per_chamber_per_event_bending11", "num_signal_seg_per_chamber_per_event_bending11",40,-2,2) 
+    num_signal_seg_per_chamber_per_event_bending12 = ROOT.TH1F("num_signal_seg_per_chamber_per_event_bending12", "num_signal_seg_per_chamber_per_event_bending12",40,-2,2) 
+    num_signal_seg_per_chamber_per_event_bending13 = ROOT.TH1F("num_signal_seg_per_chamber_per_event_bending13", "num_signal_seg_per_chamber_per_event_bending13",40,-2,2) 
+    num_signal_seg_per_chamber_per_event_bending14 = ROOT.TH1F("num_signal_seg_per_chamber_per_event_bending14", "num_signal_seg_per_chamber_per_event_bending14",40,-2,2) 
+    num_signal_seg_per_chamber_per_event_bending15 = ROOT.TH1F("num_signal_seg_per_chamber_per_event_bending15", "num_signal_seg_per_chamber_per_event_bending15",40,-2,2) 
+    num_signal_seg_per_chamber_per_event_bending16 = ROOT.TH1F("num_signal_seg_per_chamber_per_event_bending16", "num_signal_seg_per_chamber_per_event_bending16",40,-2,2) 
+    num_signal_seg_per_chamber_per_event_bending17 = ROOT.TH1F("num_signal_seg_per_chamber_per_event_bending17", "num_signal_seg_per_chamber_per_event_bending17",40,-2,2) 
 
     # defining histograms for offline vs online
     bins_bending = [-4.0, -3.0, -2.5, -2.0, -1.8, -1.6, -1.4, -1.2, -1.0, -0.9, -0.8, -0.7, -0.6, -0.5, -0.4, -0.3, -0.2, -0.1, 0.0, 0.1, 0.2, 0.3, 0.4, 0.5, 0.6, 0.7, 0.8, 0.9, 1.0, 1.2, 1.4, 1.6, 1.8, 2.0, 2.5, 3.0, 4.0]
@@ -690,41 +690,41 @@ def analysis(root_dat, hits, bx, bx_list, cross_part, verbose, pu, num_or):
                         elif online_id == 17:
                             st_effi_passed_pt17.Fill(st_pt)
 
-                        num_signal_seg_per_chamber_per_event_bending.Fill(st_bending_angle)
+                        num_signal_seg_per_chamber_per_event_bending.Fill(online_bending_angle)
                         if online_id == 1:
-                            num_signal_seg_per_chamber_per_event_bending1.Fill(st_bending_angle)
+                            num_signal_seg_per_chamber_per_event_bending1.Fill(online_bending_angle)
                         elif online_id == 2:
-                            num_signal_seg_per_chamber_per_event_bending2.Fill(st_bending_angle)
+                            num_signal_seg_per_chamber_per_event_bending2.Fill(online_bending_angle)
                         elif online_id == 3:
-                            num_signal_seg_per_chamber_per_event_bending3.Fill(st_bending_angle)
+                            num_signal_seg_per_chamber_per_event_bending3.Fill(online_bending_angle)
                         elif online_id == 4:
-                            num_signal_seg_per_chamber_per_event_bending4.Fill(st_bending_angle)
+                            num_signal_seg_per_chamber_per_event_bending4.Fill(online_bending_angle)
                         elif online_id == 5:
-                            num_signal_seg_per_chamber_per_event_bending5.Fill(st_bending_angle)
+                            num_signal_seg_per_chamber_per_event_bending5.Fill(online_bending_angle)
                         elif online_id == 6:
-                            num_signal_seg_per_chamber_per_event_bending6.Fill(st_bending_angle)
+                            num_signal_seg_per_chamber_per_event_bending6.Fill(online_bending_angle)
                         elif online_id == 7:
-                            num_signal_seg_per_chamber_per_event_bending7.Fill(st_bending_angle)
+                            num_signal_seg_per_chamber_per_event_bending7.Fill(online_bending_angle)
                         elif online_id == 8:
-                            num_signal_seg_per_chamber_per_event_bending8.Fill(st_bending_angle)
+                            num_signal_seg_per_chamber_per_event_bending8.Fill(online_bending_angle)
                         elif online_id == 9:
-                            num_signal_seg_per_chamber_per_event_bending9.Fill(st_bending_angle)
+                            num_signal_seg_per_chamber_per_event_bending9.Fill(online_bending_angle)
                         elif online_id == 10:
-                            num_signal_seg_per_chamber_per_event_bending10.Fill(st_bending_angle)
+                            num_signal_seg_per_chamber_per_event_bending10.Fill(online_bending_angle)
                         elif online_id == 11:
-                            num_signal_seg_per_chamber_per_event_bending11.Fill(st_bending_angle)
+                            num_signal_seg_per_chamber_per_event_bending11.Fill(online_bending_angle)
                         elif online_id == 12:
-                            num_signal_seg_per_chamber_per_event_bending12.Fill(st_bending_angle)
+                            num_signal_seg_per_chamber_per_event_bending12.Fill(online_bending_angle)
                         elif online_id == 13:
-                            num_signal_seg_per_chamber_per_event_bending13.Fill(st_bending_angle)
+                            num_signal_seg_per_chamber_per_event_bending13.Fill(online_bending_angle)
                         elif online_id == 14:
-                            num_signal_seg_per_chamber_per_event_bending14.Fill(st_bending_angle)
+                            num_signal_seg_per_chamber_per_event_bending14.Fill(online_bending_angle)
                         elif online_id == 15:
-                            num_signal_seg_per_chamber_per_event_bending15.Fill(st_bending_angle)
+                            num_signal_seg_per_chamber_per_event_bending15.Fill(online_bending_angle)
                         elif online_id == 16:
-                            num_signal_seg_per_chamber_per_event_bending16.Fill(st_bending_angle)
+                            num_signal_seg_per_chamber_per_event_bending16.Fill(online_bending_angle)
                         elif online_id == 17:
-                            num_signal_seg_per_chamber_per_event_bending17.Fill(st_bending_angle)
+                            num_signal_seg_per_chamber_per_event_bending17.Fill(online_bending_angle)
 
                         n_st_effi_passed += 1
                         st_effi_mres.Fill(st_bending_angle - online_bending_angle)
@@ -2070,7 +2070,7 @@ def analysis(root_dat, hits, bx, bx_list, cross_part, verbose, pu, num_or):
 
     c13e = ROOT.TCanvas('', '', 800, 650)
     c13e.SetGrid()
-    c13e.DrawFrame(-4, 0, 4, 1.1*num_signal_seg_per_chamber_per_event_bending.GetMaximum(), ";Bending Angle (sbits/layer);Nr. of Signal Segments per Chamber per BX")
+    c13e.DrawFrame(-2, 0, 2, 1.1*num_signal_seg_per_chamber_per_event_bending.GetMaximum(), ";Bending Angle (sbits/layer);Nr. of Signal Segments per Chamber per BX")
     num_signal_seg_per_chamber_per_event_bending_stack = ROOT.THStack("num_signal_seg_per_chamber_per_event_bending_stack", "num_signal_seg_per_chamber_per_event_bending_stack")
     num_signal_seg_per_chamber_per_event_bending1.Scale(1/(36.0*n_total_events))
     num_signal_seg_per_chamber_per_event_bending2.Scale(1/(36.0*n_total_events))
@@ -2167,7 +2167,7 @@ def analysis(root_dat, hits, bx, bx_list, cross_part, verbose, pu, num_or):
 
     cg = ROOT.TCanvas('', '', 800, 650)
     cg.SetGrid()
-    cg.DrawFrame(-4, 0, 4, 200, ";Bending Angle (sbits/layer);pT (GeV)")
+    cg.DrawFrame(-2, 0, 2, 200, ";Bending Angle (sbits/layer);pT (GeV)")
     track_bending_angle = [float(x) for x in track_bending_angle]
     track_pt = [float(x) for x in track_pt]
     st_pt_bending_total = ROOT.TGraph(len(track_bending_angle), array('d', track_bending_angle), array('d', track_pt))
