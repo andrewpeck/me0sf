@@ -183,6 +183,8 @@ def analysis(root_dat, hits, bx, bx_list, cross_part, verbose, pu, num_or):
     n_st_purity_total = 0
     n_st_purity_passed = 0
     n_bkg_seg_per_chamber_per_event = 0
+    online_seg_sim_track_matched_pt = []
+    online_seg_sim_track_matched_bending_angle = []
 
     n_total_events = len(root_dat)
     prev_frac_done = 0
@@ -573,8 +575,6 @@ def analysis(root_dat, hits, bx, bx_list, cross_part, verbose, pu, num_or):
         if verbose:
             file_out.write("  SimTrack - Online Segment Matching: \n")
         unmatched_st_index = []
-        online_seg_sim_track_matched_pt = []
-        online_seg_sim_track_matched_bending_angle = []
         # Checking efficiency w.r.t sim tracks
         for i in range(0, n_me0_track):
             st_chamber = track_chamber_nr[i]
