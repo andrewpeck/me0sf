@@ -70,17 +70,18 @@ def analysis(root_dat, hits, bx, bx_list, cross_part, verbose, pu, num_or):
     num_signal_seg_per_chamber_per_event_bending17 = ROOT.TH1F("num_signal_seg_per_chamber_per_event_bending17", "num_signal_seg_per_chamber_per_event_bending17",40,-2,2) 
 
     # defining histograms for offline vs online
-    bins_bending = [-4.0, -3.0, -2.5, -2.0, -1.8, -1.6, -1.4, -1.2, -1.0, -0.9, -0.8, -0.7, -0.6, -0.5, -0.4, -0.3, -0.2, -0.1, 0.0, 0.1, 0.2, 0.3, 0.4, 0.5, 0.6, 0.7, 0.8, 0.9, 1.0, 1.2, 1.4, 1.6, 1.8, 2.0, 2.5, 3.0, 4.0]
-    offline_effi_passed_bending = ROOT.TH1F("offline_effi_passed_bending", "offline_effi_passed_bending",36, array('d',bins_bending))
-    offline_effi_total_bending = ROOT.TH1F("offline_effi_total_bending", "offline_effi_total_bending",36, array('d',bins_bending)) 
+    bins_bending_purity = [-4.0, -3.0, -2.5, -2.0, -1.8, -1.6, -1.4, -1.2, -1.0, -0.9, -0.8, -0.7, -0.6, -0.5, -0.4, -0.3, -0.2, -0.1, -0.05, 0.0, 0.05, 0.1, 0.2, 0.3, 0.4, 0.5, 0.6, 0.7, 0.8, 0.9, 1.0, 1.2, 1.4, 1.6, 1.8, 2.0, 2.5, 3.0, 4.0]
+    bins_bending_effi = [-4.0, -1.0, -0.1, -0.08, -0.06, -0.04, -0.02, -0.01, 0.0, 0.01, 0.02, 0.04, 0.06, 0.08, 0.1, 1.0, 4.0]
+    offline_effi_passed_bending = ROOT.TH1F("offline_effi_passed_bending", "offline_effi_passed_bending",16, array('d',bins_bending_effi))
+    offline_effi_total_bending = ROOT.TH1F("offline_effi_total_bending", "offline_effi_total_bending",16, array('d',bins_bending_effi)) 
     offline_effi_passed_eta = ROOT.TH1F("offline_effi_passed_eta", "offline_effi_passed_eta",8,0.5,8.5)
     offline_effi_total_eta = ROOT.TH1F("offline_effi_total_eta", "offline_effi_total_eta",8,0.5,8.5) 
     offline_effi_mres = ROOT.TH1F("offline_effi_Bend_Ang_Res", "offline_effi_Bend_Ang_Res", 20, -0.6, 0.6)
     offline_effi_sres = ROOT.TH1F("offline_effi_Strip_Res", "offline_effi_Strip_Res", 20, -0.9, 0.9)
     offline_purity_passed_eta = ROOT.TH1F("offline_purity_pass_eta", "offline_purity_pass_eta",8,0.5,8.5)
     offline_purity_total_eta = ROOT.TH1F("offline_purity_total_eta", "offline_purity_total_eta",8,0.5,8.5) 
-    offline_purity_passed_bending = ROOT.TH1F("offline_purity_passed_bending", "offline_purity_passed_bending",36, array('d',bins_bending))
-    offline_purity_total_bending = ROOT.TH1F("offline_purity_total_bending", "offline_purity_total_bending",36, array('d',bins_bending)) 
+    offline_purity_passed_bending = ROOT.TH1F("offline_purity_passed_bending", "offline_purity_passed_bending",38, array('d',bins_bending_purity))
+    offline_purity_total_bending = ROOT.TH1F("offline_purity_total_bending", "offline_purity_total_bending",38, array('d',bins_bending_purity)) 
     offline_effi_passed_id = ROOT.TH1F("offline_effi_passed_id", "offline_effi_passed_id",17, 0.5, 17.5)
     offline_effi_total_id = ROOT.TH1F("offline_effi_total_id", "offline_effi_total_id",17, 0.5, 17.5)
     offline_purity_passed_id = ROOT.TH1F("offline_purity_passed_id", "offline_purity_passed_id",17, 0.5, 17.5)
@@ -98,14 +99,14 @@ def analysis(root_dat, hits, bx, bx_list, cross_part, verbose, pu, num_or):
     st_effi_total_pt_eta = ROOT.TH2F("st_effi_total_pt_eta", "st_effi_total_pt_eta",14, array('d',bins_pt), 8, 0.5, 8.5)
     st_effi_passed_eta = ROOT.TH1F("st_effi_pass_eta", "st_effi_pass_eta",8,0.5,8.5)
     st_effi_total_eta = ROOT.TH1F("st_effi_total_eta", "st_effi_total_eta",8,0.5,8.5) 
-    st_effi_passed_bending = ROOT.TH1F("st_effi_pass_bending", "st_effi_pass_bending",36, array('d',bins_bending))
-    st_effi_total_bending = ROOT.TH1F("st_effi_total_bending", "st_effi_total_bending",36, array('d',bins_bending)) 
+    st_effi_passed_bending = ROOT.TH1F("st_effi_pass_bending", "st_effi_pass_bending",16, array('d',bins_bending_effi))
+    st_effi_total_bending = ROOT.TH1F("st_effi_total_bending", "st_effi_total_bending",16, array('d',bins_bending_effi)) 
     st_effi_mres = ROOT.TH1F("st_effi_Bend_Ang_Res", "st_effi_Bend_Ang_Res", 20, -0.6, 0.6)
     st_effi_sres = ROOT.TH1F("st_effi_Strip_Res", "st_effi_Strip_Res", 20, -0.9, 0.9)
     st_purity_passed_eta = ROOT.TH1F("st_purity_pass_eta", "st_purity_pass_eta",8,0.5,8.5)
     st_purity_total_eta = ROOT.TH1F("st_purity_total_eta", "st_purity_total_eta",8,0.5,8.5) 
-    st_purity_passed_bending = ROOT.TH1F("st_purity_passed_bending", "st_purity_passed_bending",36, array('d',bins_bending))
-    st_purity_total_bending = ROOT.TH1F("st_purity_total_bending", "st_purity_total_bending",36, array('d',bins_bending)) 
+    st_purity_passed_bending = ROOT.TH1F("st_purity_passed_bending", "st_purity_passed_bending",38, array('d',bins_bending_purity))
+    st_purity_total_bending = ROOT.TH1F("st_purity_total_bending", "st_purity_total_bending",38, array('d',bins_bending_purity)) 
     st_effi_passed_id = ROOT.TH1F("st_effi_passed_id", "st_effi_passed_id",17, 0.5, 17.5)
     st_effi_total_id = ROOT.TH1F("st_effi_total_id", "st_effi_total_id",17, 0.5, 17.5)
     st_purity_passed_id = ROOT.TH1F("st_purity_passed_id", "st_purity_passed_id",17, 0.5, 17.5)
@@ -2173,7 +2174,7 @@ def analysis(root_dat, hits, bx, bx_list, cross_part, verbose, pu, num_or):
 
     cg = ROOT.TCanvas('', '', 800, 650)
     cg.SetGrid()
-    cg.DrawFrame(-2, 0, 2, 200, ";Bending Angle (sbits/layer);pT (GeV)")
+    cg.DrawFrame(-2, 0, 2, 50, ";Bending Angle (sbits/layer);pT (GeV)")
     online_seg_sim_track_matched_pt = [float(x) for x in online_seg_sim_track_matched_pt]
     online_seg_sim_track_matched_bending_angle = [float(x) for x in online_seg_sim_track_matched_bending_angle]
     st_pt_bending_total = ROOT.TGraph(len(online_seg_sim_track_matched_bending_angle), array('d', online_seg_sim_track_matched_bending_angle), array('d', online_seg_sim_track_matched_pt))
