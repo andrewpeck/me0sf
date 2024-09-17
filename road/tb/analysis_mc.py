@@ -853,21 +853,21 @@ def analysis(root_dat, hits, bx, bx_list, cross_part, verbose, pu, num_or):
                         elif online_id == 17:
                             num_signal_seg_per_chamber_per_event_nlayers17.Fill(online_lc)
                         if (online_eta_partition+1) == 1:
-                            num_signal_seg_per_chamber_per_event_nlayers_eta1.Fill(online_bending_angle)
+                            num_signal_seg_per_chamber_per_event_nlayers_eta1.Fill(online_lc)
                         elif (online_eta_partition+1) == 2:
-                            num_signal_seg_per_chamber_per_event_nlayers_eta2.Fill(online_bending_angle)
+                            num_signal_seg_per_chamber_per_event_nlayers_eta2.Fill(online_lc)
                         elif (online_eta_partition+1) == 3:
-                            num_signal_seg_per_chamber_per_event_nlayers_eta3.Fill(online_bending_angle)
+                            num_signal_seg_per_chamber_per_event_nlayers_eta3.Fill(online_lc)
                         elif (online_eta_partition+1) == 4:
-                            num_signal_seg_per_chamber_per_event_nlayers_eta4.Fill(online_bending_angle)
+                            num_signal_seg_per_chamber_per_event_nlayers_eta4.Fill(online_lc)
                         elif (online_eta_partition+1) == 5:
-                            num_signal_seg_per_chamber_per_event_nlayers_eta5.Fill(online_bending_angle)
+                            num_signal_seg_per_chamber_per_event_nlayers_eta5.Fill(online_lc)
                         elif (online_eta_partition+1) == 6:
-                            num_signal_seg_per_chamber_per_event_nlayers_eta6.Fill(online_bending_angle)
+                            num_signal_seg_per_chamber_per_event_nlayers_eta6.Fill(online_lc)
                         elif (online_eta_partition+1) == 7:
-                            num_signal_seg_per_chamber_per_event_nlayers_eta7.Fill(online_bending_angle)
+                            num_signal_seg_per_chamber_per_event_nlayers_eta7.Fill(online_lc)
                         elif (online_eta_partition+1) == 8:
-                            num_signal_seg_per_chamber_per_event_nlayers_eta8.Fill(online_bending_angle)
+                            num_signal_seg_per_chamber_per_event_nlayers_eta8.Fill(online_lc)
 
                         n_st_effi_passed += 1
                         st_effi_mres.Fill(st_bending_angle - online_bending_angle)
@@ -1057,21 +1057,21 @@ def analysis(root_dat, hits, bx, bx_list, cross_part, verbose, pu, num_or):
                     elif online_id == 17:
                         num_bkg_seg_per_chamber_per_event_nlayers17.Fill(online_lc)
                     if (online_eta_partition+1) == 1:
-                        num_bkg_seg_per_chamber_per_event_nlayers_eta1.Fill(online_bending_angle)
+                        num_bkg_seg_per_chamber_per_event_nlayers_eta1.Fill(online_lc)
                     elif (online_eta_partition+1) == 2:
-                        num_bkg_seg_per_chamber_per_event_nlayers_eta2.Fill(online_bending_angle)
+                        num_bkg_seg_per_chamber_per_event_nlayers_eta2.Fill(online_lc)
                     elif (online_eta_partition+1) == 3:
-                        num_bkg_seg_per_chamber_per_event_nlayers_eta3.Fill(online_bending_angle)
+                        num_bkg_seg_per_chamber_per_event_nlayers_eta3.Fill(online_lc)
                     elif (online_eta_partition+1) == 4:
-                        num_bkg_seg_per_chamber_per_event_nlayers_eta4.Fill(online_bending_angle)
+                        num_bkg_seg_per_chamber_per_event_nlayers_eta4.Fill(online_lc)
                     elif (online_eta_partition+1) == 5:
-                        num_bkg_seg_per_chamber_per_event_nlayers_eta5.Fill(online_bending_angle)
+                        num_bkg_seg_per_chamber_per_event_nlayers_eta5.Fill(online_lc)
                     elif (online_eta_partition+1) == 6:
-                        num_bkg_seg_per_chamber_per_event_nlayers_eta6.Fill(online_bending_angle)
+                        num_bkg_seg_per_chamber_per_event_nlayers_eta6.Fill(online_lc)
                     elif (online_eta_partition+1) == 7:
-                        num_bkg_seg_per_chamber_per_event_nlayers_eta7.Fill(online_bending_angle)
+                        num_bkg_seg_per_chamber_per_event_nlayers_eta7.Fill(online_lc)
                     elif (online_eta_partition+1) == 8:
-                        num_bkg_seg_per_chamber_per_event_nlayers_eta8.Fill(online_bending_angle)
+                        num_bkg_seg_per_chamber_per_event_nlayers_eta8.Fill(online_lc)
 
                     n_bkg_seg_per_chamber_per_event += 1
 
@@ -2853,7 +2853,7 @@ def analysis(root_dat, hits, bx, bx_list, cross_part, verbose, pu, num_or):
 
     c13g = ROOT.TCanvas('', '', 800, 650)
     c13g.SetGrid()
-    c13g.DrawFrame(-4, 0, 4, 1.1*num_bkg_seg_per_chamber_per_event_nlayers.GetMaximum(), ";Number of Layers Hit;Nr. of Fakes per Chamber per BX")
+    c13g.DrawFrame(0, 0, 7, 1.1*num_bkg_seg_per_chamber_per_event_nlayers.GetMaximum(), ";Number of Layers Hit;Nr. of Fakes per Chamber per BX")
     num_bkg_seg_per_chamber_per_event_nlayers_stack = ROOT.THStack("num_bkg_seg_per_chamber_per_event_nlayers_stack", "num_bkg_seg_per_chamber_per_event_nlayers_stack")
     num_bkg_seg_per_chamber_per_event_nlayers1.Scale(1/(36.0*n_total_events))
     num_bkg_seg_per_chamber_per_event_nlayers2.Scale(1/(36.0*n_total_events))
@@ -3121,7 +3121,7 @@ def analysis(root_dat, hits, bx, bx_list, cross_part, verbose, pu, num_or):
 
     c13i = ROOT.TCanvas('', '', 800, 650)
     c13i.SetGrid()
-    c13i.DrawFrame(-2, 0, 2, 1.1*num_signal_seg_per_chamber_per_event_nlayers.GetMaximum(), ";Number of Layers Hit;Nr. of Signal Segments per Chamber per BX")
+    c13i.DrawFrame(0, 0, 7, 1.1*num_signal_seg_per_chamber_per_event_nlayers.GetMaximum(), ";Number of Layers Hit;Nr. of Signal Segments per Chamber per BX")
     num_signal_seg_per_chamber_per_event_nlayers_stack = ROOT.THStack("num_signal_seg_per_chamber_per_event_nlayers_stack", "num_signal_seg_per_chamber_per_event_nlayers_stack")
     num_signal_seg_per_chamber_per_event_nlayers1.Scale(1/(36.0*n_total_events))
     num_signal_seg_per_chamber_per_event_nlayers2.Scale(1/(36.0*n_total_events))
@@ -3215,26 +3215,6 @@ def analysis(root_dat, hits, bx, bx_list, cross_part, verbose, pu, num_or):
     num_signal_seg_per_chamber_per_event_nlayers15.Write()
     num_signal_seg_per_chamber_per_event_nlayers16.Write()
     num_signal_seg_per_chamber_per_event_nlayers17.Write()
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
 
     cg = ROOT.TCanvas('', '', 800, 650)
     cg.SetGrid()
