@@ -171,54 +171,16 @@ architecture behavioral of chamber is
   function increase_ly_thresh (ly_thresh : ly_thresh_t)
     return ly_thresh_t is
     variable ly_thresh_strict : ly_thresh_t;
-    variable A : std_logic;
-    variable B : std_logic;
-    variable C : std_logic;
   begin
     for i in 0 to NUM_PATTERNS-1 loop
-        A := ly_thresh(i)(2);
-        B := ly_thresh(i)(1);
-        C := ly_thresh(i)(0);
-        
-        ly_thresh_strict(i)(2) := A or (B and C);
-        ly_thresh_strict(i)(1) := (B and not C) or (A and B) or (not A and not B and C);
-        ly_thresh_strict(i)(0) := (not A and not C) or (not B and not C) or (A and C);
+        if (unsigned(ly_thresh(i)) >= 5) then
+          ly_thresh_strict(i) := ly_thresh(i);
+        else
+          ly_thresh_strict(i) := std_logic_vector(unsigned(ly_thresh(i)) + 1);
+        end if;
     end loop;
     return ly_thresh_strict;
   end;
-  
---  function increase_ly_thresh (ly_thresh : ly_thresh_t)
---    return ly_thresh_t is
---    variable ly_thresh_strict : ly_thresh_t;
---  begin
---    for i in 0 to NUM_PATTERNS-1 loop
---        if (unsigned(ly_thresh(i)) >= 5) then
---          ly_thresh_strict(i) := ly_thresh(i);
---        else
---          ly_thresh_strict(i) := std_logic_vector(unsigned(ly_thresh(i)) + 1);
---        end if;
---    end loop;
---    return ly_thresh_strict;
---  end;
-  
---  function increase_ly_thresh (ly_thresh : ly_thresh_t)
---    return ly_thresh_t is
---    variable ly_thresh_strict : ly_thresh_t;
---  begin
---    for i in 0 to NUM_PATTERNS-1 loop
---      case(ly_thresh(i)) is
---        when "000"  => ly_thresh_strict(i) := "001";
---        when "001"  => ly_thresh_strict(i) := "010";
---        when "010"  => ly_thresh_strict(i) := "011";
---        when "011"  => ly_thresh_strict(i) := "100";
---        when "100"  => ly_thresh_strict(i) := "101";
---        when "101"  => ly_thresh_strict(i) := "101";
---        when "110"  => ly_thresh_strict(i) := "110";
---        when "111"  => ly_thresh_strict(i) := "111";
---      end case;
---    end loop;
---    return ly_thresh_strict;
---  end;
 
 begin
 

@@ -264,12 +264,6 @@ begin
   process (clock) is
   begin
     if (rising_edge(clock)) then
-    
---      report "I AM A PARTITION, LY THRESH IS: " severity note;
---      for i in 0 to 16 loop
---        report "PATTERN ID "&integer'image(i)&"LAYER THRESHOLD IS "&integer'image(to_integer(unsigned(ly_thresh(i)))) severity note;
-      
---      end loop;
 
       dav_o <= dav_postghost;
 
