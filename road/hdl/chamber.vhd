@@ -30,6 +30,7 @@ use ieee.std_logic_1164.all;
 use ieee.std_logic_misc.all;
 use ieee.numeric_std.all;
 use ieee.math_real.all;
+use ieee.std_logic_misc.all;
 
 entity chamber is
   generic (
@@ -40,8 +41,8 @@ entity chamber is
     S0_WIDTH        : natural := 16;     -- chunk each partition into groups this size and choose only 1 segment from each group
     S1_REUSE        : natural := 4;      -- reuse sorters
     REG_OUTPUTS     : boolean := false;  -- true to  register outputs on the 40MHz clock
-    PULSE_EXTEND    : integer := 2;      -- how long pulses should be extended by
-    DEADTIME        : natural := 3;      -- deadtime in bx
+    --PULSE_EXTEND    : integer := 0;      -- how long pulses should be extended by
+    --DEADTIME        : natural := 3;      -- deadtime in bx
 
     PATLIST : patdef_array_t := patdef_array;
 
@@ -65,16 +66,32 @@ entity chamber is
     dav_o_phase       : out natural range 0 to 7;
     -- synthesis translate_on
 
-    sbits_i           : in  chamber_t;
-    vfat_pretrigger_o : out std_logic_vector (23 downto 0);
+    --sbits_i           : in  chamber_t;
+    --vfat_pretrigger_o : out std_logic_vector (23 downto 0);
     segments_o        : out segment_list_t (NUM_SEGMENTS-1 downto 0)
     );
+    
 end chamber;
 
 architecture behavioral of chamber is
 
   --------------------------------------------------------------------------------
   -- Constants
+  --------------------------------------------------------------------------------
+
+  --------------------------------------------------------------------------------
+  --Used for testing, delete later. Allows to set all inputs to 0 and leave them hanging,
+  --since there are not enough real I/O pins to use chamber as a top level entity.--
+  --------------------------------------------------------------------------------
+  signal sbits_i : chamber_t;
+  attribute dont_touch : string;
+  attribute dont_touch of sbits_i : signal is "true";
+  
+  constant std_zeroed : std_logic_vector(192*6-1 downto 0) := (others => '0');
+  constant partition_zeroed : partition_t := convert(std_zeroed, sbits_i(0));
+  
+  signal vfat_pretrigger_o : std_logic_vector(23 downto 0);
+  attribute dont_touch of vfat_pretrigger_o : signal is "true";
   --------------------------------------------------------------------------------
 
   constant NUM_PARTITIONS : integer := 8;
@@ -107,8 +124,8 @@ architecture behavioral of chamber is
   -- Extension
   --------------------------------------------------------------------------------
 
-  signal sbits_extend : chamber_t;
-  signal dav_extend   : std_logic := '0';
+  --signal sbits_extend : chamber_t;
+  --signal dav_extend   : std_logic := '0';
 
   --------------------------------------------------------------------------------
   -- Segments
@@ -144,8 +161,73 @@ architecture behavioral of chamber is
   signal final_segs_dav     : std_logic;
 
   signal outclk : std_logic := '0';
+  
+  --------------------------------------------------------------------------------
+  -- Layer Thresholding
+  --------------------------------------------------------------------------------
+  
+  signal ly_thresh_strict : ly_thresh_t;
+  
+  function increase_ly_thresh (ly_thresh : ly_thresh_t)
+    return ly_thresh_t is
+    variable ly_thresh_strict : ly_thresh_t;
+    variable A : std_logic;
+    variable B : std_logic;
+    variable C : std_logic;
+  begin
+    for i in 0 to NUM_PATTERNS-1 loop
+        A := ly_thresh(i)(2);
+        B := ly_thresh(i)(1);
+        C := ly_thresh(i)(0);
+        
+        ly_thresh_strict(i)(2) := A or (B and C);
+        ly_thresh_strict(i)(1) := (B and not C) or (A and B) or (not A and not B and C);
+        ly_thresh_strict(i)(0) := (not A and not C) or (not B and not C) or (A and C);
+    end loop;
+    return ly_thresh_strict;
+  end;
+  
+--  function increase_ly_thresh (ly_thresh : ly_thresh_t)
+--    return ly_thresh_t is
+--    variable ly_thresh_strict : ly_thresh_t;
+--  begin
+--    for i in 0 to NUM_PATTERNS-1 loop
+--        if (unsigned(ly_thresh(i)) >= 5) then
+--          ly_thresh_strict(i) := ly_thresh(i);
+--        else
+--          ly_thresh_strict(i) := std_logic_vector(unsigned(ly_thresh(i)) + 1);
+--        end if;
+--    end loop;
+--    return ly_thresh_strict;
+--  end;
+  
+--  function increase_ly_thresh (ly_thresh : ly_thresh_t)
+--    return ly_thresh_t is
+--    variable ly_thresh_strict : ly_thresh_t;
+--  begin
+--    for i in 0 to NUM_PATTERNS-1 loop
+--      case(ly_thresh(i)) is
+--        when "000"  => ly_thresh_strict(i) := "001";
+--        when "001"  => ly_thresh_strict(i) := "010";
+--        when "010"  => ly_thresh_strict(i) := "011";
+--        when "011"  => ly_thresh_strict(i) := "100";
+--        when "100"  => ly_thresh_strict(i) := "101";
+--        when "101"  => ly_thresh_strict(i) := "101";
+--        when "110"  => ly_thresh_strict(i) := "110";
+--        when "111"  => ly_thresh_strict(i) := "111";
+--      end case;
+--    end loop;
+--    return ly_thresh_strict;
+--  end;
 
 begin
+
+  ly_thresh_strict <= increase_ly_thresh(ly_thresh) when X_PRT_EN else ly_thresh;
+
+--set all sbits to 0, only for development, remove later
+  g_set_zero: for i in 0 to 7 generate
+    sbits_i(i) <= partition_zeroed;
+  end generate;
 
   assert S1_REUSE = 1 or S1_REUSE = 2 or S1_REUSE = 4
     report "Only allowed values for s1 reuse are 1,2, and 4"
@@ -164,14 +246,14 @@ begin
   -- Pulse Extension
   --------------------------------------------------------------------------------
 
-  chamber_pulse_extension_inst : entity work.chamber_pulse_extension
-    generic map (LENGTH => PULSE_EXTEND)
-    port map (
-      clock   => clock40,
-      sbits_i => sbits_i,
-      sbits_o => sbits_extend);
+--  chamber_pulse_extension_inst : entity work.chamber_pulse_extension
+--    generic map (LENGTH => PULSE_EXTEND)
+--    port map (
+--      clock   => clock40,
+--      sbits_i => sbits_i,
+--      sbits_o => sbits_extend);
 
-  dav_extend <= dav_i;
+--  dav_extend <= dav_i;
 
   --------------------------------------------------------------------------------
   -- Input signal assignment
@@ -184,14 +266,14 @@ begin
   begin
 
     single_partitions : if (NUM_FINDERS <= 8) generate
-      partition_or <= sbits_extend(I);
+      partition_or <= sbits_i(I);
     end generate;
 
     half_partitions : if (NUM_FINDERS > 8) generate
 
       -- for even finders, just take the partition as it is
       even_gen : if (I mod 2 = 0) generate
-        partition_or <= sbits_extend(I/2);
+        partition_or <= sbits_i(I/2);
       end generate;
 
       -- for odd finders, or adjacent partitions
@@ -199,12 +281,12 @@ begin
 
         -- look for only straight and pointing segments (for cms)
         pointing : if (not EN_NON_POINTING) generate
-          partition_or(0) <=                         sbits_extend(I/2 + 1)(0);
-          partition_or(1) <=                         sbits_extend(I/2 + 1)(1);
-          partition_or(2) <= sbits_extend(I/2)(2) or sbits_extend(I/2 + 1)(2);
-          partition_or(3) <= sbits_extend(I/2)(3) or sbits_extend(I/2 + 1)(3);
-          partition_or(4) <= sbits_extend(I/2)(4);
-          partition_or(5) <= sbits_extend(I/2)(5);
+          partition_or(0) <=                         sbits_i(I/2 + 1)(0);
+          partition_or(1) <=                         sbits_i(I/2 + 1)(1);
+          partition_or(2) <= sbits_i(I/2)(2) or sbits_i(I/2 + 1)(2);
+          partition_or(3) <= sbits_i(I/2)(3) or sbits_i(I/2 + 1)(3);
+          partition_or(4) <= sbits_i(I/2)(4);
+          partition_or(5) <= sbits_i(I/2)(5);
         end generate;
 
         -- look for both x-partition segments toward the IP and away
@@ -221,7 +303,7 @@ begin
     process (clock) is
     begin
       if (rising_edge(clock)) then
-        dav_or           <= dav_extend;
+        dav_or           <= dav_i;
         partition_or_reg <= partition_or;
       end if;
     end process;
@@ -229,13 +311,44 @@ begin
     --------------------------------------------------------------------------------
     -- Per Partition Pattern Finders
     --------------------------------------------------------------------------------
+    
+    partition_gen_real : if (I mod 2 = 0) generate
+    
+      partition_inst : entity work.partition
+        generic map (
+          DISABLE_PEAKING => DISABLE_PEAKING,
+          NUM_SEGMENTS    => NUM_SEGMENTS,
+          S0_WIDTH        => S0_WIDTH
+          --DEADTIME        => DEADTIME
+          )
+        port map (
 
-    partition_inst : entity work.partition
+          clock => clock,
+          dav_i => dav_or,
+
+          partition_num => I,
+
+          ly_thresh  => ly_thresh,
+
+          -- primary layer
+          partition_i => partition_or_reg,
+
+          -- output patterns
+          dav_o      => all_segs_dav(I),
+          segments_o => all_segs((I+1)*NUM_SEGS_PER_PRT-1 downto I*NUM_SEGS_PER_PRT),
+          trigger_o  => strip_triggers(I)
+          );
+    
+    end generate;
+    
+    partition_gen_cross : if (I mod 2 = 1) generate
+    
+      partition_inst : entity work.partition
       generic map (
         DISABLE_PEAKING => DISABLE_PEAKING,
         NUM_SEGMENTS    => NUM_SEGMENTS,
-        S0_WIDTH        => S0_WIDTH,
-        DEADTIME        => DEADTIME
+        S0_WIDTH        => S0_WIDTH
+        --DEADTIME        => DEADTIME
         )
       port map (
 
@@ -244,7 +357,7 @@ begin
 
         partition_num => I,
 
-        ly_thresh  => ly_thresh,
+        ly_thresh  => ly_thresh_strict,
 
         -- primary layer
         partition_i => partition_or_reg,
@@ -254,7 +367,9 @@ begin
         segments_o => all_segs((I+1)*NUM_SEGS_PER_PRT-1 downto I*NUM_SEGS_PER_PRT),
         trigger_o  => strip_triggers(I)
         );
-
+    
+    end generate;
+    
   end generate;
 
   --------------------------------------------------------------------------------
@@ -433,6 +548,31 @@ begin
       segments_o        <= final_segs;
     end if;
   end process;
+  
+-- temporary testing process, delete later. prints all extended sbits if any sbit (not extended) is hit
+--  process (clock) is
+--  variable found_data : boolean;
+--  begin
+--  found_data := false;
+    
+--    if (rising_edge(clock)) then
+--        for prt in 0 to 7 loop
+--          for lyr in 0 to 5 loop
+--            if (not(unsigned(sbits_i(prt)(lyr)) = 0)) then
+--              found_data := true;
+--            end if;
+--          end loop;
+--          if (found_data) then
+--            report "SBITS EXTEND for Partition "& to_string(prt) severity note;
+--            for lyr in 0 to 5 loop
+--              report to_hstring(sbits_extend(prt)(lyr)) severity note;
+--            end loop;
+--            found_data := false;
+--          end if;
+--        end loop;
+        
+--    end if;
+--  end process;
 
 
 end behavioral;

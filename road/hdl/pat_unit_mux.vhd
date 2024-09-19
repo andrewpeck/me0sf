@@ -47,7 +47,7 @@ entity pat_unit_mux is
     PATLIST : patdef_array_t := patdef_array;
     WIDTH   : natural        := PRT_WIDTH;
 
-    DEADTIME : natural := 3;            -- deadtime in bx
+    --DEADTIME : natural := 3;            -- deadtime in bx
 
     -- Need padding for half the width of the pattern this is to handle the edges
     -- of the chamber where some virtual chamber of all zeroes exists... to be

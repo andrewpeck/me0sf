@@ -3,7 +3,8 @@ import functools
 import multiprocessing.pool
 import operator
 import os
-from itertools import repeat, starmap
+from copy import deepcopy
+from itertools import cycle, starmap
 from typing import List
 
 from partition_beh import process_partition
@@ -95,8 +96,14 @@ def process_chamber(chamber_data : List[List[int]], config : Config):
     else:
 
         data = chamber_data
-
-    datazip  = zip(data, range(len(data)), repeat(config))
+        
+    #If x_prt is enabled, perform strict thresholding on x-partitions
+    strict_config = deepcopy(config)
+    if (config.x_prt_en):
+        for i, thresh in enumerate(strict_config.ly_thresh):           
+            if (thresh < 5):
+                strict_config.ly_thresh[i] += 1 
+    datazip  = zip(data, range(len(data)), cycle((config, strict_config)))
 
     # for some reason multi-processing fails with questasim, generating an error
     # such as:

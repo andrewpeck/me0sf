@@ -63,7 +63,7 @@ package pat_types is
 
    -- PID_BITS: number of bits to cnt the pids
    constant PID_BITS : integer := 5;
-   attribute w of PID_BITS : constant is 32;
+   attribute w of PID_BITS : constant is 40;
 
    -- CENTROID_BITS: number of bits to cnt the centroid
    constant CENTROID_BITS : integer := 4;

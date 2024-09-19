@@ -86,8 +86,10 @@ async def generate_dav(dut):
     "Generates a dav signal every 8th clock cycle"
     while True:
         dut.dav_i.value = 1
+        #dut.clock40.value = 1
         await RisingEdge(dut.clock)
         dut.dav_i.value = 0
+        #dut.clock40.value = 0
         for _ in range(7):
             await RisingEdge(dut.clock)
 

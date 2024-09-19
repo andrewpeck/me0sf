@@ -112,8 +112,8 @@ def pat_unit(data,
         pat_straight = patdef_t(16, create_pat_ly(-0.4 / factor, 0.4 / factor))
         pat_l = patdef_t(15, create_pat_ly(0.2 / factor, 0.9 / factor))
         pat_r = mirror_patdef(pat_l, pat_l.id - 1)
-        #pat_l2 = patdef_t(16, create_pat_ly(0.5 / factor, 1.2 / factor))
-        #pat_r2 = mirror_patdef(pat_l2, pat_l2.id - 1)
+        pat_l2 = patdef_t(16, create_pat_ly(0.5 / factor, 1.2 / factor))
+        pat_r2 = mirror_patdef(pat_l2, pat_l2.id - 1)
         pat_l3 = patdef_t(13, create_pat_ly(0.9 / factor, 1.7 / factor))
         pat_r3 = mirror_patdef(pat_l3, pat_l3.id - 1)
         pat_l4 = patdef_t(11, create_pat_ly(1.4 / factor, 2.3 / factor))
@@ -132,8 +132,8 @@ def pat_unit(data,
             pat_straight,
             pat_l,
             pat_r,
-           # pat_l2,
-           # pat_r2,
+            pat_l2,
+            pat_r2,
             pat_l3,
             pat_r3,
             pat_l4,

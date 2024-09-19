@@ -25,7 +25,7 @@ entity partition is
     PRT_WIDTH      : natural := PRT_WIDTH;  -- width of the partition (192)
     S0_WIDTH       : natural := 8;          -- width of the pre-sorting regions
     PAT_UNIT_REUSE : natural := 8;          --
-    DEADTIME       : natural := 3;          -- deadtime in bx
+    --DEADTIME       : natural := 3;          -- deadtime in bx
 
     DEGHOST_PRE  : boolean := true;     -- perform intra-partition ghost cancellation BEFORE sorting
     DEGHOST_POST : boolean := false;    -- perform intra-partition ghost cancellation AFTER sorting
@@ -129,8 +129,8 @@ begin
     generic map (
       DISABLE_PEAKING => DISABLE_PEAKING,
       WIDTH           => PRT_WIDTH,
-      MUX_FACTOR      => PAT_UNIT_REUSE,
-      DEADTIME        => DEADTIME
+      MUX_FACTOR      => PAT_UNIT_REUSE
+      --DEADTIME        => DEADTIME
       )
     port map (
       clock => clock,
@@ -264,6 +264,12 @@ begin
   process (clock) is
   begin
     if (rising_edge(clock)) then
+    
+--      report "I AM A PARTITION, LY THRESH IS: " severity note;
+--      for i in 0 to 16 loop
+--        report "PATTERN ID "&integer'image(i)&"LAYER THRESHOLD IS "&integer'image(to_integer(unsigned(ly_thresh(i)))) severity note;
+      
+--      end loop;
 
       dav_o <= dav_postghost;
 

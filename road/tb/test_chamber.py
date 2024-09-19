@@ -21,33 +21,33 @@ from tb_common import (get_max_span_from_dut, get_segments_from_dut,
 
 @cocotb.test() # type: ignore
 async def chamber_test_ff(dut, nloops=20):
-    await chamber_test(dut, "FF", nloops)
+   await chamber_test(dut, "FF", nloops)
 
 @cocotb.test() # type: ignore
 async def chamber_test_5a(dut, nloops=20):
-    await chamber_test(dut, "5A", nloops)
+   await chamber_test(dut, "5A", nloops)
 
 @cocotb.test() # type: ignore
 async def chamber_test_walking1(dut, nloops=191):
-    await chamber_test(dut, "WALKING1", nloops)
+   await chamber_test(dut, "WALKING1", nloops)
 
 @cocotb.test() # type: ignore
 async def chamber_test_walkingf(dut, nloops=192):
-    await chamber_test(dut, "WALKINGF", nloops)
+   await chamber_test(dut, "WALKINGF", nloops)
 
 @cocotb.test() # type: ignore
 async def chamber_test_xprt(dut, nloops=100):
-    await chamber_test(dut, "XPRT", nloops)
+   await chamber_test(dut, "XPRT", nloops)
 
 @cocotb.test() # type: ignore
 async def chamber_test_segs(dut, nloops=100):
-    await chamber_test(dut, "SEGMENTS", nloops)
+   await chamber_test(dut, "SEGMENTS", nloops)
 
 @cocotb.test() # type: ignore
 async def chamber_test_random(dut, nloops=100):
     await chamber_test(dut, "RANDOM", nloops)
 
-async def chamber_test(dut, test, nloops=512, verbose=False):
+async def chamber_test(dut, test, nloops=512, verbose=True):
 
     '''
     Test the chamber.vhd module
@@ -67,10 +67,10 @@ async def chamber_test(dut, test, nloops=512, verbose=False):
     config.x_prt_en = dut.X_PRT_EN.value
     config.en_non_pointing = dut.EN_NON_POINTING.value
     config.max_span = get_max_span_from_dut(dut)
-    config.width = dut.partition_gen[0].partition_inst.pat_unit_mux_inst.WIDTH.value
-    config.deghost_pre = dut.partition_gen[0].partition_inst.DEGHOST_PRE.value
-    config.deghost_post = dut.partition_gen[0].partition_inst.DEGHOST_POST.value
-    config.group_width = dut.partition_gen[0].partition_inst.S0_WIDTH.value
+    config.width = dut.partition_gen[0].partition_gen_real.partition_inst.pat_unit_mux_inst.WIDTH.value
+    config.deghost_pre = dut.partition_gen[0].partition_gen_real.partition_inst.DEGHOST_PRE.value
+    config.deghost_post = dut.partition_gen[0].partition_gen_real.partition_inst.DEGHOST_POST.value
+    config.group_width = dut.partition_gen[0].partition_gen_real.partition_inst.S0_WIDTH.value
     config.num_outputs= dut.NUM_SEGMENTS.value
     config.ly_thresh = [7, 7, 7, 7, 7, 7, 7, 7, 7, 7, 5, 5, 4, 4, 4, 4, 4]
     config.cross_part_seg_width = 0 # set to zero to disable until implmented in fw
@@ -209,7 +209,6 @@ async def chamber_test(dut, test, nloops=512, verbose=False):
 
             queue.append(chamber_data)
             dut.sbits_i.value = chamber_data
-
             loop += 1
 
         # pop old data on dav_o
@@ -291,7 +290,8 @@ def test_chamber():
         os.path.join(rtl_dir, "chamber_pulse_extension.vhd"),
         os.path.join(rtl_dir, "chamber.vhd")]
 
-    parameters = {"PULSE_EXTEND": 0, "DEADTIME": 0, "DISABLE_PEAKING": True}
+    #parameters = {"PULSE_EXTEND": 1, "DEADTIME": 0, "DISABLE_PEAKING": True}
+    parameters = {"DISABLE_PEAKING": True}
 
     os.environ["SIM"] = "questa"
     #os.environ["COCOTB_RESULTS_FILE"] = f"../log/{module}.xml"

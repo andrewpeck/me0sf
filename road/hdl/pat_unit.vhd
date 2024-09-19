@@ -217,21 +217,6 @@ begin
 
       dav_o <= priority_dav;
 
---      if (best.id = 11 or best.id = 12) then
---        increase_thresh := "001";
---      else
---        increase_thresh := "000";
---      end if;
-
---      if (best.id >= 11 and best.lc >= (unsigned(ly_thresh) + unsigned(increase_thresh)) ) then
---        pat_o.lc <= best.lc;
---        pat_o.id <= best.id;
---      else
---        pat_o <= zero(pat_o);
---      end if;
---report "FW id is: " & integer'image(to_integer(best.id)) severity note;
---report "FW threshold is: " & integer'image(to_integer(unsigned(ly_thresh(to_integer(best.id))))) severity note;
-
       if (best.lc >= unsigned(ly_thresh(to_integer(best.id)))) then
         pat_o.lc <= best.lc;
         pat_o.id <= best.id;
