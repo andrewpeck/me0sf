@@ -136,6 +136,15 @@ def analysis(root_dat, hits, bx, bx_list, cross_part, verbose, pu, num_or):
     num_signal_seg_per_chamber_per_event_nlayers_eta6 = ROOT.TH1F("num_signal_seg_per_chamber_per_event_nlayers_eta6", "num_signal_seg_per_chamber_per_event_nlayers_eta6",6,0.5,6.5)
     num_signal_seg_per_chamber_per_event_nlayers_eta7 = ROOT.TH1F("num_signal_seg_per_chamber_per_event_nlayers_eta7", "num_signal_seg_per_chamber_per_event_nlayers_eta7",6,0.5,6.5)
     num_signal_seg_per_chamber_per_event_nlayers_eta8 = ROOT.TH1F("num_signal_seg_per_chamber_per_event_nlayers_eta8", "num_signal_seg_per_chamber_per_event_nlayers_eta8",6,0.5,6.5)
+    num_signal_seg_per_chamber_per_event_bending_pt = ROOT.TH2F("num_signal_seg_per_chamber_per_event_bending_pt", "num_signal_seg_per_chamber_per_event_bending_pt",40,-2,2,50,0,50)
+    num_signal_seg_per_chamber_per_event_bending_pt_eta1 = ROOT.TH2F("num_signal_seg_per_chamber_per_event_bending_pt_eta1", "num_signal_seg_per_chamber_per_event_bending_pt_eta1",40,-2,2,50,0,50)
+    num_signal_seg_per_chamber_per_event_bending_pt_eta2 = ROOT.TH2F("num_signal_seg_per_chamber_per_event_bending_pt_eta2", "num_signal_seg_per_chamber_per_event_bending_pt_eta2",40,-2,2,50,0,50)
+    num_signal_seg_per_chamber_per_event_bending_pt_eta3 = ROOT.TH2F("num_signal_seg_per_chamber_per_event_bending_pt_eta3", "num_signal_seg_per_chamber_per_event_bending_pt_eta3",40,-2,2,50,0,50)
+    num_signal_seg_per_chamber_per_event_bending_pt_eta4 = ROOT.TH2F("num_signal_seg_per_chamber_per_event_bending_pt_eta4", "num_signal_seg_per_chamber_per_event_bending_pt_eta4",40,-2,2,50,0,50)
+    num_signal_seg_per_chamber_per_event_bending_pt_eta5 = ROOT.TH2F("num_signal_seg_per_chamber_per_event_bending_pt_eta5", "num_signal_seg_per_chamber_per_event_bending_pt_eta5",40,-2,2,50,0,50)
+    num_signal_seg_per_chamber_per_event_bending_pt_eta6 = ROOT.TH2F("num_signal_seg_per_chamber_per_event_bending_pt_eta6", "num_signal_seg_per_chamber_per_event_bending_pt_eta6",40,-2,2,50,0,50)
+    num_signal_seg_per_chamber_per_event_bending_pt_eta7 = ROOT.TH2F("num_signal_seg_per_chamber_per_event_bending_pt_eta7", "num_signal_seg_per_chamber_per_event_bending_pt_eta7",40,-2,2,50,0,50)
+    num_signal_seg_per_chamber_per_event_bending_pt_eta8 = ROOT.TH2F("num_signal_seg_per_chamber_per_event_bending_pt_eta8", "num_signal_seg_per_chamber_per_event_bending_pt_eta8",40,-2,2,50,0,50)
 
     # defining histograms for offline vs online
     bins_bending_purity = [-4.0, -3.0, -2.5, -2.0, -1.8, -1.6, -1.4, -1.2, -1.0, -0.9, -0.8, -0.7, -0.6, -0.5, -0.4, -0.3, -0.2, -0.1, -0.05, 0.0, 0.05, 0.1, 0.2, 0.3, 0.4, 0.5, 0.6, 0.7, 0.8, 0.9, 1.0, 1.2, 1.4, 1.6, 1.8, 2.0, 2.5, 3.0, 4.0]
@@ -868,6 +877,24 @@ def analysis(root_dat, hits, bx, bx_list, cross_part, verbose, pu, num_or):
                             num_signal_seg_per_chamber_per_event_nlayers_eta7.Fill(online_lc)
                         elif (online_eta_partition+1) == 8:
                             num_signal_seg_per_chamber_per_event_nlayers_eta8.Fill(online_lc)
+
+                        num_signal_seg_per_chamber_per_event_bending_pt.Fill(online_bending_angle, st_pt)
+                        if (online_eta_partition+1) == 1:
+                            num_signal_seg_per_chamber_per_event_bending_pt_eta1.Fill(online_bending_angle, st_pt)
+                        elif (online_eta_partition+1) == 2:
+                            num_signal_seg_per_chamber_per_event_bending_pt_eta2.Fill(online_bending_angle, st_pt)
+                        elif (online_eta_partition+1) == 3:
+                            num_signal_seg_per_chamber_per_event_bending_pt_eta3.Fill(online_bending_angle, st_pt)
+                        elif (online_eta_partition+1) == 4:
+                            num_signal_seg_per_chamber_per_event_bending_pt_eta4.Fill(online_bending_angle, st_pt)
+                        elif (online_eta_partition+1) == 5:
+                            num_signal_seg_per_chamber_per_event_bending_pt_eta5.Fill(online_bending_angle, st_pt)
+                        elif (online_eta_partition+1) == 6:
+                            num_signal_seg_per_chamber_per_event_bending_pt_eta6.Fill(online_bending_angle, st_pt)
+                        elif (online_eta_partition+1) == 7:
+                            num_signal_seg_per_chamber_per_event_bending_pt_eta7.Fill(online_bending_angle, st_pt)
+                        elif (online_eta_partition+1) == 8:
+                            num_signal_seg_per_chamber_per_event_bending_pt_eta8.Fill(online_bending_angle, st_pt)
 
                         n_st_effi_passed += 1
                         st_effi_mres.Fill(st_bending_angle - online_bending_angle)
@@ -3216,6 +3243,96 @@ def analysis(root_dat, hits, bx, bx_list, cross_part, verbose, pu, num_or):
     num_signal_seg_per_chamber_per_event_nlayers16.Write()
     num_signal_seg_per_chamber_per_event_nlayers17.Write()
 
+    c13i = ROOT.TCanvas('', '', 800, 650)
+    c13i.SetGrid()
+    c13i.DrawFrame(-2, 0, 2, 50, ";Bending Angle (sbits/layer);pT (GeV)")
+    num_signal_seg_per_chamber_per_event_bending_pt.Scale(1/(36.0*n_total_events))
+    num_signal_seg_per_chamber_per_event_bending_pt.Draw("same COLZ")
+    latex.DrawLatex(0.9, 0.91,plot_text1)
+    latex.DrawLatex(0.42, 0.91,plot_text2)
+    c13i.Print("num_signal_seg_per_chamber_per_event_bending_pt_%s_bx%s_crosspart_%s_or%d.pdf"%(hits, bx, cross_part, num_or))
+    num_signal_seg_per_chamber_per_event_bending_pt.Write()
+
+    c13i_eta1 = ROOT.TCanvas('', '', 800, 650)
+    c13i_eta1.SetGrid()
+    c13i_eta1.DrawFrame(-2, 0, 2, 50, ";Bending Angle (sbits/layer);pT (GeV)")
+    num_signal_seg_per_chamber_per_event_bending_pt_eta1.Scale(1/(36.0*n_total_events))
+    num_signal_seg_per_chamber_per_event_bending_pt_eta1.Draw("same COLZ")
+    latex.DrawLatex(0.9, 0.91,plot_text1)
+    latex.DrawLatex(0.42, 0.91,plot_text2)
+    c13i_eta1.Print("num_signal_seg_per_chamber_per_event_bending_pt_eta1_%s_bx%s_crosspart_%s_or%d.pdf"%(hits, bx, cross_part, num_or))
+    num_signal_seg_per_chamber_per_event_bending_pt_eta1.Write()
+
+    c13i_eta2 = ROOT.TCanvas('', '', 800, 650)
+    c13i_eta2.SetGrid()
+    c13i_eta2.DrawFrame(-2, 0, 2, 50, ";Bending Angle (sbits/layer);pT (GeV)")
+    num_signal_seg_per_chamber_per_event_bending_pt_eta2.Scale(1/(36.0*n_total_events))
+    num_signal_seg_per_chamber_per_event_bending_pt_eta2.Draw("same COLZ")
+    latex.DrawLatex(0.9, 0.91,plot_text1)
+    latex.DrawLatex(0.42, 0.91,plot_text2)
+    c13i_eta2.Print("num_signal_seg_per_chamber_per_event_bending_pt_eta2_%s_bx%s_crosspart_%s_or%d.pdf"%(hits, bx, cross_part, num_or))
+    num_signal_seg_per_chamber_per_event_bending_pt_eta2.Write()
+
+    c13i_eta3 = ROOT.TCanvas('', '', 800, 650)
+    c13i_eta3.SetGrid()
+    c13i_eta3.DrawFrame(-2, 0, 2, 50, ";Bending Angle (sbits/layer);pT (GeV)")
+    num_signal_seg_per_chamber_per_event_bending_pt_eta3.Scale(1/(36.0*n_total_events))
+    num_signal_seg_per_chamber_per_event_bending_pt_eta3.Draw("same COLZ")
+    latex.DrawLatex(0.9, 0.91,plot_text1)
+    latex.DrawLatex(0.42, 0.91,plot_text2)
+    c13i_eta3.Print("num_signal_seg_per_chamber_per_event_bending_pt_eta3_%s_bx%s_crosspart_%s_or%d.pdf"%(hits, bx, cross_part, num_or))
+    num_signal_seg_per_chamber_per_event_bending_pt_eta3.Write()
+
+    c13i_eta4 = ROOT.TCanvas('', '', 800, 650)
+    c13i_eta4.SetGrid()
+    c13i_eta4.DrawFrame(-2, 0, 2, 50, ";Bending Angle (sbits/layer);pT (GeV)")
+    num_signal_seg_per_chamber_per_event_bending_pt_eta4.Scale(1/(36.0*n_total_events))
+    num_signal_seg_per_chamber_per_event_bending_pt_eta4.Draw("same COLZ")
+    latex.DrawLatex(0.9, 0.91,plot_text1)
+    latex.DrawLatex(0.42, 0.91,plot_text2)
+    c13i_eta4.Print("num_signal_seg_per_chamber_per_event_bending_pt_eta4_%s_bx%s_crosspart_%s_or%d.pdf"%(hits, bx, cross_part, num_or))
+    num_signal_seg_per_chamber_per_event_bending_pt_eta4.Write()
+
+    c13i_eta5 = ROOT.TCanvas('', '', 800, 650)
+    c13i_eta5.SetGrid()
+    c13i_eta5.DrawFrame(-2, 0, 2, 50, ";Bending Angle (sbits/layer);pT (GeV)")
+    num_signal_seg_per_chamber_per_event_bending_pt_eta5.Scale(1/(36.0*n_total_events))
+    num_signal_seg_per_chamber_per_event_bending_pt_eta5.Draw("same COLZ")
+    latex.DrawLatex(0.9, 0.91,plot_text1)
+    latex.DrawLatex(0.42, 0.91,plot_text2)
+    c13i_eta5.Print("num_signal_seg_per_chamber_per_event_bending_pt_eta5_%s_bx%s_crosspart_%s_or%d.pdf"%(hits, bx, cross_part, num_or))
+    num_signal_seg_per_chamber_per_event_bending_pt_eta5.Write()
+
+    c13i_eta6 = ROOT.TCanvas('', '', 800, 650)
+    c13i_eta6.SetGrid()
+    c13i_eta6.DrawFrame(-2, 0, 2, 50, ";Bending Angle (sbits/layer);pT (GeV)")
+    num_signal_seg_per_chamber_per_event_bending_pt_eta6.Scale(1/(36.0*n_total_events))
+    num_signal_seg_per_chamber_per_event_bending_pt_eta6.Draw("same COLZ")
+    latex.DrawLatex(0.9, 0.91,plot_text1)
+    latex.DrawLatex(0.42, 0.91,plot_text2)
+    c13i_eta6.Print("num_signal_seg_per_chamber_per_event_bending_pt_eta6_%s_bx%s_crosspart_%s_or%d.pdf"%(hits, bx, cross_part, num_or))
+    num_signal_seg_per_chamber_per_event_bending_pt_eta6.Write()
+
+    c13i_eta7 = ROOT.TCanvas('', '', 800, 650)
+    c13i_eta7.SetGrid()
+    c13i_eta7.DrawFrame(-2, 0, 2, 50, ";Bending Angle (sbits/layer);pT (GeV)")
+    num_signal_seg_per_chamber_per_event_bending_pt_eta7.Scale(1/(36.0*n_total_events))
+    num_signal_seg_per_chamber_per_event_bending_pt_eta7.Draw("same COLZ")
+    latex.DrawLatex(0.9, 0.91,plot_text1)
+    latex.DrawLatex(0.42, 0.91,plot_text2)
+    c13i_eta7.Print("num_signal_seg_per_chamber_per_event_bending_pt_eta7_%s_bx%s_crosspart_%s_or%d.pdf"%(hits, bx, cross_part, num_or))
+    num_signal_seg_per_chamber_per_event_bending_pt_eta7.Write()
+
+    c13i_eta8 = ROOT.TCanvas('', '', 800, 650)
+    c13i_eta8.SetGrid()
+    c13i_eta8.DrawFrame(-2, 0, 2, 50, ";Bending Angle (sbits/layer);pT (GeV)")
+    num_signal_seg_per_chamber_per_event_bending_pt_eta8.Scale(1/(36.0*n_total_events))
+    num_signal_seg_per_chamber_per_event_bending_pt_eta8.Draw("same COLZ")
+    latex.DrawLatex(0.9, 0.91,plot_text1)
+    latex.DrawLatex(0.42, 0.91,plot_text2)
+    c13i_eta8.Print("num_signal_seg_per_chamber_per_event_bending_pt_eta8_%s_bx%s_crosspart_%s_or%d.pdf"%(hits, bx, cross_part, num_or))
+    num_signal_seg_per_chamber_per_event_bending_pt_eta8.Write()
+    
     cg = ROOT.TCanvas('', '', 800, 650)
     cg.SetGrid()
     cg.DrawFrame(-2, 0, 2, 50, ";Bending Angle (sbits/layer);pT (GeV)")
