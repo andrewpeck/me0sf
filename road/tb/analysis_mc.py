@@ -922,6 +922,7 @@ def analysis(root_dat, hits, bx, bx_list, cross_part, verbose, pu, num_or):
                 online_substrip = seg.substrip+seg.strip
                 online_bending_angle = seg.bend_ang
                 online_id = seg.id
+                online_lc = seg.lc
                 st_purity_total_eta.Fill(online_eta_partition+1)
                 st_purity_total_bending.Fill(online_bending_angle)
                 st_purity_total_id.Fill(online_id)
