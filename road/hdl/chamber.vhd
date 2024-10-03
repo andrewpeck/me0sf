@@ -57,7 +57,7 @@ entity chamber is
     clock             : in  std_logic;                     -- MUST BE 320MHZ
     clock40           : in  std_logic;                     -- MUST BE  40MHZ
 
-    ly_thresh         : in  ly_thresh_t; -- Layer threshold, 0 to 6
+    ly_thresh_i         : in  ly_thresh_t; -- Layer threshold, 0 to 6
 
     dav_i             : in  std_logic;
     dav_o             : out std_logic;
@@ -66,8 +66,8 @@ entity chamber is
     dav_o_phase       : out natural range 0 to 7;
     -- synthesis translate_on
 
-    --sbits_i           : in  chamber_t;
-    --vfat_pretrigger_o : out std_logic_vector (23 downto 0);
+    sbits_i           : in  chamber_t;
+    vfat_pretrigger_o : out std_logic_vector (23 downto 0);
     segments_o        : out segment_list_t (NUM_SEGMENTS-1 downto 0)
     );
     
@@ -83,15 +83,15 @@ architecture behavioral of chamber is
   --Used for testing, delete later. Allows to set all inputs to 0 and leave them hanging,
   --since there are not enough real I/O pins to use chamber as a top level entity.--
   --------------------------------------------------------------------------------
-  signal sbits_i : chamber_t;
-  attribute dont_touch : string;
-  attribute dont_touch of sbits_i : signal is "true";
+--  signal sbits_i : chamber_t;
+--  attribute dont_touch : string;
+--  attribute dont_touch of sbits_i : signal is "true";
   
-  constant std_zeroed : std_logic_vector(192*6-1 downto 0) := (others => '0');
-  constant partition_zeroed : partition_t := convert(std_zeroed, sbits_i(0));
+--  constant std_zeroed : std_logic_vector(192*6-1 downto 0) := (others => '0');
+--  constant partition_zeroed : partition_t := convert(std_zeroed, sbits_i(0));
   
-  signal vfat_pretrigger_o : std_logic_vector(23 downto 0);
-  attribute dont_touch of vfat_pretrigger_o : signal is "true";
+--  signal vfat_pretrigger_o : std_logic_vector(23 downto 0);
+--  attribute dont_touch of vfat_pretrigger_o : signal is "true";
   --------------------------------------------------------------------------------
 
   constant NUM_PARTITIONS : integer := 8;
@@ -119,6 +119,8 @@ architecture behavioral of chamber is
   -- use a CEIL here so that 15/2 -> 8 instead of 7..
   -- otherwise the highest partition is dropped
   constant NUM_FINDERS_DIV2 : integer := integer(ceil(real(NUM_FINDERS)/2.0));
+  
+  constant MIN_LY_THRESH : natural := 4;
 
   --------------------------------------------------------------------------------
   -- Extension
@@ -165,9 +167,27 @@ architecture behavioral of chamber is
   --------------------------------------------------------------------------------
   -- Layer Thresholding
   --------------------------------------------------------------------------------
+  signal ly_thresh_strict_full : ly_thresh_t;
+  signal ly_thresh_compressed : ly_thresh_compressed_t;
+  signal ly_thresh_strict_compressed : ly_thresh_compressed_t;
   
-  signal ly_thresh_strict : ly_thresh_t;
+  --Function to save on bits required to represent layer hits. Instead of a real layer count
+  --such as 4, changes the threshold to 1, with the understanding this is the value above
+  --the minimum threshold.
+  function compress_ly_count (ly_thresh : ly_thresh_t)
+    return ly_thresh_compressed_t is
+    variable ly_thresh_compressed : ly_thresh_compressed_t;
+    variable ly_thresh_compressed_full : std_logic_vector(2 downto 0);
+  begin
+    for i in 0 to NUM_PATTERNS-1 loop
+      ly_thresh_compressed_full := std_logic_vector(unsigned(ly_thresh(i)) - MIN_LY_THRESH);
+      ly_thresh_compressed(i) := ly_thresh_compressed_full(1 downto 0);
+    end loop;
+    return ly_thresh_compressed;
+  end;
   
+  --Function to increase all thresholds by 1, to a maximum of 5. Values already greater
+  --than 5 remain unchanged.
   function increase_ly_thresh (ly_thresh : ly_thresh_t)
     return ly_thresh_t is
     variable ly_thresh_strict : ly_thresh_t;
@@ -184,12 +204,14 @@ architecture behavioral of chamber is
 
 begin
 
-  ly_thresh_strict <= increase_ly_thresh(ly_thresh) when X_PRT_EN else ly_thresh;
+  ly_thresh_strict_full <= increase_ly_thresh(ly_thresh_i) when X_PRT_EN else ly_thresh_i;
+  ly_thresh_compressed <= compress_ly_count(ly_thresh_i);
+  ly_thresh_strict_compressed <= compress_ly_count(ly_thresh_strict_full);
 
 --set all sbits to 0, only for development, remove later
-  g_set_zero: for i in 0 to 7 generate
-    sbits_i(i) <= partition_zeroed;
-  end generate;
+--  g_set_zero: for i in 0 to 7 generate
+--    sbits_i(i) <= partition_zeroed;
+--  end generate;
 
   assert S1_REUSE = 1 or S1_REUSE = 2 or S1_REUSE = 4
     report "Only allowed values for s1 reuse are 1,2, and 4"
@@ -290,7 +312,7 @@ begin
 
           partition_num => I,
 
-          ly_thresh  => ly_thresh,
+          ly_thresh  => ly_thresh_compressed,
 
           -- primary layer
           partition_i => partition_or_reg,
@@ -319,7 +341,7 @@ begin
 
         partition_num => I,
 
-        ly_thresh  => ly_thresh_strict,
+        ly_thresh  => ly_thresh_strict_compressed,
 
         -- primary layer
         partition_i => partition_or_reg,
@@ -333,6 +355,16 @@ begin
     end generate;
     
   end generate;
+  
+--  process (clock) begin
+--    if (rising_edge(clock)) then
+--      for I in all_segs'range loop
+--        if (all_segs(I).id > 0) then
+--          report "I am a chamber. There is a segment centered at strip "&integer'image(to_integer(unsigned(all_segs(I).strip)))&". It is in partition "&integer'image(to_integer(unsigned(all_segs(I).partition)));
+--        end if;
+--      end loop;
+--    end if;
+--  end process;
 
   --------------------------------------------------------------------------------
   -- Pretrigger

@@ -47,7 +47,7 @@ entity pat_unit is
     dav_i : in  std_logic;
     dav_o : out std_logic;
 
-    ly_thresh : in ly_thresh_t;
+    ly_thresh : in ly_thresh_compressed_t;
 
     ly0 : in std_logic_vector (LY0_SPAN-1 downto 0);
     ly1 : in std_logic_vector (LY1_SPAN-1 downto 0);
@@ -211,14 +211,15 @@ begin
   --------------------------------------------------------------------------------
 
   process (clock) is
-  --variable increase_thresh : std_logic_vector (2 downto 0) := "000";
   begin
     if (rising_edge(clock)) then
 
       dav_o <= priority_dav;
 
-      if (best.lc >= unsigned(ly_thresh(to_integer(best.id)))) then
-        pat_o.lc <= best.lc;
+      if (best.lc > unsigned(ly_thresh(to_integer(best.id)))) then
+        --pat_o.lc <= unsigned('0'&std_logic_vector(best.lc)) + 3;
+        --pat_o.lc <= unsigned('0'&std_logic_vector(best.lc));
+        pat_o.lc <= unsigned(std_logic_vector(best.lc));
         pat_o.id <= best.id;
       else
         pat_o <= zero(pat_o);

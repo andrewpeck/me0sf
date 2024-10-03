@@ -9,7 +9,7 @@ use work.patterns.all;
 
 entity deghost is
   generic(
-    WIDTH        : positive := 191;
+    WIDTH        : positive := 192;
     GROUP_WIDTH  : natural  := 0;
     EDGE_DIST    : natural  := 2;
     CHECK_IDS    : boolean  := false;
@@ -37,14 +37,14 @@ begin
   process (clock) is
   begin
     if (rising_edge(clock)) then
-
       dav_o <= dav_i;
+      
 
       for I in segments_i'range loop
 
         segments_o(I) <= segments_i(I);
 
-        if not (GROUP_WIDTH > 0 and not at_edge(I, GROUP_WIDTH, EDGE_DIST)) then
+        if (GROUP_WIDTH > 0 and at_edge(I, GROUP_WIDTH, EDGE_DIST)) then
 
           -- if we aren't at the rightmost edge of the chamber (strip 191),
           -- then check +1 to the right

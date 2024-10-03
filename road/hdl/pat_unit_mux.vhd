@@ -58,7 +58,7 @@ entity pat_unit_mux is
 
     clock : in std_logic;
 
-    ly_thresh : in ly_thresh_t;
+    ly_thresh : in ly_thresh_compressed_t;
 
     dav_i : in  std_logic;
     dav_o : out std_logic := '0';
@@ -249,6 +249,7 @@ begin
         strips_demux(I*MUX_FACTOR+patterns_mux_phase).id    <= patterns_mux(I).id;
         strips_demux(I*MUX_FACTOR+patterns_mux_phase).lc    <= patterns_mux(I).lc;
         strips_demux(I*MUX_FACTOR+patterns_mux_phase).strip <= to_unsigned(I*MUX_FACTOR+patterns_mux_phase, STRIP_BITS);
+        
       end loop;
 
       -- copy the unfolded outputs to be stable for a 25 ns clock period since

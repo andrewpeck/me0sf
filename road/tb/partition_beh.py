@@ -110,6 +110,15 @@ def process_partition(partition_data : List[int],
 
     segments = pat_mux(partition_data, partition=partition, config=config)
 
+        
+    # if (partition == 1):
+    #     print("I am partition "+str(partition)+". Printing segments before deghosting...")
+    #     for seg in segments:
+    #         if (seg.id > 0):
+    #             print(seg)
+
+
+
     if (config.deghost_pre):
         segments = cancel_edges(segments=segments,
                                 edge_distance=config.edge_distance,

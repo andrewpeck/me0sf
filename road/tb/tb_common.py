@@ -13,7 +13,7 @@ def setup(dut, max_span=37):
     calculate_global_layer_mask(get_patlist_from_dut(dut), max_span)
 
     # set layer count threshold
-    dut.ly_thresh.value = [7, 7, 7, 7, 7, 7, 7, 7, 7, 7, 5, 5, 4, 4, 4, 4, 4]
+    dut.ly_thresh_i.value = [7, 7, 7, 7, 7, 7, 7, 7, 7, 7, 5, 5, 4, 4, 4, 4, 4]
     # start the clock
     c = Clock(dut.clock, 12, "ns")
     cocotb.start_soon(c.start())

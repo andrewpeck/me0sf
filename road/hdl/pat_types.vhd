@@ -58,7 +58,7 @@ package pat_types is
    attribute w of HC_BITS : constant is 32;
 
    -- LC_BITS: number of bits to count layers hit
-   constant LC_BITS : integer := 3;
+   constant LC_BITS : integer := 2;
    attribute w of LC_BITS : constant is 32;
 
    -- PID_BITS: number of bits to cnt the pids

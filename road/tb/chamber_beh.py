@@ -15,7 +15,7 @@ def cross_partition_cancellation(segments : List[List[Segment]],
                                  cross_part_seg_width : int) -> List[List[Segment]]:
 
     for i in range(1,15,2):
-
+        
         for (l,seg) in enumerate(segments[i]):
             if seg.id == 0:
                 continue
@@ -118,6 +118,8 @@ def process_chamber(chamber_data : List[List[int]], config : Config):
     else:
         with multiprocessing.pool.Pool() as pool:
             segments = pool.starmap(process_partition, datazip)
+
+    segments = list(segments)
 
     # print("Outputs from process partition (raw)")
     # for prt in segments:

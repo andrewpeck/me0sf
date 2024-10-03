@@ -55,7 +55,7 @@ entity partition is
     dav_o_phase : out natural range 0 to 7 := 0;
     -- synthesis translate_on
 
-    ly_thresh : in ly_thresh_t;
+    ly_thresh : in ly_thresh_compressed_t;
 
     --------------------------------------------------------------------------------
     -- Inputs
@@ -264,7 +264,6 @@ begin
   process (clock) is
   begin
     if (rising_edge(clock)) then
-
       dav_o <= dav_postghost;
 
       for I in segments_o'range loop
@@ -273,6 +272,13 @@ begin
         segments_o(I).strip     <= segments_postghost(I).strip;
         segments_o(I).partition <= to_unsigned(partition_num, 4);
       end loop;
+      
+      -- test function to print segments in partition, delete later
+--      for I in segments_deghost'range loop
+--        if (segments_deghost(I).id > 0) then
+--          report "I am partition"&integer'image(partition_num)&". There is a segment centered at strip "&integer'image(to_integer(unsigned(segments_deghos(I).strip)));
+--        end if;
+--      end loop;
 
     end if;
   end process;
