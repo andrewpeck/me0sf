@@ -229,24 +229,19 @@ def pat_unit(data,
     # (7) apply a layer threshold
     if (partition % 2 != 0):
         ly_thresh += 1
-    if (best.id <= 12):
+    #if (best.id <= 12): # for PU 140
+    if (best.id <= 16): # for PU 200
         ly_thresh += 1
-    if (partition >= 5): # for PU 200
+    if (partition >= 13): # for PU 200
         ly_thresh += 1
-    if (partition >=13):
-        ly_thresh = 6 # for PU 200
-    else:
-        ly_thresh = min(ly_thresh, 5)
+    ly_thresh = min(ly_thresh, 5)
 
     if (best.lc < ly_thresh):
         best.reset()
 
     # (8) remove very wide segments
-    if (best.id <= 14):
+    if (best.id <= 10):
         best.reset()
-    if (partition >= 9): # for PU 200
-        if (best.id <= 16):
-            best.reset()
 
     # (9) remove segments with large clusters for wide segments - ONLY NEEDED FOR PU200
     cluster_size_max_limits = [3, 6, 9, 12, 15]

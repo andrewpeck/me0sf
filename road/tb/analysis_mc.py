@@ -542,6 +542,13 @@ def analysis(root_dat, hits, bx, bx_list, cross_part, verbose, pu, num_or):
                 seg.fit(config.max_span)
                 if seg.mse is not None and seg.mse >= mse_th:
                     seg.id = 0
+
+                if abs(seg.bend_ang) > 1: # for PU 200
+                    seg.id = 0
+                if seg.partition >= 9: # for PU 200
+                    if abs(seg.bend_ang) > 0.5: # for PU 200
+                        seg.id = 0
+
                 if seg.id == 0:
                     continue
                 #mse_collections.append(seg.mse)
