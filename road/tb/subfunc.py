@@ -8,7 +8,8 @@ LAYER_MASK = None
 
 class Config:
     skip_centroids : bool = False
-    ly_thresh : int = 4
+    ly_thresh_patid : list[int] = [7, 7, 7, 7, 7, 7, 7, 7, 7, 7, 5, 5, 4, 4, 4, 4, 4]
+    ly_thresh_eta : list[int] = [4, 5, 4, 5, 4, 5, 4, 5, 4, 5, 4, 5, 4, 5, 4]
     max_span : int = 37
     width : int = 192
     deghost_pre : bool = True
@@ -78,6 +79,7 @@ class Segment:
         self.lc = 0
         self.id = 0
         self.update_quality()
+        return self
 
     def update_quality(self):
         """ create sortable number to compare segments"""

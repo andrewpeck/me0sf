@@ -115,7 +115,8 @@ def calculate_hits(data):
 def pat_unit(data,
              bx_data,
              strip : int = 0,
-             ly_thresh : int = 4,
+             ly_thresh_patid : list[int] = [7, 7, 7, 7, 7, 7, 7, 7, 7, 7, 5, 5, 4, 4, 4, 4, 4],
+             ly_thresh_eta : list[int] = [4, 5, 4, 5, 4, 5, 4, 5, 4, 5, 4, 5, 4, 5, 4],
              partition : int = -1,
              input_max_span : int = 37,
              num_or : int = 2,
@@ -127,9 +128,8 @@ def pat_unit(data,
     # for robustness concern, other codes might use PATLIST, so we kept the default PATLIST in subfunc
     # however, this could cause inconsistent issue, becareful! OR find a way to modify PATLIST
     global LAYER_MASK
-
-    if LAYER_MASK is None:
-
+    
+    if LAYER_MASK is None: 
         factor = num_or / 2
 
         pat_straight = patdef_t(17, create_pat_ly(-0.4 / factor, 0.4 / factor))
@@ -171,6 +171,7 @@ def pat_unit(data,
 
         # first make the PATLIST appropriate
         calculate_global_layer_mask(dynamic_patlist, input_max_span)
+        
 
     """
     takes in sample data for each layer and returns best segment
@@ -227,23 +228,15 @@ def pat_unit(data,
     #print(best.bx)
     
     # (7) apply a layer threshold
-    if (partition % 2 != 0):
-        ly_thresh += 1
-    #if (best.id <= 12): # for PU 140
-    if (best.id <= 16): # for PU 200
-        ly_thresh += 1
-    if (partition >= 13): # for PU 200
-        ly_thresh += 1
-    ly_thresh = min(ly_thresh, 5)
-
-    if (best.lc < ly_thresh):
+    ly_thresh_final = max(ly_thresh_patid[best.id], ly_thresh_eta[partition]) 
+    if (best.lc < ly_thresh_final):
         best.reset()
 
     # (8) remove very wide segments
     if (best.id <= 10):
         best.reset()
 
-    # (9) remove segments with large clusters for wide segments - ONLY NEEDED FOR PU200
+    # (9) remove segments with large clusters for wide segments - ONLY NEEDED FOR PU200 - NOT USED AT THE MOEMENT
     cluster_size_max_limits = [3, 6, 9, 12, 15]
     n_hits_max_limits = [3, 6, 9, 12, 15]
     cluster_size_counts = calculate_cluster_size(data)
@@ -286,6 +279,9 @@ def pat_unit(data,
     #    if (best.lc - n_layers_large_hits[1]) < 3:
     #        best.reset()
 
+    #print("id is: " + str(best.id))
+    #print("threshold is: " + str(ly_thresh[best.id]))
+    
     best.partition=partition
 
     # debug output
@@ -318,14 +314,21 @@ def pat_unit(data,
 ################################################################################
 
 def test_pat_unit():
-    assert pat_unit(strip=0, partition=0, ly_thresh=4, data=[0b1000000000000000000, 0b1000000000000000000, 0b1000000000000000000, 0b1000000000000000000, 0b1000000000000000000, 0b1000000000000000000]).id == 19
-    assert pat_unit(strip=0, partition=0, ly_thresh=4, data=[0b1000000000000000000, 0b1000000000000000000, 0b1000000000000000000, 0b1000000000000000000, 0b1000000000000000000, 0b1000000000000000000]).lc == 6
-    assert pat_unit(strip=0, partition=0, ly_thresh=4, data=[0b100000000000000000, 0b100000000000000000, 0b100000000000000000, 0b100000000000000000, 0b100000000000000000, 0b100000000000000000]).id == 19
-    assert pat_unit(strip=0, partition=0, ly_thresh=4, data=[0b100000000000000000, 0b100000000000000000, 0b100000000000000000, 0b100000000000000000, 0b100000000000000000, 0b100000000000000000]).lc == 6
-    assert pat_unit(strip=0, partition=0, ly_thresh=4, data=[0b100000000000000000, 0b1000000000000000000, 0b10000000000000000000, 0b1000000000000000000, 0b100000000000000000000, 0b100000000000000000000] ).id == 18
-    assert pat_unit(strip=0, partition=0, ly_thresh=4, data=[0b100000000000000000, 0b1000000000000000000, 0b10000000000000000000, 0b1000000000000000000, 0b100000000000000000000, 0b100000000000000000000] ).lc == 5
-    assert pat_unit(strip=0, partition=0, ly_thresh=4, data=[0b100000000000000000, 0b100000000000000000000, 0b100000000000000000000, 0b100000000000000000000, 0b100000000000000000000, 0b100000000000000000000] ).id == 0
-    assert pat_unit(strip=0, partition=0, ly_thresh=4, data=[0b100000000000000000, 0b100000000000000000000, 0b100000000000000000000, 0b100000000000000000000, 0b100000000000000000000, 0b100000000000000000000] ).lc == 0
+#changed ly_thresh to list form (used to be flat integer). haven't tested these functions yet, the pattern id's are outdated
+    assert pat_unit(strip=0, partition=0, ly_thresh=[7, 7, 7, 7, 7, 7, 7, 7, 7, 7, 5, 5, 4, 4, 4, 4, 4], data=[0b1000000000000000000, 0b1000000000000000000, 0b1000000000000000000, 0b1000000000000000000, 0b1000000000000000000, 0b1000000000000000000]).id == 19
+    assert pat_unit(strip=0, partition=0, ly_thresh=[7, 7, 7, 7, 7, 7, 7, 7, 7, 7, 5, 5, 4, 4, 4, 4, 4], data=[0b1000000000000000000, 0b1000000000000000000, 0b1000000000000000000, 0b1000000000000000000, 0b1000000000000000000, 0b1000000000000000000]).lc == 6
+    assert pat_unit(strip=0, partition=0, ly_thresh=[7, 7, 7, 7, 7, 7, 7, 7, 7, 7, 5, 5, 4, 4, 4, 4, 4]
+, data=[0b100000000000000000, 0b100000000000000000, 0b100000000000000000, 0b100000000000000000, 0b100000000000000000, 0b100000000000000000]).id == 19
+    assert pat_unit(strip=0, partition=0, ly_thresh=[7, 7, 7, 7, 7, 7, 7, 7, 7, 7, 5, 5, 4, 4, 4, 4, 4]
+, data=[0b100000000000000000, 0b100000000000000000, 0b100000000000000000, 0b100000000000000000, 0b100000000000000000, 0b100000000000000000]).lc == 6
+    assert pat_unit(strip=0, partition=0, ly_thresh=[7, 7, 7, 7, 7, 7, 7, 7, 7, 7, 5, 5, 4, 4, 4, 4, 4]
+, data=[0b100000000000000000, 0b1000000000000000000, 0b10000000000000000000, 0b1000000000000000000, 0b100000000000000000000, 0b100000000000000000000] ).id == 18
+    assert pat_unit(strip=0, partition=0, ly_thresh=[7, 7, 7, 7, 7, 7, 7, 7, 7, 7, 5, 5, 4, 4, 4, 4, 4]
+, data=[0b100000000000000000, 0b1000000000000000000, 0b10000000000000000000, 0b1000000000000000000, 0b100000000000000000000, 0b100000000000000000000] ).lc == 5
+    assert pat_unit(strip=0, partition=0, ly_thresh=[7, 7, 7, 7, 7, 7, 7, 7, 7, 7, 5, 5, 4, 4, 4, 4, 4]
+, data=[0b100000000000000000, 0b100000000000000000000, 0b100000000000000000000, 0b100000000000000000000, 0b100000000000000000000, 0b100000000000000000000] ).id == 0
+    assert pat_unit(strip=0, partition=0, ly_thresh=[7, 7, 7, 7, 7, 7, 7, 7, 7, 7, 5, 5, 4, 4, 4, 4, 4]
+, data=[0b100000000000000000, 0b100000000000000000000, 0b100000000000000000000, 0b100000000000000000000, 0b100000000000000000000, 0b100000000000000000000] ).lc == 0
 
 def test_get_ly_mask():
     """ test function for get_ly_mask """

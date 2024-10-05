@@ -536,19 +536,32 @@ def analysis(root_dat, hits, bx, bx_list, cross_part, verbose, pu, num_or):
             num_or_to_span = {2:37, 4:19, 8:11, 16:7}
             config.max_span = num_or_to_span[num_or]
             config.num_or = num_or
+
+            if pu == "140":
+                config.ly_thresh_patid : list[int] = [7, 7, 7, 7, 7, 7, 7, 7, 7, 7, 5, 5, 4, 4, 4, 4, 4]
+                if config.x_prt_en:
+                    config.ly_thresh_eta : list[int] = [4, 5, 4, 5, 4, 5, 4, 5, 4, 5, 4, 5, 4, 5, 4]
+                else:
+                    config.ly_thresh_eta : list[int] = [4, 4, 4, 4, 4, 4, 4, 4]
+            elif pu == "200":
+                config.ly_thresh_patid : list[int] = [7, 7, 7, 7, 7, 7, 7, 7, 7, 7, 5, 5, 5, 5, 5, 5, 4]
+                if config.x_prt_en:
+                    config.ly_thresh_eta : list[int] = [4, 5, 4, 5, 4, 5, 4, 5, 4, 5, 4, 5, 4, 5, 5]
+                else:
+                    config.ly_thresh_eta : list[int] = [4, 4, 4, 4, 4, 4, 4, 5]
+
             seglist = process_chamber(data, config, chamber_bx_data)
             seglist_final = []
             for seg in seglist:
                 seg.fit(config.max_span)
                 if seg.mse is not None and seg.mse >= mse_th:
                     seg.id = 0
-
-                if abs(seg.bend_ang) > 1: # for PU 200
-                    seg.id = 0
-                if seg.partition >= 9: # for PU 200
-                    if abs(seg.bend_ang) > 0.5: # for PU 200
+                if pu == "200":
+                    if abs(seg.bend_ang) > 1: 
                         seg.id = 0
-
+                    if seg.partition >= 9: 
+                        if abs(seg.bend_ang) > 0.5: 
+                            seg.id = 0
                 if seg.id == 0:
                     continue
                 #mse_collections.append(seg.mse)

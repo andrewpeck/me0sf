@@ -44,7 +44,8 @@ def pat_mux(partition_data, partition, config : Config, partition_bx_data):
     # todo : after extracting window the span is 37 or smaller
     fn = lambda strip : pat_unit(data = extract_data_window(partition_data, strip, config.max_span),
                                  bx_data = extract_bx_data_window(partition_bx_data, strip, config.max_span),
-                                 ly_thresh = config.ly_thresh,
+                                 ly_thresh_patid = config.ly_thresh_patid,
+                                 ly_thresh_eta = config.ly_thresh_eta,
                                  strip = strip,
                                  partition = partition, 
                                  input_max_span = config.max_span,
@@ -71,7 +72,7 @@ def test_pat_mux():
     data = [0b1, 0b1, 0b1, 0b1, 0b1, 0b1]
 
     config = Config()
-    config.ly_thresh=6
+    config.ly_thresh=[7, 7, 7, 7, 7, 7, 7, 7, 7, 7, 5, 5, 4, 4, 4, 4, 4]
     config.max_span=37
 
     mux = pat_mux(data, partition=0, config=config)

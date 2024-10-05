@@ -3,7 +3,8 @@ import functools
 import multiprocessing.pool
 import operator
 import os
-from itertools import repeat, starmap
+from copy import deepcopy
+from itertools import repeat, cycle, starmap
 from typing import List
 
 from partition_beh import process_partition
@@ -14,7 +15,7 @@ def cross_partition_cancellation(segments : List[List[Segment]],
                                  cross_part_seg_width : int) -> List[List[Segment]]:
 
     for i in range(1,15,2):
-
+        
         for (l,seg) in enumerate(segments[i]):
             if seg.id == 0:
                 continue
@@ -103,8 +104,16 @@ def process_chamber(chamber_data : List[List[int]], config : Config, chamber_bx_
     else:
 
         data = chamber_data
-
+        
     datazip  = zip(data, range(len(data)), repeat(config), processed_chamber_bx_data)
+
+    #If x_prt is enabled, perform strict thresholding on x-partitions
+    #strict_config = deepcopy(config)
+    #if (config.x_prt_en):
+    #    for i, thresh in enumerate(strict_config.ly_thresh):           
+    #        if (thresh < 5):
+    #            strict_config.ly_thresh[i] += 1 
+    #datazip  = zip(data, range(len(data)), cycle((config, strict_config)))
 
     # for some reason multi-processing fails with questasim, generating an error
     # such as:
@@ -119,6 +128,8 @@ def process_chamber(chamber_data : List[List[int]], config : Config, chamber_bx_
     else:
         with multiprocessing.pool.Pool() as pool:
             segments = pool.starmap(process_partition, datazip)
+
+    segments = list(segments)
 
     # print("Outputs from process partition (raw)")
     # for prt in segments:
@@ -169,7 +180,7 @@ def test_chamber_beh():
     config.deghost_post = False
     config.group_width = 8
     config.num_outputs= 4
-    config.ly_thresh = 4
+    config.ly_thresh = [7, 7, 7, 7, 7, 7, 7, 7, 7, 7, 5, 5, 4, 4, 4, 4, 4]
     config.cross_part_seg_width = 0
     config.skip_centroids = True
 
