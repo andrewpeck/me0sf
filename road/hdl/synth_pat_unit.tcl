@@ -1,4 +1,4 @@
-set UTIL_MAX 378
+set UTIL_MAX 359
 
 read_vhdl -vhdl2008 -library work {
     pat_types.vhd
@@ -29,5 +29,5 @@ change the limit. This warning is here to avoid unanticipated increases."
 
 if {$util < $UTIL_MAX} {
     error "Congratulations on improving the pat_unit utilization to $util. You should update
-the max limit to make sure there are no regressions in the future."
+the max limit in hdl/synth_pat_unit.tcl to make sure there are no regressions in the future."
 }

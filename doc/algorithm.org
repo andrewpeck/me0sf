@@ -1,10 +1,13 @@
 #+TITLE: ME0 Segment Finding
 #+HTML_HEAD: <link href="theme.css" rel="stylesheet">
 #+OPTIONS: tex:t author:nil
+#+DEST: ohm:public_html/notes/
 #+OPTIONS: num:nil
 #+STARTUP: latexpreview
 #+STARTUP: fninline
 #+STARTUP: fnadjust
+
+
 
 * Segment Finding Algorithm
 
@@ -12,11 +15,7 @@ Each ME0 chamber is composed of 6 layers of GEMs.
 
 Each layer is composed of 8 partitions in eta, each of which is split into 384 strips in phi.
 
-: [ put an image of the chamber here ]
-
-The trigger output of a GEM chamber is a binary readout called an "S-bit", which
-is the OR of two adjacent strips. The resolution of a ME0 chamber in the trigger
-path is therefore 1/2 of the fundamental resolution, or 8x192 strips per layer.
+The trigger output of a GEM chamber is a binary readout called an "S-bit", which is the OR of two adjacent strips. The resolution of a ME0 chamber in the trigger path is therefore 1/2 of the fundamental resolution, or 8x192 strips per layer.
 
 In summary, and ME0 Chamber has:
  - 6 layers
@@ -24,22 +23,50 @@ In summary, and ME0 Chamber has:
  - each eta partition has 384 strips (192 s-bits)
  - 1536 sbits / layer / bx  * 6 layers = 9216 sbits / bx
 
+The orientation of the chamber relative to the interaction point is:
+
+#+begin_example
+                 ly0 -> ly5  .
+            prt0 |‾‾‾‾‾‾‾‾|.
+            prt1 |      . |
+            prt2 |   .    |
+            prt3 |.       |
+            prt4 |        |
+            prt5 |        |
+           .prt6 |        |
+        .   prt7 |________|
+     .
+--IP-----------------------
+#+end_example
+
+#+begin_example
+\ 16        8         0  /    prt0
+ \ 17       9        1  /     prt1
+  \ 18      10      2  /      prt2
+   \ 19     11     3  /       prt3
+    \ 20    12    4  /        prt4
+     \ 21   13   5  /         prt5
+      \ 22  14  6  /          prt6
+       \ 23 15 7  /           prt7
+
+     strip 191 --> 0
+#+end_example
+
 The basic goal of segment finding in ME0 is that we want to:
+
 1. Identify multi-layer segments
 2. Do some refined angular/position calculation using multi-layer hit data
 
-In a somewhat abstract sense, the mechanism to do this segment identification is
-along the lines of:
+The mechanism to do this segment identification is broadly something like:
 
-1) Need to identify segments locally
+1) Identify segments locally
    + Create "segment candidates" with some sortable key field
    + Done in parallel, many times
-2) Need to sort segment candidates into a smaller number of output candidates
-   + Development of sorting machinery can be somewhat decoupled from the exact
-     segment identification mechanism
-3) Perform some post-processing on the segment candidates to produce a refined
-   measurement (some kind of fit)
+2) Sort segment candidates into a smaller number of output candidates
+   + Development of sorting machinery can be somewhat decoupled from the exact segment identification mechanism
+3) Perform some post-processing on the segment candidates to produce a refined measurement (some kind of fit)
 
+#+attr_html: :width 500px
 #+begin_src dot :file dataflow.svg :results value
 digraph {
   graph [fontname = "Roboto Mono"];
@@ -47,10 +74,11 @@ digraph {
   edge [fontname = "Roboto Mono"];
   node [shape=box]
   rankdir=LR
-  "Input\nSbits" -> "Centroid\nFiltering" -> "Segment\nIdentification" -> "Sorting" -> "Fitting" -> "Output"
+  "Input\nSbits" -> "Segment\nIdentification" -> "Sorting" -> "Fitting" -> "Output"
 }
 #+end_src
 
+#+ATTR_HTML: :style max-width:100%;width:${1024px}
 #+RESULTS:
 [[file:dataflow.svg]]
 
@@ -78,45 +106,63 @@ ly5 ------------------+------------------------------------///------------------
 #+end_example
 
 Our goal in segment finding is to:
+
  1. Identify segments
  2. Measure the position of the segment
  3. Measure the bending angle of the segment
 
 *** Cross-partition data sharing
-How to look at eta ??
-*** Chamber staggering
-Are the chambers staggered? if so we need de-staggering
-*** Alignment ??
-Are alignment corrections required?
-*** Centroid Identification
-GEM hits are read out as individual strips, and produce clusters with a fairly large distribution.
 
+Approximately 10% efficiency loss is incurred if the segment finder only looks for tracks within single partitions. To capture the segments which cross from partition to partition, the segment finder does cross-partition data sharing.
+
+This is done by creating what we have dubbed 'virtual partitions'.
+
+There are eight 'true' partitions in the chamber. Segment finders are instantiated for each of these eight partitions. In addition to this though, virtual partitions are formed that are the OR of some layers of one partition, and some from the neighbor.
+
+For example, the logic implemented in the firmware does the ORing as follows:
+
+#+begin_src
+partition_or(0) <=                  sbits(I/2 + 1)(0);
+partition_or(1) <=                  sbits(I/2 + 1)(1);
+partition_or(2) <= sbits(I/2)(2) or sbits(I/2 + 1)(2);
+partition_or(3) <= sbits(I/2)(3) or sbits(I/2 + 1)(3);
+partition_or(4) <= sbits(I/2)(4);
+partition_or(5) <= sbits(I/2)(5);
+#+end_src
+
+
+The partitions are numbered so that 0 == straight, 1 == angled, 2 == straight, 3 == angled, etc. This means that in the output segments there are 15 possible partitions, 8 of which are straight and 7 of which are angled. Even numbered partitions are straight, so the LSB of the partition word can be used as an angled flag.
+
+*** Chamber staggering
+
+Are the chambers staggered? if so we need de-staggering
+
+*** Alignment ??
+
+Are alignment corrections required?
+
+*** Centroid Identification :noexport:
+
+GEM hits are read out as individual strips, and produce clusters with a fairly large distribution.
 The center of this cluster corresponds to the center of the charge distribution.
 
-Because the road based pattern finder prefers straighter patterns (higher pT), performing pattern
-finding on the raw GEM hits produces a bias which truncates the outer edges of the clusters and
-incorrectly assigns narrower patterns than should be found.
+Because the road based pattern finder prefers straighter patterns (higher pT), performing pattern finding on the raw GEM hits produces a bias which truncates the outer edges of the clusters and incorrectly assigns narrower patterns than should be found.
 
-To prevent this, a first processing stage of the GEM data is to convert the clusters into individual
-strip hits. This is currently done using a simple average within a moving window.
+To prevent this, a first processing stage of the GEM data is to convert the clusters into individual strip hits. This is currently done using a simple average within a moving window.
 
 : to be described in detail....
 
-When the centroid lies between strips, this filtering stage leaves two strips on at once. This is
-taken into account in later processing stages.
+When the centroid lies between strips, this filtering stage leaves two strips on at once. This is taken into account in later processing stages.
 
 ** Segment Candidate Identification
 
 Centered around each strip is a pattern identification block called a "pattern unit".
 
-A pattern unit looks at a subset of the partition's data, and identifies segment
-candidates which are roughly centered around a given strip.
+A pattern unit looks at a subset of the partition's data, and identifies segment candidates which are roughly centered around a given strip.
 
-To minimize latency, each bunch crossing a number of independent pattern unit
-modules operate in parallel to find pattern candidates for each of the strips in the chamber.
+To minimize latency, each bunch crossing a number of independent pattern unit modules operate in parallel to find pattern candidates for each of the strips in the chamber.
 
-For example, in the following diagram we show the "window" that a pattern unit
-centered on strip #20 might look at:
+For example, in the following diagram we show the "window" that a pattern unit centered on strip #20 might look at:
 
 
 #+begin_example
@@ -132,9 +178,7 @@ ly5 --│-------------------+----------------│-------------------///----------
                        ^ track
 #+end_example
 
-Within a pattern unit we look only at the boxed area, and can consider looking
-at a slice of data ranging within +- some range (the range is determined from
-the width of the maximally wide pattern). Here we use +- 18 as an example.
+Within a pattern unit we look only at the boxed area, and can consider looking at a slice of data ranging within +- some range (the range is determined from the width of the maximally wide pattern). Here we use +- 18 as an example.
 
 #+begin_example
 ┌────────────────────────────────────┐
@@ -148,11 +192,9 @@ the width of the maximally wide pattern). Here we use +- 18 as an example.
 -18     <--       0      -->       18
 #+end_example
 
-Each pattern unit looks for patterns (or roads) which are centered around a given
-strip, at different bending angles.
+Each pattern unit looks for patterns (or roads) which are centered around a given strip, at different bending angles.
 
-For example, two patterns with different bending angles might look something
-like:
+For example, two patterns with different bending angles might look something like:
 
 - Pattern #14
 #+begin_example
@@ -175,8 +217,7 @@ ly4 ----xxxxxxxxx------------------------
 ly5 xxxxxxxxx----------------------------
 #+end_example
 
-If we were to overlay the above pattern #14 onto the data shown above, we would
-see this:
+If we were to overlay the above pattern #14 onto the data shown above, we would see this:
 
 #+begin_example
 ┌─────────────────────────────────────┐
@@ -190,8 +231,7 @@ see this:
 -18     <--       0       -->       18
 #+end_example
 
-In this case, we can see that 6 hits (designated by ~+~) fall within the pattern
-mask (designated by ~x~), so we say that for this pattern the layer count is 6.
+In this case, we can see that 6 hits (designated by ~+~) fall within the pattern mask (designated by ~x~), so we say that for this pattern the layer count is 6.
 
 The high layer count (6) is because this pattern is a good match for the actual data.
 
@@ -209,28 +249,30 @@ If instead we overlay pattern #1 on this data we see
 -18     <--       0       -->       18
 #+end_example
 
-In this case only one of the hits falls within the pattern mask, so the layer
-count is only 1. Following this example, we can use the layer count for each
-pattern as a metric for the quality of the pattern.
+In this case only one of the hits falls within the pattern mask, so the layer count is only 1. Following this example, we can use the layer count for each pattern as a metric for the quality of the pattern.
 
-For the entire collection of patterns in a pattern unit, a sorting tree looks
-through this collection of data and returns a single pattern which is determined
-to have the highest "quality".
+For the entire collection of patterns in a pattern unit, a sorting tree looks through this collection of data and returns a single pattern which is determined to have the highest "quality".
+
+*Hit count*: for sorting within a pattern unit, the simple metric of {layer count, id} was found to be inadequate due to a "narrowing" bias that was discovered by Jade. Because the pattern unit prefers higher pattern IDs (straighter patterns), the sorting mechanism will select the straightest possible pattern that still maintains the layer count, while discarding hits at the edges. To avoid throwing away this data biasing the pattern finder toward erroneously narrow patterns, a hit count was introduced.
+
+Sorting secondarily on the number of hits means that the pattern unit will not narrow patterns in a foolhardy attempt to increase the pattern ID.
+
+In implementing this in the firmware, however, a full 6 layer hit count was found to be /very/ costly in terms of resources. A simplified approach was taken that considers only outer layers, and a simplified code for counting the number of hits. For implementation details, refer to ~hit_count.vhd~.
 
 The sorting metric is:
+
 1. Choose the pattern with the highest layer count
-2. If multiple patterns have the same layer count, choose the one with the
-   highest pattern id (higher pattern IDs correspond to straighter patterns, or
-   higher momentum particles).
+2. If multiple patterns have the same layer count: choose the one with the highest hit count
+3. If multilpe patterns have the same layer count + hit count: choose the highest pattern id (higher pattern IDs correspond to straighter patterns, or higher momentum particles).
 
 The single pattern that is chosen for each pattern unit
-1. Layer count (the number of layers hit in the pattern)
-2. Pattern ID (a unique number representing the pattern; higher pattern IDs are
-   straighter)
-3. Collection of 6 centroids (describes the position of a hit within the pattern
-   mask)
 
-*** Centroid finding
+1. Layer count (the number of layers hit in the pattern)
+2. Pattern ID (a unique number representing the pattern; higher pattern IDs are straighter)
+
+*** Centroid finding :noexport:
+
+*NOTE: centroid finding was removed from the pattern unit due to extreme resource usage.*
 
 To minimize resource usage and keep acceptance high, the patterns are defined to
 be fairly wide. To avoid losing resolution in this wide patterns, however, along
@@ -284,30 +326,34 @@ python script, so the firmware is flexible to accomodate different algorithms
 for centroid finding.
 
 *** Edge Padding
+
 (Some pattern units run off the left and right edges of the chamber and need to
 be zero-padded)
+
+** Deadtime
+
+Deadtime is added to prevent pulse-extended strips from re-firing in time. It is a simple mechanism wherein each strip has a counter, and goes dead for a specified number of bunch crossings after firing.
+
 ** Ghost Cancellation
-(because of wide patterns, the same hits will produce multiple strips.. cancel
-off these neighboring "ghosts")
+
+Because of wide patterns, the same hits will produce multiple strips that trigger. A mechanism must cancel off these neighboring "ghosts" by selecting only the best segment in a group of neighboring strips.
+
+Ghost cancellation must also act between partitions, *but this is not yet implemented in the firmware*.
+
 ** Partition Pre-Sorting
 
-For each partition, every bunch crossing a collection of 192 segments is
-produced in the pattern units.
+For each partition, every bunch crossing a collection of 192 segments is produced in the pattern units.
 
-This will be later sent into "true" bitonic sorters, but to reduce the
-computational difficulty of the bitonic sorting stage, the segments are first
-passed through a crude sorting tree.
+This will be later sent into "true" bitonic sorters, but to reduce the computational difficulty of the bitonic sorting stage, the segments are first passed through a crude sorting tree.
 
-This takes advantage of the fact that generally we are less interested in
-multiple segments appearing in neighboring partitions, since they will often
-simply be ghosts of one another.
+This takes advantage of the fact that generally we are less interested in multiple segments appearing in neighboring partitions, since they will often simply be ghosts of one another.
 
-Thus, we restrict the chamber to only accept one segment for every N strips,
-reducing the # of segments that need to be sorted by a factor of N.
+Thus, we restrict the chamber to only accept one segment for every N strips, reducing the # of segments that need to be sorted by a factor of N.
 
 ** Chamber Segment Selection
-Choose from (8 partitions * 192/N segments) -> M segments, where N is the
-pre-sorting factor from the previous stage.
+
+Choose from (8 partitions * 192/N segments) -> M segments, where N is the pre-sorting factor from the previous stage.
+
 ** Centroid Coordinate Transformation
 
 /f/ (~pattern id~, ~6x centroids~) → 6x hit position
@@ -334,8 +380,7 @@ A standard linear fit follows a formula:
 
 To reduce the computational difficulty in an FPGA, we modify this formula in a few ways.
 
-To defer a division by n and continue more of the calculation in signed
-arithmetic (rather than fixed point), we instead calculate:
+To defer a division by n and continue more of the calculation in signed arithmetic (rather than fixed point), we instead calculate:
 
 \begin{align*}
   m =& \frac {\sum{}{}(x_i - \overline{X})(y_i-\overline{Y})}{\sum{}{} (x_i-\overline{X})^2} \\
@@ -344,11 +389,9 @@ arithmetic (rather than fixed point), we instead calculate:
     =& \frac {\sum{}{}(nx - \sum{}{}{x_{i}})(ny_i-\sum{}{}{y_i})} {\sum{}{} (nx_{i}-\sum{}{}x_{i})^2}
 \end{align*}
 
-To make this even simpler, we take advantage of the fact that the range of the
-divisor in the above equation is limited to a maximum value of 630.
+To make this even simpler, we take advantage of the fact that the range of the divisor in the above equation is limited to a maximum value of 630.
 
-This is because the ~x~ values represent the layer count, which is simply the set
-of layers hit (0, 1, 2, 3, 4, 5) where not all layers are necessarily hit.
+This is because the ~x~ values represent the layer count, which is simply the set of layers hit (0, 1, 2, 3, 4, 5) where not all layers are necessarily hit.
 
 The upper bound on this number then is just:
 
@@ -358,11 +401,7 @@ The upper bound on this number then is just:
 
 This was found by brute force exhausting the entire possibility of combinations.
 
-Since the divisor only has a small range of values possible, the division is
-re-written as a multiplication by the reciprocal of the number. All possible
-values of this are encoded in a lookup table as a fixed point value. This
-transforms a division into a fixed point multiplication, which is
-computationally much simpler.
+Since the divisor only has a small range of values possible, the division is re-written as a multiplication by the reciprocal of the number. All possible values of this are encoded in a lookup table as a fixed point value. This transforms a division into a fixed point multiplication, which is computationally much simpler.
 
 
 \[
@@ -372,9 +411,7 @@ computationally much simpler.
 \]
 
 
-With this, the slope is still expressed by the same formula as above, with a
-multiplication by a factor of 1/n (stored in a lookup table) used in place of a
-division by n.
+With this, the slope is still expressed by the same formula as above, with a multiplication by a factor of 1/n (stored in a lookup table) used in place of a division by n.
 
 \[
   b = \overline{Y} - m\overline{X} = \frac{\sum{}{}y_i}{n} - m \frac{\sum{}{}x_i}{n}
@@ -382,54 +419,39 @@ division by n.
   = (\sum{}{}y_i - m \sum{}{}x_i) \times reciprocal(n)
 \]
 
-This intercept (~b~) represents the intercept in a coordinate system where the
-layers are numbered (0 1 2 3 4 5) and so the intercept is the strip along the
-edge of the chamber (on the 0th layer).
+This intercept (~b~) represents the intercept in a coordinate system where the layers are numbered (0 1 2 3 4 5) and so the intercept is the strip along the edge of the chamber (on the 0th layer).
 
-To better represent the pattern and make the intercept in the center of the
-chamber, we do a simple coordinate transformation:
+To better represent the pattern and make the intercept in the center of the chamber, we do a simple coordinate transformation:
 
 \[
 strip = m \times 2.5 + b
 \]
 
-The number 2.5 is chosen so that the center of the chamber is at 0, with the
-layers at ±0.5, ±1.5, ±2.5. The output of the fit module is therefore the strip
-and slope centered in the midpoint of the chamber. Both numbers are output as
-fixed point numbers.
+The number 2.5 is chosen so that the center of the chamber is at 0, with the layers at ±0.5, ±1.5, ±2.5. The output of the fit module is therefore the strip and slope centered in the midpoint of the chamber. Both numbers are output as fixed point numbers.
 
 e.g., for the strip output,
- - the number is composed of an integer and decimal part. The integer part
-   represents the strip in integer units. Since the patterns are constructed
-   such that the tracks are /always/ centered around the midpoint of the pattern
-   unit, the integer part of this need only be a few bits to represent the
-   offset from center.
+ - the number is composed of an integer and decimal part. The integer part represents the strip in integer units. Since the patterns are constructed such that the tracks are /always/ centered around the midpoint of the pattern unit, the integer part of this need only be a few bits to represent the offset from center.
  - the fractional part is such that
    + fractional bit 0 = 1/2 strip
    + fractional bit 1 = 1/4 strip
    + fractional bit 2 = 1/8 strip
    + and so on..
 
-For the slope output, it is similarly represented in fixed point format, with
-units of strips/layer. A slope of 0 is a straight track, and a slope of 7 is
-extremely angled.
+For the slope output, it is similarly represented in fixed point format, with units of strips/layer. A slope of 0 is a straight track, and a slope of 7 is extremely angled.
 
-The fit operates in a relatively high resolution output by default, but the
-resolution can be truncated for sending upstream by simply truncating off
-fractional bits to achieve the desired bandwidth.
+The fit operates in a relatively high resolution output by default, but the resolution can be truncated for sending upstream by simply truncating off fractional bits to achieve the desired bandwidth.
 
-Studies are needed to determine the optional (and achievable) resolution from
-this fit.
+Studies are needed to determine the optional (and achievable) resolution from this fit.
 
 *** Quality of Fit
+
 how to calculate??
 
 *** Pipelined Multiplication
+
 Some steps of the fit (multiplications) are pipelined into multiple (2) clock cycles.
 
-The basic scheme of the pipelined multiplication is to split the numbers into
-most-significant and least-significant parts, and multiply the parts
-independently, summing their products at the end.
+The basic scheme of the pipelined multiplication is to split the numbers into most-significant and least-significant parts, and multiply the parts independently, summing their products at the end.
 
 e.g. consider the multiplication of two 16 bit numbers, A and B:
 
@@ -442,13 +464,10 @@ A \times B =& A[15:0] \times B[15:0]  \\
            =& (A_{HI} \cdot B_{HI} << 16) + (A_{HI} \cdot B_{LO} \cdot << 8) + (A_{LO} \cdot B_{HI} \cdot << 8) + (A_{LO} \cdot B_{LO}) \\
 \end{align*}
 
-So, we are able to split a 16x16 bit multiplication into two steps: (1) four 8x8
-bit multiplications w/ bitshifting (2) three additions. This allows us to
-pipeline the multiplication into two clock cycles and achieve timing at 320 MHz.
-Bitshifting is "free" in the FPGA (just zero padding) so this can easily meet
-timing.
+So, we are able to split a 16x16 bit multiplication into two steps: (1) four 8x8 bit multiplications w/ bitshifting (2) three additions. This allows us to pipeline the multiplication into two clock cycles and achieve timing at 320 MHz. Bitshifting is "free" in the FPGA (just zero padding) so this can easily meet timing.
 
 *** Reciprocal
+
 The lookup table for the reciprocal LUT is calculated through a simple python script:
 
 #+begin_src  python :results output
@@ -467,6 +486,7 @@ print("".join([
 #+end_src
 
 ** Post-Fit Coordinate Transformation
+
 Transform from local to global coordinates (this is just addition of strip + fit_offset)
 
 f (pat_unit_strip, fit_offset) -> strip
@@ -515,7 +535,7 @@ The resolution may be reduced later after further studies are done.
 
 *** Quality
 
-* Firmware Implementation
+* Firmware Implementation :noexport:
 ** Configurable Options
 *** Compile Time Options
 **** Pattern definitions
@@ -525,30 +545,46 @@ The resolution may be reduced later after further studies are done.
 *** Runtime Options
 **** Layer threshold
 **** Pattern enables
-** Firmware
-*** pat_unit.vhd
-*** pat_unit_mux.vhd
-*** partition.vhd
-*** segment_selector.vhd
-*** fit.vhd
+
 * Testbench
 
 The firmware is tested against a standalone Python emulator, using CocoTB as the
 test runner and Questasim (or modelsim, or Aldec Riviera) as the simulator.
 
-* Resource Utilization
-|         |  LUT |  FF | DSP |                                       |
-|---------+------+-----+-----+---------------------------------------|
-| Fitting | 1627 | 763 |   0 | Runs at 320MHz, can do 8x fits per bx |
+The test bench is based around a Python program that is meant to be a 1:1 identical implementation of the firwmare. The CI ensures that they are functionally compatible to the best extent possible, although some features are not (yet) fully implemented and tested, such as pulse extension and deadzoneing.
+
+The python program can be run in a stanalone way, is written in pure python, and has very minimal depedencies (it should require only built-in python packages). It is rather slow but uses multiprocessing for a fairly signficant speedup on a multi-core machine.
+
+The input to the top level function (~process_chamber~) is quite simple. It requires a 2D list of BigInts that specify the hits in the partition.
+
+e.g. an empty chamber is:
+
+#+begin_src python
+[[0 for _ in range(6)] for _ in range(8)]
+#+end_src
+
+Hits are simply bits in the BigInt, e.g. a hit on strip 10 is represented by ~1 << 10~.
+
+~process_chamber~ also takes in a ~Config~ struct that controls some of the configurable parameters of the segment finder.
+
+* Resourcever Utilization :noexport:
+
+04/05/2023
+
+| Pulse extension    | 40761 (5 LUTs / strip)  | Shrunk with more efficient implementation |
+| Dipartition sorter | 5888  (736 each)        |                                           |
+| Partition          | 382976 (23936 each)     |                                           |
+|                    | ~~> pat unit = 18780 ea |                                           |
+|                    | ~~> Deghost = 2645      |                                           |
+#+TBLFM: $2=23936*16
 
 * Presentations
 - https://docs.google.com/presentation/d/10K-16xrXGUYcb-aZzMEEbbvJrTAYdaBR/edit#slide=id.ga773dc3468_0_22
+- https://indico.cern.ch/event/1213272/contributions/5150612/attachments/2557258/4407451/ME0_segment_finding_simulation_GEM_Workshop.pdf
 * Source Code
 - Firmware: https://github.com/andrewpeck/me0sf/
 * Local Variables :noexport:
-# eval: (make-variable-buffer-local 'after-save-hook)
 # Local Variables:
-# eval: (add-hook 'after-save-hook #'org-html-export-to-html nil 'local)
-# eval: (add-hook 'after-save-hook (lambda () (start-process "copy-to-ohm" nil "rsync" "-av" (format "%s.html" (file-name-base)) "ohm:~/public_html/notes/"))) nil 'local)
-# eval: (add-hook 'after-save-hook (lambda () (mapcar (lambda (file) (start-process "copy-to-ohm" nil "rsync" "-av" file "ohm:~/public_html/notes/")) (file-expand-wildcards "*.svg" )) nil 'local))
+# eval: (make-variable-buffer-local 'after-save-hook)
+# eval: (add-hook 'after-save-hook #'org-publish-this-file) nil 'local)
 # End:

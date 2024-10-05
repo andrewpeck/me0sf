@@ -31,7 +31,7 @@ end chamber_pulse_extension;
 architecture behavioral of chamber_pulse_extension is
 
 begin
-
+  
 
   prt_gen : for I in 0 to 7 generate
     ly_gen : for J in 0 to 5 generate
@@ -45,6 +45,6 @@ begin
 
       end generate;
     end generate;
-  end generate;
+  end generate;  
 
 end behavioral;

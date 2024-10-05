@@ -13,8 +13,7 @@ def setup(dut, max_span=37):
     calculate_global_layer_mask(get_patlist_from_dut(dut), max_span)
 
     # set layer count threshold
-    dut.ly_thresh.value = 4
-
+    dut.ly_thresh_i.value = [7, 7, 7, 7, 7, 7, 7, 7, 7, 7, 5, 5, 4, 4, 4, 4, 4]
     # start the clock
     c = Clock(dut.clock, 12, "ns")
     cocotb.start_soon(c.start())
@@ -43,6 +42,38 @@ def get_segments_from_dut(dut):
 
     return segs
 
+async def measure_latency(dut, checkfn, setfn):
+
+    #--------------------------------------------------------------------------------
+    # Measure Latency
+    #--------------------------------------------------------------------------------
+
+    meas_latency=-1
+
+    # align to the dav input
+    await RisingEdge(dut.dav_i)
+    for _ in range(8):
+        await RisingEdge(dut.clock)
+
+    # turn on the input for 1 clock cycle, then turn off
+    setfn(dut, 1)
+    for _ in range(8):
+        await RisingEdge(dut.clock)
+    setfn(dut, 0)
+
+    # extract latency
+    for i in range(128):
+        await RisingEdge(dut.clock)
+        if checkfn():
+            meas_latency = i/8.0 + 3 # add magic number?? to account for the 1 bx latency to turn on and off above
+            print(f"Latency={i} clocks ({meas_latency} bx)")
+            break
+
+    assert meas_latency != -1, \
+        print("Couldn't measure pat_unit_mux latency. Never saw a pattern!")
+
+    return meas_latency
+
 
 def get_segment_from_pat_unit(dut):
     lc = int(dut.pat_o.lc.value)
@@ -55,8 +86,10 @@ async def generate_dav(dut):
     "Generates a dav signal every 8th clock cycle"
     while True:
         dut.dav_i.value = 1
+        #dut.clock40.value = 1
         await RisingEdge(dut.clock)
         dut.dav_i.value = 0
+        #dut.clock40.value = 0
         for _ in range(7):
             await RisingEdge(dut.clock)
 
@@ -70,9 +103,9 @@ async def monitor_dav(dut):
         assert dut.dav_o == 1
         await RisingEdge(dut.clock)
 
-        for _ in range(7):
+        for i in range(7):
             await RisingEdge(dut.clock)
-            assert dut.dav_o == 0
+            assert dut.dav_o == 0, print(f"dav=1 in cycle {i}")
 
         await RisingEdge(dut.clock)
         assert dut.dav_o == 1

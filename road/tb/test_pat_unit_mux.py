@@ -1,4 +1,4 @@
-# TODO: test the deadzone logic
+# TODO: test the peaking logic
 
 import os
 from math import ceil
@@ -68,7 +68,7 @@ async def pat_unit_mux_test(dut, NLOOPS=500, test="WALKING1"):
     config = Config()
     config.skip_centroids = True
     config.max_span=get_max_span_from_dut(dut)
-    config.ly_thresh=6
+    #config.ly_thresh=6
     config.width=dut.WIDTH.value
     dut.ly_thresh.value = config.ly_thresh
 
@@ -76,28 +76,20 @@ async def pat_unit_mux_test(dut, NLOOPS=500, test="WALKING1"):
     # Measure Latency
     #--------------------------------------------------------------------------------
 
-    meas_latency=-1
+    checkfn = lambda : dut.segments_o[0].lc.value.is_resolvable and \
+        dut.segments_o[0].lc.value.integer >= config.ly_thresh[dut.segments_o[0].id.value.integer]
 
-    # align to the dav input
-    await RisingEdge(dut.dav_i)
-    for _ in range(8):
-        await RisingEdge(dut.clock)
-    set_dut_inputs(dut, [1 for _ in range(6)])
+    def setfn(dut, x):
+        dut.ly0.value = x
+        dut.ly1.value = x
+        dut.ly2.value = x
+        dut.ly3.value = x
+        dut.ly4.value = x
+        dut.ly5.value = x
 
-    for i in range(128):
-        # extract latency
-        await RisingEdge(dut.clock)
-        if dut.segments_o[0].lc.value.is_resolvable and \
-           dut.segments_o[0].lc.value.integer > 0:
-            meas_latency = i/8.0
-            print(f"Latency={i} clocks ({meas_latency} bx)")
-            break
-
-    assert meas_latency != -1, print("Couldn't measure pat_unit_mux latency. Never saw a pattern!")
+    meas_latency = await measure_latency(dut, checkfn, setfn)
 
     LATENCY = ceil(meas_latency)
-
-    set_dut_inputs(dut, [0 for _ in range(6)])
 
     #--------------------------------------------------------------------------------
     # Setup a fixed latency queue
@@ -133,17 +125,22 @@ async def pat_unit_mux_test(dut, NLOOPS=500, test="WALKING1"):
             if test=="WALKING1":
                 new_data = [0x1 << (i % 192) for _ in range(6)]
             elif test=="5A":
-                if i % 2 == 0:
+                if i % 4 == 0:
                     new_data = [0x555555555555555555555555555555555555555555555555 for _ in range(6)]
-                else:
+                elif i % 4 == 2:
                     new_data = [0xaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaa for _ in range(6)]
+                else:
+                    new_data = [0 for _ in range(6)]
             elif test=="FF":
                 if i % 2 == 0:
                     new_data = [0xFFFFFFFFFFFFFFFFFFFFFFFFFFFFFFFFFFFFFFFFFFFFFFFF for _ in range(6)]
                 else:
-                    new_data = [0xaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaa for _ in range(6)]
+                    new_data = [0x000000000000000000000000000000000000000000000000 for _ in range(6)]
             elif test=="SEGMENTS":
-                new_data = datagen(n_segs=2, n_noise=10, max_span=config.width)
+                if i % 2 == 0:
+                    new_data = datagen(n_segs=2, n_noise=10, max_span=config.width)
+                else:
+                    new_data = [0 for _ in range(6)]
             else:
                 new_data = 0*[6]
                 raise Exception("Invalid test selected")
@@ -205,12 +202,12 @@ def test_pat_unit_mux():
         os.path.join(rtl_dir, "patterns.vhd"),
         os.path.join(rtl_dir, "pat_unit.vhd"),
         os.path.join(rtl_dir, "dav_to_phase.vhd"),
-        os.path.join(rtl_dir, "deadzone.vhd"),
         os.path.join(rtl_dir, "pat_unit_mux.vhd")]
 
     parameters = {}
     parameters["MUX_FACTOR"] = 8
     parameters["DEADTIME"]   = 0
+    parameters["DISABLE_PEAKING"] = True
 
     os.environ["SIM"] = "questa"
     #os.environ["COCOTB_RESULTS_FILE"] = f"../log/{module}.xml"

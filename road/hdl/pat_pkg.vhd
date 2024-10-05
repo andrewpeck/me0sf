@@ -30,8 +30,13 @@ package pat_pkg is
     return std_logic_vector;
 
   constant SELECTOR_LATENCY     : positive := 4;
+  
+  constant NUM_PATTERNS : integer := 17;
 
   type chamber_t is array(integer range 0 to 7) of partition_t;
+  
+  type ly_thresh_t is array(integer range 0 to NUM_PATTERNS-1) of std_logic_vector(2 downto 0);
+  type ly_thresh_compressed_t is array(integer range 0 to NUM_PATTERNS-1) of std_logic_vector(1 downto 0);
 
   --------------------------------------------------------------------------------
   -- Build Parameters
@@ -264,13 +269,13 @@ package body pat_pkg is
 
   -- unit test function to check that the sorting operators are working correctly
   procedure check_pattern_operators (nil : boolean) is
-    variable ply0 : segment_t := (lc => to_unsigned(0, LC_BITS), id => x"A", partition => (others => '0'), strip => (others => '0'));
-    variable ply1 : segment_t := (lc => to_unsigned(1, LC_BITS), id => x"9", partition => (others => '0'), strip => (others => '0'));
-    variable ply2 : segment_t := (lc => to_unsigned(2, LC_BITS), id => x"8", partition => (others => '0'), strip => (others => '0'));
+    variable ply0 : segment_t := (lc => to_unsigned(0, LC_BITS), id => to_unsigned(16#10#, PID_BITS), partition => (others => '0'), strip => (others => '0'));
+    variable ply1 : segment_t := (lc => to_unsigned(1, LC_BITS), id => to_unsigned(16#9#, PID_BITS), partition => (others => '0'), strip => (others => '0'));
+    variable ply2 : segment_t := (lc => to_unsigned(2, LC_BITS), id => to_unsigned(16#8#, PID_BITS), partition => (others => '0'), strip => (others => '0'));
 
-    variable pat0 : segment_t := (lc => to_unsigned(1, LC_BITS), id => x"0", partition => (others => '0'), strip => (others => '0'));
-    variable pat1 : segment_t := (lc => to_unsigned(1, LC_BITS), id => x"1", partition => (others => '0'), strip => (others => '0'));
-    variable pat2 : segment_t := (lc => to_unsigned(1, LC_BITS), id => x"2", partition => (others => '0'), strip => (others => '0'));
+    variable pat0 : segment_t := (lc => to_unsigned(1, LC_BITS), id => to_unsigned(16#0#, PID_BITS), partition => (others => '0'), strip => (others => '0'));
+    variable pat1 : segment_t := (lc => to_unsigned(1, LC_BITS), id => to_unsigned(16#1#, PID_BITS), partition => (others => '0'), strip => (others => '0'));
+    variable pat2 : segment_t := (lc => to_unsigned(1, LC_BITS), id => to_unsigned(16#2#, PID_BITS), partition => (others => '0'), strip => (others => '0'));
   begin
 
     -- > testing

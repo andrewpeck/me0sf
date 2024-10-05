@@ -32,7 +32,10 @@ use work.priority_encoder_pkg.all;
 
 entity pat_unit_mux is
   generic(
-    VERBOSE       : boolean := false;
+
+    VERBOSE : boolean := false;
+
+    DISABLE_PEAKING : boolean := false;
 
     LY0_SPAN : natural := get_max_span(patdef_array);
     LY1_SPAN : natural := get_max_span(patdef_array);
@@ -44,7 +47,7 @@ entity pat_unit_mux is
     PATLIST : patdef_array_t := patdef_array;
     WIDTH   : natural        := PRT_WIDTH;
 
-    DEADTIME : natural := 3;            -- deadtime in bx
+    --DEADTIME : natural := 3;            -- deadtime in bx
 
     -- Need padding for half the width of the pattern this is to handle the edges
     -- of the chamber where some virtual chamber of all zeroes exists... to be
@@ -55,7 +58,7 @@ entity pat_unit_mux is
 
     clock : in std_logic;
 
-    ly_thresh  : in std_logic_vector (2 downto 0);
+    ly_thresh : in ly_thresh_compressed_t;
 
     dav_i : in  std_logic;
     dav_o : out std_logic := '0';
@@ -72,7 +75,9 @@ entity pat_unit_mux is
     ly4 : in std_logic_vector (WIDTH-1 downto 0);
     ly5 : in std_logic_vector (WIDTH-1 downto 0);
 
-    segments_o : out pat_unit_mux_list_t (WIDTH-1 downto 0)
+    segments_o : out pat_unit_mux_list_t (WIDTH-1 downto 0);
+
+    trigger_o : out std_logic_vector (WIDTH-1 downto 0)
 
     );
 end pat_unit_mux;
@@ -103,19 +108,21 @@ architecture behavioral of pat_unit_mux is
   signal patterns_mux : pat_unit_list_t (NUM_SECTORS-1 downto 0);
 
   -- convert to strip type, appends the strip # to the format
-  signal strips_reg : pat_unit_mux_list_t (WIDTH-1 downto 0);
+  signal strips_demux : pat_unit_mux_list_t (WIDTH-1 downto 0);
 
   signal phase_i, patterns_mux_phase : natural range 0 to MUX_FACTOR-1;
 
-  attribute MAX_FANOUT : integer;
+  attribute MAX_FANOUT                       : integer;
   attribute MAX_FANOUT of patterns_mux_phase : signal is 128;
 
-  signal dav_reg : std_logic := '0';
+  signal dav_reg     : std_logic := '0';
+  signal dav_peaking : std_logic := '0';
+  signal dav_demux   : std_logic := '0';
 
   signal pat_unit_dav : std_logic_vector(NUM_SECTORS-1 downto 0);
 
-  signal dead : std_logic_vector (PRT_WIDTH-1 downto 0) := (others => '0');
-  signal trig : std_logic_vector (PRT_WIDTH-1 downto 0) := (others => '0');
+  signal segments      : pat_unit_mux_list_t (WIDTH-1 downto 0);
+  signal segments_last : pat_unit_mux_list_t (WIDTH-1 downto 0);
 
 begin
 
@@ -200,7 +207,7 @@ begin
 
         clock => clock,
 
-        ly_thresh  => ly_thresh,
+        ly_thresh => ly_thresh,
 
         dav_i => lyx_unit_dav,
         ly0   => ly0_unit,
@@ -230,57 +237,98 @@ begin
     if (rising_edge(clock)) then
 
       if (patterns_mux_phase = 0) then
-        dav_o <= '1';
+        dav_peaking <= '1';
+        dav_demux   <= '1';
       else
-        dav_o <= '0';
+        dav_peaking <= '0';
+        dav_demux   <= '0';
       end if;
 
       -- unfold the pattern unit multiplexer and assign the strip number
       for I in 0 to NUM_SECTORS-1 loop
-        strips_reg(I*MUX_FACTOR+patterns_mux_phase).id    <= patterns_mux(I).id;
-        strips_reg(I*MUX_FACTOR+patterns_mux_phase).lc    <= patterns_mux(I).lc;
-        strips_reg(I*MUX_FACTOR+patterns_mux_phase).strip <= to_unsigned(I*MUX_FACTOR+patterns_mux_phase, STRIP_BITS);
+        strips_demux(I*MUX_FACTOR+patterns_mux_phase).id    <= patterns_mux(I).id;
+        strips_demux(I*MUX_FACTOR+patterns_mux_phase).lc    <= patterns_mux(I).lc;
+        strips_demux(I*MUX_FACTOR+patterns_mux_phase).strip <= to_unsigned(I*MUX_FACTOR+patterns_mux_phase, STRIP_BITS);
+        
       end loop;
 
       -- copy the unfolded outputs to be stable for a 25 ns clock period since
       -- the unfolder changes every clock cycle
       if (patterns_mux_phase = 0) then
+        segments      <= strips_demux;
+        segments_last <= segments;
+      end if;
+
+      --------------------------------------------------------------------------------
+      -- Peak finding logic
+      --------------------------------------------------------------------------------
+      --
+      -- A problem that was quickly discovered in developing the segment finding
+      -- algorithms was that due to the poor timing resolution of the GEM
+      -- chamber, not all hits arrive in a single clock cycle.
+      --
+      -- To account for this, pulse stretching is used to make each S-bit hit
+      -- last for e.g. 3 clock cycles.
+      --
+      -- A problem in this approach though is that the pattern unit will fire on
+      -- the early hits, which e.g. may only have 4 layers, while the remaining
+      -- 2 layers can come in across the next two clock cycles.
+      --
+      -- To prevent this "early-firing" phenomena, a simple mechanism "peaking"
+      -- mechanism is used.
+      --
+      -- This works by buffering the found segments for a single clock cycle,
+      -- and waiting until a time bin where the quality of the found pattern
+      -- decreases, then doing a 1 clock cycle lookback and using the segments
+      -- found in the /previous/ clock cycle.
+      --
+      --
+      -- so for example say the hits are coming in out of time... with pulse
+      -- extension=3
+      --
+      -- bx N we have 4 layers
+      -- bx N+1 we have 6 layers
+      -- bx N+2 we have 6 layers
+      -- bx N + 3 we have 2 layers
+      --
+      -- we'd know from the transition of 6->2 layers that we gathered all of
+      -- the hits, so in this case we use BX N+2 as the actual segment
+      --
+      --
+      --                   ─────┬───┬───┬───┬─────────────────────────────────────────
+      -- segments               │ 5 │ 6 │ 5 │
+      --   lyc             ─────┴───┴───┴───┴─────────────────────────────────────────
+      --
+      --                   ─────────┬───┬───┬───┬─────────────────────────────────────
+      -- segments_last              │ 5 │ 6 │ 5 │
+      --   lyc             ─────────┴───┴───┴───┴─────────────────────────────────────
+      --
+      --                                ┌───┐
+      -- segments <        ─────────────┘   └─────────────────────────────────────────
+      -- segments_last
+      --
+      --                   ──────────────┬───┬────────────────────────────────────────
+      -- segments_o                      │ 6 │
+      --   lyc             ──────────────┴───┴────────────────────────────────────────
+      --
+      --------------------------------------------------------------------------------
+
+      if (dav_demux = '1') then
         for I in segments_o'range loop
-          if dead(I) = '1' then
-            segments_o(I) <= zero(segments_o(I));
+          if DISABLE_PEAKING or segments(I).lc < segments_last(I).lc then
+            segments_o(I) <= segments_last(I);
+            trigger_o(I)  <= '1';
           else
-            segments_o(I) <= strips_reg(I);
+            segments_o(I) <= zero(segments_o(I));
+            trigger_o(I)  <= '0';
           end if;
         end loop;
       end if;
 
-    end if;
+      dav_o <= dav_peaking;
+
+    end if;  -- rising_edge(clock)
+
   end process;
-
-  --------------------------------------------------------------------------------
-  -- Deadzoning
-  --------------------------------------------------------------------------------
-
-  process (segments_o) is
-  begin
-    for I in segments_o'range loop
-      if (valid(segments_o(I))) then
-        trig(I) <= '1';
-      else
-        trig(I) <= '0';
-      end if;
-    end loop;
-  end process;
-
-  deadzone_inst : entity work.deadzone
-    generic map (
-      WIDTH    => PRT_WIDTH,
-      DEADTIME => 8*DEADTIME -- multiply by 8 to be in BX units
-      )
-    port map (
-      clock  => clock,
-      trg_i  => trig,
-      dead_o => dead
-      );
 
 end behavioral;

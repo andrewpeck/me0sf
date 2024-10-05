@@ -1,6 +1,5 @@
 # Testbench for chamber.vhd
 # NOTES:
-#   - measure latency
 #   - verify selector latency parameter
 #   - add cross partition tester
 #   - check the outputs of the partitions before chamber sorting ?
@@ -18,87 +17,90 @@ from chamber_beh import process_chamber
 from datagen import datagen
 from subfunc import Config
 from tb_common import (get_max_span_from_dut, get_segments_from_dut,
-                       monitor_dav, setup)
+                       monitor_dav, setup, measure_latency)
 
+# @cocotb.test() # type: ignore
+# async def chamber_test_ff(dut, nloops=20):
+#    await chamber_test(dut, "FF", nloops)
+
+# @cocotb.test() # type: ignore
+# async def chamber_test_5a(dut, nloops=20):
+#    await chamber_test(dut, "5A", nloops)
+
+# @cocotb.test() # type: ignore
+# async def chamber_test_walking1(dut, nloops=191):
+#    await chamber_test(dut, "WALKING1", nloops)
+
+# @cocotb.test() # type: ignore
+# async def chamber_test_walkingf(dut, nloops=192):
+#    await chamber_test(dut, "WALKINGF", nloops)
+
+# @cocotb.test() # type: ignore
+# async def chamber_test_xprt(dut, nloops=100):
+#    await chamber_test(dut, "XPRT", nloops)
+
+# @cocotb.test() # type: ignore
+# async def chamber_test_segs(dut, nloops=100):
+#    await chamber_test(dut, "SEGMENTS", nloops)
+
+# @cocotb.test() # type: ignore
+# async def chamber_test_random(dut, nloops=100):
+#     await chamber_test(dut, "RANDOM", nloops)
+   
 @cocotb.test() # type: ignore
-async def chamber_test_ff(dut, nloops=20):
-    await chamber_test(dut, "FF", nloops)
+async def chamber_test_deghost(dut, nloops=20):
+   await chamber_test(dut, "DEGHOST", nloops)   
 
-@cocotb.test() # type: ignore
-async def chamber_test_5a(dut, nloops=20):
-    await chamber_test(dut, "5A", nloops)
-
-@cocotb.test() # type: ignore
-async def chamber_test_walking1(dut, nloops=191):
-    await chamber_test(dut, "WALKING1", nloops)
-
-@cocotb.test() # type: ignore
-async def chamber_test_walkingf(dut, nloops=192):
-    await chamber_test(dut, "WALKINGF", nloops)
-
-@cocotb.test() # type: ignore
-async def chamber_test_xprt(dut, nloops=100):
-    await chamber_test(dut, "XPRT", nloops)
-
-@cocotb.test() # type: ignore
-async def chamber_test_segs(dut, nloops=100):
-    await chamber_test(dut, "SEGMENTS", nloops)
-
-@cocotb.test() # type: ignore
-async def chamber_test_random(dut, nloops=100):
-    await chamber_test(dut, "RANDOM", nloops)
-
-async def chamber_test(dut, test, nloops=512, verbose=False):
+async def chamber_test(dut, test, nloops=512, verbose=True):
 
     '''
     Test the chamber.vhd module
     '''
-
     #random.seed(56) # chloe's favorite number
 
     # setup the dut and extract constants from it
+
     setup(dut)
 
     cocotb.start_soon(monitor_dav(dut))
 
     await RisingEdge(dut.clock)
-
+     
     config = Config()
 
     config.skip_centroids = True
     config.x_prt_en = dut.X_PRT_EN.value
     config.en_non_pointing = dut.EN_NON_POINTING.value
     config.max_span = get_max_span_from_dut(dut)
-    config.width = dut.partition_gen[0].partition_inst.pat_unit_mux_inst.WIDTH.value
-    config.deghost_pre = dut.partition_gen[0].partition_inst.DEGHOST_PRE.value
-    config.deghost_post = dut.partition_gen[0].partition_inst.DEGHOST_POST.value
-    config.group_width = dut.partition_gen[0].partition_inst.S0_WIDTH.value
+    config.width = dut.partition_gen[0].partition_gen_real.partition_inst.pat_unit_mux_inst.WIDTH.value
+    config.deghost_pre = dut.partition_gen[0].partition_gen_real.partition_inst.DEGHOST_PRE.value
+    config.deghost_post = dut.partition_gen[0].partition_gen_real.partition_inst.DEGHOST_POST.value
+    config.group_width = dut.partition_gen[0].partition_gen_real.partition_inst.S0_WIDTH.value
     config.num_outputs= dut.NUM_SEGMENTS.value
-    config.ly_thresh = 6
-    config.cross_part_seg_width = 0 # set to zero to disable until implmented in fw
+    config.ly_thresh = [7, 7, 7, 7, 7, 7, 7, 7, 7, 7, 5, 5, 4, 4, 4, 4, 4]
+    config.cross_part_seg_width = 1 # set to zero to disable until implmented in fw
 
     NUM_PARTITIONS = 8
     NULL = lambda : [[0 for _ in range(6)] for _ in range(8)]
     dut.sbits_i.value = NULL()
 
-    dut.ly_thresh.value = config.ly_thresh
+    dut.ly_thresh_i.value = config.ly_thresh
 
     # flush the bufers
     for _ in range(256):
         await RisingEdge(dut.clock)
 
     # measure latency by putting some s-bits on a strip and waiting to see the output
-    meas_latency=-1
-    for i in range(128):
-        dut.sbits_i.value = [[1 for _ in range(6)] for _ in range(NUM_PARTITIONS)]
-        await RisingEdge(dut.clock)
-        if dut.segments_o[0].lc.value.is_resolvable and \
-           dut.segments_o[0].lc.value.integer >= config.ly_thresh:
-            meas_latency = i/8.0
-            print(f"Latency={i} clocks ({meas_latency} bx)")
-            break
+    # subtract 3 to account for lc compression
+    checkfn = lambda : dut.segments_o[0].lc.value.is_resolvable and \
+        dut.segments_o[0].lc.value.integer >= config.ly_thresh[dut.segments_o[0].id.value.integer] - 3
 
-    LATENCY = ceil(meas_latency)
+    def setfn(dut, x):
+        dut.sbits_i.value = [[x for _ in range(6)] for _ in range(NUM_PARTITIONS)]
+
+    meas_latency = await measure_latency(dut, checkfn, setfn)
+
+    LATENCY = ceil(meas_latency)-1
 
     # flush the bufers
     dut.sbits_i.value = NULL()
@@ -207,12 +209,30 @@ async def chamber_test(dut, test, nloops=512, verbose=False):
                 #                 [0,0,0,0,0,0],
                 #                 [0,0,0,0,0,0],
                 #                 [0,0,0,0,0,0],]
+            elif test=="DEGHOST":
+
+                chamber_data = NULL()
+
+                #chamber_data[3] = [(2**192-1) & (2**184) for _ in range(6)]
+                #The following creates a ghost
+                # chamber_data[3][0] = (2**192-1) & (2**15)
+                # chamber_data[3][1] = (2**192-1) & (2**15)
+                # chamber_data[3][2] = (2**192-1) & (2**14)
+                # chamber_data[3][4] = (2**192-1) & (2**17)
+                # chamber_data[3][5] = (2**192-1) & (2**18)
+
+                chamber_data[1][0] = (2**192-1) & (2**10)
+                chamber_data[1][1] = (2**192-1) & (2**10)
+                chamber_data[0][2] = (2**192-1) & (2**10)
+                chamber_data[0][3] = (2**192-1) & (2**10)
+                chamber_data[0][4] = (2**192-1) & (2**12)
+                chamber_data[0][5] = (2**192-1) & (2**12)
+
             else:
                 chamber_data = NULL()
 
             queue.append(chamber_data)
             dut.sbits_i.value = chamber_data
-
             loop += 1
 
         # pop old data on dav_o
@@ -225,6 +245,12 @@ async def chamber_test(dut, test, nloops=512, verbose=False):
                                           config=config)
 
             fw_segments = get_segments_from_dut(dut)
+
+            #Add 3 to the FW segments' layer count, to account for LC compression
+            for segment in fw_segments:
+                if (segment.lc > 0):
+                    segment.lc += 3
+                    segment.update_quality()
 
             if verbose:
                 print(f'{loop=}')
@@ -287,7 +313,6 @@ def test_chamber():
         os.path.join(rtl_dir, "pat_unit.vhd"),
         os.path.join(rtl_dir, "fixed_delay.vhd"),
         os.path.join(rtl_dir, "dav_to_phase.vhd"),
-        os.path.join(rtl_dir, "deadzone.vhd"),
         os.path.join(rtl_dir, "pat_unit_mux.vhd"),
         os.path.join(rtl_dir, "deghost.vhd"),
         os.path.join(rtl_dir, "partition.vhd"),
@@ -295,17 +320,18 @@ def test_chamber():
         os.path.join(rtl_dir, "chamber_pulse_extension.vhd"),
         os.path.join(rtl_dir, "chamber.vhd")]
 
-    parameters = {"PULSE_EXTEND": 0, "DEADTIME": 0}
+    #parameters = {"PULSE_EXTEND": 1, "DEADTIME": 0, "DISABLE_PEAKING": True}
+    parameters = {"DISABLE_PEAKING": True}
 
     os.environ["SIM"] = "questa"
     #os.environ["COCOTB_RESULTS_FILE"] = f"../log/{module}.xml"
-
+    
     run(vhdl_sources=vhdl_sources,
         module=module,  # name of cocotb test module
         compile_args=["-2008"],
         toplevel="chamber",  # top level HDL
         toplevel_lang="vhdl",
-        sim_args=["-do", "set NumericStdNoWarnings 1;"],
+        sim_args=["-suppress", "14408", "-do", "set NumericStdNoWarnings 1;"],
         parameters=parameters,
         gui=0)
 

@@ -47,7 +47,7 @@ entity pat_unit is
     dav_i : in  std_logic;
     dav_o : out std_logic;
 
-    ly_thresh  : in std_logic_vector (2 downto 0);
+    ly_thresh : in ly_thresh_compressed_t;
 
     ly0 : in std_logic_vector (LY0_SPAN-1 downto 0);
     ly1 : in std_logic_vector (LY1_SPAN-1 downto 0);
@@ -132,12 +132,19 @@ begin
 
     end generate;
 
+    -- for each pattern, slice off just the bits that are included as part of
+    -- the pattern mask; this subset of bits is passed into the hit count module
+    -- and used for sorting
+
     ly0_mask <= get_ly_mask (ly0_size, ly0, patlist(I).ly0);
     ly1_mask <= get_ly_mask (ly1_size, ly1, patlist(I).ly1);
     ly2_mask <= get_ly_mask (ly2_size, ly2, patlist(I).ly2);
     ly3_mask <= get_ly_mask (ly3_size, ly3, patlist(I).ly3);
     ly4_mask <= get_ly_mask (ly4_size, ly4, patlist(I).ly4);
     ly5_mask <= get_ly_mask (ly5_size, ly5, patlist(I).ly5);
+
+    -- hit_count module is the workhorse of the segment finder...
+    -- everything else is just sorting
 
     i_hit_count : entity work.hit_count
       generic map(
@@ -154,7 +161,7 @@ begin
         hc  => pats(I).hc,
         lc  => pats(I).lc);
 
-    -- pattern id
+    -- copy the (constant) pattern id
     pats(I).id <= to_unsigned(patlist(I).id, PID_BITS);
 
   end generate;
@@ -173,12 +180,12 @@ begin
   priority_encoder_inst : entity work.priority_encoder
     generic map (
       WIDTH       => NUM_PATTERNS,
-      REG_INPUT   => false,
+      REG_INPUT   => true,
       REG_OUTPUT  => true,
       REG_STAGES  => 2,
       DAT_BITS    => best_slv'length,
       QLT_BITS    => best_slv'length,
-      IGNORE_BITS => 0, -- 1 to ignore the bend of the pattern id, 2 and 3 are the same, 4, 5 are the same, etc
+      IGNORE_BITS => 0,                 -- 1 to ignore the bend of the pattern id, 2 and 3 are the same, 4, 5 are the same, etc
       ADR_BITS_o  => integer(ceil(log2(real(NUM_PATTERNS))))
       )
     port map (
@@ -209,8 +216,10 @@ begin
 
       dav_o <= priority_dav;
 
-      if (best.lc >= to_integer(unsigned(ly_thresh))) then
-        pat_o.lc <= best.lc;
+      if (best.lc > unsigned(ly_thresh(to_integer(best.id)))) then
+        --pat_o.lc <= unsigned('0'&std_logic_vector(best.lc)) + 3;
+        --pat_o.lc <= unsigned('0'&std_logic_vector(best.lc));
+        pat_o.lc <= unsigned(std_logic_vector(best.lc));
         pat_o.id <= best.id;
       else
         pat_o <= zero(pat_o);
