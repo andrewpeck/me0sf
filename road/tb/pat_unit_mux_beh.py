@@ -72,7 +72,8 @@ def test_pat_mux():
     data = [0b1, 0b1, 0b1, 0b1, 0b1, 0b1]
 
     config = Config()
-    config.ly_thresh=[7, 7, 7, 7, 7, 7, 7, 7, 7, 7, 5, 5, 4, 4, 4, 4, 4]
+    config.ly_thresh_patid = [7, 7, 7, 7, 7, 7, 7, 7, 7, 7, 5, 5, 4, 4, 4, 4, 4]
+    config.ly_thresh_eta = [4, 5, 4, 5, 4, 5, 4, 5, 4, 5, 4, 5, 4, 5, 4]
     config.max_span=37
 
     mux = pat_mux(data, partition=0, config=config)

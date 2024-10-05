@@ -110,9 +110,9 @@ def process_chamber(chamber_data : List[List[int]], config : Config, chamber_bx_
     #If x_prt is enabled, perform strict thresholding on x-partitions
     #strict_config = deepcopy(config)
     #if (config.x_prt_en):
-    #    for i, thresh in enumerate(strict_config.ly_thresh):           
+    #    for i, thresh in enumerate(strict_config.ly_thresh_patid):           
     #        if (thresh < 5):
-    #            strict_config.ly_thresh[i] += 1 
+    #            strict_config.ly_thresh_patid[i] += 1 
     #datazip  = zip(data, range(len(data)), cycle((config, strict_config)))
 
     # for some reason multi-processing fails with questasim, generating an error
@@ -180,7 +180,8 @@ def test_chamber_beh():
     config.deghost_post = False
     config.group_width = 8
     config.num_outputs= 4
-    config.ly_thresh = [7, 7, 7, 7, 7, 7, 7, 7, 7, 7, 5, 5, 4, 4, 4, 4, 4]
+    config.ly_thresh_patid = [7, 7, 7, 7, 7, 7, 7, 7, 7, 7, 5, 5, 4, 4, 4, 4, 4]
+    config.ly_thresh_eta = [4, 5, 4, 5, 4, 5, 4, 5, 4, 5, 4, 5, 4, 5, 4]
     config.cross_part_seg_width = 0
     config.skip_centroids = True
 
