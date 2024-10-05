@@ -228,7 +228,7 @@ def pat_unit(data,
     #print(best.bx)
     
     # (7) apply a layer threshold
-    ly_thresh_final = max(ly_thresh_patid[best.id], ly_thresh_eta[partition]) 
+    ly_thresh_final = max(ly_thresh_patid[best.id-1], ly_thresh_eta[partition]) 
     if (best.lc < ly_thresh_final):
         best.reset()
 
