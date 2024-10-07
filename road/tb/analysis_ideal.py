@@ -7,7 +7,7 @@ import matplotlib.pyplot as plt
 from datagen import datagen_with_segs
 import numpy as np
 import random
-import boost_histogram as bh
+#import boost_histogram as bh
 import ROOT
 # with uproot.open("MuonGE0Segments2.root:ge0/segments") as segments:
 #     print(segments.keys())

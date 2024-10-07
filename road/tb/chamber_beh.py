@@ -4,7 +4,7 @@ import multiprocessing.pool
 import operator
 import os
 from copy import deepcopy
-from itertools import cycle, starmap
+from itertools import repeat, cycle, starmap
 from typing import List
 
 from partition_beh import process_partition
@@ -59,7 +59,7 @@ def cross_partition_cancellation(segments : List[List[Segment]],
 
     return segments
 
-def process_chamber(chamber_data : List[List[int]], config : Config):
+def process_chamber(chamber_data : List[List[int]], config : Config, chamber_bx_data):
 
     # gather segments from each partition
     # this will return a 8 x N list of segments
@@ -69,12 +69,14 @@ def process_chamber(chamber_data : List[List[int]], config : Config):
         num_finders = 15
 
         data = [[0 for _ in range(6)] for _ in range(num_finders)]
+        processed_chamber_bx_data = [[[-9999 for _ in range(192)] for _ in range(6)] for _ in range(num_finders)]
 
         for finder in range(num_finders):
 
             # even finders are simple, just take the partition
             if finder % 2 == 0:
                 data[finder] = chamber_data[finder//2]
+                processed_chamber_bx_data[finder] = chamber_bx_data[finder//2]
 
             # odd finders are the OR of two adjacent partitions
             else:
@@ -93,17 +95,25 @@ def process_chamber(chamber_data : List[List[int]], config : Config):
                     data[finder][4] = chamber_data[finder//2][4]
                     data[finder][5] = chamber_data[finder//2][5]
 
+                    processed_chamber_bx_data[finder][0] = chamber_bx_data[finder//2+1][0]
+                    processed_chamber_bx_data[finder][1] = chamber_bx_data[finder//2+1][1]
+                    processed_chamber_bx_data[finder][2] = [max(chamber_bx_data[finder//2][2][i], chamber_bx_data[finder//2+1][2][i]) for i in range(len(chamber_bx_data[finder//2][2]))]
+                    processed_chamber_bx_data[finder][3] = [max(chamber_bx_data[finder//2][3][i], chamber_bx_data[finder//2+1][3][i]) for i in range(len(chamber_bx_data[finder//2][3]))]
+                    processed_chamber_bx_data[finder][4] = chamber_bx_data[finder//2][4]
+                    processed_chamber_bx_data[finder][5] = chamber_bx_data[finder//2][5]
     else:
 
         data = chamber_data
         
+    datazip  = zip(data, range(len(data)), repeat(config), processed_chamber_bx_data)
+
     #If x_prt is enabled, perform strict thresholding on x-partitions
-    strict_config = deepcopy(config)
-    if (config.x_prt_en):
-        for i, thresh in enumerate(strict_config.ly_thresh):           
-            if (thresh < 5):
-                strict_config.ly_thresh[i] += 1 
-    datazip  = zip(data, range(len(data)), cycle((config, strict_config)))
+    #strict_config = deepcopy(config)
+    #if (config.x_prt_en):
+    #    for i, thresh in enumerate(strict_config.ly_thresh_patid):           
+    #        if (thresh < 5):
+    #            strict_config.ly_thresh_patid[i] += 1 
+    #datazip  = zip(data, range(len(data)), cycle((config, strict_config)))
 
     # for some reason multi-processing fails with questasim, generating an error
     # such as:
@@ -170,7 +180,8 @@ def test_chamber_beh():
     config.deghost_post = False
     config.group_width = 8
     config.num_outputs= 4
-    config.ly_thresh = [7, 7, 7, 7, 7, 7, 7, 7, 7, 7, 5, 5, 4, 4, 4, 4, 4]
+    config.ly_thresh_patid = [7, 7, 7, 7, 7, 7, 7, 7, 7, 7, 5, 5, 4, 4, 4, 4, 4]
+    config.ly_thresh_eta = [4, 5, 4, 5, 4, 5, 4, 5, 4, 5, 4, 5, 4, 5, 4]
     config.cross_part_seg_width = 0
     config.skip_centroids = True
 

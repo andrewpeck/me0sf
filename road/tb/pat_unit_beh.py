@@ -1,5 +1,6 @@
 # Python implementation of the pat_unit.vhd behavior
 import math
+import numpy as np
 from typing import List
 
 from constants import *
@@ -63,10 +64,21 @@ def mask_layer_data (data : List[int], mask) -> List[int]:
     """
     return list(map(lambda ly_dat, ly_mask: ly_dat & ly_mask , data, mask))
 
-def calculate_centroids(masked_data : List[int]) -> List[float]:
-    # print(masked_data)
-    """takes in a []*6 list of pre-masked data and gives the found centroids"""
-    return [find_centroid(x) for x in masked_data]
+def calculate_centroids(single_pattern_masked_data : List[int], partition_bx_data) -> List[float]:
+    """takes in a []*6 list of masked data and gives the found centroids"""
+    centroids = []
+    bxs = []
+    for layer_index, layer in enumerate(single_pattern_masked_data):
+        cur_centroid, hits_indices = find_centroid(layer)
+        centroids.append(cur_centroid)
+        for hit_index in hits_indices:
+            bxs.append(partition_bx_data[layer_index][hit_index-1])
+            #print(partition_bx_data[layer_index][hit_index-1])
+    if len(bxs) == 0:
+        return centroids, -9999
+    #print(bxs)
+    #print(np.mean(bxs))
+    return centroids, np.mean(bxs)
 
 def calculate_hit_count(masked_data : List[int], light : bool = False) -> int:
     """takes in a []*6 list of pre-masked data and gives the number of hits
@@ -92,9 +104,19 @@ def calculate_layer_count(masked_data : List[int]) -> int:
     """takes in a []*6 list of pre-masked data and gives the layer count"""
     return sum(map(lambda x : x > 0, masked_data))
 
+def calculate_cluster_size(data):
+    cluster_size_per_layer = [max_cluster_size(x) for x in data]
+    return cluster_size_per_layer
+
+def calculate_hits(data):
+    n_hits_per_layer = [count_ones(x) for x in data]
+    return n_hits_per_layer
+
 def pat_unit(data,
+             bx_data,
              strip : int = 0,
-             ly_thresh : list[int] = [7, 7, 7, 7, 7, 7, 7, 7, 7, 7, 5, 5, 4, 4, 4, 4, 4],
+             ly_thresh_patid : list[int] = [7, 7, 7, 7, 7, 7, 7, 7, 7, 7, 5, 5, 4, 4, 4, 4, 4],
+             ly_thresh_eta : list[int] = [4, 5, 4, 5, 4, 5, 4, 5, 4, 5, 4, 5, 4, 5, 4],
              partition : int = -1,
              input_max_span : int = 37,
              num_or : int = 2,
@@ -107,8 +129,7 @@ def pat_unit(data,
     # however, this could cause inconsistent issue, becareful! OR find a way to modify PATLIST
     global LAYER_MASK
     
-    if LAYER_MASK is None:
-
+    if LAYER_MASK is None: 
         factor = num_or / 2
 
         pat_straight = patdef_t(17, create_pat_ly(-0.4 / factor, 0.4 / factor))
@@ -123,9 +144,9 @@ def pat_unit(data,
         pat_l5 = patdef_t(8, create_pat_ly(2.7 / factor, 3.8 / factor))
         pat_r5 = mirror_patdef(pat_l5, pat_l5.id - 1)
         pat_l6 = patdef_t(6, create_pat_ly(3.5 / factor, 4.7 / factor))
-        pat_r6 = mirror_patdef(pat_l6, pat_l6.id-1)
+        pat_r6 = mirror_patdef(pat_l6, pat_l6.id - 1)
         pat_l7 = patdef_t(4, create_pat_ly(4.3 / factor, 5.5 / factor))
-        pat_r7 = mirror_patdef(pat_l7, pat_l7.id-1)
+        pat_r7 = mirror_patdef(pat_l7, pat_l7.id - 1)
         pat_l8 = patdef_t(2, create_pat_ly(5.4 / factor, 7.0 / factor))
         pat_r8 = mirror_patdef(pat_l8, pat_l8.id - 1)
 
@@ -170,7 +191,7 @@ def pat_unit(data,
     # and the layer data with the respective layer mask to
     # determine how many hits are in each layer
     # this yields a map object that can be iterated over to get,
-    #    for each of the N patterns, the masked []*6 layer data
+    #    for each of the 17 patterns, the masked []*6 layer data
     masked_data = [mask_layer_data(x.mask, data) for x in LAYER_MASK]
 
     # (3) count # of hits
@@ -181,27 +202,86 @@ def pat_unit(data,
     # (4) process centroids
     if skip_centroids:
         centroids = [[0 for _ in range(6)] for _ in range(len(masked_data))]
+        bxs = [-9999 for _ in range(len(masked_data))]
     else:
-        centroids = [calculate_centroids(x) for x in masked_data]
-
+        centroids = []
+        bxs = []
+        for single_pattern_masked_data in masked_data:
+            cur_pattern_centroids, cur_pattern_bx = calculate_centroids(single_pattern_masked_data, bx_data)
+            #print(cur_pattern_bx)
+            centroids.append(cur_pattern_centroids)
+            bxs.append(cur_pattern_bx)
+    #print(bxs)
     # (5) process segments
     seg_list = [Segment(lc=lc,
                         hc=hc,
                         id=pid,
                         partition=partition,
                         strip=strip,
-                        centroid=centroid)
-                for (hc, lc, pid, centroid) in
-                zip(hcs, lcs, pids, centroids)]
+                        centroid=centroid,
+                        bx=bx)
+                for (hc, lc, pid, centroid, bx) in
+                zip(hcs, lcs, pids, centroids, bxs)]
 
     # (6) choose the max of all patterns
     best = max(seg_list) # type: ignore
-
+    #print(best.bx)
+    
     # (7) apply a layer threshold
+    ly_thresh_final = max(ly_thresh_patid[best.id-1], ly_thresh_eta[partition]) 
+    if (best.lc < ly_thresh_final):
+        best.reset()
+
+    # (8) remove very wide segments
+    if (best.id <= 10):
+        best.reset()
+
+    # (9) remove segments with large clusters for wide segments - ONLY NEEDED FOR PU200 - NOT USED AT THE MOEMENT
+    cluster_size_max_limits = [3, 6, 9, 12, 15]
+    n_hits_max_limits = [3, 6, 9, 12, 15]
+    cluster_size_counts = calculate_cluster_size(data)
+    n_hits_counts = calculate_hits(data)
+    n_layers_large_clusters = [0, 0, 0, 0, 0]
+    n_layers_large_hits = [0, 0, 0, 0, 0]
+    for i, threshold in enumerate(cluster_size_max_limits):
+        for l in cluster_size_counts:
+            if l > threshold:
+                n_layers_large_clusters[i] += 1
+    for i, threshold in enumerate(n_hits_max_limits):
+        for l in n_hits_counts:
+            if l > threshold:
+                n_layers_large_hits[i] += 1
+
+    best.max_cluster_size = max(cluster_size_counts)
+    best.max_noise = max(n_hits_counts)
+    '''
+    best.nlayers_withcsg3 = n_layers_large_clusters[0]
+    best.nlayers_withcsg5 = n_layers_large_clusters[1]
+    best.nlayers_withcsg10 = n_layers_large_clusters[2]
+    best.nlayers_withcsg15 = n_layers_large_clusters[3]
+    best.nlayers_withnoiseg3 = n_layers_large_hits[0]
+    best.nlayers_withnoiseg5 = n_layers_large_hits[1]
+    best.nlayers_withnoiseg10 = n_layers_large_hits[2]
+    best.nlayers_withnoiseg15 = n_layers_large_hits[3]
+    '''
+
+    #if n_layers_large_clusters[4] >= 1:
+    #    best.reset()
+    #if partition >= 11:
+    #    if n_layers_large_clusters[4] >= 1:
+    #        best.reset()
+    #    if (best.lc - n_layers_large_clusters[0]) < 4:
+    #        best.reset()
+    #if partition >= 9:
+    #    if (best.lc - n_layers_large_hits[2]) < 3:
+    #        best.reset()
+    #else:
+    #    if (best.lc - n_layers_large_hits[1]) < 3:
+    #        best.reset()
+
     #print("id is: " + str(best.id))
     #print("threshold is: " + str(ly_thresh[best.id]))
-    if (best.lc < ly_thresh[best.id] or best.id < 10 or (best.id == 10 or best.id == 11) and best.lc < 5):
-        best.reset()
+    
     best.partition=partition
 
     # debug output

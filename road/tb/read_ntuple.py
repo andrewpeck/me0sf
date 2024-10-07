@@ -1,6 +1,6 @@
 import uproot
 
-def read_ntuple(file_path):
+def read_ntuple(file_path, entry_start=None, entry_stop=None):
     with uproot.open(file_path + ":ge0/segments") as segments:
         
         #print("read all: ", segments.keys())
@@ -152,7 +152,10 @@ def read_ntuple(file_path):
                 'me0_seg_param_x_i': "me0_seg_param_x", 
                 'me0_seg_param_y_i': "me0_seg_param_y", 
                 'me0_seg_rec_hit_index_i': "me0_seg_rec_hit_index"
-            }
+            },
+
+            entry_start=entry_start, 
+            entry_stop=entry_stop
         )
 
     return events

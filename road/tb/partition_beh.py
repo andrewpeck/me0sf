@@ -94,7 +94,8 @@ def cancel_edges(segments : List[Segment],
 
 def process_partition(partition_data : List[int],
                       partition : int,
-                      config : Config):
+                      config : Config, 
+                      partition_bx_data):
 
     '''takes in partition data, a group size, and a ghost width to return a
     smaller data set, using ghost edge cancellation and segment quality
@@ -108,7 +109,16 @@ def process_partition(partition_data : List[int],
 
     '''
 
-    segments = pat_mux(partition_data, partition=partition, config=config)
+    segments = pat_mux(partition_data, partition=partition, config=config, partition_bx_data=partition_bx_data)
+
+        
+    # if (partition == 1):
+    #     print("I am partition "+str(partition)+". Printing segments before deghosting...")
+    #     for seg in segments:
+    #         if (seg.id > 0):
+    #             print(seg)
+
+
 
         
     # if (partition == 1):
@@ -145,7 +155,8 @@ def test_process_partition():
     data = [1]*6
 
     config = Config();
-    config.ly_thresh=[7, 7, 7, 7, 7, 7, 7, 7, 7, 7, 5, 5, 4, 4, 4, 4, 4]
+    config.ly_thresh_patid=[7, 7, 7, 7, 7, 7, 7, 7, 7, 7, 5, 5, 4, 4, 4, 4, 4]
+    config.ly_thresh_eta = [4, 5, 4, 5, 4, 5, 4, 5, 4, 5, 4, 5, 4, 5, 4]
     config.deghost_pre=True
 
     part = process_partition(data, partition=0, config=config)

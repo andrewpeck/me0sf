@@ -8,7 +8,8 @@ LAYER_MASK = None
 
 class Config:
     skip_centroids : bool = False
-    ly_thresh : list[int] = [7, 7, 7, 7, 7, 7, 7, 7, 7, 7, 5, 5, 4, 4, 4, 4, 4]
+    ly_thresh_patid : list[int] = [7, 7, 7, 7, 7, 7, 7, 7, 7, 7, 5, 5, 4, 4, 4, 4, 4]
+    ly_thresh_eta : list[int] = [4, 5, 4, 5, 4, 5, 4, 5, 4, 5, 4, 5, 4, 5, 4]
     max_span : int = 37
     width : int = 192
     deghost_pre : bool = True
@@ -47,8 +48,10 @@ class Segment:
     ignore_bend = False
 
     def __init__(self, lc, id, hc=0, strip=0, partition=0, centroid=None,
-                 substrip=None, bend_ang=None):
-
+                 substrip=None, bend_ang=None, mse = None, bx=-9999,
+                 max_cluster_size = None, max_noise = None,
+                 nlayers_withcsg3 = None, nlayers_withcsg5 = None, nlayers_withcsg10 = None, nlayers_withcsg15 = None,
+                 nlayers_withnoiseg3 = None, nlayers_withnoiseg5 = None, nlayers_withnoiseg10 = None, nlayers_withnoiseg15 = None):
         self.hc = hc
         self.lc = lc
         self.id = id
@@ -57,6 +60,18 @@ class Segment:
         self.centroid = centroid
         self.substrip = substrip
         self.bend_ang = bend_ang
+        self.mse = mse
+        self.bx = bx
+        self.max_cluster_size = max_cluster_size
+        self.max_noise = max_noise
+        self.nlayers_withcsg3 = nlayers_withcsg3
+        self.nlayers_withcsg5 = nlayers_withcsg5
+        self.nlayers_withcsg10 = nlayers_withcsg10
+        self.nlayers_withcsg15 = nlayers_withcsg15
+        self.nlayers_withnoiseg3 = nlayers_withnoiseg3
+        self.nlayers_withnoiseg5 = nlayers_withnoiseg5
+        self.nlayers_withnoiseg10 = nlayers_withnoiseg10
+        self.nlayers_withnoiseg15 = nlayers_withnoiseg15
         self.update_quality()
 
     def reset(self):
@@ -105,6 +120,7 @@ class Segment:
             fit = llse_fit(x, centroids)
             self.bend_ang = fit[0] #m
             self.substrip = fit[1] #b
+            self.mse = fit[2] #mse
 
     def __str__(self):
 
@@ -175,27 +191,27 @@ def create_pat_ly(lower : float, upper : float):
 
     return layer_list
 
+# discard anything below or equal to 8
 # for PATLIST initialization process
 # true patlist; only used for testing pat_unit.vhd emulator
-pat_straight = patdef_t(19, create_pat_ly(-0.4, 0.4))
-pat_l = patdef_t(18, create_pat_ly(0.2, 0.9))
+
+pat_straight = patdef_t(17, create_pat_ly(-0.4, 0.4))
+pat_l = patdef_t(16, create_pat_ly(0.2, 0.9))
 pat_r = mirror_patdef(pat_l, pat_l.id - 1)
-pat_l2 = patdef_t(16, create_pat_ly(0.5, 1.2))
+pat_l2 = patdef_t(14, create_pat_ly(0.9, 1.7))
 pat_r2 = mirror_patdef(pat_l2, pat_l2.id - 1)
-pat_l3 = patdef_t(14, create_pat_ly(0.9, 1.7))
+pat_l3 = patdef_t(12, create_pat_ly(1.4, 2.3))
 pat_r3 = mirror_patdef(pat_l3, pat_l3.id - 1)
-pat_l4 = patdef_t(12, create_pat_ly(1.4, 2.3))
+pat_l4 = patdef_t(10, create_pat_ly(2.0, 3.0))
 pat_r4 = mirror_patdef(pat_l4, pat_l4.id - 1)
-pat_l5 = patdef_t(10, create_pat_ly(2.0, 3.0))
+pat_l5 = patdef_t(8, create_pat_ly(2.7, 3.8))
 pat_r5 = mirror_patdef(pat_l5, pat_l5.id - 1)
-pat_l6 = patdef_t(8, create_pat_ly(2.7, 3.8))
-pat_r6 = mirror_patdef(pat_l6, pat_l6.id - 1)
-pat_l7 = patdef_t(6, create_pat_ly(3.5, 4.7))
+pat_l6 = patdef_t(6, create_pat_ly(3.5, 4.7))
+pat_r6 = mirror_patdef(pat_l6, pat_l6.id-1)
+pat_l7 = patdef_t(4, create_pat_ly(4.3, 5.5))
 pat_r7 = mirror_patdef(pat_l7, pat_l7.id-1)
-pat_l8 = patdef_t(4, create_pat_ly(4.3, 5.5))
-pat_r8 = mirror_patdef(pat_l8, pat_l8.id-1)
-pat_l9 = patdef_t(2, create_pat_ly(5.4, 7.0))
-pat_r9 = mirror_patdef(pat_l9, pat_l9.id - 1)
+pat_l8 = patdef_t(2, create_pat_ly(5.4, 7.0))
+pat_r8 = mirror_patdef(pat_l8, pat_l8.id - 1)
 
 PATLIST = (
     pat_straight,
@@ -214,30 +230,26 @@ PATLIST = (
     pat_l7,
     pat_r7,
     pat_l8,
-    pat_r8,
-    pat_l9,
-    pat_r9)
+    pat_r8)
 
 PATLIST_LUT = {
-    19: pat_straight,
-    18: pat_l,
-    17: pat_r,
-    16: pat_l2,
-    15: pat_r2,
-    14: pat_l3,
-    13: pat_r3,
-    12: pat_l4,
-    11: pat_r4,
-    10: pat_l5,
-    9: pat_r5,
-    8: pat_l6,
-    7: pat_r6,
-    6: pat_l7,
-    5: pat_r7,
-    4: pat_l8,
-    3: pat_r8,
-    2: pat_l9,
-    1: pat_r}
+    17: pat_straight,
+    16: pat_l,
+    15: pat_r,
+    14: pat_l2,
+    13: pat_r2,
+    12: pat_l3,
+    11: pat_r3,
+    10: pat_l4,
+    9: pat_r4,
+    8: pat_l5,
+    7: pat_r5,
+    6: pat_l6,
+    5: pat_r6,
+    4: pat_l7,
+    3: pat_r7,
+    2: pat_l8,
+    1: pat_r8}
 
 def count_ones(x):
     """takes in an integer and counts how many ones are in that integer's binary form"""
@@ -247,6 +259,22 @@ def count_ones(x):
             cnt += 1
         x = x>>1
     return cnt
+
+def max_cluster_size(x):
+    """calculate maximum cluster size in that integer's binary form"""
+    size = 0
+    max_size = 0
+    while (x > 0):
+        if (x&1)==1:
+            size += 1
+        else:
+            if size > max_size:
+                max_size = size
+            size = 0
+        x = x>>1
+    if size > max_size:
+        max_size = size
+    return max_size
 
 def set_bit(index, num1=0):
     """takes in an integer index to set a one within a binary number; if num1 parameter is filled
@@ -282,7 +310,7 @@ def find_ones(data):
             ones.append(cnt+1)
         data = data >> 1
         cnt = cnt + 1
-
+    # note that the positions returned are in 1-index system
     return ones
 
 def find_centroid(data : int):
@@ -291,9 +319,9 @@ def find_centroid(data : int):
     ones = find_ones(data)
 
     if len(ones)==0:
-        return 0
+        return 0, ones
 
-    return (1.0 * sum(ones)) / len(ones)
+    return ((1.0 * sum(ones)) / len(ones)), ones
 
 def generate_combinations(nbits : int):
     return (nbits, tuple(range(2**nbits)))
@@ -314,7 +342,6 @@ def llse_fit(x, y):
     x_sum = sum(x)
     y_sum = sum(y)
     n = len(x)
-
     products = 0
     squares = 0
     for i in range(len(x)):
@@ -322,8 +349,14 @@ def llse_fit(x, y):
         squares += (n * x[i] - x_sum) ** 2
     m = 1.0 * products / squares
     b = 1.0 / n * (y_sum - m * x_sum)
-
-    return m, b
+    
+    # calculate mse
+    sse = 0
+    for i in range(len(x)):
+        sse += (y[i] - m * x[i] - b)**2
+    mse = sse / n
+    
+    return m, b, mse
 
 def chunk(in_list, n):
     return [in_list[i * n:(i + 1) * n]
