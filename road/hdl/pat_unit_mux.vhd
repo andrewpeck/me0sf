@@ -37,13 +37,6 @@ entity pat_unit_mux is
 
     DISABLE_PEAKING : boolean := false;
 
-    LY0_SPAN : natural := get_max_span(patdef_array);
-    LY1_SPAN : natural := get_max_span(patdef_array);
-    LY2_SPAN : natural := get_max_span(patdef_array);
-    LY3_SPAN : natural := get_max_span(patdef_array);
-    LY4_SPAN : natural := get_max_span(patdef_array);
-    LY5_SPAN : natural := get_max_span(patdef_array);
-
     PATLIST : patdef_array_t := patdef_array;
     WIDTH   : natural        := PRT_WIDTH;
 

@@ -30,14 +30,7 @@ entity partition is
     DEGHOST_PRE  : boolean := true;     -- perform intra-partition ghost cancellation BEFORE sorting
     DEGHOST_POST : boolean := false;    -- perform intra-partition ghost cancellation AFTER sorting
 
-    PATLIST : patdef_array_t := patdef_array;
-
-    LY0_SPAN : natural := get_max_span(patdef_array);
-    LY1_SPAN : natural := get_max_span(patdef_array);  -- TODO: variably size the other layers instead of using the max
-    LY2_SPAN : natural := get_max_span(patdef_array);  -- TODO: variably size the other layers instead of using the max
-    LY3_SPAN : natural := get_max_span(patdef_array);  -- TODO: variably size the other layers instead of using the max
-    LY4_SPAN : natural := get_max_span(patdef_array);  -- TODO: variably size the other layers instead of using the max
-    LY5_SPAN : natural := get_max_span(patdef_array)   -- TODO: variably size the other layers instead of using the max
+    PATLIST : patdef_array_t := patdef_array
     );
   port(
 
