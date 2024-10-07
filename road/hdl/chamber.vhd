@@ -77,10 +77,8 @@ architecture behavioral of chamber is
   --since there are not enough real I/O pins to use chamber as a top level entity.--
   --------------------------------------------------------------------------------
   signal sbits_i : chamber_t;
-  signal sbits_i_buf : chamber_t;
   attribute dont_touch : string;
   attribute dont_touch of sbits_i : signal is "true";
-  attribute dont_touch of sbits_i_buf : signal is "true";
   
   constant std_zeroed : std_logic_vector(192*6-1 downto 0) := (others => '0');
   constant partition_zeroed : partition_t := convert(std_zeroed, sbits_i(0));
@@ -209,7 +207,6 @@ begin
       for i in 0 to 7 loop
         sbits_i(i) <= partition_zeroed;
       end loop;
-      sbits_i_buf <= sbits_i;
     end if;
   end process;
 
@@ -250,14 +247,14 @@ begin
   begin
 
     single_partitions : if (NUM_FINDERS <= 8) generate
-      partition_or <= sbits_i_buf(I);
+      partition_or <= sbits_i(I);
     end generate;
 
     half_partitions : if (NUM_FINDERS > 8) generate
 
       -- for even finders, just take the partition as it is
       even_gen : if (I mod 2 = 0) generate
-        partition_or <= sbits_i_buf(I/2);
+        partition_or <= sbits_i(I/2);
       end generate;
 
       -- for odd finders, or adjacent partitions
@@ -265,12 +262,12 @@ begin
 
         -- look for only straight and pointing segments (for cms)
         pointing : if (not EN_NON_POINTING) generate
-          partition_or(0) <=                         sbits_i_buf(I/2 + 1)(0);
-          partition_or(1) <=                         sbits_i_buf(I/2 + 1)(1);
-          partition_or(2) <= sbits_i_buf(I/2)(2) or sbits_i_buf(I/2 + 1)(2);
-          partition_or(3) <= sbits_i_buf(I/2)(3) or sbits_i_buf(I/2 + 1)(3);
-          partition_or(4) <= sbits_i_buf(I/2)(4);
-          partition_or(5) <= sbits_i_buf(I/2)(5);
+          partition_or(0) <=                         sbits_i(I/2 + 1)(0);
+          partition_or(1) <=                         sbits_i(I/2 + 1)(1);
+          partition_or(2) <= sbits_i(I/2)(2) or sbits_i(I/2 + 1)(2);
+          partition_or(3) <= sbits_i(I/2)(3) or sbits_i(I/2 + 1)(3);
+          partition_or(4) <= sbits_i(I/2)(4);
+          partition_or(5) <= sbits_i(I/2)(5);
         end generate;
 
         -- look for both x-partition segments toward the IP and away
