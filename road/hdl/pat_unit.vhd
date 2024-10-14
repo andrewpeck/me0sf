@@ -31,6 +31,7 @@ entity pat_unit is
   generic(
     VERBOSE : boolean        := false;
     PATLIST : patdef_array_t := patdef_array;
+    EN_HC_COMPRESS : boolean := true;
 
     LY0_SPAN : natural := get_max_span(patdef_array);
     LY1_SPAN : natural := get_max_span(patdef_array);
@@ -47,7 +48,7 @@ entity pat_unit is
     dav_i : in  std_logic;
     dav_o : out std_logic;
 
-    ly_thresh : in ly_thresh_compressed_t;
+    ly_thresh : in ly_thresh_t;
 
     ly0 : in std_logic_vector (LY0_SPAN-1 downto 0);
     ly1 : in std_logic_vector (LY1_SPAN-1 downto 0);
@@ -145,22 +146,42 @@ begin
 
     -- hit_count module is the workhorse of the segment finder...
     -- everything else is just sorting
-
-    i_hit_count : entity work.hit_count
-      generic map(
-        HCB => HC_BITS,
-        LCB => LC_BITS)
-      port map (
-        clk => clock,
-        ly0 => ly0_mask,
-        ly1 => ly1_mask,
-        ly2 => ly2_mask,
-        ly3 => ly3_mask,
-        ly4 => ly4_mask,
-        ly5 => ly5_mask,
-        hc  => pats(I).hc,
-        lc  => pats(I).lc);
-
+    compression_enabled : if (EN_HC_COMPRESS) generate
+      i_hit_count : entity work.hit_count
+        generic map(
+          HCB => HC_BITS,
+          LCB => LC_BITS,
+          EN_HC_COMPRESS => EN_HC_COMPRESS)
+        port map (
+          clk => clock,
+          ly0 => ly0_mask,
+          ly1 => ly1_mask,
+          ly2 => ly2_mask,
+          ly3 => ly3_mask,
+          ly4 => ly4_mask,
+          ly5 => ly5_mask,
+          hc  => pats(I).hc,
+          lc  => pats(I).lc);
+     end generate;
+     
+     compression_disabled : if (not EN_HC_COMPRESS) generate
+       i_hit_count : entity work.hit_count
+        generic map(
+          HCB => HC_BITS,
+          LCB => LC_BITS,
+          EN_HC_COMPRESS => EN_HC_COMPRESS)
+        port map (
+          clk => clock,
+          ly0 => ly0_mask,
+          ly1 => ly1_mask,
+          ly2 => ly2_mask,
+          ly3 => ly3_mask,
+          ly4 => ly4_mask,
+          ly5 => ly5_mask,
+          hc  => pats(I).hc,
+          lc  => pats(I).lc);
+     end generate;
+     
     -- copy the (constant) pattern id
     pats(I).id <= to_unsigned(patlist(I).id, PID_BITS);
 
@@ -216,7 +237,7 @@ begin
 
       dav_o <= priority_dav;
 
-      if (best.lc > unsigned(ly_thresh(to_integer(best.id)))) then
+      if (best.id > 0 and best.lc > unsigned(ly_thresh(to_integer(best.id)-1))) then
         --pat_o.lc <= unsigned('0'&std_logic_vector(best.lc)) + 3;
         --pat_o.lc <= unsigned('0'&std_logic_vector(best.lc));
         pat_o.lc <= unsigned(std_logic_vector(best.lc));

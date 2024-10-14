@@ -41,6 +41,7 @@ entity pat_unit_mux is
     WIDTH   : natural        := PRT_WIDTH;
 
     --DEADTIME : natural := 3;            -- deadtime in bx
+    EN_HC_COMPRESS : boolean := true;
 
     -- Need padding for half the width of the pattern this is to handle the edges
     -- of the chamber where some virtual chamber of all zeroes exists... to be
@@ -51,7 +52,7 @@ entity pat_unit_mux is
 
     clock : in std_logic;
 
-    ly_thresh : in ly_thresh_compressed_t;
+    ly_thresh : in ly_thresh_t;
 
     dav_i : in  std_logic;
     dav_o : out std_logic := '0';
@@ -195,7 +196,7 @@ begin
     end process;
 
     pat_unit_inst : entity work.pat_unit
-      generic map (VERBOSE => verbose)
+      generic map (VERBOSE => verbose, EN_HC_COMPRESS => EN_HC_COMPRESS)
       port map (
 
         clock => clock,

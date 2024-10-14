@@ -26,6 +26,7 @@ entity partition is
     S0_WIDTH       : natural := 8;          -- width of the pre-sorting regions
     PAT_UNIT_REUSE : natural := 8;          --
     --DEADTIME       : natural := 3;          -- deadtime in bx
+    EN_HC_COMPRESS : boolean := true;
 
     DEGHOST_PRE  : boolean := true;     -- perform intra-partition ghost cancellation BEFORE sorting
     DEGHOST_POST : boolean := false;    -- perform intra-partition ghost cancellation AFTER sorting
@@ -48,7 +49,7 @@ entity partition is
     dav_o_phase : out natural range 0 to 7 := 0;
     -- synthesis translate_on
 
-    ly_thresh : in ly_thresh_compressed_t;
+    ly_thresh : in ly_thresh_t;
 
     --------------------------------------------------------------------------------
     -- Inputs
@@ -122,8 +123,9 @@ begin
     generic map (
       DISABLE_PEAKING => DISABLE_PEAKING,
       WIDTH           => PRT_WIDTH,
-      MUX_FACTOR      => PAT_UNIT_REUSE
+      MUX_FACTOR      => PAT_UNIT_REUSE,
       --DEADTIME        => DEADTIME
+      EN_HC_COMPRESS => EN_HC_COMPRESS
       )
     port map (
       clock => clock,

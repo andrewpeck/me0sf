@@ -43,6 +43,14 @@ entity chamber is
     REG_OUTPUTS     : boolean := false;  -- true to  register outputs on the 40MHz clock
     --PULSE_EXTEND    : integer := 0;      -- how long pulses should be extended by
     --DEADTIME        : natural := 3;      -- deadtime in bx
+    EN_HC_COMPRESS : boolean := false;   -- true to enable compression of hit count function (REQUIRED: minimum ly_thresh value is 4)
+    
+    LY0_SPAN : natural := get_max_span(patdef_array);
+    LY1_SPAN : natural := get_max_span(patdef_array);
+    LY2_SPAN : natural := get_max_span(patdef_array);
+    LY3_SPAN : natural := get_max_span(patdef_array);
+    LY4_SPAN : natural := get_max_span(patdef_array);
+    LY5_SPAN : natural := get_max_span(patdef_array);
 
     PATLIST : patdef_array_t := patdef_array
     );
@@ -59,8 +67,8 @@ entity chamber is
     dav_o_phase       : out natural range 0 to 7;
     -- synthesis translate_on
 
---    sbits_i           : in  chamber_t;
---    vfat_pretrigger_o : out std_logic_vector (23 downto 0);
+    sbits_i           : in  chamber_t;
+    vfat_pretrigger_o : out std_logic_vector (23 downto 0);
     segments_o        : out segment_list_t (NUM_SEGMENTS-1 downto 0)
     );
     
@@ -76,15 +84,15 @@ architecture behavioral of chamber is
   --Used for testing, delete later. Allows to set all inputs to 0 and leave them hanging,
   --since there are not enough real I/O pins to use chamber as a top level entity.--
   --------------------------------------------------------------------------------
-  signal sbits_i : chamber_t;
-  attribute dont_touch : string;
-  attribute dont_touch of sbits_i : signal is "true";
+--  signal sbits_i : chamber_t;
+--  attribute dont_touch : string;
+--  attribute dont_touch of sbits_i : signal is "true";
   
-  constant std_zeroed : std_logic_vector(192*6-1 downto 0) := (others => '0');
-  constant partition_zeroed : partition_t := convert(std_zeroed, sbits_i(0));
+--  constant std_zeroed : std_logic_vector(192*6-1 downto 0) := (others => '0');
+--  constant partition_zeroed : partition_t := convert(std_zeroed, sbits_i(0));
   
-  signal vfat_pretrigger_o : std_logic_vector(23 downto 0);
-  attribute dont_touch of vfat_pretrigger_o : signal is "true";
+--  signal vfat_pretrigger_o : std_logic_vector(23 downto 0);
+--  attribute dont_touch of vfat_pretrigger_o : signal is "true";
   --------------------------------------------------------------------------------
 
   constant NUM_PARTITIONS : integer := 8;
@@ -161,20 +169,18 @@ architecture behavioral of chamber is
   -- Layer Thresholding
   --------------------------------------------------------------------------------
   signal ly_thresh_strict_full : ly_thresh_t;
-  signal ly_thresh_compressed : ly_thresh_compressed_t;
-  signal ly_thresh_strict_compressed : ly_thresh_compressed_t;
+  signal ly_thresh_compressed : ly_thresh_t;
+  signal ly_thresh_strict_compressed : ly_thresh_t;
   
   --Function to save on bits required to represent layer hits. Instead of a real layer count
   --such as 4, changes the threshold to 1, with the understanding this is the value above
   --the minimum threshold.
   function compress_ly_count (ly_thresh : ly_thresh_t)
-    return ly_thresh_compressed_t is
-    variable ly_thresh_compressed : ly_thresh_compressed_t;
-    variable ly_thresh_compressed_full : std_logic_vector(2 downto 0);
+    return ly_thresh_t is
+    variable ly_thresh_compressed : ly_thresh_t;
   begin
     for i in 0 to NUM_PATTERNS-1 loop
-      ly_thresh_compressed_full := std_logic_vector(unsigned(ly_thresh(i)) - MIN_LY_THRESH);
-      ly_thresh_compressed(i) := ly_thresh_compressed_full(1 downto 0);
+      ly_thresh_compressed(i) := std_logic_vector(unsigned(ly_thresh(i)) - MIN_LY_THRESH);
     end loop;
     return ly_thresh_compressed;
   end;
@@ -198,17 +204,17 @@ architecture behavioral of chamber is
 begin
 
   ly_thresh_strict_full <= increase_ly_thresh(ly_thresh_i) when X_PRT_EN else ly_thresh_i;
-  ly_thresh_compressed <= compress_ly_count(ly_thresh_i);
-  ly_thresh_strict_compressed <= compress_ly_count(ly_thresh_strict_full);
+  ly_thresh_compressed <= compress_ly_count(ly_thresh_i) when EN_HC_COMPRESS else ly_thresh_i;
+  ly_thresh_strict_compressed <= compress_ly_count(ly_thresh_strict_full) when EN_HC_COMPRESS else ly_thresh_strict_full;
 
 --set all sbits to 0, only for development, remove later
-  process (clock) begin
-    if (rising_edge(clock)) then
-      for i in 0 to 7 loop
-        sbits_i(i) <= partition_zeroed;
-      end loop;
-    end if;
-  end process;
+--  process (clock) begin
+--    if (rising_edge(clock)) then
+--      for i in 0 to 7 loop
+--        sbits_i(i) <= partition_zeroed;
+--      end loop;
+--    end if;
+--  end process;
 
   assert S1_REUSE = 1 or S1_REUSE = 2 or S1_REUSE = 4
     report "Only allowed values for s1 reuse are 1,2, and 4"
@@ -299,8 +305,9 @@ begin
         generic map (
           DISABLE_PEAKING => DISABLE_PEAKING,
           NUM_SEGMENTS    => NUM_SEGMENTS,
-          S0_WIDTH        => S0_WIDTH
+          S0_WIDTH        => S0_WIDTH,
           --DEADTIME        => DEADTIME
+          EN_HC_COMPRESS => EN_HC_COMPRESS
           )
         port map (
 
@@ -328,8 +335,9 @@ begin
       generic map (
         DISABLE_PEAKING => DISABLE_PEAKING,
         NUM_SEGMENTS    => NUM_SEGMENTS,
-        S0_WIDTH        => S0_WIDTH
+        S0_WIDTH        => S0_WIDTH,
         --DEADTIME        => DEADTIME
+        EN_HC_COMPRESS => EN_HC_COMPRESS
         )
       port map (
 

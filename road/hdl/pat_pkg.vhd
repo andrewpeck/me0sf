@@ -36,7 +36,6 @@ package pat_pkg is
   type chamber_t is array(integer range 0 to 7) of partition_t;
   
   type ly_thresh_t is array(integer range 0 to NUM_PATTERNS-1) of std_logic_vector(2 downto 0);
-  type ly_thresh_compressed_t is array(integer range 0 to NUM_PATTERNS-1) of std_logic_vector(1 downto 0);
 
   --------------------------------------------------------------------------------
   -- Build Parameters
