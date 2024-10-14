@@ -146,8 +146,7 @@ begin
 
     -- hit_count module is the workhorse of the segment finder...
     -- everything else is just sorting
-    compression_enabled : if (EN_HC_COMPRESS) generate
-      i_hit_count : entity work.hit_count
+    i_hit_count : entity work.hit_count
         generic map(
           HCB => HC_BITS,
           LCB => LC_BITS,
@@ -162,25 +161,6 @@ begin
           ly5 => ly5_mask,
           hc  => pats(I).hc,
           lc  => pats(I).lc);
-     end generate;
-     
-     compression_disabled : if (not EN_HC_COMPRESS) generate
-       i_hit_count : entity work.hit_count
-        generic map(
-          HCB => HC_BITS,
-          LCB => LC_BITS,
-          EN_HC_COMPRESS => EN_HC_COMPRESS)
-        port map (
-          clk => clock,
-          ly0 => ly0_mask,
-          ly1 => ly1_mask,
-          ly2 => ly2_mask,
-          ly3 => ly3_mask,
-          ly4 => ly4_mask,
-          ly5 => ly5_mask,
-          hc  => pats(I).hc,
-          lc  => pats(I).lc);
-     end generate;
      
     -- copy the (constant) pattern id
     pats(I).id <= to_unsigned(patlist(I).id, PID_BITS);

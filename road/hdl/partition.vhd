@@ -269,11 +269,11 @@ begin
       end loop;
       
       -- test function to print segments in partition, delete later
---      for I in segments_deghost'range loop
---        if (segments_deghost(I).id > 0) then
---          report "I am partition"&integer'image(partition_num)&". There is a segment centered at strip "&integer'image(to_integer(unsigned(segments_deghos(I).strip)));
---        end if;
---      end loop;
+     for I in segments_deghost'range loop
+       if (segments_deghost(I).id > 0) then
+         report "I am partition"&integer'image(partition_num)&". There is a segment centered at strip "&integer'image(to_integer(unsigned(segments_deghos(I).strip)));
+       end if;
+     end loop;
 
     end if;
   end process;
