@@ -243,13 +243,12 @@ async def chamber_test(dut, test, nloops=512, verbose=True):
             
             elif test=="TEST_PAT":
 
-                chamber_Data = NULL()
+                chamber_data = NULL()
 
                 chamber_data[1][0] = (2**192-1) & (2**26)
                 chamber_data[1][1] = (2**192-1) & (2**26)
                 chamber_data[1][2] = (2**192-1) & (2**26)
-                chamber_data[1][3] = (2**192-1) & (2**26)
-                chamber_data[1][4] = (2**192-1) & (2**26)
+                chamber_data[1][3] = (2**192-1) & (2**26)        
 
             else:
                 chamber_data = NULL()
