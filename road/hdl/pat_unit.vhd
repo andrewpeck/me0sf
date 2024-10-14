@@ -217,7 +217,7 @@ begin
 
       dav_o <= priority_dav;
 
-      if (best.id > 0 and best.lc > unsigned(ly_thresh(to_integer(best.id)-1))) then
+      if (best.id > 0 and best.lc >= unsigned(ly_thresh(to_integer(best.id)-1))) then
         --pat_o.lc <= unsigned('0'&std_logic_vector(best.lc)) + 3;
         --pat_o.lc <= unsigned('0'&std_logic_vector(best.lc));
         pat_o.lc <= unsigned(std_logic_vector(best.lc));
