@@ -173,7 +173,7 @@ architecture behavioral of chamber is
   signal ly_thresh_strict_compressed : ly_thresh_t;
   
   --Function to save on bits required to represent layer hits. Instead of a real layer count
-  --such as 4, changes the threshold to 1, with the understanding this is the value above
+  --such as 4, changes the threshold to 0, with the understanding this is the value above
   --the minimum threshold.
   function compress_ly_count (ly_thresh : ly_thresh_t)
     return ly_thresh_t is

@@ -217,13 +217,20 @@ begin
 
       dav_o <= priority_dav;
 
-      if (best.id > 0 and best.lc > unsigned(ly_thresh(to_integer(best.id)-1))) then
-        --pat_o.lc <= unsigned('0'&std_logic_vector(best.lc)) + 3;
-        --pat_o.lc <= unsigned('0'&std_logic_vector(best.lc));
-        pat_o.lc <= unsigned(std_logic_vector(best.lc));
-        pat_o.id <= best.id;
+      if (EN_HC_COMPRESS) then
+        if (best.id > 0 and best.lc > unsigned(ly_thresh(to_integer(best.id)-1))) then
+          pat_o.lc <= unsigned(std_logic_vector(best.lc));
+          pat_o.id <= best.id;
+        else
+          pat_o <= zero(pat_o);
+        end if;
       else
-        pat_o <= zero(pat_o);
+        if (best.id > 0 and best.lc >= unsigned(ly_thresh(to_integer(best.id)-1))) then
+          pat_o.lc <= unsigned(std_logic_vector(best.lc));
+          pat_o.id <= best.id;
+        else
+          pat_o <= zero(pat_o);
+        end if;
       end if;
 
     end if;
