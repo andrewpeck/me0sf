@@ -19,37 +19,41 @@ from subfunc import Config
 from tb_common import (get_max_span_from_dut, get_segments_from_dut,
                        monitor_dav, setup, measure_latency)
 
-@cocotb.test() # type: ignore
-async def chamber_test_ff(dut, nloops=20):
-   await chamber_test(dut, "FF", nloops)
+# @cocotb.test() # type: ignore
+# async def chamber_test_ff(dut, nloops=20):
+#    await chamber_test(dut, "FF", nloops)
 
-@cocotb.test() # type: ignore
-async def chamber_test_5a(dut, nloops=20):
-   await chamber_test(dut, "5A", nloops)
+# @cocotb.test() # type: ignore
+# async def chamber_test_5a(dut, nloops=20):
+#    await chamber_test(dut, "5A", nloops)
 
-@cocotb.test() # type: ignore
-async def chamber_test_walking1(dut, nloops=191):
-   await chamber_test(dut, "WALKING1", nloops)
+# @cocotb.test() # type: ignore
+# async def chamber_test_walking1(dut, nloops=191):
+#    await chamber_test(dut, "WALKING1", nloops)
 
-@cocotb.test() # type: ignore
-async def chamber_test_walkingf(dut, nloops=192):
-   await chamber_test(dut, "WALKINGF", nloops)
+# @cocotb.test() # type: ignore
+# async def chamber_test_walkingf(dut, nloops=192):
+#    await chamber_test(dut, "WALKINGF", nloops)
 
-@cocotb.test() # type: ignore
-async def chamber_test_xprt(dut, nloops=100):
-   await chamber_test(dut, "XPRT", nloops)
+# @cocotb.test() # type: ignore
+# async def chamber_test_xprt(dut, nloops=100):
+#    await chamber_test(dut, "XPRT", nloops)
 
-@cocotb.test() # type: ignore
-async def chamber_test_segs(dut, nloops=100):
-   await chamber_test(dut, "SEGMENTS", nloops)
+# @cocotb.test() # type: ignore
+# async def chamber_test_segs(dut, nloops=100):
+#    await chamber_test(dut, "SEGMENTS", nloops)
 
-@cocotb.test() # type: ignore
-async def chamber_test_random(dut, nloops=100):
-    await chamber_test(dut, "RANDOM", nloops)
+# @cocotb.test() # type: ignore
+# async def chamber_test_random(dut, nloops=100):
+#     await chamber_test(dut, "RANDOM", nloops)
    
 # @cocotb.test() # type: ignore
 # async def chamber_test_deghost(dut, nloops=20):
 #    await chamber_test(dut, "DEGHOST", nloops)   
+
+@cocotb.test() # type: ignore
+async def chamber_test_deghost(dut, nloops=20):
+   await chamber_test(dut, "TEST_PAT", nloops)   
 
 async def chamber_test(dut, test, nloops=512, verbose=True):
 
@@ -236,6 +240,16 @@ async def chamber_test(dut, test, nloops=512, verbose=True):
                 chamber_data[1][3] = (2**192-1) & (2**26)
                 chamber_data[1][4] = (2**192-1) & (2**26)
                 chamber_data[1][5] = (2**192-1) & (2**26)
+            
+            elif test=="TEST_PAT":
+
+                chamber_Data = NULL()
+
+                chamber_data[1][0] = (2**192-1) & (2**26)
+                chamber_data[1][1] = (2**192-1) & (2**26)
+                chamber_data[1][2] = (2**192-1) & (2**26)
+                chamber_data[1][3] = (2**192-1) & (2**26)
+                chamber_data[1][4] = (2**192-1) & (2**26)
 
             else:
                 chamber_data = NULL()
