@@ -84,7 +84,7 @@ async def chamber_test(dut, test, nloops=512, verbose=True):
     config.ly_thresh_patid = [7, 7, 7, 7, 7, 7, 7, 7, 7, 7, 5, 5, 4, 4, 4, 4, 4]
     config.cross_part_seg_width = 0 # set to zero to disable until implmented in fw
 
-    en_hc_compress = False #this is a generic, so need to set it here and in top level in FW
+    en_hc_compress = True #this is a generic, so need to set it here and in top level in FW
 
     NUM_PARTITIONS = 8
     NULL = lambda : [[0 for _ in range(6)] for _ in range(8)]
