@@ -220,6 +220,14 @@ begin
     report "Only allowed values for s1 reuse are 1,2, and 4"
     severity error;
 
+  variable min : integer := 7;
+  for i in 0 to 10 loop
+    if (ly_thresh_i(i) < min) then
+      min := ly_thresh_i(i);
+    end if;
+  end loop;
+  assert min >= 4 report "Minimum threshold cannot be below 4 if compression is enabled" severity error;
+
   -- synthesis translate_off
   dav_to_phase_i_mon : entity work.dav_to_phase
     generic map (DIV => 1)
