@@ -456,6 +456,26 @@ begin
     end if;
   end process;
 
+  --------------------------------------------------------------------------------
+  -- Cross Partition Deghosting
+  --
+  -- Need to cancel segments that appear in x-partitions and its neighbors
+  --
+  -- For each x-partition, and for each non null segment in a x-partition, find
+  -- the best segment in the left and right partitions that is within the radius.
+  -- Cancel all other segments in the radius in the real partitions. If there is a
+  -- segment in the radius in both the left and right partitions, cancel both.
+  -- If there is exactly one among the left and right partitions, cancel the
+  -- x-partition segment. If there is none, cancel nothing.
+
+  --------------------------------------------------------------------------------
+
+  -- TODO: Implement cross partition deghosting
+  x_part_deghost : if X_PRT_EN generate:
+    x_part_deghost_i : for I in 0 to NUM_FINDERS-1 begin
+
+    end generate;
+  end generate;
 
   --------------------------------------------------------------------------------
   -- Partition Sorting
