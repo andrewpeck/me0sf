@@ -44,6 +44,8 @@ entity chamber is
     --PULSE_EXTEND    : integer := 0;      -- how long pulses should be extended by
     --DEADTIME        : natural := 3;      -- deadtime in bx
     EN_HC_COMPRESS : boolean := true;   -- true to enable compression of hit count function (REQUIRED: minimum ly_thresh value is 4)
+    X_DEGHOST_EN : boolean := false;     -- true to enable cross partition deghosting
+    X_DEGHOST_EDGE_DIST : natural := 2;  -- radius for cross partition deghosting
     
     LY0_SPAN : natural := get_max_span(patdef_array);
     LY1_SPAN : natural := get_max_span(patdef_array);
@@ -135,6 +137,7 @@ architecture behavioral of chamber is
   --------------------------------------------------------------------------------
 
   signal all_segs            : segment_list_t (NUM_FINDERS * NUM_SEGS_PER_PRT - 1 downto 0)    := (others => null_pattern);  -- get all segments from each partition
+  signal all_segs_x_deghosted  : segment_list_t (NUM_FINDERS * NUM_SEGS_PER_PRT - 1 downto 0)    := (others => null_pattern);  -- all segments after x-partition deghosting
   signal two_prt_sorted_segs : segment_list_t (NUM_FINDERS_DIV2 * NUM_SEGMENTS - 1 downto 0)   := (others => null_pattern);  -- sort down to number of output segments for each 2 partitions
   signal one_prt_sorted_segs : segment_list_t (NUM_FINDERS_DIV2*2 * NUM_SEGMENTS - 1 downto 0) := (others => null_pattern);  -- sort down to the number of output segments for each partition
   signal final_segs          : segment_list_t (NUM_SEGMENTS - 1 downto 0)                      := (others => null_pattern);
@@ -471,11 +474,28 @@ begin
   --------------------------------------------------------------------------------
 
   -- TODO: Implement cross partition deghosting
-  x_part_deghost : if X_PRT_EN generate:
-    x_part_deghost_i : for I in 0 to NUM_FINDERS-1 begin
 
+  -- Look into all_segs_dav and adding a function to keep DAV in phase with outputs
+  
+  x_part_deghost_off : if (not (X_PRT_EN and X_DEGHOST_EN)) generate:
+    all_segs_x_deghosted <= all_segs
+
+  x_part_deghost : if (X_PRT_EN and X_DEGHOST_EN) generate:
+    x_prt_deghost : entity work.x_prt_deghost
+    generic map (
+      NUM_FINDERS => NUM_FINDERS,
+      NUM_SEGS_PER_PRT => NUM_SEGS_PER_PRT,
+      EDGE_DIST => X_DEGHOST_EDGE_DIST
+      )
+    port map (
+      clock      => clock,
+      -- dav_i      => dav_segments,
+      -- dav_o      => dav_segments_deghost,
+      segments_i => all_segs,
+      segments_o => all_segs_x_deghosted
+      );
+      
     end generate;
-  end generate;
 
   --------------------------------------------------------------------------------
   -- Partition Sorting
@@ -510,7 +530,7 @@ begin
         clock  => clock,
         dav_i  => all_segs_dav(I),
         dav_o  => one_prt_sorted_dav(I),
-        segs_i => all_segs((I+1)*NUM_SEGS_PER_PRT-1 downto I*NUM_SEGS_PER_PRT),
+        segs_i => all_segs_x_deghosted((I+1)*NUM_SEGS_PER_PRT-1 downto I*NUM_SEGS_PER_PRT),
         segs_o => one_prt_sorted_segs((I+1)*NUM_SEGMENTS-1 downto I*NUM_SEGMENTS)
         );
   end generate;
