@@ -483,7 +483,7 @@ begin
     x_prt_deghost : entity work.x_prt_deghost
     generic map (
       NUM_FINDERS => NUM_FINDERS,
-      NUM_SEGS_PER_PRT => NUM_SEGS_PER_PRT,
+      N_SEGS_PRT => NUM_SEGS_PER_PRT,
       EDGE_DIST => X_DEGHOST_EDGE_DIST
       )
     port map (
