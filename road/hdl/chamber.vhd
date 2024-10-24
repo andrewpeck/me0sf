@@ -477,10 +477,11 @@ begin
 
   -- Look into all_segs_dav and adding a function to keep DAV in phase with outputs
   
-  x_part_deghost_off : if (not (X_PRT_EN and X_DEGHOST_EN)) generate:
-    all_segs_x_deghosted <= all_segs
+  x_part_deghost_off : if (not (X_PRT_EN and X_DEGHOST_EN)) generate
+    all_segs_x_deghosted <= all_segs;
+  end generate;
 
-  x_part_deghost : if (X_PRT_EN and X_DEGHOST_EN) generate:
+  x_part_deghost : if (X_PRT_EN and X_DEGHOST_EN) generate
     x_prt_deghost : entity work.x_prt_deghost
     generic map (
       NUM_FINDERS => NUM_FINDERS,
