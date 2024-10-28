@@ -39,15 +39,23 @@ architecture behavioral of new_x_prt_deghost is
 
   function get_dists(l_segs : segment_list_t (N_SEGS_PRT - 1 downto 0); r_segs : segment_list_t (N_SEGS_PRT - 1 downto 0)) return (array (N_SEGS_PRT-1 downto 0) of segment_list_t(N_SEGS_PRT-1 downto 0)) is
     variable out_matrix is array (N_SEGS_PRT-1 downto 0) of array (N_SEGS_PRT-1 downto 0) of std_logic := N_SEGS_PRT * ('0' * N_SEGS_PRT);
+    variable l_seg is segment_t;
+    variable r_seg is segment_t;
+
+    variable lower_bits_diff is unsigned (1 downto 0);
+
+    constant RADIUS : unsigned (1 downto 0) := 2;
     begin
-      for l_seg in l_segs loop
+      for i in range(N_SEGS_PRT) loop
+        l_seg := l_segs(i);
         l_null := (l_seg = null_pattern);
 
-        for r_seg in r_segs loop
+        for j in range(N_SEGS_PRT) loop
+          r_seg := r_segs(j)
           r_null := (r_seg = null_pattern);
 
-          upper_bits := l_seg(SEG_SIZE downto IDK) xor r_seg(SEG_SIZE downto IDK);
-          lower_bits_diff := abs(l_seg(IDK downto IDK2) - r_seg(IDK downto IDK2));
+          upper_bits := l_seg.strip(STRIP_BITS downto 2) xor r_seg(STRIP_BITS downto 2);
+          lower_bits_diff := abs(signed(l_seg(2 downto 0)) - signed(r_seg(2 downto 0)));
 
           if (and_reduce(upper_bits) or lower_bits_diff > RADIUS) then
             out_matrix(i)(j) := '0';
@@ -63,15 +71,14 @@ begin
 
   process begin
     if (rising_edge(clock)) then
-      l_segs <= 
-      out_matrix <= get_dists(l_segs, r_segs);
+      out_matrix <= get_dists(l_segs_i, r_segs_i);
     end if;
   end process;
 
   -- x_prt_deghost_for : for prt_index in 0 to floor(NUM_FINDERS/2)-1 generate
-  --   x_prt_segments = all_segs((2*prt_index+2)*NUM_SEGS_PER_PRT downto (2*prt_index+1)*NUM_SEGS_PER_PRT);
-  --   l_prt_segments = all_segs((2*prt_index+1)*NUM_SEGS_PER_PRT downto (2*prt_index)*NUM_SEGS_PER_PRT);
-  --   r_prt_segments = all_segs((2*prt_index+3)*NUM_SEGS_PER_PRT downto (2*prt_index+2)*NUM_SEGS_PER_PRT);
+  --   x_prt_segments = all_segs((2*prt_index+2)*N_SEGS_PRT downto (2*prt_index+1)*N_SEGS_PRT);
+  --   l_prt_segments = all_segs((2*prt_index+1)*N_SEGS_PRT downto (2*prt_index)*N_SEGS_PRT);
+  --   r_prt_segments = all_segs((2*prt_index+3)*N_SEGS_PRT downto (2*prt_index+2)*N_SEGS_PRT);
   -- end generate;
 
 end behavioral;
