@@ -49,6 +49,17 @@ def cross_partition_cancellation(segments : List[List[Segment]],
                         seg2_max_quality_index = k
                         seg2_max_quality = seg2.quality
 
+            if seg.quality >= seg1_max_quality_index and seg.quality >= seg2_max_quality_index:
+                segments[i-1][seg1_max_quality_index].reset()
+                segments[i+1][seg2_max_quality_index].reset()
+            else:
+                if seg2_max_quality_index >= seg1_max_quality_index:
+                    segments[i][l].reset()
+                    segments[i-1][seg1_max_quality_index].reset()
+                else:
+                    segments[i][l].reset()
+                    segments[i+1][seg1_max_quality_index].reset()
+            '''
             if seg1_max_quality_index != -9999 and seg2_max_quality_index != -9999:
                 segments[i-1][seg1_max_quality_index].reset()
                 segments[i+1][seg2_max_quality_index].reset()
@@ -56,6 +67,7 @@ def cross_partition_cancellation(segments : List[List[Segment]],
                 segments[i][l].reset()
             elif seg2_max_quality_index != -9999:
                 segments[i][l].reset()
+            '''
 
     return segments
 
