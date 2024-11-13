@@ -43,7 +43,7 @@ entity chamber is
     REG_OUTPUTS     : boolean := false;  -- true to  register outputs on the 40MHz clock
     --PULSE_EXTEND    : integer := 0;      -- how long pulses should be extended by
     --DEADTIME        : natural := 3;      -- deadtime in bx
-    EN_HC_COMPRESS : boolean := true;   -- true to enable compression of hit count function (REQUIRED: minimum ly_thresh value is 4)
+    EN_HC_COMPRESS : boolean := false;   -- true to enable compression of hit count function (REQUIRED: minimum ly_thresh value is 4)
     X_DEGHOST_EN : boolean := false;     -- true to enable cross partition deghosting
     X_DEGHOST_EDGE_DIST : natural := 2;  -- radius for cross partition deghosting
     
@@ -481,22 +481,22 @@ begin
     all_segs_x_deghosted <= all_segs;
   end generate;
 
-  x_part_deghost : if (X_PRT_EN and X_DEGHOST_EN) generate
-    x_prt_deghost : entity work.x_prt_deghost
-    generic map (
-      NUM_FINDERS => NUM_FINDERS,
-      N_SEGS_PRT => NUM_SEGS_PER_PRT,
-      EDGE_DIST => X_DEGHOST_EDGE_DIST
-      )
-    port map (
-      clock      => clock,
-      -- dav_i      => dav_segments,
-      -- dav_o      => dav_segments_deghost,
-      segments_i => all_segs,
-      segments_o => all_segs_x_deghosted
-      );
+--  x_part_deghost : if (X_PRT_EN and X_DEGHOST_EN) generate
+--    x_prt_deghost : entity work.x_prt_deghost
+--    generic map (
+--      NUM_FINDERS => NUM_FINDERS,
+--      N_SEGS_PRT => NUM_SEGS_PER_PRT,
+--      EDGE_DIST => X_DEGHOST_EDGE_DIST
+--      )
+--    port map (
+--      clock      => clock,
+--      -- dav_i      => dav_segments,
+--      -- dav_o      => dav_segments_deghost,
+--      segments_i => all_segs,
+--      segments_o => all_segs_x_deghosted
+--      );
       
-    end generate;
+--    end generate;
 
   --------------------------------------------------------------------------------
   -- Partition Sorting

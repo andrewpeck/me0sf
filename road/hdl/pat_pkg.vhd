@@ -32,10 +32,13 @@ package pat_pkg is
   constant SELECTOR_LATENCY     : positive := 4;
   
   constant NUM_PATTERNS : integer := 17;
+  constant N_SEGS_PRT : integer := 12;
 
   type chamber_t is array(integer range 0 to 7) of partition_t;
   
   type ly_thresh_t is array(integer range 0 to NUM_PATTERNS-1) of std_logic_vector(2 downto 0);
+  
+  type dist_matrix is array(NUM_PRT_SEGS-1 downto 0) of std_logic_vector(NUM_PRT_SEGS-1 downto 0);
 
   --------------------------------------------------------------------------------
   -- Build Parameters

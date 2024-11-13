@@ -10,7 +10,6 @@ use work.patterns.all;
 entity new_x_prt_deghost is
   generic(
     NUM_FINDERS : integer := 15;
-    N_SEGS_PRT : natural := 12;
     EDGE_DIST : natural := 2
     );
   port(
@@ -24,7 +23,7 @@ entity new_x_prt_deghost is
     l_segs_i : in segment_list_t (N_SEGS_PRT-1 downto 0);
     r_segs_i : in segment_list_t (N_SEGS_PRT-1 downto 0);
 
-    out_matrix : out array (N_SEGS_PRT-1 downto 0) of array(N_SEGS_PRT-1 downto 0) of std_logic;
+    out_matrix : out dist_matrix
     
     );
 end new_x_prt_deghost;
@@ -37,30 +36,39 @@ architecture behavioral of new_x_prt_deghost is
   signal l_segment : segment_t;
   signal r_segment : segment_t;
 
-  function get_dists(l_segs : segment_list_t (N_SEGS_PRT - 1 downto 0); r_segs : segment_list_t (N_SEGS_PRT - 1 downto 0)) return (array (N_SEGS_PRT-1 downto 0) of segment_list_t(N_SEGS_PRT-1 downto 0)) is
-    variable out_matrix is array (N_SEGS_PRT-1 downto 0) of array (N_SEGS_PRT-1 downto 0) of std_logic := N_SEGS_PRT * ('0' * N_SEGS_PRT);
-    variable l_seg is segment_t;
-    variable r_seg is segment_t;
+  function get_dists(l_segs : segment_list_t (N_SEGS_PRT - 1 downto 0); r_segs : segment_list_t (N_SEGS_PRT - 1 downto 0)) return dist_matrix is
+    variable out_matrix : dist_matrix;
+    variable l_seg : segment_t;
+    variable r_seg : segment_t;
+    
+    variable l_null : std_logic;
+    variable r_null : std_logic;
+    
+    variable upper_bits : std_logic_vector (STRIP_BITS-1 downto 2);
+    variable lower_bit : std_logic_vector (STRIP_BITS-1 downto 2);
 
-    variable lower_bits_diff is unsigned (1 downto 0);
+    variable lower_bits_diff : signed (2 downto 0);
 
-    constant RADIUS : unsigned (1 downto 0) := 2;
+    constant RADIUS : unsigned (1 downto 0) := unsigned(2);
     begin
-      for i in range(N_SEGS_PRT) loop
+      for i in 0 to N_SEGS_PRT-1 loop
         l_seg := l_segs(i);
-        l_null := (l_seg = null_pattern);
+        l_null := std_logic(l_seg.lc = 0);
 
-        for j in range(N_SEGS_PRT) loop
-          r_seg := r_segs(j)
-          r_null := (r_seg = null_pattern);
+        for j in 0 to N_SEGS_PRT-1 loop
+          r_seg := r_segs(j);
+          r_null := std_logic(r_seg.lc = 0);
+          
+          for k in STRIP_BITS downto 2 loop
+            upper_bits(k) := l_seg.strip(k) xor r_seg.strip(k);
+          end loop;
+         
+          lower_bits_diff := abs(signed(unsigned(l_seg.strip(1 downto 0))) - signed(unsigned(r_seg.strip(1 downto 0))));
 
-          upper_bits := l_seg.strip(STRIP_BITS downto 2) xor r_seg(STRIP_BITS downto 2);
-          lower_bits_diff := abs(signed(l_seg(2 downto 0)) - signed(r_seg(2 downto 0)));
-
-          if (and_reduce(upper_bits) or lower_bits_diff > RADIUS) then
+          if (boolean(and_reduce(upper_bits)) or boolean(lower_bits_diff > signed(RADIUS))) then
             out_matrix(i)(j) := '0';
           else
-            out_matrix(i)(j) := '1' and (not l_null) and (not_r_null);
+            out_matrix(i)(j) := '1' and (not l_null) and (not r_null);
           end if;
         end loop;
       end loop;
