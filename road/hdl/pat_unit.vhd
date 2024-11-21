@@ -31,7 +31,7 @@ entity pat_unit is
   generic(
     VERBOSE : boolean        := false;
     PATLIST : patdef_array_t := patdef_array;
-    EN_HC_COMPRESS : boolean := true;
+    EN_HC_COMPRESS : boolean := false;
 
     LY0_SPAN : natural := get_max_span(patdef_array);
     LY1_SPAN : natural := get_max_span(patdef_array);

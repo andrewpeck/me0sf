@@ -236,6 +236,10 @@ def pat_unit(data,
     if (best.id <= 10):
         best.reset()
 
+    #for i in seg_list:
+    #    if i.id == 17:
+    #        print(i)
+
     # (9) remove segments with large clusters for wide segments - ONLY NEEDED FOR PU200 - NOT USED AT THE MOEMENT
     cluster_size_max_limits = [3, 6, 9, 12, 15]
     n_hits_max_limits = [3, 6, 9, 12, 15]

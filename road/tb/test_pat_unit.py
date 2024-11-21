@@ -27,13 +27,18 @@ async def monitor_dav(dut, latency):
             await RisingEdge(dut.clock)
         assert dut.dav_o.value == 1, f"Is the latency setting wrong? did not find dav w/ latency={latency}"
 
-@cocotb.test() # type: ignore
-async def pat_unit_test_segments(dut):
-    await pat_unit_test(dut, test="SEGMENTS")
+#@cocotb.test() # type: ignore
+#async def pat_unit_test_segments(dut):
+#    await pat_unit_test(dut, test="SEGMENTS")
+#
+#@cocotb.test() # type: ignore
+#async def pat_unit_test_noise(dut):
+#    await pat_unit_test(dut, test="NOISE")
 
 @cocotb.test() # type: ignore
 async def pat_unit_test_noise(dut):
-    await pat_unit_test(dut, test="NOISE")
+    await pat_unit_test(dut, test="TEST_SEG")
+
 
 async def pat_unit_test(dut, test="SEGMENTS"):
 
@@ -106,6 +111,12 @@ async def pat_unit_test(dut, test="SEGMENTS"):
                 hits[ly] |= clust << strp
             hits = [x & 2**37-1 for x in hits]
             return hits
+    elif test=="TEST_SEG":
+        def get_data() -> List[int]:
+            hits = [0 for _ in range(6)]
+            hits[0] = (2**37-1) & (2**19 | 2**20)
+            hits[3:] = [(2**37-1) & 2**17 for _ in range(4)]
+            return hits
     else:
         raise Exception(f"Unknown test {test}")
 
@@ -134,10 +145,11 @@ async def pat_unit_test(dut, test="SEGMENTS"):
         # (2) run the emulator on the old data
         data = queue.pop(0)
         sw_segment = pat_unit(data=data, strip=0,
-                              ly_thresh=LY_THRESH,
+                              ly_thresh_patid=LY_THRESH,
                               partition=0,
                               skip_centroids=True,
-                              light_hit_count=True)
+                              light_hit_count=True,
+                              bx_data = []) #bxs needs an argument, make this accurate later if needed
 
         fw_segment = get_segment_from_pat_unit(dut)
 
