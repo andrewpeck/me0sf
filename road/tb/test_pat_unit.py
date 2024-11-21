@@ -53,6 +53,8 @@ async def pat_unit_test(dut, test="SEGMENTS"):
     # set layer count threshold
     dut.ly_thresh.value = [7, 7, 7, 7, 7, 7, 7, 7, 7, 7, 5, 5, 4, 4, 4, 4, 4]
 
+    en_hc_compress = True #this is a generic, so need to set it here and in top level in FW
+
     # set MAX_SPAN from firmware
     # should be a number approx 37
     MAX_SPAN = get_max_span_from_dut(dut)
@@ -138,6 +140,12 @@ async def pat_unit_test(dut, test="SEGMENTS"):
                               light_hit_count=True)
 
         fw_segment = get_segment_from_pat_unit(dut)
+
+        #Add 3 to the FW segments' layer count, to account for LC compression
+        if (en_hc_compress):
+            if (fw_segment.lc > 0):
+                fw_segment.lc += 3
+                fw_segment.update_quality()
 
         if sw_segment != fw_segment:
             print(f"loop={i}")
