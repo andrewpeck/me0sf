@@ -38,7 +38,11 @@ package pat_pkg is
   
   type ly_thresh_t is array(integer range 0 to NUM_PATTERNS-1) of std_logic_vector(2 downto 0);
   
+<<<<<<< HEAD
   type dist_matrix is array(N_SEGS_PRT-1 downto 0) of std_logic_vector(N_SEGS_PRT-1 downto 0);
+=======
+  --type dist_matrix is array(NUM_PRT_SEGS-1 downto 0) of std_logic_vector(NUM_PRT_SEGS-1 downto 0);
+>>>>>>> abe6220ea3c3cf4c6d687eef8e431867c9879b25
 
   --------------------------------------------------------------------------------
   -- Build Parameters
