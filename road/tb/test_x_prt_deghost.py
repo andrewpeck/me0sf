@@ -2,10 +2,16 @@ import os
 from math import ceil
 
 import cocotb
+from cocotb.clock import Clock
 from cocotb.triggers import RisingEdge
 from cocotb_test.simulator import run
 
-from tb_common import (get_segments_from_dut, monitor_dav, setup, measure_latency)
+from tb_common import (get_segments_from_dut, generate_dav, monitor_dav, measure_latency)
+
+def setup(dut):
+    c = Clock(dut.clock, 12, "ns")
+    cocotb.start_soon(c.start())
+    cocotb.start_soon(generate_dav(dut))
 
 @cocotb.test() # type: ignore
 async def chamber_test_ff(dut, nloops=100):
@@ -101,6 +107,8 @@ def test_chamber():
         os.path.join(rtl_dir, "patterns.vhd"),
         os.path.join(rtl_dir, "x_prt_deghost.vhd")]
 
+    parameters = {"NUM_SEGS_PER_PRT" : 12}
+
     os.environ["SIM"] = "questa"
     
     run(vhdl_sources=vhdl_sources,
@@ -109,6 +117,7 @@ def test_chamber():
         toplevel="x_prt_deghost",  # top level HDL
         toplevel_lang="vhdl",
         sim_args=["-suppress", "14408", "-do", "set NumericStdNoWarnings 1;"],
+        parameters=parameters,
         gui=0)
 
 if __name__ == "__main__":

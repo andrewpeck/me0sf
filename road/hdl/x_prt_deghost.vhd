@@ -17,8 +17,8 @@ entity x_prt_deghost is
   port(
     clock      : in  std_logic;
 
-    -- dav_i      : in  std_logic;
-    -- dav_o      : out std_logic;
+    dav_i      : in  std_logic;
+    dav_o      : out std_logic;
 
     segments_i : in  segment_list_t (NUM_FINDERS * NUM_SEGS_PER_PRT - 1 downto 0);
     segments_o : out segment_list_t (NUM_FINDERS * NUM_SEGS_PER_PRT - 1 downto 0)
@@ -64,15 +64,15 @@ begin
     x_prt_seg_for : for x_segment_index in 0 to NUM_SEGS_PER_PRT-1 generate
       x_segment <= x_prt_segments(x_segment_index);
       
-      x_seg_exists <= True when x_segment.lc /= 0 else False; --make sure segment is not null
+      --x_seg_exists <= True when x_segment.lc /= 0 else False; --make sure segment is not null
       
-      best_index_l <= NUM_SEGS_PER_PRT;
+     -- best_index_l <= NUM_SEGS_PER_PRT;
       in_radius_finder_l : for l_segment_index in 0 to NUM_SEGS_PER_PRT-1 generate
         l_segment <= l_prt_segments(l_segment_index);
         in_radius_vector_l(l_segment_index) <= '1' when (x_seg_exists and abs(signed(unsigned(l_segment.strip) - unsigned(x_segment.strip))) <= EDGE_DIST) else '0';
       end generate;
     
-      best_index_r <= NUM_SEGS_PER_PRT;
+      --best_index_r <= NUM_SEGS_PER_PRT;
       in_radius_finder_r : for r_segment_index in 0 to NUM_SEGS_PER_PRT-1 generate
         r_segment <= r_prt_segments(r_segment_index);
         in_radius_vector_r(r_segment_index) <= '1' when (x_seg_exists and abs(signed(unsigned(r_segment.strip) - unsigned(x_segment.strip))) <= EDGE_DIST) else '0';
