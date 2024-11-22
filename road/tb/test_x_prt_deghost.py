@@ -35,7 +35,7 @@ async def chamber_test(dut, test, nloops=512, verbose=True):
     checkfn = lambda : True
 
     def setfn(dut, x):
-        dut.segments_i.value = [[x for _ in range(6)] for _ in range(NUM_PARTITIONS)]
+        dut.segments_i.value = [[x for _ in range(15*12)]]
 
     meas_latency = await measure_latency(dut, checkfn, setfn)
 
