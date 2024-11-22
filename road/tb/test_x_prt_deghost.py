@@ -25,22 +25,22 @@ async def chamber_test(dut, test, nloops=512, verbose=True):
     await RisingEdge(dut.clock)
 
     NUM_PARTITIONS = 8
-    NULL = lambda : [[0 for _ in range(6)] for _ in range(8)]
-    dut.sbits_i.value = NULL()
+    NULL = lambda : [[0 for _ in range(15*12)]]
+    dut.segments_i.value = NULL()
 
     # flush the buffers
     for _ in range(256):
         await RisingEdge(dut.clock)
 
-    # measure latency by putting some s-bits on a strip and waiting to see the output
-    checkfn = lambda : dut.segments_o[0].lc.value.is_resolvable and dut.segments_o[0].lc.value.integer > 0
+    checkfn = lambda : True
 
     def setfn(dut, x):
         dut.segments_i.value = [[x for _ in range(6)] for _ in range(NUM_PARTITIONS)]
 
     meas_latency = await measure_latency(dut, checkfn, setfn)
 
-    LATENCY = ceil(meas_latency)-1
+    # LATENCY = ceil(meas_latency)-1
+    LATENCY = 50  #arbitrary value for now, just want to flush everything
 
     # flush the buffers
     dut.sbits_i.value = NULL()

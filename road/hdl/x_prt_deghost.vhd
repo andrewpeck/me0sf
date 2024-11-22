@@ -21,7 +21,8 @@ entity x_prt_deghost is
     dav_o      : out std_logic;
 
     segments_i : in  segment_list_t (NUM_FINDERS * NUM_SEGS_PER_PRT - 1 downto 0);
-    segments_o : out segment_list_t (NUM_FINDERS * NUM_SEGS_PER_PRT - 1 downto 0)
+    --segments_o : out segment_list_t (NUM_FINDERS * NUM_SEGS_PER_PRT - 1 downto 0)
+    vector_o : out std_logic_vector(NUM_SEGS_PER_PRT-1 downto 0)
     );
 end x_prt_deghost;
 
@@ -77,6 +78,8 @@ begin
         r_segment <= r_prt_segments(r_segment_index);
         in_radius_vector_r(r_segment_index) <= '1' when (x_seg_exists and abs(signed(unsigned(r_segment.strip) - unsigned(x_segment.strip))) <= EDGE_DIST) else '0';
       end generate;
+      
+  vector_o <= in_radius_vector_l;
     
 --    deghost_final_choice : if (best_index_l /= NUM_SEGS_PER_PRT and best_index_r /= NUM_SEGS_PER_PRT) generate
 --      l_prt_mask(best_index_l) <= '0';
