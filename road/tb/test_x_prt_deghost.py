@@ -96,17 +96,17 @@ def test_chamber():
     module = os.path.splitext(os.path.basename(__file__))[0]
 
     vhdl_sources = [
-        os.path.join(rtl_dir, "x_prt_deghost.vhd"),
         os.path.join(rtl_dir, "pat_types.vhd"),
         os.path.join(rtl_dir, "pat_pkg.vhd"),
-        os.path.join(rtl_dir, "patterns.vhd")]
+        os.path.join(rtl_dir, "patterns.vhd"),
+        os.path.join(rtl_dir, "x_prt_deghost.vhd")]
 
     os.environ["SIM"] = "questa"
     
     run(vhdl_sources=vhdl_sources,
         module=module,  # name of cocotb test module
         compile_args=["-2008"],
-        toplevel="chamber",  # top level HDL
+        toplevel="x_prt_deghost",  # top level HDL
         toplevel_lang="vhdl",
         sim_args=["-suppress", "14408", "-do", "set NumericStdNoWarnings 1;"],
         gui=0)
