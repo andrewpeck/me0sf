@@ -25,17 +25,21 @@ async def chamber_test(dut, test, nloops=512, verbose=True):
     await RisingEdge(dut.clock)
 
     NUM_PARTITIONS = 8
-    NULL = lambda : [[0 for _ in range(15*12)]]
-    dut.segments_i.value = NULL()
-
-    # flush the buffers
-    for _ in range(256):
-        await RisingEdge(dut.clock)
 
     checkfn = lambda : True
 
     def setfn(dut, x):
-        dut.segments_i.value = [x for _ in range(15*12)]
+        for i in range(15*12):
+            dut.segments_i[i].lc.value.integer = x
+            dut.segments_i[i].id.value.integer = 0
+            dut.segments_i[i].strip.value.integer = 0
+            dut.segments_i[i].partition.value.integer = 0
+
+    setfn(dut, 0)
+
+    # flush the buffers
+    for _ in range(256):
+        await RisingEdge(dut.clock)
 
     meas_latency = await measure_latency(dut, checkfn, setfn)
 
@@ -43,7 +47,8 @@ async def chamber_test(dut, test, nloops=512, verbose=True):
     LATENCY = 50  #arbitrary value for now, just want to flush everything
 
     # flush the buffers
-    dut.sbits_i.value = NULL()
+    setfn(dut, 0)
+
     for _ in range(LATENCY*8+1):
         await RisingEdge(dut.clock)
 
@@ -66,7 +71,7 @@ async def chamber_test(dut, test, nloops=512, verbose=True):
 
             if test=="SEGMENTS":
 
-                segments_data = NUM_FINDERS*NUM_SEGS_PER_PRT*[0]
+                segments_data = NUM_FINDERS*NUM_SEGS_PER_PRT*[""]
 
                 NUM_FINDERS = 15
                 NUM_SEGS_PER_PRT = 12
@@ -76,12 +81,17 @@ async def chamber_test(dut, test, nloops=512, verbose=True):
                 #[LC PID STRIP PRT]
                 #[0000 00000 00000000 0000]
                 #[4 bits 5 bits 8 bits 4 bits]
-                segments_data[NUM_FINDERS*PRT + SEG_NUM] = int(format(4, '04b') + format(17, '05b') + format(0, '08b') + format(PRT, '04b'), 2)
+                segments_data[NUM_FINDERS*PRT + SEG_NUM] = format(4, '04b') + format(17, '05b') + format(0, '08b') + format(PRT, '04b')
       
             else:
-                segments_data = NULL()
+                raise Exception("Test not found")
 
-            dut.segments_i.value = segments_data
+            for i in range (15*12):
+                dut.segments_i[i].lc.value.integer = int(segments_data[i][0:3], 2)
+                dut.segments_i[i].id.value.integer = int(segments_data[i][4:10], 2)
+                dut.segments_i[i].strip.value.integer = int(segments_data[i][11:18], 2)
+                dut.segments_i[i].partition.value.integer = int(segments_data[i][18:21], 2)
+
             loop += 1
 
         # pop old data on dav_o
