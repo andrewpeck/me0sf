@@ -25,7 +25,7 @@ async def chamber_test(dut, test, nloops=512, verbose=True):
     await RisingEdge(dut.clock)
 
     NUM_PARTITIONS = 8
-    NULL = lambda : [[0 for _ in range(15*12)]]
+    NULL = lambda : [0 for _ in range(15*12)]
     dut.segments_i.value = NULL()
 
     # flush the buffers
