@@ -46,6 +46,33 @@ architecture behavioral of x_prt_deghost is
   
   type seg_exists_t is array (0 to NUM_X_PRT-1, 0 to NUM_SEGS_PER_PRT) of boolean;
   signal x_seg_exists : seg_exists_t;
+  
+  
+  --Function to reduce resources of subtraction of 8 bit integers (strips numbers)
+  --Returns true if left and right seg are both non-null and within EDGE_DIST
+  function are_segs_in_range(l_seg : segment_t; r_seg : segment_t) return boolean is
+    variable out_bool : boolean;
+    
+    variable upper_bits_xor : std_logic_vector (STRIP_BITS-1 downto 2);
+
+    variable lower_bits_diff : unsigned (1 downto 0);
+
+    begin
+      -- Check if either segment is null
+      if l_seg.lc = 0 or r_seg.lc = 0 then
+        return false;
+      end if;
+
+      for i in STRIP_BITS-1 downto 2 loop
+          upper_bits_xor(i) := l_seg.strip(i) xor r_seg.strip(i);
+      end loop;
+         
+      lower_bits_diff := unsigned(abs(signed(unsigned(l_seg.strip(1 downto 0))) - signed(unsigned(r_seg.strip(1 downto 0)))));
+
+      out_bool := false when (and_reduce(upper_bits_xor) = '1') or (lower_bits_diff > EDGE_DIST) else true;
+      
+      return out_bool;
+    end;
 
 begin
   -- set masks to all 1's
@@ -66,7 +93,8 @@ begin
       
      -- best_index_l <= NUM_SEGS_PER_PRT;
       in_radius_finder_l : for l_segment_index in 0 to NUM_SEGS_PER_PRT-1 generate
-        in_radius_vector_l(l_segment_index) <= '1' when (x_seg_exists(prt_index, x_segment_index) and l_prt_segments(l_segment_index).lc > 0 and abs(signed(unsigned(l_prt_segments(l_segment_index).strip) - unsigned(x_prt_segments(x_segment_index).strip))) <= EDGE_DIST) else '0';
+        --in_radius_vector_l(l_segment_index) <= '1' when (x_seg_exists(prt_index, x_segment_index) and l_prt_segments(l_segment_index).lc > 0 and abs(signed(unsigned(l_prt_segments(l_segment_index).strip) - unsigned(x_prt_segments(x_segment_index).strip))) <= EDGE_DIST) else '0';    
+        in_radius_vector_l(l_segment_index) <= '1' when are_segs_in_range(l_prt_segments(l_segment_index), x_prt_segments(x_segment_index)) else '0';                       
       end generate;
     
       --best_index_r <= NUM_SEGS_PER_PRT;
