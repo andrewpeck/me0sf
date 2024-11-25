@@ -60,7 +60,7 @@ async def chamber_test(dut, test, nloops=512, verbose=True):
     while loop < nloops:
 
         # push new data on dav_i
-        if dut.dav_i_phase.value == 7:
+        if dut.dav_i.value == 1:
 
             if verbose:
                 print(f"{loop=}")
@@ -70,38 +70,42 @@ async def chamber_test(dut, test, nloops=512, verbose=True):
             # (3) set the DUT inputs to the new data
 
             if test=="SEGMENTS":
-
-                segments_data = NUM_FINDERS*NUM_SEGS_PER_PRT*[""]
-
                 NUM_FINDERS = 15
                 NUM_SEGS_PER_PRT = 12
 
+                segments_data = NUM_FINDERS*NUM_SEGS_PER_PRT*['0'*(4+5+8+4)]
+                
                 PRT = 0
                 SEG_NUM = 0
                 #[LC PID STRIP PRT]
                 #[0000 00000 00000000 0000]
                 #[4 bits 5 bits 8 bits 4 bits]
-                segments_data[NUM_FINDERS*PRT + SEG_NUM] = format(4, '04b') + format(17, '05b') + format(0, '08b') + format(PRT, '04b')
+                segments_data[NUM_SEGS_PER_PRT*PRT + SEG_NUM] = format(4, '04b') + format(17, '05b') + format(0, '08b') + format(PRT, '04b')
+                segments_data[NUM_SEGS_PER_PRT*1 + 0] = format(4, '04b') + format(17, '05b') + format(0, '08b') + format(1, '04b')
+
       
             else:
                 raise Exception("Test not found")
 
             for i in range (15*12):
-                dut.segments_i[i].lc.value.integer = int(segments_data[i][0:3], 2)
-                dut.segments_i[i].id.value.integer = int(segments_data[i][4:10], 2)
-                dut.segments_i[i].strip.value.integer = int(segments_data[i][11:18], 2)
-                dut.segments_i[i].partition.value.integer = int(segments_data[i][18:21], 2)
+                dut.segments_i[i].lc.value = int(segments_data[i][0:4], 2)
+                dut.segments_i[i].id.value = int(segments_data[i][4:9], 2)
+                dut.segments_i[i].strip.value = int(segments_data[i][9:17], 2)
+                dut.segments_i[i].partition.value = int(segments_data[i][17:21], 2)
 
             loop += 1
 
         # pop old data on dav_o
-        if dut.dav_o_phase.value == 0:
-            fw_segments = get_segments_from_dut(dut)
+        if dut.dav_i.value == 1 and loop > 10:
+            fw_vector = dut.vector_o
+            for i in range(NUM_SEGS_PER_PRT):
+                #print(dut.x_prt_segments[i].lc.value.integer)
+                print(dut.in_radius_vector_l[i].value)
 
             if verbose:
                 print(f'{loop=}')
-                for i in range(len(fw_segments)):
-                    print("  > fw: " + str(fw_segments[i]))
+                for i in range(len(fw_vector)):
+                    print("  > fw: " + str(fw_vector[i]))
 
         await RisingEdge(dut.clock)
 
