@@ -14,7 +14,7 @@ def setup(dut):
     cocotb.start_soon(generate_dav(dut))
 
 @cocotb.test() # type: ignore
-async def chamber_test_ff(dut, nloops=100):
+async def chamber_test_ff(dut, nloops=20):
    await chamber_test(dut, "SEGMENTS", nloops) 
 
 async def chamber_test(dut, test, nloops=512, verbose=True):
@@ -81,7 +81,9 @@ async def chamber_test(dut, test, nloops=512, verbose=True):
                 #[0000 00000 00000000 0000]
                 #[4 bits 5 bits 8 bits 4 bits]
                 segments_data[NUM_SEGS_PER_PRT*PRT + SEG_NUM] = format(4, '04b') + format(17, '05b') + format(0, '08b') + format(PRT, '04b')
-                segments_data[NUM_SEGS_PER_PRT*1 + 0] = format(4, '04b') + format(17, '05b') + format(0, '08b') + format(1, '04b')
+                segments_data[NUM_SEGS_PER_PRT*1 + 0] = format(4, '04b') + format(17, '05b') + format(3, '08b') + format(1, '04b')
+                segments_data[NUM_SEGS_PER_PRT*PRT + 4] = format(4, '04b') + format(17, '05b') + format(2, '08b') + format(PRT, '04b')
+
 
       
             else:

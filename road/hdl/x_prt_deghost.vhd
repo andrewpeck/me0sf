@@ -55,7 +55,7 @@ architecture behavioral of x_prt_deghost is
     
     variable upper_bits_xor : std_logic_vector (STRIP_BITS-1 downto 2);
 
-    variable lower_bits_diff : unsigned (1 downto 0);
+    variable lower_bits_diff : unsigned (2 downto 0);
 
     begin
       -- Check if either segment is null
@@ -66,10 +66,12 @@ architecture behavioral of x_prt_deghost is
       for i in STRIP_BITS-1 downto 2 loop
           upper_bits_xor(i) := l_seg.strip(i) xor r_seg.strip(i);
       end loop;
+      --report("UPPER BITS XOR: "&integer'image(to_integer(unsigned(upper_bits_xor))));
          
-      lower_bits_diff := unsigned(abs(signed(unsigned(l_seg.strip(1 downto 0))) - signed(unsigned(r_seg.strip(1 downto 0)))));
+      lower_bits_diff := unsigned(abs(signed(unsigned('0'&l_seg.strip(1 downto 0))) - signed(unsigned('0'&r_seg.strip(1 downto 0)))));
+      --report "LOWER BITS DIFF: "&integer'image(to_integer(lower_bits_diff)) severity note;
 
-      out_bool := false when (and_reduce(upper_bits_xor) = '1') or (lower_bits_diff > EDGE_DIST) else true;
+      out_bool := false when (or_reduce(upper_bits_xor) = '1') or (lower_bits_diff(1 downto 0) > EDGE_DIST) else true;
       
       return out_bool;
     end;
