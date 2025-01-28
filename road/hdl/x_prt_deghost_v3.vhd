@@ -45,8 +45,8 @@ entity x_prt_deghost_v3 is
     v_seg_i : in segment_t;
     r_segs_i : in segment_list_t (N_SEGS_PRT-1 downto 0); -- 12 segs in
 
-    out_matrix : out dist_matrix
-    
+--    out_matrix : out dist_matrix
+    out_bits : out std_logic_vector(5 downto 0)
     );
 end x_prt_deghost_v3;
 
@@ -57,6 +57,8 @@ architecture behavioral of x_prt_deghost_v3 is
   signal x_segment : segment_t;
   signal l_segment : segment_t;
   signal r_segment : segment_t;
+  
+--  type diff_arr_t is array (0 to 5) of signed (2 downto 0);
 
   -- Assuming chunk size is a power of 2, then the "strip" attribute of segments can be interpreted as:
   -- strip = [chunk_number][offset_in_chunk]
@@ -64,18 +66,14 @@ architecture behavioral of x_prt_deghost_v3 is
   -- Returns 6 bits, corresponding to whether the top 3 segments are in range, and the bottom 3
   -- To save resources, we can replace the whole chunk_number with only "0" or "1", reducing our space from the whole 192 strips to the local 2 chunks (2*CHUNK_SIZE)
 
-  function get_dists(v_seg : segment_t; r_segs : segment_list_t (5 downto 0)) return std_logic_vector(5 downto 0) is
+  function get_dists(v_seg : segment_t; r_segs : segment_list_t (5 downto 0)) return std_logic_vector is
     variable out_bits : std_logic_vector (5 downto 0);
-
-    variable l_seg : segment_t;
-    variable r_seg : segment_t;
     
-    variable v_null : std_logic;
-    variable r_null : std_logic
+    variable v_null : boolean;
+    variable r_null : boolean;
 
     -- TODO: Check signed size to make sure overflow doesn't happen, just put numbers down for now
-    type diff_arr_t is array (0 to 5) of signed (2 downto 0);
-    variable diff_arr : diff_arr_t (5 downto 0);
+    variable diff : signed (1 downto 0);
 
     -- Bit to left append strip number of virtual and real segments
     constant append_v : std_logic_vector (5 downto 0) := "100100";
@@ -83,25 +81,25 @@ architecture behavioral of x_prt_deghost_v3 is
 
     constant RADIUS : unsigned (1 downto 0) := unsigned(2);
     begin
-      v_null := '1' when v_seg.count = 0 else '0';
-      
       for i in 0 to 5 loop
-        r_null := '1' when r_segs(i).count = 0 else '0';
-        diff_arr := abs(signed(unsigned(append_r(i) & r_segs(i).strip(1 downto 0))) - signed(unsigned(append_v(i) & v_seg.strip(1 downto 0))));
+        diff := abs(signed(unsigned(append_r(i) & r_segs(i).strip(1 downto 0))) - signed(unsigned(append_v(i) & v_seg.strip(1 downto 0))));
 
-        if (boolean(lower_bits_diff > signed(RADIUS)) or v_null or r_null_arr(i)) then
+        if (boolean(diff > signed(RADIUS))) then
+--        if (boolean(diff > signed(RADIUS)) or v_seg.lc = 0 or r_segs(i) = 0) then
             out_bits(i) := '0';
           else
             out_bits(i) := '1';
         end if;
+      end loop;
+      
       return out_bits;
-    end;
+    end function;
 
 begin
 
   process begin
     if (rising_edge(clock)) then
-      out_matrix <= get_dists(v_seg_i, r_segs_i);
+      out_bits <= get_dists(v_seg_i, r_segs_i(0 to 5));
     end if;
   end process;
 
