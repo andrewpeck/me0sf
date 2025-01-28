@@ -28,12 +28,24 @@ async def chamber_test(dut, test, nloops=512, verbose=True):
 
     checkfn = lambda : True
 
+    # def setfn(dut, x):
+    #     for i in range(15*12):
+    #         dut.segments_i[i].lc.value.integer = x
+    #         dut.segments_i[i].id.value.integer = 0
+    #         dut.segments_i[i].strip.value.integer = 0
+    #         dut.segments_i[i].partition.value.integer = 0
+
+    
     def setfn(dut, x):
-        for i in range(15*12):
-            dut.segments_i[i].lc.value.integer = x
-            dut.segments_i[i].id.value.integer = 0
-            dut.segments_i[i].strip.value.integer = 0
-            dut.segments_i[i].partition.value.integer = 0
+        for i in range(6):
+            dut.r_segs_i[i].lc.value.integer = x
+            dut.r_segs_i[i].id.value.integer = 0
+            dut.r_segs_i[i].strip.value.integer = 0
+            dut.r_segs_i[i].partition.value.integer = 0
+        dut.v_seg_i[i].lc.value.integer = x
+        dut.v_seg_i[i].id.value.integer = 0
+        dut.v_seg_i[i].strip.value.integer = 0
+        dut.v_seg_i[i].partition.value.integer = 0
 
     setfn(dut, 0)
 
@@ -73,27 +85,34 @@ async def chamber_test(dut, test, nloops=512, verbose=True):
                 NUM_FINDERS = 15
                 NUM_SEGS_PER_PRT = 12
 
-                segments_data = NUM_FINDERS*NUM_SEGS_PER_PRT*['0'*(4+5+8+4)]
+                segments_data = 6*['0'*(4+5+8+4)]
+
+                # segments_data = NUM_FINDERS*NUM_SEGS_PER_PRT*['0'*(4+5+8+4)]
                 
                 PRT = 0
                 SEG_NUM = 0
                 #[LC PID STRIP PRT]
                 #[0000 00000 00000000 0000]
                 #[4 bits 5 bits 8 bits 4 bits]
-                segments_data[NUM_SEGS_PER_PRT*PRT + SEG_NUM] = format(4, '04b') + format(17, '05b') + format(0, '08b') + format(PRT, '04b')
-                segments_data[NUM_SEGS_PER_PRT*1 + 0] = format(4, '04b') + format(17, '05b') + format(3, '08b') + format(1, '04b')
-                segments_data[NUM_SEGS_PER_PRT*PRT + 4] = format(4, '04b') + format(17, '05b') + format(2, '08b') + format(PRT, '04b')
+                # segments_data[NUM_SEGS_PER_PRT*PRT + SEG_NUM] = format(4, '04b') + format(17, '05b') + format(0, '08b') + format(PRT, '04b')
+                # segments_data[NUM_SEGS_PER_PRT*1 + 0] = format(4, '04b') + format(17, '05b') + format(3, '08b') + format(1, '04b')
+                # segments_data[NUM_SEGS_PER_PRT*PRT + 4] = format(4, '04b') + format(17, '05b') + format(2, '08b') + format(PRT, '04b')
 
 
       
             else:
                 raise Exception("Test not found")
 
-            for i in range (15*12):
-                dut.segments_i[i].lc.value = int(segments_data[i][0:4], 2)
-                dut.segments_i[i].id.value = int(segments_data[i][4:9], 2)
-                dut.segments_i[i].strip.value = int(segments_data[i][9:17], 2)
-                dut.segments_i[i].partition.value = int(segments_data[i][17:21], 2)
+            for i in range (6):
+                # All null segs
+                dut.r_segs_i[i].lc.value = int(0, 2)
+                dut.r_segs_i[i].id.value = int(0, 2)
+                dut.r_segs_i[i].strip.value = int(0, 2)
+                dut.r_segs_i[i].partition.value = int(0, 2)
+            dut.v_seg_i.lc.value = int(4, 2)
+            dut.v_seg_i.id.value = int(17, 2)
+            dut.v_seg_i.strip.value = int(0, 2)
+            dut.v_seg_i.partition.value = int(0, 2)
 
             loop += 1
 
@@ -121,7 +140,7 @@ def test_chamber():
         os.path.join(rtl_dir, "pat_types.vhd"),
         os.path.join(rtl_dir, "pat_pkg.vhd"),
         os.path.join(rtl_dir, "patterns.vhd"),
-        os.path.join(rtl_dir, "x_prt_deghost.vhd")]
+        os.path.join(rtl_dir, "x_prt_deghost_v3.vhd")]
 
     parameters = {"NUM_SEGS_PER_PRT" : 12}
 
@@ -130,7 +149,7 @@ def test_chamber():
     run(vhdl_sources=vhdl_sources,
         module=module,  # name of cocotb test module
         compile_args=["-2008"],
-        toplevel="x_prt_deghost",  # top level HDL
+        toplevel="x_prt_deghost_v3",  # top level HDL
         toplevel_lang="vhdl",
         sim_args=["-suppress", "14408", "-do", "set NumericStdNoWarnings 1;"],
         parameters=parameters,
