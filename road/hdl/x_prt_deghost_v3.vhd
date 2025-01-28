@@ -71,7 +71,7 @@ architecture behavioral of x_prt_deghost_v3 is
     variable r_seg : segment_t;
     
     variable v_null : std_logic;
-    variable r_null_arr : std_logic_vector (5 downto 0);
+    variable r_null : std_logic
 
     -- TODO: Check signed size to make sure overflow doesn't happen, just put numbers down for now
     type diff_arr_t is array (0 to 5) of signed (2 downto 0);
@@ -84,11 +84,9 @@ architecture behavioral of x_prt_deghost_v3 is
     constant RADIUS : unsigned (1 downto 0) := unsigned(2);
     begin
       v_null := '1' when v_seg.count = 0 else '0';
+      
       for i in 0 to 5 loop
-        r_null_arr := '1' when r_segs(i).count = 0 else '0';
-      end loop;
-
-      for i in 0 to 5 loop
+        r_null := '1' when r_segs(i).count = 0 else '0';
         diff_arr := abs(signed(unsigned(append_r(i) & r_segs(i).strip(1 downto 0))) - signed(unsigned(append_v(i) & v_seg.strip(1 downto 0))));
 
         if (boolean(lower_bits_diff > signed(RADIUS)) or v_null or r_null_arr(i)) then
