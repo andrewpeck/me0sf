@@ -12,7 +12,7 @@ entity x_prt_deghost is
   generic(
     NUM_FINDERS : integer := 15;
     NUM_SEGS_PER_PRT : natural := 12;
-    EDGE_DIST : natural := 2
+    DEGHOST_RADIUS : natural := 2
     );
   port(
     clock      : in  std_logic;
@@ -29,14 +29,18 @@ end x_prt_deghost;
 architecture behavioral of x_prt_deghost is
 
   constant NUM_X_PRT : integer := integer(floor(real(NUM_FINDERS)/2.0));
+  constant STRIPS_PER_CHUNK : integer := 192/NUM_SEGS_PER_PRT;
+  constant CHUNK_RADIUS : integer := ceil(real(DEGHOST_RADIUS)/real(STRIPS_PER_CHUNK));
+
+  type chunk_2d_array is array(0 to NUM_FINDERS+1, 0 to NUM_SEGS_PER_PRT+1) of segment_t;
+  signal segments_i_padded : chunk_2d_array;
 
   signal x_prt_segments : segment_list_t (NUM_SEGS_PER_PRT - 1 downto 0) := (others => null_pattern);
   signal l_prt_segments : segment_list_t (NUM_SEGS_PER_PRT - 1 downto 0) := (others => null_pattern);
   signal r_prt_segments : segment_list_t (NUM_SEGS_PER_PRT - 1 downto 0) := (others => null_pattern);
 
-  signal x_prt_mask : std_logic_vector(NUM_SEGS_PER_PRT - 1 downto 0) := (others => '1');
-  signal l_prt_mask : std_logic_vector(NUM_SEGS_PER_PRT - 1 downto 0) := (others => '1');
-  signal r_prt_mask : std_logic_vector(NUM_SEGS_PER_PRT - 1 downto 0) := (others => '1');
+  type mask_2d_array is array(0 to NUM_FINDERS-1, 0 to NUM_SEGS_PER_PRT-1) of boolean;
+  signal mask_array : mask_2d_array;
   
   signal in_radius_vector_l : std_logic_vector(NUM_SEGS_PER_PRT-1 downto 0);
   signal in_radius_vector_r : std_logic_vector(NUM_SEGS_PER_PRT-1 downto 0);
@@ -46,10 +50,14 @@ architecture behavioral of x_prt_deghost is
   
   type seg_exists_t is array (0 to NUM_X_PRT-1, 0 to NUM_SEGS_PER_PRT) of boolean;
   signal x_seg_exists : seg_exists_t;
+
+  type chunk_vector_array_t is array(0 to NUM_X_PRT-1, 0 to NUM_SEGS_PER_PRT-1) of std_logic_vector(2 downto 0);
+  signal chunk_vector_array_up : chunk_vector_array_t;
+  signal chunk_vector_array_dwon : chunk_vector_array_t;
   
   
   --Function to reduce resources of subtraction of 8 bit integers (strips numbers)
-  --Returns true if left and right seg are both non-null and within EDGE_DIST
+  --Returns true if left and right seg are both non-null and within DEGHOST_RADIUS
   function are_segs_in_range(l_seg : segment_t; r_seg : segment_t) return boolean is
     variable out_bool : boolean;
     
@@ -71,18 +79,21 @@ architecture behavioral of x_prt_deghost is
       lower_bits_diff := unsigned(abs(signed(unsigned('0'&l_seg.strip(1 downto 0))) - signed(unsigned('0'&r_seg.strip(1 downto 0)))));
       --report "LOWER BITS DIFF: "&integer'image(to_integer(lower_bits_diff)) severity note;
 
-      out_bool := false when (or_reduce(upper_bits_xor) = '1') or (lower_bits_diff(1 downto 0) > EDGE_DIST) else true;
+      out_bool := false when (or_reduce(upper_bits_xor) = '1') or (lower_bits_diff(1 downto 0) > DEGHOST_RADIUS) else true;
       
       return out_bool;
     end;
 
 begin
-  -- set masks to all 1's
-  x_prt_mask <= (others => '1');
-  l_prt_mask <= (others => '1');
-  r_prt_mask <= (others => '1');
+  -- pad input
+  pad_segs : for i in 0 to NUM_FINDERS-1 generate
+    segments_i_padded(i, 0) <= null_pattern;
+    pad_segs_2 : for j in 0 to NUM_SEGS_PER_PRT-1 generate
+      segments_i_padded(i, j+1) <= segments_i(i*NUM_SEGS_PER_PRT + j)
+    end generate;
+    segments_i_padded(i, NUM_SEGS_PER_PRT+1) <= null_pattern;
+  end generate;
 
-  -- deghost each virtual partition in parallel
   -- x_prt_deghost_for : for prt_index in 0 to NUM_X_PRT-1 generate
   x_prt_deghost_for : for prt_index in 0 to 0 generate -- temporarily checking only prt for testing
     l_prt_segments <= segments_i((2*prt_index+1)*NUM_SEGS_PER_PRT-1 downto (2*prt_index)*NUM_SEGS_PER_PRT);
@@ -91,18 +102,17 @@ begin
 
     -- deghost each segment in a given virtual partition
     x_prt_seg_for : for x_segment_index in 0 to 0 generate -- NUM_SEGS_PER_PRT-1 generate
-      x_seg_exists(prt_index, x_segment_index) <= True when x_prt_segments(x_segment_index).lc /= 0 else False; --make sure segment is not null
-      
-     -- best_index_l <= NUM_SEGS_PER_PRT;
-      in_radius_finder_l : for l_segment_index in 0 to NUM_SEGS_PER_PRT-1 generate
-        --in_radius_vector_l(l_segment_index) <= '1' when (x_seg_exists(prt_index, x_segment_index) and l_prt_segments(l_segment_index).lc > 0 and abs(signed(unsigned(l_prt_segments(l_segment_index).strip) - unsigned(x_prt_segments(x_segment_index).strip))) <= EDGE_DIST) else '0';    
-        in_radius_vector_l(l_segment_index) <= '1' when are_segs_in_range(l_prt_segments(l_segment_index), x_prt_segments(x_segment_index)) else '0';                       
-      end generate;
+      --x_seg_exists(prt_index, x_segment_index) <= True when x_prt_segments(x_segment_index).lc /= 0 else False; --make sure segment is not null
+      chunk_vector_array_up(prt_index, x_segment_index) <= 
+
+      -- in_radius_finder_l : for l_segment_index in 0 to NUM_SEGS_PER_PRT-1 generate
+      --   in_radius_vector_l(l_segment_index) <= '1' when (x_seg_exists(prt_index, x_segment_index) and l_prt_segments(l_segment_index).lc > 0 and abs(signed(unsigned(l_prt_segments(l_segment_index).strip) - unsigned(x_prt_segments(x_segment_index).strip))) <= DEGHOST_RADIUS) else '0';    
+      --   in_radius_vector_l(l_segment_index) <= '1' when are_segs_in_range(l_prt_segments(l_segment_index), x_prt_segments(x_segment_index)) else '0';
+      -- end generate;
     
-      --best_index_r <= NUM_SEGS_PER_PRT;
-      in_radius_finder_r : for r_segment_index in 0 to NUM_SEGS_PER_PRT-1 generate
-        in_radius_vector_r(r_segment_index) <= '1' when (x_seg_exists(prt_index, x_segment_index) and r_prt_segments(r_segment_index).lc > 0 and abs(signed(unsigned(r_prt_segments(r_segment_index).strip) - unsigned(x_prt_segments(x_segment_index).strip))) <= EDGE_DIST) else '0';
-      end generate;
+      -- in_radius_finder_r : for r_segment_index in 0 to NUM_SEGS_PER_PRT-1 generate
+      --   in_radius_vector_r(r_segment_index) <= '1' when (x_seg_exists(prt_index, x_segment_index) and r_prt_segments(r_segment_index).lc > 0 and abs(signed(unsigned(r_prt_segments(r_segment_index).strip) - unsigned(x_prt_segments(x_segment_index).strip))) <= DEGHOST_RADIUS) else '0';
+      -- end generate;
       
   vector_o <= in_radius_vector_l;
     
@@ -117,3 +127,18 @@ begin
   end generate;
 
 end behavioral;
+
+
+
+
+--Pad input 2D chunk array with null vectors on the left and right, so edge cases work nicely.
+--For each virtual segment, make 2 std_logic_vectors of length 2*CHUNK_RADIUS+1 (in general, set to 3 for now, can generalize later but probably don't need to)
+--So, need a 2D array of std_logic_vectors, with each entry corresponding to a virtual chunk
+--If virtual chunk is near border, put 0's in missing chunks
+--Compare virtual strip number to real strip numbers. Only need some of LSBs.
+--Add check that chunk size is a power of 2 -- otherwise, this doesn't work.
+--Chunk bits = log_2(256/chunk_size) = STRIP_BITS - log_2(chunk_size); Strip_within_chunk_bits = STRIP_BITS - chunk_bits
+--If chunks being compared are not equal, need to left-append 0 to left chunk and 1 to right chunk (if 1 away; if 2 away, left append 00 and 10, then 00 and 11 if 3 away...)
+--Realistically, only comparing up to 1 chunk away. Can generalize later.
+--Or both vectors together. If only 1 true, kill virtual. If both true, kill both real.
+--To kill segments, make a 2D std_logic array (array of std_logic_vector) to mask. If killing, set 0. Else, set 1. And this with 2D chunk array.
