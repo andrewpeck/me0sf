@@ -10,8 +10,6 @@
 --Or both vectors together. If only 1 true, kill virtual. If both true, kill both real.
 --To kill segments, make a 2D std_logic array (array of std_logic_vector) to mask. If killing, set 0. Else, set 1. And this with 2D chunk array.
 
-
-
 library ieee;
 use ieee.std_logic_1164.all;
 use ieee.std_logic_misc.all;
@@ -61,29 +59,26 @@ architecture behavioral of x_prt_deghost_v3 is
   function get_dists(v_seg : segment_t; r_segs : segment_list_t (5 downto 0)) return std_logic_vector is
     variable out_bits : std_logic_vector (5 downto 0);
     
-    variable v_null : boolean;
     variable r_null : boolean;
 
     -- TODO: Check signed size to make sure overflow doesn't happen, just put numbers down for now
-    variable diff : signed (1 downto 0);
+    variable diff : signed (2 downto 0);
 
     -- Bit to left append strip number of virtual and real segments
     constant append_v : std_logic_vector (5 downto 0) := "001001";
     constant append_r : std_logic_vector (5 downto 0) := "101101";
 
-    constant RADIUS : unsigned (1 downto 0) := unsigned(2);
-    v_null := true when v_seg.lc = 0 else false;
+    constant RADIUS : unsigned (1 downto 0) := "10";
     
     begin
       for i in 0 to 5 loop
         r_null := true when r_segs(i).lc = 0 else false;
         diff := abs(signed(unsigned(append_r(i) & r_segs(i).strip(1 downto 0))) - signed(unsigned(append_v(i) & v_seg.strip(1 downto 0))));
 
-        if (boolean(diff > signed(RADIUS))) then
---        if (boolean(diff > signed(RADIUS)) or v_seg.lc = 0 or r_segs(i) = 0) then
-            out_bits(i) := '0';
-          else
-            out_bits(i) := '1';
+        if (not r_null and boolean(diff > signed(RADIUS))) then
+          out_bits(i) := '0';
+        else
+          out_bits(i) := '1';
         end if;
       end loop;
       
