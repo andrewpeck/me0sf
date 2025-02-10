@@ -43,7 +43,7 @@ entity x_prt_deghost_v3 is
     -- segments_i : in  segment_list_t (NUM_FINDERS * N_SEGS_PRT - 1 downto 0);
     -- segments_o : out segment_list_t (NUM_FINDERS * N_SEGS_PRT - 1 downto 0)
     v_seg_i : in segment_t;
-    r_segs_i : in segment_list_t (N_SEGS_PRT-1 downto 0); -- 12 segs in
+    r_segs_i : in segment_list_t (5 downto 0); -- 12 segs in
 
 --    out_matrix : out dist_matrix
     out_bits : out std_logic_vector(5 downto 0)
@@ -51,14 +51,6 @@ entity x_prt_deghost_v3 is
 end x_prt_deghost_v3;
 
 architecture behavioral of x_prt_deghost_v3 is
-
-  signal x_prt_segments : segment_list_t (N_SEGS_PRT - 1 downto 0) := (others => null_pattern);
-
-  signal x_segment : segment_t;
-  signal l_segment : segment_t;
-  signal r_segment : segment_t;
-  
---  type diff_arr_t is array (0 to 5) of signed (2 downto 0);
 
   -- Assuming chunk size is a power of 2, then the "strip" attribute of segments can be interpreted as:
   -- strip = [chunk_number][offset_in_chunk]
@@ -76,12 +68,15 @@ architecture behavioral of x_prt_deghost_v3 is
     variable diff : signed (1 downto 0);
 
     -- Bit to left append strip number of virtual and real segments
-    constant append_v : std_logic_vector (5 downto 0) := "100100";
+    constant append_v : std_logic_vector (5 downto 0) := "001001";
     constant append_r : std_logic_vector (5 downto 0) := "101101";
 
     constant RADIUS : unsigned (1 downto 0) := unsigned(2);
+    v_null := true when v_seg.lc = 0 else false;
+    
     begin
       for i in 0 to 5 loop
+        r_null := true when r_segs(i).lc = 0 else false;
         diff := abs(signed(unsigned(append_r(i) & r_segs(i).strip(1 downto 0))) - signed(unsigned(append_v(i) & v_seg.strip(1 downto 0))));
 
         if (boolean(diff > signed(RADIUS))) then
@@ -99,7 +94,7 @@ begin
 
   process begin
     if (rising_edge(clock)) then
-      out_bits <= get_dists(v_seg_i, r_segs_i(0 to 5));
+      out_bits <= get_dists(v_seg_i, r_segs_i);
     end if;
   end process;
 
