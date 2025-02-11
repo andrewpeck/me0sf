@@ -66,7 +66,7 @@ architecture behavioral of x_prt_deghost_v3 is
 
     -- Bit to left append strip number of virtual and real segments
     constant append_v : std_logic_vector (5 downto 0) := "001001";
-    constant append_r : std_logic_vector (5 downto 0) := "101101";
+    constant append_r : std_logic_vector (5 downto 0) := "100100";
 
     constant RADIUS : unsigned (1 downto 0) := "10";
     constant temp : signed (20 downto 0) := (others => '0');

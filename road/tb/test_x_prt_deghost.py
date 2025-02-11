@@ -1,5 +1,6 @@
 import os
 from math import ceil
+from random import seed, randint
 
 import cocotb
 from cocotb.clock import Clock
@@ -33,12 +34,12 @@ def setup(dut):
     cocotb.start_soon(generate_dav(dut))
 
 @cocotb.test() # type: ignore
-async def chamber_test_ff(dut, nloops=20): 
+async def chamber_test_ff(dut, nloops=2000): 
    await chamber_test(dut, "SEGMENTS", nloops) 
 
 async def chamber_test(dut, test, nloops=512, verbose=True):
     setup(dut)
- 
+    seed(12708142)
     await RisingEdge(dut.clock)
 
     NUM_PARTITIONS = 8
@@ -81,33 +82,38 @@ async def chamber_test(dut, test, nloops=512, verbose=True):
             if test=="SEGMENTS":
                 NUM_FINDERS = 15
                 NUM_SEGS_PER_PRT = 12
-
-                segments_data = [seg(4, 17, 0, 0), seg(4, 16, 0, 0), seg(4, 19, 0, 0), seg(0, 0, 0, 0), seg(0, 16, 0, 0), seg(4, 17, 0, 0), seg(4, 32, 0, 0)]
-
-                # segments_data = NUM_FINDERS*NUM_SEGS_PER_PRT*['0'*(4+5+8+4)]
                 
-                PRT = 0
-                SEG_NUM = 0
-                #[LC PID STRIP PRT]
-                #[0000 00000 00000000 0000]
-                #[4 bits 5 bits 8 bits 4 bits]
-                # segments_data[NUM_SEGS_PER_PRT*PRT + SEG_NUM] = format(4, '04b') + format(17, '05b') + format(0, '08b') + format(PRT, '04b')
-                # segments_data[NUM_SEGS_PER_PRT*1 + 0] = format(4, '04b') + format(17, '05b') + format(3, '08b') + format(1, '04b')
-                # segments_data[NUM_SEGS_PER_PRT*PRT + 4] = format(4, '04b') + format(17, '05b') + format(2, '08b') + format(PRT, '04b')
+                v_seg_strip = randint(32, 159)
+                v_chunk = v_seg_strip//32
 
+                segments_data = [seg(4, v_seg_strip, 0, 0), seg(4, (v_chunk-1)*32 + randint(0, 15), 0, 0), seg(4, v_chunk*32 + randint(0, 15), 0, 0), seg(4, (v_chunk+1)*32 + randint(0, 15), 0, 0), seg(4, (v_chunk-1)*32 + randint(0, 15), 0, 0), seg(4, v_chunk*32+randint(0, 15), 0, 0), seg(4, (v_chunk+1)*32 + randint(0, 15), 0, 0)]
+                for my_seg in segments_data:
+                    print(my_seg.strip) 
 
+                # segments_data = [seg(4, 17, 0, 0), seg(4, 16, 0, 0), seg(4, 19, 0, 0), seg(0, 0, 0, 0), seg(0, 16, 0, 0), seg(4, 17, 0, 0), seg(4, 32, 0, 0)]
+                # Should give 010011 
       
             else:
                 raise Exception("Test not found")
-
+            queue.append(segments_data)
             input_fw(dut, segments_data)
             loop += 1
 
         # pop old data on dav_o
         if dut.dav_o.value == 1 and loop > LATENCY:
             fw_vector = dut.out_bits
-            print(dut.out_bits.value)
+            sw_segs = queue.pop(0)
+            out_str = ""
+            for i in range(1, 7):
+                if (sw_segs[i].lc > 0 and abs(sw_segs[i].strip - sw_segs[0].strip) <= 2):
+                    out_str += "1"
+                else:
+                    out_str += "0"
+
+            print("FW: " + str(dut.out_bits.value))
+            print("SW: " + out_str[::-1])
             print("\n")
+            assert str(dut.out_bits.value) == out_str[::-1]
 
          #   if verbose:
          #       print(f'{loop=}')
