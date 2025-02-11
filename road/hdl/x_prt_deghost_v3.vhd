@@ -35,8 +35,8 @@ entity x_prt_deghost_v3 is
   port(
     clock      : in  std_logic;
 
-    -- dav_i      : in  std_logic;
-    -- dav_o      : out std_logic;
+    dav_i      : in  std_logic;
+    dav_o      : out std_logic;
 
     -- segments_i : in  segment_list_t (NUM_FINDERS * N_SEGS_PRT - 1 downto 0);
     -- segments_o : out segment_list_t (NUM_FINDERS * N_SEGS_PRT - 1 downto 0)
@@ -62,20 +62,22 @@ architecture behavioral of x_prt_deghost_v3 is
     variable r_null : boolean;
 
     -- TODO: Check signed size to make sure overflow doesn't happen, just put numbers down for now
-    variable diff : signed (2 downto 0);
+    variable diff : signed (6 downto 0);
 
     -- Bit to left append strip number of virtual and real segments
     constant append_v : std_logic_vector (5 downto 0) := "001001";
     constant append_r : std_logic_vector (5 downto 0) := "101101";
 
     constant RADIUS : unsigned (1 downto 0) := "10";
+    constant temp : signed (20 downto 0) := (others => '0');
     
     begin
       for i in 0 to 5 loop
         r_null := true when r_segs(i).lc = 0 else false;
-        diff := abs(signed(unsigned(append_r(i) & r_segs(i).strip(1 downto 0))) - signed(unsigned(append_v(i) & v_seg.strip(1 downto 0))));
+        
+        diff := abs( ('0' & append_r(i) & signed(r_segs(i).strip(4 downto 0))) - ('0' & append_v(i) & signed(v_seg.strip(4 downto 0))) );
 
-        if (not r_null and boolean(diff > signed(RADIUS))) then
+        if (r_null or boolean(unsigned(diff) > RADIUS)) then
           out_bits(i) := '0';
         else
           out_bits(i) := '1';
@@ -87,9 +89,10 @@ architecture behavioral of x_prt_deghost_v3 is
 
 begin
 
-  process begin
+  process (clock) begin
     if (rising_edge(clock)) then
       out_bits <= get_dists(v_seg_i, r_segs_i);
+      dav_o <= dav_i;
     end if;
   end process;
 

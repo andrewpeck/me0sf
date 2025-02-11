@@ -8,69 +8,66 @@ from cocotb_test.simulator import run
 
 from tb_common import (get_segments_from_dut, generate_dav, monitor_dav, measure_latency)
 
+class seg:
+    def __init__ (self, lc, strip, pid, part):
+        self.lc = lc
+        self.strip = strip
+        self.pid = pid
+        self.part = part
+
+def input_fw(dut, segs):
+    dut.v_seg_i.lc.value = segs[0].lc
+    dut.v_seg_i.strip.value = segs[0].strip
+    dut.v_seg_i.id.value = segs[0].pid
+    dut.v_seg_i.partition.value = segs[0].part
+
+    for i in range(1, 7):
+        dut.r_segs_i[i-1].lc.value = segs[i].lc
+        dut.r_segs_i[i-1].strip.value = segs[i].strip
+        dut.r_segs_i[i-1].id.value = segs[i].pid
+        dut.r_segs_i[i-1].partition.value = segs[i].part
+
 def setup(dut):
     c = Clock(dut.clock, 12, "ns")
     cocotb.start_soon(c.start())
     cocotb.start_soon(generate_dav(dut))
 
 @cocotb.test() # type: ignore
-async def chamber_test_ff(dut, nloops=20):
+async def chamber_test_ff(dut, nloops=20): 
    await chamber_test(dut, "SEGMENTS", nloops) 
 
 async def chamber_test(dut, test, nloops=512, verbose=True):
     setup(dut)
-
-    cocotb.start_soon(monitor_dav(dut))
-
+ 
     await RisingEdge(dut.clock)
 
     NUM_PARTITIONS = 8
 
-    checkfn = lambda : True
-
-    # def setfn(dut, x):
-    #     for i in range(15*12):
-    #         dut.segments_i[i].lc.value.integer = x
-    #         dut.segments_i[i].id.value.integer = 0
-    #         dut.segments_i[i].strip.value.integer = 0
-    #         dut.segments_i[i].partition.value.integer = 0
-
+    checkfn = lambda : dut.out_bits.value.is_resolvable and dut.out_bits.value.integer > 0
     
     def setfn(dut, x):
-        for i in range(6):
-            dut.r_segs_i[i].lc.value.integer = x
-            dut.r_segs_i[i].id.value.integer = 0
-            dut.r_segs_i[i].strip.value.integer = 0
-            dut.r_segs_i[i].partition.value.integer = 0
-        dut.v_seg_i[i].lc.value.integer = x
-        dut.v_seg_i[i].id.value.integer = 0
-        dut.v_seg_i[i].strip.value.integer = 0
-        dut.v_seg_i[i].partition.value.integer = 0
+       input_fw(dut, [seg(x,0,0,0) for _ in range(7)])
 
     setfn(dut, 0)
 
     # flush the buffers
-    for _ in range(256):
+    for _ in range(10):
         await RisingEdge(dut.clock)
 
     meas_latency = await measure_latency(dut, checkfn, setfn)
-
-    # LATENCY = ceil(meas_latency)-1
-    LATENCY = 50  #arbitrary value for now, just want to flush everything
-
+    LATENCY = ceil(meas_latency)-2
+ 
     # flush the buffers
     setfn(dut, 0)
 
-    for _ in range(LATENCY*8+1):
+    for _ in range(LATENCY):
         await RisingEdge(dut.clock)
-
-    for _ in range(LATENCY-1):
-        await RisingEdge(dut.dav_i)
 
     # loop over some number of test cases
     loop = 0
+    queue = []
     while loop < nloops:
-
+        
         # push new data on dav_i
         if dut.dav_i.value == 1:
 
@@ -85,7 +82,7 @@ async def chamber_test(dut, test, nloops=512, verbose=True):
                 NUM_FINDERS = 15
                 NUM_SEGS_PER_PRT = 12
 
-                segments_data = 6*['0'*(4+5+8+4)]
+                segments_data = [seg(4, 17, 0, 0), seg(4, 16, 0, 0), seg(4, 19, 0, 0), seg(0, 0, 0, 0), seg(0, 16, 0, 0), seg(4, 17, 0, 0), seg(4, 32, 0, 0)]
 
                 # segments_data = NUM_FINDERS*NUM_SEGS_PER_PRT*['0'*(4+5+8+4)]
                 
@@ -103,30 +100,19 @@ async def chamber_test(dut, test, nloops=512, verbose=True):
             else:
                 raise Exception("Test not found")
 
-            for i in range (6):
-                # All null segs
-                dut.r_segs_i[i].lc.value = int(0, 2)
-                dut.r_segs_i[i].id.value = int(0, 2)
-                dut.r_segs_i[i].strip.value = int(0, 2)
-                dut.r_segs_i[i].partition.value = int(0, 2)
-            dut.v_seg_i.lc.value = int(4, 2)
-            dut.v_seg_i.id.value = int(17, 2)
-            dut.v_seg_i.strip.value = int(0, 2)
-            dut.v_seg_i.partition.value = int(0, 2)
-
+            input_fw(dut, segments_data)
             loop += 1
 
         # pop old data on dav_o
-        if dut.dav_i.value == 1 and loop > 10:
-            fw_vector = dut.vector_o
-            for i in range(NUM_SEGS_PER_PRT):
-                #print(dut.x_prt_segments[i].lc.value.integer)
-                print(dut.in_radius_vector_l[i].value)
+        if dut.dav_o.value == 1 and loop > LATENCY:
+            fw_vector = dut.out_bits
+            print(dut.out_bits.value)
+            print("\n")
 
-            if verbose:
-                print(f'{loop=}')
-                for i in range(len(fw_vector)):
-                    print("  > fw: " + str(fw_vector[i]))
+         #   if verbose:
+         #       print(f'{loop=}')
+         #       for i in range(len(fw_vector)):
+         #           print("  > fw: " + str(fw_vector[i]))
 
         await RisingEdge(dut.clock)
 
@@ -142,17 +128,17 @@ def test_chamber():
         os.path.join(rtl_dir, "patterns.vhd"),
         os.path.join(rtl_dir, "x_prt_deghost_v3.vhd")]
 
-    parameters = {"NUM_SEGS_PER_PRT" : 12}
+    #parameters = {"NUM_SEGS_PER_PRT" : 12}
 
     os.environ["SIM"] = "questa"
-    
+
     run(vhdl_sources=vhdl_sources,
         module=module,  # name of cocotb test module
         compile_args=["-2008"],
         toplevel="x_prt_deghost_v3",  # top level HDL
         toplevel_lang="vhdl",
         sim_args=["-suppress", "14408", "-do", "set NumericStdNoWarnings 1;"],
-        parameters=parameters,
+        parameters={},
         gui=0)
 
 if __name__ == "__main__":
