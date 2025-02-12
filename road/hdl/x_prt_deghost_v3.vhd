@@ -30,7 +30,8 @@ use work.patterns.all;
 entity x_prt_deghost_v3 is
   generic(
     NUM_FINDERS : integer := 15;
-    EDGE_DIST : natural := 2
+    RADIUS : natural := 2;
+    CHUNK_WIDTH : natural := 16
     );
   port(
     clock      : in  std_logic;
@@ -57,25 +58,21 @@ architecture behavioral of x_prt_deghost_v3 is
   -- To save resources, we can replace the whole chunk_number with only "0" or "1", reducing our space from the whole 192 strips to the local 2 chunks (2*CHUNK_SIZE)
 
   function get_dists(v_seg : segment_t; r_segs : segment_list_t (5 downto 0)) return std_logic_vector is
-    variable out_bits : std_logic_vector (5 downto 0);
-    
-    variable r_null : boolean;
-
-    -- TODO: Check signed size to make sure overflow doesn't happen, just put numbers down for now
-    variable diff : signed (6 downto 0);
-
     -- Bit to left append strip number of virtual and real segments
     constant append_v : std_logic_vector (5 downto 0) := "001001";
     constant append_r : std_logic_vector (5 downto 0) := "100100";
+    constant chunk_bits : natural := log2(CHUNK_WIDTH);
+    constant intra_chunk_bits : natural := strip_bits - chunk_bits;
 
-    constant RADIUS : unsigned (1 downto 0) := "10";
-    constant temp : signed (20 downto 0) := (others => '0');
+    variable diff : signed (in_strip_bits-1+2 downto 0);
+    variable out_bits : std_logic_vector (5 downto 0);
+    variable r_null : boolean;
     
     begin
       for i in 0 to 5 loop
         r_null := true when r_segs(i).lc = 0 else false;
         
-        diff := abs( ('0' & append_r(i) & signed(r_segs(i).strip(4 downto 0))) - ('0' & append_v(i) & signed(v_seg.strip(4 downto 0))) );
+        diff := abs( ('0' & append_r(i) & signed(r_segs(i).strip(intra_strip_bits-1 downto 0))) - ('0' & append_v(i) & signed(v_seg.strip(intra_strip_bits-1 downto 0))) );
 
         if (r_null or boolean(unsigned(diff) > RADIUS)) then
           out_bits(i) := '0';

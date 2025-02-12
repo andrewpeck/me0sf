@@ -101,7 +101,6 @@ async def chamber_test(dut, test, nloops=512, verbose=True):
 
         # pop old data on dav_o
         if dut.dav_o.value == 1 and loop > LATENCY:
-            fw_vector = dut.out_bits
             sw_segs = queue.pop(0)
             out_str = ""
             for i in range(1, 7):
@@ -114,11 +113,6 @@ async def chamber_test(dut, test, nloops=512, verbose=True):
             print("SW: " + out_str[::-1])
             print("\n")
             assert str(dut.out_bits.value) == out_str[::-1]
-
-         #   if verbose:
-         #       print(f'{loop=}')
-         #       for i in range(len(fw_vector)):
-         #           print("  > fw: " + str(fw_vector[i]))
 
         await RisingEdge(dut.clock)
 
@@ -134,8 +128,6 @@ def test_chamber():
         os.path.join(rtl_dir, "patterns.vhd"),
         os.path.join(rtl_dir, "x_prt_deghost_v3.vhd")]
 
-    #parameters = {"NUM_SEGS_PER_PRT" : 12}
-
     os.environ["SIM"] = "questa"
 
     run(vhdl_sources=vhdl_sources,
@@ -144,7 +136,7 @@ def test_chamber():
         toplevel="x_prt_deghost_v3",  # top level HDL
         toplevel_lang="vhdl",
         sim_args=["-suppress", "14408", "-do", "set NumericStdNoWarnings 1;"],
-        parameters={},
+        parameters={"RADIUS": 2, "CHUNK_WIDTH": 16},
         gui=0)
 
 if __name__ == "__main__":
