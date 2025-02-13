@@ -9,6 +9,9 @@ from cocotb_test.simulator import run
 
 from tb_common import (get_segments_from_dut, generate_dav, monitor_dav, measure_latency)
 
+CHUNK_WIDTH = 16
+RADIUS = 3
+
 class seg:
     def __init__ (self, lc, strip, pid, part):
         self.lc = lc
@@ -34,7 +37,7 @@ def setup(dut):
     cocotb.start_soon(generate_dav(dut))
 
 @cocotb.test() # type: ignore
-async def chamber_test_ff(dut, nloops=2000): 
+async def chamber_test_ff(dut, nloops=20000): 
    await chamber_test(dut, "SEGMENTS", nloops) 
 
 async def chamber_test(dut, test, nloops=512, verbose=True):
@@ -83,10 +86,10 @@ async def chamber_test(dut, test, nloops=512, verbose=True):
                 NUM_FINDERS = 15
                 NUM_SEGS_PER_PRT = 12
                 
-                v_seg_strip = randint(32, 159)
-                v_chunk = v_seg_strip//32
+                v_seg_strip = randint(CHUNK_WIDTH, 192-CHUNK_WIDTH+1)
+                v_chunk = v_seg_strip//CHUNK_WIDTH
 
-                segments_data = [seg(4, v_seg_strip, 0, 0), seg(4, (v_chunk-1)*32 + randint(0, 15), 0, 0), seg(4, v_chunk*32 + randint(0, 15), 0, 0), seg(4, (v_chunk+1)*32 + randint(0, 15), 0, 0), seg(4, (v_chunk-1)*32 + randint(0, 15), 0, 0), seg(4, v_chunk*32+randint(0, 15), 0, 0), seg(4, (v_chunk+1)*32 + randint(0, 15), 0, 0)]
+                segments_data = [seg(4, v_seg_strip, 0, 0), seg(4, (v_chunk-1)*CHUNK_WIDTH + randint(0, CHUNK_WIDTH-1), 0, 0), seg(4, v_chunk*CHUNK_WIDTH + randint(0, CHUNK_WIDTH-1), 0, 0), seg(4, (v_chunk+1)*CHUNK_WIDTH + randint(0, CHUNK_WIDTH-1), 0, 0), seg(4, (v_chunk-1)*CHUNK_WIDTH + randint(0, CHUNK_WIDTH-1), 0, 0), seg(4, v_chunk*CHUNK_WIDTH+randint(0, CHUNK_WIDTH-1), 0, 0), seg(4, (v_chunk+1)*CHUNK_WIDTH + randint(0, CHUNK_WIDTH-1), 0, 0)]
                 for my_seg in segments_data:
                     print(my_seg.strip) 
 
@@ -104,7 +107,7 @@ async def chamber_test(dut, test, nloops=512, verbose=True):
             sw_segs = queue.pop(0)
             out_str = ""
             for i in range(1, 7):
-                if (sw_segs[i].lc > 0 and abs(sw_segs[i].strip - sw_segs[0].strip) <= 2):
+                if (sw_segs[i].lc > 0 and abs(sw_segs[i].strip - sw_segs[0].strip) <= RADIUS):
                     out_str += "1"
                 else:
                     out_str += "0"
@@ -136,7 +139,7 @@ def test_chamber():
         toplevel="x_prt_deghost_v3",  # top level HDL
         toplevel_lang="vhdl",
         sim_args=["-suppress", "14408", "-do", "set NumericStdNoWarnings 1;"],
-        parameters={"RADIUS": 2, "CHUNK_WIDTH": 16},
+        parameters={"RADIUS": RADIUS, "CHUNK_WIDTH": CHUNK_WIDTH},
         gui=0)
 
 if __name__ == "__main__":
