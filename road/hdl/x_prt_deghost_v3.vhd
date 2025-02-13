@@ -15,6 +15,8 @@ use ieee.std_logic_1164.all;
 use ieee.std_logic_misc.all;
 use ieee.numeric_std.all;
 
+use ieee.math_real.log2;
+
 use work.pat_types.all;
 use work.pat_pkg.all;
 use work.patterns.all;
@@ -61,10 +63,10 @@ architecture behavioral of x_prt_deghost_v3 is
     -- Bit to left append strip number of virtual and real segments
     constant append_v : std_logic_vector (5 downto 0) := "001001";
     constant append_r : std_logic_vector (5 downto 0) := "100100";
-    constant chunk_bits : natural := log2(CHUNK_WIDTH);
+    constant chunk_bits : natural := natural(log2(real(CHUNK_WIDTH)));
     constant intra_chunk_bits : natural := strip_bits - chunk_bits;
 
-    variable diff : signed (in_strip_bits-1+2 downto 0);
+    variable diff : signed (intra_chunk_bits-1+2 downto 0);
     variable out_bits : std_logic_vector (5 downto 0);
     variable r_null : boolean;
     
@@ -72,7 +74,7 @@ architecture behavioral of x_prt_deghost_v3 is
       for i in 0 to 5 loop
         r_null := true when r_segs(i).lc = 0 else false;
         
-        diff := abs( ('0' & append_r(i) & signed(r_segs(i).strip(intra_strip_bits-1 downto 0))) - ('0' & append_v(i) & signed(v_seg.strip(intra_strip_bits-1 downto 0))) );
+        diff := abs( ('0' & append_r(i) & signed(r_segs(i).strip(intra_chunk_bits-1 downto 0))) - ('0' & append_v(i) & signed(v_seg.strip(intra_chunk_bits-1 downto 0))) );
 
         if (r_null or boolean(unsigned(diff) > RADIUS)) then
           out_bits(i) := '0';
