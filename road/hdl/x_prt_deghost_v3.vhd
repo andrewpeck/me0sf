@@ -83,8 +83,8 @@ architecture behavioral of x_prt_deghost_v3 is
         end if;
       end loop;
       
-      return out_bits;
-    end function;
+    return out_bits;
+  end function;
 
 begin
 
@@ -100,5 +100,80 @@ begin
   --   l_prt_segments = all_segs((2*prt_index+1)*N_SEGS_PRT downto (2*prt_index)*N_SEGS_PRT);
   --   r_prt_segments = all_segs((2*prt_index+3)*N_SEGS_PRT downto (2*prt_index+2)*N_SEGS_PRT);
   -- end generate;
+
+end behavioral;
+
+
+
+
+
+
+
+
+
+
+
+
+entity x_prt_deghost_controller is
+  generic(
+    NUM_PART_TOTAL : integer := 15;
+    RADIUS : natural := 2;
+    CHUNK_WIDTH : natural := 16;
+    N_SEGS_PRT : natural := 12
+  );
+  port(
+    clock      : in  std_logic;
+
+    dav_i      : in  std_logic;
+    dav_o      : out std_logic;
+
+    segs_i : in segment_list_t (NUM_PART_TOTAL * N_SEGS_PRT - 1 downto 0);
+    segs_o : out segment_list_t (N_SEGS_TOTAL + 2*(NUM_PART_TOTAL+1) + 2*(N_SEGS_PRT+1) - 1 downto 0);
+  );
+end x_prt_deghost_controller;
+
+architecture behavioral of x_prt_deghost_controller is
+
+-- Assuming chunk size is a power of 2, then the "strip" attribute of segments can be interpreted as:
+-- strip = [chunk_number][offset_in_chunk]
+-- Since we are only comparing chunks that are -1,0,1 apart, the whole chunk_number is unecessary for the subtraction operation.
+-- Returns 6 bits, corresponding to whether the top 3 segments are in range, and the bottom 3
+-- To save resources, we can replace the whole chunk_number with only "0" or "1", reducing our space from the whole 192 strips to the local 2 chunks (2*CHUNK_SIZE)
+constant N_SEGS_TOTAL : natural := NUM_PART_TOTAL * N_SEGS_PRT;
+constant N_SEGS_PADDED_TOTAL : natural := N_SEGS_TOTAL + 2*(NUM_PART_TOTAL+1) + 2*(N_SEGS_PRT+1)
+
+signal segs_padded : segment_list_t(N_SEGS_PADDED_TOTAL-1 downto 0); 
+
+function pad_segs_in(in_segs : segment_list_t (NUM_PART_TOTAL*N_SEGS_PRT-1 downto 0)) return segment_list_t is
+  variable out_segs : segment_list_t (N_SEGS_PADDED_TOTAL-1 downto 0);
+  variable cur_seg : segment_t;
+  begin
+    for y in 0 to NUM_PART_TOTAL loop
+      for x in 0 to N_SEGS_PRT loop
+        if (y = 0 or y = NUM_PART_TOTAL or x = 0 or x = N_SEGS_PRT) then
+          cur_seg := (others => "0");
+        else
+          cur_seg := in_segs((N_SEGS_PRT-1)*y + (x-1));
+        end if;
+        out_segs(N_SEGS_PRT*y + x) := cur_seg;
+      end loop;
+    end loop;
+  return out_segs
+
+end function;
+
+begin
+  process (clock) begin
+    if (rising_edge(clock)) then
+      segs_o <= pad_segs_i(segs_i);
+      dav_o <= dav_i;
+    end if;
+  end process;
+
+-- x_prt_deghost_for : for prt_index in 0 to floor(NUM_FINDERS/2)-1 generate
+--   x_prt_segments = all_segs((2*prt_index+2)*N_SEGS_PRT downto (2*prt_index+1)*N_SEGS_PRT);
+--   l_prt_segments = all_segs((2*prt_index+1)*N_SEGS_PRT downto (2*prt_index)*N_SEGS_PRT);
+--   r_prt_segments = all_segs((2*prt_index+3)*N_SEGS_PRT downto (2*prt_index+2)*N_SEGS_PRT);
+-- end generate;
 
 end behavioral;
