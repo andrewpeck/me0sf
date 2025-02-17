@@ -126,9 +126,9 @@ begin
       
       begin
         --get segs above
-        r_segs (0 to 2) <= segs_padded((N_SEGS_PRT+2)*(y+1-1) + (x+1+1) to (N_SEGS_PRT+2)*(y+1-1) + (x+1-1));
+        r_segs (0 to 2) <= segs_padded((N_SEGS_PRT+2)*(y+1-1) + (x+1-1) to (N_SEGS_PRT+2)*(y+1-1) + (x+1+1));
         --get segs below
-        r_segs (3 to 5) <= segs_padded((N_SEGS_PRT+2)*(y+1+1) + (x+1+1) to (N_SEGS_PRT+2)*(y+1+1) + (x+1-1));
+        r_segs (3 to 5) <= segs_padded((N_SEGS_PRT+2)*(y+1+1) + (x+1-1) to (N_SEGS_PRT+2)*(y+1+1) + (x+1+1));
         
         range_vectors(N_SEGS_PRT*y + x) <= get_dists(v_seg, r_segs);
     end generate;

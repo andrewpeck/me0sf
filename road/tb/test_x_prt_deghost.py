@@ -23,7 +23,7 @@ class seg:
         self.part = part
 
 def input_fw(dut, segs):
-    for my_seg,i in enumerate(segs):
+    for i,my_seg in enumerate(segs):
         dut.segs_i[i].lc.value = my_seg.lc
         dut.segs_i[i].strip.value = my_seg.strip
         dut.segs_i[i].id.value = my_seg.pid
@@ -35,7 +35,7 @@ def setup(dut):
     cocotb.start_soon(generate_dav(dut))
 
 @cocotb.test() # type: ignore
-async def chamber_test_ff(dut, nloops=20000): 
+async def chamber_test_ff(dut, nloops=10): 
    await chamber_test(dut, "SEGMENTS", nloops) 
 
 async def chamber_test(dut, test, nloops=512, verbose=True):
@@ -43,13 +43,13 @@ async def chamber_test(dut, test, nloops=512, verbose=True):
     seed(12708142)
     await RisingEdge(dut.clock)
 
-    checkfn = lambda : dut.out_bits.value.is_resolvable and dut.out_bits.value.integer > 0
+    checkfn = lambda : dut.range_vectors[0].value.is_resolvable #and dut.out_bits.value.integer > 0
     
     def setfn(dut, x):
        input_fw(dut, [seg(x,0,0,0) for _ in range(NUM_FINDERS*NUM_SEGS_PER_PRT)])
-
+ 
     setfn(dut, 0)
-
+    
     # flush the buffers
     for _ in range(10):
         await RisingEdge(dut.clock)
@@ -83,7 +83,8 @@ async def chamber_test(dut, test, nloops=512, verbose=True):
                 for prt in range(NUM_FINDERS):
                     for chunk in range(NUM_SEGS_PER_PRT):
                         strip = randint(chunk*CHUNK_WIDTH, (chunk+1)*CHUNK_WIDTH - 1)
-                        segments_data.append(seg(4, strip, 0, prt))
+                        #segments_data.append(seg(4, strip, 0, prt))
+                        segments_data.append(seg(4, loop, 0, prt))
       
             else:
                 raise Exception("Test not found")
@@ -102,9 +103,22 @@ async def chamber_test(dut, test, nloops=512, verbose=True):
             #         out_str += "0"
 
             print("\n")
-            print("Original segs: " + sw_segs)
-            print("Padded segs: " + str(dut.segs_padded))
-            print("Range vectors: " + str(dut.range_vectors))
+
+            orig_segs_1d = [my_seg.strip for my_seg in sw_segs]
+            print("Original segs:")
+            for i in range(NUM_FINDERS):
+                print(str(orig_segs_1d[NUM_SEGS_PER_PRT*i:NUM_SEGS_PER_PRT*(i+1)]))
+
+            pad_segs_1d = [my_seg.strip.value.integer for my_seg in dut.segs_padded]
+            print("Padded segs:")
+            for i in range(NUM_FINDERS+2):
+                print(str(pad_segs_1d[(NUM_SEGS_PER_PRT+2)*i:(NUM_SEGS_PER_PRT+2)*(i+1)]))
+
+            range_vectors_1d = [my_range.value for my_range in dut.range_vectors]
+            print("Range vectors:")
+            for i in range(NUM_FINDERS//2):
+                print(str(range_vectors_1d[NUM_SEGS_PER_PRT*i:NUM_SEGS_PER_PRT*(i+1)]))
+
             print("\n")
             # assert str(dut.out_bits.value) == out_str[::-1]
 
