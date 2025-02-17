@@ -83,8 +83,8 @@ async def chamber_test(dut, test, nloops=512, verbose=True):
                 for prt in range(NUM_FINDERS):
                     for chunk in range(NUM_SEGS_PER_PRT):
                         strip = randint(chunk*CHUNK_WIDTH, (chunk+1)*CHUNK_WIDTH - 1)
-                        #segments_data.append(seg(4, strip, 0, prt))
-                        segments_data.append(seg(4, loop, 0, prt))
+                        segments_data.append(seg(4, strip, 0, prt))
+                        #segments_data.append(seg(4, loop, 0, prt))
       
             else:
                 raise Exception("Test not found")
@@ -111,7 +111,7 @@ async def chamber_test(dut, test, nloops=512, verbose=True):
 
             pad_segs_1d = [my_seg.strip.value.integer for my_seg in dut.segs_padded]
             print("Padded segs:")
-            for i in range(NUM_FINDERS+2):
+            for i in range(NUM_FINDERS):
                 print(str(pad_segs_1d[(NUM_SEGS_PER_PRT+2)*i:(NUM_SEGS_PER_PRT+2)*(i+1)]))
 
             range_vectors_1d = [my_range.value for my_range in dut.range_vectors]
