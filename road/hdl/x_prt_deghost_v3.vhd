@@ -78,7 +78,7 @@ architecture behavioral of x_prt_deghost_v3 is
     variable out_bits : std_logic_vector (0 to 5);
     variable r_null : boolean;
     
-    begin
+    begin 
       for i in 0 to 5 loop
         r_null := true when r_segs(i).lc = 0 else false;
         
@@ -121,10 +121,12 @@ begin
   
   x_prts : for y in 0 to N_X_PRTS-1 generate
     v_seg : for x in 0 to N_SEGS_PRT-1 generate
-      signal v_seg : segment_t := segs_padded((N_SEGS_PRT+2)*(2*y+1) + (x+1));
+      signal v_seg : segment_t; 
       signal r_segs : segment_list_t (0 to 5);
       
       begin
+        --get virtual segment
+        v_seg <= segs_padded((N_SEGS_PRT+2)*(2*y+1) + (x+1));
         --get segs above
         r_segs (0 to 2) <= segs_padded((N_SEGS_PRT+2)*(2*y+1-1) + (x+1-1) to (N_SEGS_PRT+2)*(2*y+1-1) + (x+1+1));
         --get segs below
