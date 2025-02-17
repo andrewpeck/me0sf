@@ -41,11 +41,7 @@ entity x_prt_deghost_v3 is
     dav_o      : out std_logic;
 
     segs_i : in  segment_list_t (0 to NUM_FINDERS*N_SEGS_PRT - 1);
-    segs_o : out segment_list_t (0 to (NUM_FINDERS+2)*(N_SEGS_PRT+2) - 1);
-    v_seg_i : in segment_t
---    r_segs_i : in segment_list_t (5 downto 0); -- 12 segs in
-
---    out_bits : out std_logic_vector(5 downto 0)
+    segs_o : out segment_list_t (0 to (NUM_FINDERS+2)*(N_SEGS_PRT+2) - 1)
     );
 end x_prt_deghost_v3;
 

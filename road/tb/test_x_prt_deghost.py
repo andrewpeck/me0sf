@@ -10,7 +10,10 @@ from cocotb_test.simulator import run
 from tb_common import (get_segments_from_dut, generate_dav, monitor_dav, measure_latency)
 
 CHUNK_WIDTH = 16
-RADIUS = 3
+RADIUS = 2
+
+NUM_FINDERS = 15
+NUM_SEGS_PER_PRT = 12
 
 class seg:
     def __init__ (self, lc, strip, pid, part):
@@ -20,16 +23,11 @@ class seg:
         self.part = part
 
 def input_fw(dut, segs):
-    dut.v_seg_i.lc.value = segs[0].lc
-    dut.v_seg_i.strip.value = segs[0].strip
-    dut.v_seg_i.id.value = segs[0].pid
-    dut.v_seg_i.partition.value = segs[0].part
-
-    for i in range(1, 7):
-        dut.r_segs_i[i-1].lc.value = segs[i].lc
-        dut.r_segs_i[i-1].strip.value = segs[i].strip
-        dut.r_segs_i[i-1].id.value = segs[i].pid
-        dut.r_segs_i[i-1].partition.value = segs[i].part
+    for my_seg,i in enumerate(segs):
+        dut.segs_i[i].lc.value = my_seg.lc
+        dut.segs_i[i].strip.value = my_seg.strip
+        dut.segs_i[i].id.value = my_seg.pid
+        dut.segs_i[i].partition.value = my_seg.part
 
 def setup(dut):
     c = Clock(dut.clock, 12, "ns")
@@ -45,12 +43,10 @@ async def chamber_test(dut, test, nloops=512, verbose=True):
     seed(12708142)
     await RisingEdge(dut.clock)
 
-    NUM_PARTITIONS = 8
-
     checkfn = lambda : dut.out_bits.value.is_resolvable and dut.out_bits.value.integer > 0
     
     def setfn(dut, x):
-       input_fw(dut, [seg(x,0,0,0) for _ in range(7)])
+       input_fw(dut, [seg(x,0,0,0) for _ in range(NUM_FINDERS*NUM_SEGS_PER_PRT)])
 
     setfn(dut, 0)
 
@@ -83,18 +79,11 @@ async def chamber_test(dut, test, nloops=512, verbose=True):
             # (3) set the DUT inputs to the new data
 
             if test=="SEGMENTS":
-                NUM_FINDERS = 15
-                NUM_SEGS_PER_PRT = 12
-                
-                v_seg_strip = randint(CHUNK_WIDTH, 192-CHUNK_WIDTH+1)
-                v_chunk = v_seg_strip//CHUNK_WIDTH
-
-                segments_data = [seg(4, v_seg_strip, 0, 0), seg(4, (v_chunk-1)*CHUNK_WIDTH + randint(0, CHUNK_WIDTH-1), 0, 0), seg(4, v_chunk*CHUNK_WIDTH + randint(0, CHUNK_WIDTH-1), 0, 0), seg(4, (v_chunk+1)*CHUNK_WIDTH + randint(0, CHUNK_WIDTH-1), 0, 0), seg(4, (v_chunk-1)*CHUNK_WIDTH + randint(0, CHUNK_WIDTH-1), 0, 0), seg(4, v_chunk*CHUNK_WIDTH+randint(0, CHUNK_WIDTH-1), 0, 0), seg(4, (v_chunk+1)*CHUNK_WIDTH + randint(0, CHUNK_WIDTH-1), 0, 0)]
-                for my_seg in segments_data:
-                    print(my_seg.strip) 
-
-                # segments_data = [seg(4, 17, 0, 0), seg(4, 16, 0, 0), seg(4, 19, 0, 0), seg(0, 0, 0, 0), seg(0, 16, 0, 0), seg(4, 17, 0, 0), seg(4, 32, 0, 0)]
-                # Should give 010011 
+                segments_data = []
+                for prt in range(NUM_FINDERS):
+                    for chunk in range(NUM_SEGS_PER_PRT):
+                        strip = randint(chunk*CHUNK_WIDTH, (chunk+1)*CHUNK_WIDTH - 1)
+                        segments_data.append(seg(4, strip, 0, prt))
       
             else:
                 raise Exception("Test not found")
@@ -105,17 +94,19 @@ async def chamber_test(dut, test, nloops=512, verbose=True):
         # pop old data on dav_o
         if dut.dav_o.value == 1 and loop > LATENCY:
             sw_segs = queue.pop(0)
-            out_str = ""
-            for i in range(1, 7):
-                if (sw_segs[i].lc > 0 and abs(sw_segs[i].strip - sw_segs[0].strip) <= RADIUS):
-                    out_str += "1"
-                else:
-                    out_str += "0"
+            # out_str = ""
+            # for i in range(1, 7):
+            #     if (sw_segs[i].lc > 0 and abs(sw_segs[i].strip - sw_segs[0].strip) <= RADIUS):
+            #         out_str += "1"
+            #     else:
+            #         out_str += "0"
 
-            print("FW: " + str(dut.out_bits.value))
-            print("SW: " + out_str[::-1])
             print("\n")
-            assert str(dut.out_bits.value) == out_str[::-1]
+            print("Original segs: " + sw_segs)
+            print("Padded segs: " + str(dut.segs_padded))
+            print("Range vectors: " + str(dut.range_vectors))
+            print("\n")
+            # assert str(dut.out_bits.value) == out_str[::-1]
 
         await RisingEdge(dut.clock)
 
