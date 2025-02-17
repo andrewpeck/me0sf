@@ -1,4 +1,4 @@
---Pad input 2D chunk array with null vectors, so edge cases work nicely.
+--Pad input 2D chunk array with null vectors, so edge cases work nicely. Only need to pad left and right sides (not top or bottom), as x-partitions are between real partitions.
 --For each virtual segment, make 2 std_logic_vectors of length 2*CHUNK_RADIUS+1 (in general, set to 3 for now, can generalize later but probably don't need to)
 --So, need a 2D array of std_logic_vectors, with each entry corresponding to a virtual chunk
 --Compare virtual strip number to real strip numbers. Only need some of LSBs.
@@ -55,7 +55,7 @@ architecture behavioral of x_prt_deghost_v3 is
   
   constant N_CHUNKS_PER_PRT : positive := PRT_WIDTH/CHUNK_WIDTH;
   constant N_SEGS_TOTAL : positive := NUM_FINDERS * N_SEGS_PRT;
-  constant N_SEGS_PADDED_TOTAL : positive := (NUM_FINDERS+2)*(N_SEGS_PRT+2);
+  constant N_SEGS_PADDED_TOTAL : positive := (NUM_FINDERS)*(N_SEGS_PRT+2);
   constant N_X_PRTS : positive := positive(floor(real(NUM_FINDERS)/2.0));
   
   signal segs_padded : segment_list_t(0 to N_SEGS_PADDED_TOTAL-1);
@@ -99,15 +99,15 @@ architecture behavioral of x_prt_deghost_v3 is
     variable out_segs : segment_list_t (0 to N_SEGS_PADDED_TOTAL-1);
     variable cur_seg : segment_t;
     begin
-      for y in 0 to NUM_FINDERS+1 loop
+      for y in 0 to NUM_FINDERS-1 loop
         for x in 0 to N_SEGS_PRT+1 loop
-          if (y = 0 or y = NUM_FINDERS+1 or x = 0 or x = N_SEGS_PRT+1) then
+          if (x = 0 or x = N_SEGS_PRT+1) then
             cur_seg.lc := (others => '0');
             cur_seg.id := (others => '0');
             cur_seg.strip := (others => '0');
             cur_seg.partition := (others => '0');
           else
-            cur_seg := in_segs(N_SEGS_PRT*(y-1) + (x-1));
+            cur_seg := in_segs(N_SEGS_PRT*y + (x-1));
           end if;
           out_segs((N_SEGS_PRT+2)*y + x) := cur_seg;
         end loop;
@@ -121,14 +121,14 @@ begin
   
   x_prts : for y in 0 to N_X_PRTS-1 generate
     v_seg : for x in 0 to N_SEGS_PRT-1 generate
-      signal v_seg : segment_t := segs_padded((N_SEGS_PRT+2)*(y+1) + (x+1));
+      signal v_seg : segment_t := segs_padded((N_SEGS_PRT+2)*(2*y+1) + (x+1));
       signal r_segs : segment_list_t (0 to 5);
       
       begin
         --get segs above
-        r_segs (0 to 2) <= segs_padded((N_SEGS_PRT+2)*(y+1-1) + (x+1-1) to (N_SEGS_PRT+2)*(y+1-1) + (x+1+1));
+        r_segs (0 to 2) <= segs_padded((N_SEGS_PRT+2)*(2*y+1-1) + (x+1-1) to (N_SEGS_PRT+2)*(2*y+1-1) + (x+1+1));
         --get segs below
-        r_segs (3 to 5) <= segs_padded((N_SEGS_PRT+2)*(y+1+1) + (x+1-1) to (N_SEGS_PRT+2)*(y+1+1) + (x+1+1));
+        r_segs (3 to 5) <= segs_padded((N_SEGS_PRT+2)*(2*y+1+1) + (x+1-1) to (N_SEGS_PRT+2)*(2*y+1+1) + (x+1+1));
         
         range_vectors(N_SEGS_PRT*y + x) <= get_dists(v_seg, r_segs);
     end generate;
