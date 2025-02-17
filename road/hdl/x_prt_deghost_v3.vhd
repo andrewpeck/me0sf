@@ -40,12 +40,12 @@ entity x_prt_deghost_v3 is
     dav_i      : in  std_logic;
     dav_o      : out std_logic;
 
-    segs_i : in  segment_list_t (NUM_FINDERS * N_SEGS_PRT - 1 downto 0);
-    segs_o : out segment_list_t ((NUM_FINDERS+2)*(N_SEGS_PRT+2) - 1 downto 0);
-    v_seg_i : in segment_t;
-    r_segs_i : in segment_list_t (5 downto 0); -- 12 segs in
+    segs_i : in  segment_list_t (0 to NUM_FINDERS*N_SEGS_PRT - 1);
+    segs_o : out segment_list_t (0 to (NUM_FINDERS+2)*(N_SEGS_PRT+2) - 1);
+    v_seg_i : in segment_t
+--    r_segs_i : in segment_list_t (5 downto 0); -- 12 segs in
 
-    out_bits : out std_logic_vector(5 downto 0)
+--    out_bits : out std_logic_vector(5 downto 0)
     );
 end x_prt_deghost_v3;
 
@@ -62,7 +62,7 @@ architecture behavioral of x_prt_deghost_v3 is
   constant N_SEGS_PADDED_TOTAL : positive := (NUM_FINDERS+2)*(N_SEGS_PRT+2);
   constant N_X_PRTS : positive := positive(floor(real(NUM_FINDERS)/2.0));
   
-  signal segs_padded : segment_list_t(N_SEGS_PADDED_TOTAL-1 downto 0);
+  signal segs_padded : segment_list_t(0 to N_SEGS_PADDED_TOTAL-1);
   
   type range_vector_arr is array (0 to N_X_PRTS*N_CHUNKS_PER_PRT-1) of std_logic_vector (5 downto 0);
   signal range_vectors : range_vector_arr;
@@ -71,7 +71,7 @@ architecture behavioral of x_prt_deghost_v3 is
   --   ...[][][]...   Real partition
   --     ...[]...     Virtual partition
   --   ...[][][]...   Real partition
-  function get_dists(v_seg : segment_t; r_segs : segment_list_t (5 downto 0)) return std_logic_vector is
+  function get_dists(v_seg : segment_t; r_segs : segment_list_t (0 to 5)) return std_logic_vector is
     -- Bit to left append strip number of virtual and real segments
     constant append_v : std_logic_vector (5 downto 0) := "001001";
     constant append_r : std_logic_vector (5 downto 0) := "100100";
@@ -99,8 +99,8 @@ architecture behavioral of x_prt_deghost_v3 is
   end function;
   
   -- Function to pad the 2D partition-chunk matrix with null segments
-  function pad_segs_in(in_segs : segment_list_t (N_SEGS_TOTAL-1 downto 0)) return segment_list_t is
-    variable out_segs : segment_list_t (N_SEGS_PADDED_TOTAL-1 downto 0);
+  function pad_segs_in(in_segs : segment_list_t (0 to N_SEGS_TOTAL-1)) return segment_list_t is
+    variable out_segs : segment_list_t (0 to N_SEGS_PADDED_TOTAL-1);
     variable cur_seg : segment_t;
     begin
       for y in 0 to NUM_FINDERS+1 loop
@@ -126,16 +126,20 @@ begin
   x_prts : for y in 0 to N_X_PRTS-1 generate
     v_seg : for x in 0 to N_SEGS_PRT-1 generate
       signal v_seg : segment_t := segs_padded((N_SEGS_PRT+2)*(y+1) + (x+1));
---      signal segs_above : segment_list_t (2 downto 0);
---      signal segs_below : segment_list_t (2 downto 0);
+      signal r_segs : segment_list_t (0 to 5);
+      
       begin
-        range_vectors(N_SEGS_PRT*y + x) <= get_dists(v_seg, r_segs_i);
+        --get segs above
+        r_segs (0 to 2) <= segs_padded((N_SEGS_PRT+2)*(y+1-1) + (x+1+1) to (N_SEGS_PRT+2)*(y+1-1) + (x+1-1));
+        --get segs below
+        r_segs (3 to 5) <= segs_padded((N_SEGS_PRT+2)*(y+1+1) + (x+1+1) to (N_SEGS_PRT+2)*(y+1+1) + (x+1-1));
+        
+        range_vectors(N_SEGS_PRT*y + x) <= get_dists(v_seg, r_segs);
     end generate;
   end generate;
   
   process (clock) begin
     if (rising_edge(clock)) then
-      out_bits <= get_dists(v_seg_i, r_segs_i);
       dav_o <= dav_i;
     end if;
   end process;
