@@ -203,11 +203,13 @@ begin
   
   --Mask
   mask <= get_mask(range_vectors);
-  seg_masking : for i in 0 to NUM_FINDERS*N_SEGS_PRT - 1 generate
-    segs_masked(i).id <= segs_i(i).id;
-    segs_masked(i).partition <= segs_i(i).partition;
-    segs_masked(i).strip <= segs_i(i).strip;
-    segs_masked(i).lc <= segs_i(i).lc when mask(i) = '1' else "000";
+  part_masking : for y in 0 to NUM_FINDERS-1 generate
+    seg_masking : for x in 0 to N_SEGS_PRT-1 generate
+      segs_masked(y*N_SEGS_PRT + x).id <= segs_i(y*N_SEGS_PRT + x).id;
+      segs_masked(y*N_SEGS_PRT + x).partition <= segs_i(y*N_SEGS_PRT + x).partition;
+      segs_masked(y*N_SEGS_PRT + x).strip <= segs_i(y*N_SEGS_PRT + x).strip;
+      segs_masked(y*N_SEGS_PRT + x).lc <= segs_i(y*N_SEGS_PRT + x).lc when (y mod 2 = 1 or mask(y/2*N_SEGS_PRT + x) = '1') else "000";
+    end generate;
   end generate;
   
   process (clock) begin
