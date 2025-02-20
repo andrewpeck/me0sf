@@ -119,6 +119,11 @@ async def chamber_test(dut, test, nloops=512, verbose=True):
             for i in range(NUM_FINDERS//2):
                 print(str(range_vectors_1d[NUM_SEGS_PER_PRT*i:NUM_SEGS_PER_PRT*(i+1)]))
 
+            segs_o = [my_seg.lc.value.integer for my_seg in dut.segs_o]
+            print("Segs out:")
+            for i in range(NUM_FINDERS):
+                print(str(segs_o[NUM_SEGS_PER_PRT*i:NUM_SEGS_PER_PRT*(i+1)]))
+
             print("\n")
             # assert str(dut.out_bits.value) == out_str[::-1]
 

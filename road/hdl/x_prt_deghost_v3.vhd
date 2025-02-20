@@ -60,7 +60,7 @@ architecture behavioral of x_prt_deghost_v3 is
   
   signal segs_padded : segment_list_t(0 to N_SEGS_PADDED_TOTAL-1);
   
-  type range_vector_arr is array (0 to N_X_PRTS*N_CHUNKS_PER_PRT-1) of std_logic_vector (5 downto 0);
+  type range_vector_arr is array (0 to N_X_PRTS*N_CHUNKS_PER_PRT-1) of std_logic_vector (0 to 5);
   signal range_vectors : range_vector_arr;
   
   signal mask : std_logic_vector (0 to NUM_FINDERS*N_SEGS_PRT - 1);
@@ -93,8 +93,8 @@ architecture behavioral of x_prt_deghost_v3 is
   --   ...[][][]...   Real partition
   function get_dists(v_seg : segment_t; r_segs : segment_list_t (0 to 5)) return std_logic_vector is
     -- Bit to left append strip number of virtual and real segments
-    constant append_v : std_logic_vector (5 downto 0) := "001001";
-    constant append_r : std_logic_vector (5 downto 0) := "100100";
+    constant append_v : std_logic_vector (0 to 5) := "100100";
+    constant append_r : std_logic_vector (0 to 5) := "001001";
     constant chunk_bits : natural := natural(log2(real(CHUNK_WIDTH)));
     constant intra_chunk_bits : natural := strip_bits - chunk_bits;
 
@@ -102,7 +102,7 @@ architecture behavioral of x_prt_deghost_v3 is
     variable r_null : boolean;
     variable v_null : boolean;
     
-    variable out_bits : std_logic_vector (5 downto 0);
+    variable out_bits : std_logic_vector (0 to 5);
     
   begin
     v_null := true when v_seg.lc = 0 else false;
@@ -186,10 +186,12 @@ begin
   --Get range vectors for each virtual chunk
   x_prts : for y in 0 to N_X_PRTS-1 generate
     v_seg : for x in 0 to N_SEGS_PRT-1 generate
-      signal v_seg : segment_t := segs_padded((N_SEGS_PRT+2)*(2*y+1) + (x+1));
+      signal v_seg : segment_t;
       signal r_segs : segment_list_t (0 to 5);
       
       begin
+        --get virtual segment
+        v_seg <= segs_padded((N_SEGS_PRT+2)*(2*y+1) + (x+1));
         --get segs above
         r_segs (0 to 2) <= segs_padded((N_SEGS_PRT+2)*(2*y+1-1) + (x+1-1) to (N_SEGS_PRT+2)*(2*y+1-1) + (x+1+1));
         --get segs below
