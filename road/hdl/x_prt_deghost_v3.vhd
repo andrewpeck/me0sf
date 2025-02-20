@@ -41,7 +41,7 @@ entity x_prt_deghost_v3 is
     dav_o      : out std_logic;
 
     segs_i : in  segment_list_t (0 to NUM_FINDERS*N_SEGS_PRT - 1);
-    segs_o : out segment_list_t (0 to (NUM_FINDERS+2)*(N_SEGS_PRT+2) - 1)
+    segs_o : out segment_list_t (0 to NUM_FINDERS*N_SEGS_PRT - 1)
     );
 end x_prt_deghost_v3;
 
@@ -62,37 +62,9 @@ architecture behavioral of x_prt_deghost_v3 is
   
   type range_vector_arr is array (0 to N_X_PRTS*N_CHUNKS_PER_PRT-1) of std_logic_vector (5 downto 0);
   signal range_vectors : range_vector_arr;
-
-  -- Function to determine if which of 6 neighboring real segments are close to the virtual segment
-  --   ...[][][]...   Real partition
-  --     ...[]...     Virtual partition
-  --   ...[][][]...   Real partition
-  function get_dists(v_seg : segment_t; r_segs : segment_list_t (0 to 5)) return std_logic_vector is
-    -- Bit to left append strip number of virtual and real segments
-    constant append_v : std_logic_vector (0 to 5) := "100100";
-    constant append_r : std_logic_vector (0 to 5) := "001001";
-    constant chunk_bits : natural := natural(log2(real(CHUNK_WIDTH)));
-    constant intra_chunk_bits : natural := strip_bits - chunk_bits;
-
-    variable diff : signed (intra_chunk_bits-1+2 downto 0);
-    variable out_bits : std_logic_vector (0 to 5);
-    variable r_null : boolean;
-    
-    begin 
-      for i in 0 to 5 loop
-        r_null := true when r_segs(i).lc = 0 else false;
-        
-        diff := abs( ('0' & append_r(i) & signed(r_segs(i).strip(intra_chunk_bits-1 downto 0))) - ('0' & append_v(i) & signed(v_seg.strip(intra_chunk_bits-1 downto 0))) );
-
-        if (r_null or boolean(unsigned(diff) > RADIUS)) then
-          out_bits(i) := '0';
-        else
-          out_bits(i) := '1';
-        end if;
-      end loop;
-      
-    return out_bits;
-  end function;
+  
+  signal mask : std_logic_vector (0 to NUM_FINDERS*N_SEGS_PRT - 1);
+  signal segs_masked : segment_list_t (0 to NUM_FINDERS*N_SEGS_PRT - 1);
   
   -- Function to pad the 2D partition-chunk matrix with null segments
   function pad_segs_in(in_segs : segment_list_t (0 to N_SEGS_TOTAL-1)) return segment_list_t is
@@ -115,37 +87,132 @@ architecture behavioral of x_prt_deghost_v3 is
     return out_segs;
   end function;
 
+  -- Function to determine if which of 6 neighboring real segments are close to the virtual segment
+  --   ...[][][]...   Real partition
+  --     ...[]...     Virtual partition
+  --   ...[][][]...   Real partition
+  function get_dists(v_seg : segment_t; r_segs : segment_list_t (0 to 5)) return std_logic_vector is
+    -- Bit to left append strip number of virtual and real segments
+    constant append_v : std_logic_vector (5 downto 0) := "001001";
+    constant append_r : std_logic_vector (5 downto 0) := "100100";
+    constant chunk_bits : natural := natural(log2(real(CHUNK_WIDTH)));
+    constant intra_chunk_bits : natural := strip_bits - chunk_bits;
+
+    variable diff : signed (intra_chunk_bits-1+2 downto 0);
+    variable r_null : boolean;
+    variable v_null : boolean;
+    
+    variable out_bits : std_logic_vector (5 downto 0);
+    
+  begin
+    v_null := true when v_seg.lc = 0 else false;
+    for i in 0 to 5 loop
+      r_null := true when r_segs(i).lc = 0 else false;
+      
+      diff := abs( ('0' & append_r(i) & signed(r_segs(i).strip(intra_chunk_bits-1 downto 0))) - ('0' & append_v(i) & signed(v_seg.strip(intra_chunk_bits-1 downto 0))) );
+
+      if (v_null or r_null or boolean(unsigned(diff) > RADIUS)) then
+        out_bits(i) := '0';
+      else
+        out_bits(i) := '1';
+      end if;
+    end loop;
+      
+    return out_bits;
+  end function;
+  
+  function get_mask(range_vectors : range_vector_arr) return std_logic_vector is
+  
+    variable range_vectors_s2 : range_vector_arr;
+  
+    variable above_bits : std_logic_vector (0 to 2);
+    variable below_bits : std_logic_vector (0 to 2);
+  
+    variable reals_mask : std_logic_vector (0 to NUM_FINDERS*N_SEGS_PRT - 1);
+    variable both_mask : std_logic_vector (0 to NUM_FINDERS*N_SEGS_PRT - 1);
+  
+  begin
+    --Kill real segment ghosts
+    
+    --Don't need to check top or bottom partitions, since they are real and cannot be killed
+    reals_mask(0 to N_SEGS_PRT-1) := (others => '1');
+
+    for y in 1 to NUM_FINDERS-N_X_PRTS - 2 loop
+      --Leftmost segment
+      if ( (range_vectors((y-1)*N_SEGS_PRT)(4) or range_vectors((y-1)*N_SEGS_PRT+1)(3)) and (range_vectors(y*N_SEGS_PRT)(1) or range_vectors(y*N_SEGS_PRT+1)(0)) ) = '1' then
+        reals_mask(y*N_SEGS_PRT) := '0';
+        range_vectors_s2((y-1)*N_SEGS_PRT)(4) := '0';
+        range_vectors_s2((y-1)*N_SEGS_PRT+1)(3) := '0';
+        range_vectors_s2(y*N_SEGS_PRT)(1) := '0';
+        range_vectors_s2(y*N_SEGS_PRT+1)(0) := '0';
+      else
+        reals_mask(y*N_SEGS_PRT) := '1';
+        range_vectors_s2((y-1)*N_SEGS_PRT)(4) := '0';
+        range_vectors_s2((y-1)*N_SEGS_PRT+1)(3) := '0';
+        range_vectors_s2(y*N_SEGS_PRT)(1) := '0';
+        range_vectors_s2(y*N_SEGS_PRT+1)(0) := '0';
+      end if;
+
+      --Rightmost segment
+      reals_mask(y*N_SEGS_PRT) := '0' when ( range_vectors(y*N_SEGS_PRT-2)(5) or range_vectors(y*N_SEGS_PRT-1)(4) ) and ( range_vectors((y+1)*N_SEGS_PRT-2)(2) or range_vectors((y+1)*N_SEGS_PRT-1)(1) ) else '1';
+      
+      --Middle segments
+      for x in 1 to N_SEGS_PRT-2 loop
+        above_bits(0) := range_vectors((y-1)*N_SEGS_PRT + x - 1)(5);
+        above_bits(1) := range_vectors((y-1)*N_SEGS_PRT + x)(4);
+        above_bits(2) := range_vectors((y-1)*N_SEGS_PRT + x + 1)(3);
+        
+        below_bits(0) := range_vectors(y*N_SEGS_PRT + x - 1)(2);
+        below_bits(1) := range_vectors(y*N_SEGS_PRT + x)(1);
+        below_bits(2) := range_vectors(y*N_SEGS_PRT + x + 1)(0);
+        
+        reals_mask(y*N_SEGS_PRT + x) := '0' when or_reduce(above_bits) xor or_reduce(below_bits) else '1';
+      end loop;
+    end loop;
+    
+    --Kill virtual segment ghosts
+   --both_mask()
+    
+    --return both_mask;
+    return reals_mask;
+  end function;
+   
+
 begin
 
+  --Zero pad 2d segment array on left and right
   segs_padded <= pad_segs_in(segs_i);
   
+  --Get range vectors for each virtual chunk
   x_prts : for y in 0 to N_X_PRTS-1 generate
     v_seg : for x in 0 to N_SEGS_PRT-1 generate
-      signal v_seg : segment_t; 
+      signal v_seg : segment_t := segs_padded((N_SEGS_PRT+2)*(2*y+1) + (x+1));
       signal r_segs : segment_list_t (0 to 5);
       
       begin
-        --get virtual segment
-        v_seg <= segs_padded((N_SEGS_PRT+2)*(2*y+1) + (x+1));
         --get segs above
         r_segs (0 to 2) <= segs_padded((N_SEGS_PRT+2)*(2*y+1-1) + (x+1-1) to (N_SEGS_PRT+2)*(2*y+1-1) + (x+1+1));
         --get segs below
         r_segs (3 to 5) <= segs_padded((N_SEGS_PRT+2)*(2*y+1+1) + (x+1-1) to (N_SEGS_PRT+2)*(2*y+1+1) + (x+1+1));
-        
+
         range_vectors(N_SEGS_PRT*y + x) <= get_dists(v_seg, r_segs);
     end generate;
+  end generate;
+  
+  --Mask
+  mask <= get_mask(range_vectors);
+  seg_masking : for i in 0 to NUM_FINDERS*N_SEGS_PRT - 1 generate
+    segs_masked(i).id <= segs_i(i).id;
+    segs_masked(i).partition <= segs_i(i).partition;
+    segs_masked(i).strip <= segs_i(i).strip;
+    segs_masked(i).lc <= segs_i(i).lc when mask(i) = '1' else "000";
   end generate;
   
   process (clock) begin
     if (rising_edge(clock)) then
       dav_o <= dav_i;
+      segs_o <= segs_masked;
     end if;
   end process;
-
-  -- x_prt_deghost_for : for prt_index in 0 to floor(NUM_FINDERS/2)-1 generate
-  --   x_prt_segments = all_segs((2*prt_index+2)*N_SEGS_PRT downto (2*prt_index+1)*N_SEGS_PRT);
-  --   l_prt_segments = all_segs((2*prt_index+1)*N_SEGS_PRT downto (2*prt_index)*N_SEGS_PRT);
-  --   r_prt_segments = all_segs((2*prt_index+3)*N_SEGS_PRT downto (2*prt_index+2)*N_SEGS_PRT);
-  -- end generate;
 
 end behavioral;
