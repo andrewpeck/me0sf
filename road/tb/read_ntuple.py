@@ -1,6 +1,6 @@
 import uproot
 
-def read_ntuple(file_path):
+def read_ntuple(file_path, entry_start=None, entry_stop=None):
     with uproot.open(file_path + ":ME0HitAnalyzer/Events") as Events:
 
         events = Events.arrays(
