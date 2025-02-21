@@ -161,9 +161,9 @@ architecture behavioral of x_prt_deghost_v3 is
         v_kill_bits(1) := range_vectors((y-1)*N_SEGS_PRT + x)(4) and or_reduce(range_vectors((y-1)*N_SEGS_PRT + x)(0 to 2));
         v_kill_bits(2) := range_vectors((y-1)*N_SEGS_PRT + x + 1)(3) and or_reduce(range_vectors((y-1)*N_SEGS_PRT + x + 1)(0 to 2));
         
-        v_kill_bits(0) := range_vectors(y*N_SEGS_PRT + x - 1)(2) and or_reduce(range_vectors(y*N_SEGS_PRT + x - 1)(3 to 5));
-        v_kill_bits(1) := range_vectors(y*N_SEGS_PRT + x)(1) and or_reduce(range_vectors(y*N_SEGS_PRT + x)(3 to 5));
-        v_kill_bits(2) := range_vectors(y*N_SEGS_PRT + x + 1)(0) and or_reduce(range_vectors(y*N_SEGS_PRT + x + 1)(3 to 5));
+        v_kill_bits(3) := range_vectors(y*N_SEGS_PRT + x - 1)(2) and or_reduce(range_vectors(y*N_SEGS_PRT + x - 1)(3 to 5));
+        v_kill_bits(4) := range_vectors(y*N_SEGS_PRT + x)(1) and or_reduce(range_vectors(y*N_SEGS_PRT + x)(3 to 5));
+        v_kill_bits(5) := range_vectors(y*N_SEGS_PRT + x + 1)(0) and or_reduce(range_vectors(y*N_SEGS_PRT + x + 1)(3 to 5));
         
         reals_mask(y*N_SEGS_PRT + x) := '0' when or_reduce(v_kill_bits)  else '1';
       end loop;
