@@ -125,8 +125,7 @@ architecture behavioral of x_prt_deghost_v3 is
   
     variable range_vectors_s2 : range_vector_arr;
   
-    variable above_bits : std_logic_vector (0 to 2);
-    variable below_bits : std_logic_vector (0 to 2);
+    variable v_kill_bits : std_logic_vector (0 to 5);
   
     variable reals_mask : std_logic_vector (0 to NUM_FINDERS*N_SEGS_PRT - 1);
     variable both_mask : std_logic_vector (0 to NUM_FINDERS*N_SEGS_PRT - 1);
@@ -134,39 +133,39 @@ architecture behavioral of x_prt_deghost_v3 is
   begin
     --Kill real segment ghosts
     
-    --Don't need to check top or bottom partitions, since they are real and cannot be killed
+    --Need to check top and bottom partitions differently, consider zero padding
     reals_mask(0 to N_SEGS_PRT-1) := (others => '1');
 
-    for y in 1 to NUM_FINDERS-N_X_PRTS - 2 loop
-      --Leftmost segment
-      if ( (range_vectors((y-1)*N_SEGS_PRT)(4) or range_vectors((y-1)*N_SEGS_PRT+1)(3)) and (range_vectors(y*N_SEGS_PRT)(1) or range_vectors(y*N_SEGS_PRT+1)(0)) ) = '1' then
-        reals_mask(y*N_SEGS_PRT) := '0';
-        range_vectors_s2((y-1)*N_SEGS_PRT)(4) := '0';
-        range_vectors_s2((y-1)*N_SEGS_PRT+1)(3) := '0';
-        range_vectors_s2(y*N_SEGS_PRT)(1) := '0';
-        range_vectors_s2(y*N_SEGS_PRT+1)(0) := '0';
+    for y in 1 to NUM_FINDERS-N_X_PRTS-2 loop
+      --Check leftmost segment
+      if (range_vectors(y*N_SEGS_PRT)(5) and or_reduce(range_vectors(y*N_SEGS_PRT)(0 to 2)))  then
+        reals_mask((y+1)*N_SEGS_PRT) := '0';
+--        range_vectors_s2((y-1)*N_SEGS_PRT)(4) := '0';
+--        range_vectors_s2((y-1)*N_SEGS_PRT+1)(3) := '0';
+--        range_vectors_s2(y*N_SEGS_PRT)(1) := '0';
+--        range_vectors_s2(y*N_SEGS_PRT+1)(0) := '0';
       else
-        reals_mask(y*N_SEGS_PRT) := '1';
-        range_vectors_s2((y-1)*N_SEGS_PRT)(4) := '0';
-        range_vectors_s2((y-1)*N_SEGS_PRT+1)(3) := '0';
-        range_vectors_s2(y*N_SEGS_PRT)(1) := '0';
-        range_vectors_s2(y*N_SEGS_PRT+1)(0) := '0';
+        reals_mask((y+1)*N_SEGS_PRT) := '1';
+--        range_vectors_s2((y-1)*N_SEGS_PRT)(4) := '0';
+--        range_vectors_s2((y-1)*N_SEGS_PRT+1)(3) := '0';
+--        range_vectors_s2(y*N_SEGS_PRT)(1) := '0';
+--        range_vectors_s2(y*N_SEGS_PRT+1)(0) := '0';
       end if;
 
       --Rightmost segment
-      reals_mask(y*N_SEGS_PRT) := '0' when ( range_vectors(y*N_SEGS_PRT-2)(5) or range_vectors(y*N_SEGS_PRT-1)(4) ) and ( range_vectors((y+1)*N_SEGS_PRT-2)(2) or range_vectors((y+1)*N_SEGS_PRT-1)(1) ) else '1';
+      reals_mask((y+1)*N_SEGS_PRT) := '0' when ( range_vectors(y*N_SEGS_PRT-2)(5) or range_vectors(y*N_SEGS_PRT-1)(4) ) and ( range_vectors((y+1)*N_SEGS_PRT-2)(2) or range_vectors((y+1)*N_SEGS_PRT-1)(1) ) else '1';
       
       --Middle segments
       for x in 1 to N_SEGS_PRT-2 loop
-        above_bits(0) := range_vectors((y-1)*N_SEGS_PRT + x - 1)(5);
-        above_bits(1) := range_vectors((y-1)*N_SEGS_PRT + x)(4);
-        above_bits(2) := range_vectors((y-1)*N_SEGS_PRT + x + 1)(3);
+        v_kill_bits(0) := range_vectors((y-1)*N_SEGS_PRT + x - 1)(5) and or_reduce(range_vectors((y-1)*N_SEGS_PRT + x - 1)(0 to 2));
+        v_kill_bits(1) := range_vectors((y-1)*N_SEGS_PRT + x)(4) and or_reduce(range_vectors((y-1)*N_SEGS_PRT + x)(0 to 2));
+        v_kill_bits(2) := range_vectors((y-1)*N_SEGS_PRT + x + 1)(3) and or_reduce(range_vectors((y-1)*N_SEGS_PRT + x + 1)(0 to 2));
         
-        below_bits(0) := range_vectors(y*N_SEGS_PRT + x - 1)(2);
-        below_bits(1) := range_vectors(y*N_SEGS_PRT + x)(1);
-        below_bits(2) := range_vectors(y*N_SEGS_PRT + x + 1)(0);
+        v_kill_bits(0) := range_vectors(y*N_SEGS_PRT + x - 1)(2) and or_reduce(range_vectors(y*N_SEGS_PRT + x - 1)(3 to 5));
+        v_kill_bits(1) := range_vectors(y*N_SEGS_PRT + x)(1) and or_reduce(range_vectors(y*N_SEGS_PRT + x)(3 to 5));
+        v_kill_bits(2) := range_vectors(y*N_SEGS_PRT + x + 1)(0) and or_reduce(range_vectors(y*N_SEGS_PRT + x + 1)(3 to 5));
         
-        reals_mask(y*N_SEGS_PRT + x) := '0' when or_reduce(above_bits) xor or_reduce(below_bits) else '1';
+        reals_mask(y*N_SEGS_PRT + x) := '0' when or_reduce(v_kill_bits)  else '1';
       end loop;
     end loop;
     
