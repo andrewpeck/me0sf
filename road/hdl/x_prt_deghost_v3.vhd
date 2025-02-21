@@ -165,7 +165,7 @@ architecture behavioral of x_prt_deghost_v3 is
         v_kill_bits(4) := range_vectors(y*N_SEGS_PRT + x)(1) and or_reduce(range_vectors(y*N_SEGS_PRT + x)(3 to 5));
         v_kill_bits(5) := range_vectors(y*N_SEGS_PRT + x + 1)(0) and or_reduce(range_vectors(y*N_SEGS_PRT + x + 1)(3 to 5));
         
-        reals_mask(y*N_SEGS_PRT + x) := '0' when or_reduce(v_kill_bits)  else '1';
+        reals_mask(y*N_SEGS_PRT + x) := '0' when or_reduce(v_kill_bits) else '1';
       end loop;
     end loop;
     

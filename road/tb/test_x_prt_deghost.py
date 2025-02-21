@@ -119,6 +119,11 @@ async def chamber_test(dut, test, nloops=512, verbose=True):
             for i in range(NUM_FINDERS//2):
                 print(str(range_vectors_1d[NUM_SEGS_PER_PRT*i:NUM_SEGS_PER_PRT*(i+1)]))
 
+            mask_1d = [val.value for val in dut.mask]
+            print("Mask:")
+            for i in range((NUM_FINDERS+1)//2):
+                print(str(mask_1d[NUM_SEGS_PER_PRT*i:NUM_SEGS_PER_PRT*(i+1)]))
+
             segs_o = [my_seg.lc.value.integer for my_seg in dut.segs_o]
             print("Segs out:")
             for i in range(NUM_FINDERS):
