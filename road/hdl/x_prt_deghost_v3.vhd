@@ -137,34 +137,46 @@ architecture behavioral of x_prt_deghost_v3 is
   
   function get_mask(range_vectors : range_vector_padded_arr) return std_logic_vector is
   
-    variable range_vectors_s2 : range_vector_padded_arr;
+    type range_vector_or_arr is array (0 to (N_X_PRTS+2)*(N_CHUNKS_PER_PRT+2)-1) of std_logic_vector(0 to 1); 
+    variable range_vectors_or : range_vector_or_arr;
   
     variable v_kill_bits : std_logic_vector (0 to 5);
-  
-    variable reals_mask : std_logic_vector (0 to NUM_FINDERS*N_SEGS_PRT - 1);
-    variable both_mask : std_logic_vector (0 to NUM_FINDERS*N_SEGS_PRT - 1);
+    
+    variable mask : std_logic_vector (0 to NUM_FINDERS*N_SEGS_PRT - 1);
   
   begin
+    for i in 0 to (N_X_PRTS+2)*(N_CHUNKS_PER_PRT+2)-1 loop
+      range_vectors_or(i)(0) := or_reduce(range_vectors(i)(0 to 2));
+      range_vectors_or(i)(1) := or_reduce(range_vectors(i)(3 to 5));
+    end loop;
     --Kill real segment ghosts
     for y in 0 to NUM_FINDERS-N_X_PRTS-1 loop
       for x in 0 to N_SEGS_PRT-1 loop
-        v_kill_bits(0) := range_vectors(y*(N_SEGS_PRT+2) + x)(5) and or_reduce(range_vectors(y*(N_SEGS_PRT+2) + x)(0 to 2));
-        v_kill_bits(1) := range_vectors(y*(N_SEGS_PRT+2) + x + 1)(4) and or_reduce(range_vectors(y*(N_SEGS_PRT+2) + x + 1)(0 to 2));
-        v_kill_bits(2) := range_vectors(y*(N_SEGS_PRT+2) + x + 2)(3) and or_reduce(range_vectors(y*(N_SEGS_PRT+2) + x + 2)(0 to 2));
+        v_kill_bits(0) := range_vectors(y*(N_SEGS_PRT+2) + x)(5) and range_vectors_or(y*(N_SEGS_PRT+2) + x)(0);
+        v_kill_bits(1) := range_vectors(y*(N_SEGS_PRT+2) + x + 1)(4) and range_vectors_or(y*(N_SEGS_PRT+2) + x + 1)(0);
+        v_kill_bits(2) := range_vectors(y*(N_SEGS_PRT+2) + x + 2)(3) and range_vectors_or(y*(N_SEGS_PRT+2) + x + 2)(0);
         
-        v_kill_bits(3) := range_vectors((y+1)*(N_SEGS_PRT+2) + x)(2) and or_reduce(range_vectors((y+1)*(N_SEGS_PRT+2) + x)(3 to 5));
-        v_kill_bits(4) := range_vectors((y+1)*(N_SEGS_PRT+2) + x + 1)(1) and or_reduce(range_vectors((y+1)*(N_SEGS_PRT+2) + x + 1)(3 to 5));
-        v_kill_bits(5) := range_vectors((y+1)*(N_SEGS_PRT+2) + x + 2)(0) and or_reduce(range_vectors((y+1)*(N_SEGS_PRT+2) + x + 2)(3 to 5));
+        v_kill_bits(3) := range_vectors((y+1)*(N_SEGS_PRT+2) + x)(2) and range_vectors_or((y+1)*(N_SEGS_PRT+2) + x)(1);
+        v_kill_bits(4) := range_vectors((y+1)*(N_SEGS_PRT+2) + x + 1)(1) and range_vectors_or((y+1)*(N_SEGS_PRT+2) + x + 1)(1);
+        v_kill_bits(5) := range_vectors((y+1)*(N_SEGS_PRT+2) + x + 2)(0) and range_vectors_or((y+1)*(N_SEGS_PRT+2) + x + 2)(1);
         
-        reals_mask(y*N_SEGS_PRT + x) := '0' when or_reduce(v_kill_bits) else '1';
+        mask(2*y*N_SEGS_PRT + x) := '0' when or_reduce(v_kill_bits) else '1';
       end loop;
     end loop;
+    
+    --Update range vectors to reflect killed real segments
+    
+--    for y in something loop
+--      for x in somethingelse loop
+--        range_vectors_s2
+--      end loop;
+--    end loop;
     
     --Kill virtual segment ghosts
    --both_mask()
     
     --return both_mask;
-    return reals_mask;
+    return mask;
   end function;
    
 
