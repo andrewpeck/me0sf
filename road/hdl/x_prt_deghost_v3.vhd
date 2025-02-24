@@ -179,7 +179,15 @@ architecture behavioral of x_prt_deghost_v3 is
     -- Kill virtual ghosts
     for y in 1 to N_X_PRTS loop
       for x in 1 to N_CHUNKS_PER_PRT loop
-        mask((2*(y-1)+1)*N_CHUNKS_PER_PRT + (x-1)) := or_reduce(range_vectors_s2(y*(N_CHUNKS_PER_PRT+2)+x));
+      
+        if (x = 1) then
+          mask((2*(y-1)+1)*N_CHUNKS_PER_PRT + (x-1)) := or_reduce(range_vectors_s2(y*(N_CHUNKS_PER_PRT+2)+x)(1 to 2)) or or_reduce(range_vectors_s2(y*(N_CHUNKS_PER_PRT+2)+x)(4 to 5));
+        elsif (x = N_CHUNKS_PER_PRT) then
+          mask((2*(y-1)+1)*N_CHUNKS_PER_PRT + (x-1)) := or_reduce(range_vectors_s2(y*(N_CHUNKS_PER_PRT+2)+x)(0 to 1)) or or_reduce(range_vectors_s2(y*(N_CHUNKS_PER_PRT+2)+x)(3 to 4));
+        else
+          mask((2*(y-1)+1)*N_CHUNKS_PER_PRT + (x-1)) := or_reduce(range_vectors_s2(y*(N_CHUNKS_PER_PRT+2)+x));  
+        end if;
+
       end loop;
     end loop;
     
