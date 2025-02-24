@@ -139,6 +139,8 @@ architecture behavioral of x_prt_deghost_v3 is
   
     type range_vector_or_arr is array (0 to (N_X_PRTS+2)*(N_CHUNKS_PER_PRT+2)-1) of std_logic_vector(0 to 1); 
     variable range_vectors_or : range_vector_or_arr;
+    
+    variable range_vectors_s2 : range_vector_padded_arr;
   
     variable v_kill_bits : std_logic_vector (0 to 5);
     
@@ -161,21 +163,26 @@ architecture behavioral of x_prt_deghost_v3 is
         v_kill_bits(5) := range_vectors((y+1)*(N_SEGS_PRT+2) + x + 2)(0) and range_vectors_or((y+1)*(N_SEGS_PRT+2) + x + 2)(1);
         
         mask(2*y*N_SEGS_PRT + x) := '0' when or_reduce(v_kill_bits) else '1';
+        
+        --Update range vectors
+        range_vectors_s2(y*(N_SEGS_PRT+2) + x)(5) := range_vectors(y*(N_SEGS_PRT+2) + x)(5) and not range_vectors_or(y*(N_SEGS_PRT+2) + x)(0);
+        range_vectors_s2(y*(N_SEGS_PRT+2) + x + 1)(4) := range_vectors(y*(N_SEGS_PRT+2) + x + 1)(4) and not range_vectors_or(y*(N_SEGS_PRT+2) + x + 1)(0);
+        range_vectors_s2(y*(N_SEGS_PRT+2) + x + 2)(3) := range_vectors(y*(N_SEGS_PRT+2) + x + 2)(3) and not range_vectors_or(y*(N_SEGS_PRT+2) + x + 2)(0);
+        
+        range_vectors_s2((y+1)*(N_SEGS_PRT+2) + x)(2) := range_vectors((y+1)*(N_SEGS_PRT+2) + x)(2) and not range_vectors_or((y+1)*(N_SEGS_PRT+2) + x)(1);
+        range_vectors_s2((y+1)*(N_SEGS_PRT+2) + x + 1)(1) := range_vectors((y+1)*(N_SEGS_PRT+2) + x + 1)(1) and not range_vectors_or((y+1)*(N_SEGS_PRT+2) + x + 1)(1);
+        range_vectors_s2((y+1)*(N_SEGS_PRT+2) + x + 2)(0) := range_vectors((y+1)*(N_SEGS_PRT+2) + x + 2)(0) and not range_vectors_or((y+1)*(N_SEGS_PRT+2) + x + 2)(1);
+        
       end loop;
     end loop;
     
-    --Update range vectors to reflect killed real segments
+    -- Kill virtual ghosts
+    for y in 1 to N_X_PRTS loop
+      for x in 1 to N_CHUNKS_PER_PRT loop
+        mask((2*(y-1)+1)*N_CHUNKS_PER_PRT + (x-1)) := or_reduce(range_vectors_s2(y*(N_CHUNKS_PER_PRT+2)+x));
+      end loop;
+    end loop;
     
---    for y in something loop
---      for x in somethingelse loop
---        range_vectors_s2
---      end loop;
---    end loop;
-    
-    --Kill virtual segment ghosts
-   --both_mask()
-    
-    --return both_mask;
     return mask;
   end function;
    
@@ -212,7 +219,7 @@ begin
       segs_masked(y*N_SEGS_PRT + x).id <= segs_i(y*N_SEGS_PRT + x).id;
       segs_masked(y*N_SEGS_PRT + x).partition <= segs_i(y*N_SEGS_PRT + x).partition;
       segs_masked(y*N_SEGS_PRT + x).strip <= segs_i(y*N_SEGS_PRT + x).strip;
-      segs_masked(y*N_SEGS_PRT + x).lc <= segs_i(y*N_SEGS_PRT + x).lc when (y mod 2 = 1 or mask(y/2*N_SEGS_PRT + x) = '1') else "000";
+      segs_masked(y*N_SEGS_PRT + x).lc <= segs_i(y*N_SEGS_PRT + x).lc when (mask(y*N_SEGS_PRT + x) = '1') else "000";
     end generate;
   end generate;
   
