@@ -180,12 +180,13 @@ architecture behavioral of x_prt_deghost_v3 is
     for y in 1 to N_X_PRTS loop
       for x in 1 to N_CHUNKS_PER_PRT loop
       
+        -- If not in range of any real segs, keep. Otherwise, kill.
         if (x = 1) then
-          mask((2*(y-1)+1)*N_CHUNKS_PER_PRT + (x-1)) := or_reduce(range_vectors_s2(y*(N_CHUNKS_PER_PRT+2)+x)(1 to 2)) or or_reduce(range_vectors_s2(y*(N_CHUNKS_PER_PRT+2)+x)(4 to 5));
+          mask((2*(y-1)+1)*N_CHUNKS_PER_PRT + (x-1)) := not or_reduce(range_vectors_s2(y*(N_CHUNKS_PER_PRT+2)+x)(1 to 2)) and not or_reduce(range_vectors_s2(y*(N_CHUNKS_PER_PRT+2)+x)(4 to 5));
         elsif (x = N_CHUNKS_PER_PRT) then
-          mask((2*(y-1)+1)*N_CHUNKS_PER_PRT + (x-1)) := or_reduce(range_vectors_s2(y*(N_CHUNKS_PER_PRT+2)+x)(0 to 1)) or or_reduce(range_vectors_s2(y*(N_CHUNKS_PER_PRT+2)+x)(3 to 4));
+          mask((2*(y-1)+1)*N_CHUNKS_PER_PRT + (x-1)) := not or_reduce(range_vectors_s2(y*(N_CHUNKS_PER_PRT+2)+x)(0 to 1)) and not or_reduce(range_vectors_s2(y*(N_CHUNKS_PER_PRT+2)+x)(3 to 4));
         else
-          mask((2*(y-1)+1)*N_CHUNKS_PER_PRT + (x-1)) := or_reduce(range_vectors_s2(y*(N_CHUNKS_PER_PRT+2)+x));  
+          mask((2*(y-1)+1)*N_CHUNKS_PER_PRT + (x-1)) := not or_reduce(range_vectors_s2(y*(N_CHUNKS_PER_PRT+2)+x));  
         end if;
 
       end loop;
