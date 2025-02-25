@@ -1,9 +1,11 @@
 --Pad input 2D chunk array with null vectors, so edge cases work nicely. Only need to pad left and right sides (not top or bottom), as x-partitions are between real partitions.
---For each virtual segment, make 2 std_logic_vectors of length 2*CHUNK_RADIUS+1 (in general, set to 3 for now, can generalize later but probably don't need to)
---So, need a 2D array of std_logic_vectors, with each entry corresponding to a virtual chunk
---Compare virtual strip number to real strip numbers. Only need some of LSBs.
+--For each virtual segment, make a std_logic_vector ("range vector") of length 2*CHUNK_RADIUS+1 (set to 6 bits for now, can generalize later but probably don't need to)
+--Create 2D array of range vectors, each corresponding to a virtual chunk. Each bit represent whether the virtual segment in that chunk is close to a real segment in a neighboring chunk.
+--Real   [0][1][2] <--- Bits 0-2 of the RV
+--Virtual    [] <--- RV for this chunk
+--Real   [3][4][5] <--- Bits 3-5 of the RV
+--Compare virtual strip number to real strip numbers. Only need some of LSBs, since chunk is known.
 --Add check that chunk size is a power of 2 -- otherwise, this doesn't work.
---Chunk bits = log_2(256/chunk_size) = STRIP_BITS - log_2(chunk_size); Strip_within_chunk_bits = STRIP_BITS - chunk_bits
 --If chunks being compared are not equal, need to left-append 0 to left chunk and 1 to right chunk
 --Or both vectors together. If only 1 true, kill virtual. If both true, kill both real.
 --To kill segments, make a 2D std_logic array (array of std_logic_vector) to mask. If killing, set 0. Else, set 1. And this with 2D chunk array.
@@ -31,8 +33,7 @@ use work.patterns.all;
 entity x_prt_deghost_v3 is
   generic(
     NUM_FINDERS : integer := 15;
-    RADIUS : natural := 2;
-    CHUNK_WIDTH : natural := 16
+    RADIUS : natural := 2
     );
   port(
     clock      : in  std_logic;
@@ -53,15 +54,14 @@ architecture behavioral of x_prt_deghost_v3 is
   -- Returns 6 bits, corresponding to whether the top 3 segments are in range, and the bottom 3
   -- To save resources, we can replace the whole chunk_number with only "0" or "1", reducing our space from the whole 192 strips to the local 2 chunks (2*CHUNK_SIZE)
   
-  constant N_CHUNKS_PER_PRT : positive := PRT_WIDTH/CHUNK_WIDTH;
   constant N_SEGS_TOTAL : positive := NUM_FINDERS * N_SEGS_PRT;
   constant N_SEGS_PADDED_TOTAL : positive := (NUM_FINDERS)*(N_SEGS_PRT+2);
   constant N_X_PRTS : positive := positive(floor(real(NUM_FINDERS)/2.0));
   
   signal segs_padded : segment_list_t(0 to N_SEGS_PADDED_TOTAL-1);
   
-  type range_vector_arr is array (0 to N_X_PRTS*N_CHUNKS_PER_PRT-1) of std_logic_vector (0 to 5);
-  type range_vector_padded_arr is array (0 to (N_X_PRTS+2)*(N_CHUNKS_PER_PRT+2)-1) of std_logic_vector (0 to 5);
+  type range_vector_arr is array (0 to N_X_PRTS*N_SEGS_PRT-1) of std_logic_vector (0 to 5);
+  type range_vector_padded_arr is array (0 to (N_X_PRTS+2)*(N_SEGS_PRT+2)-1) of std_logic_vector (0 to 5);
   signal range_vectors : range_vector_arr;
   signal range_vectors_padded : range_vector_padded_arr;
   
@@ -109,7 +109,7 @@ architecture behavioral of x_prt_deghost_v3 is
     -- Bit to left append strip number of virtual and real segments
     constant append_v : std_logic_vector (0 to 5) := "100100";
     constant append_r : std_logic_vector (0 to 5) := "001001";
-    constant chunk_bits : natural := natural(log2(real(CHUNK_WIDTH)));
+    constant chunk_bits : natural := natural(log2(real(PRT_WIDTH/N_SEGS_PRT)));
     constant intra_chunk_bits : natural := strip_bits - chunk_bits;
 
     variable diff : signed (intra_chunk_bits-1+2 downto 0);
@@ -125,11 +125,7 @@ architecture behavioral of x_prt_deghost_v3 is
       
       diff := abs( ('0' & append_r(i) & signed(r_segs(i).strip(intra_chunk_bits-1 downto 0))) - ('0' & append_v(i) & signed(v_seg.strip(intra_chunk_bits-1 downto 0))) );
 
-      if (v_null or r_null or boolean(unsigned(diff) > RADIUS)) then
-        out_bits(i) := '0';
-      else
-        out_bits(i) := '1';
-      end if;
+      out_bits(i) := '0' when v_null or r_null or boolean(unsigned(diff) > RADIUS) else '1';
     end loop;
       
     return out_bits;
@@ -137,17 +133,16 @@ architecture behavioral of x_prt_deghost_v3 is
   
   function get_mask(range_vectors : range_vector_padded_arr) return std_logic_vector is
   
-    type range_vector_or_arr is array (0 to (N_X_PRTS+2)*(N_CHUNKS_PER_PRT+2)-1) of std_logic_vector(0 to 1); 
+    type range_vector_or_arr is array (0 to (N_X_PRTS+2)*(N_SEGS_PRT+2)-1) of std_logic_vector(0 to 1); 
     variable range_vectors_or : range_vector_or_arr;
     
     variable range_vectors_s2 : range_vector_arr;
-  
     variable v_kill_bits : std_logic_vector (0 to 5);
     
     variable mask : std_logic_vector (0 to NUM_FINDERS*N_SEGS_PRT - 1);
   
   begin
-    for i in 0 to (N_X_PRTS+2)*(N_CHUNKS_PER_PRT+2)-1 loop
+    for i in 0 to (N_X_PRTS+2)*(N_SEGS_PRT+2)-1 loop
       range_vectors_or(i)(0) := or_reduce(range_vectors(i)(0 to 2));
       range_vectors_or(i)(1) := or_reduce(range_vectors(i)(3 to 5));
     end loop;
@@ -180,28 +175,18 @@ architecture behavioral of x_prt_deghost_v3 is
       end loop;
     end loop;
     
-    -- Kill virtual ghosts
+    --Kill virtual ghosts
     for y in 0 to N_X_PRTS-1 loop
-      for x in 0 to N_CHUNKS_PER_PRT-1 loop
-      
-        -- If not in range of any real segs, keep. Otherwise, kill.
---        if (x = 1) then
---          mask((2*(y-1)+1)*N_CHUNKS_PER_PRT + (x-1)) := not or_reduce(range_vectors_s2(y*(N_CHUNKS_PER_PRT+2)+x)(1 to 2)) and not or_reduce(range_vectors_s2(y*(N_CHUNKS_PER_PRT+2)+x)(4 to 5));
---        elsif (x = N_CHUNKS_PER_PRT) then
---          mask((2*(y-1)+1)*N_CHUNKS_PER_PRT + (x-1)) := not or_reduce(range_vectors_s2(y*(N_CHUNKS_PER_PRT+2)+x)(0 to 1)) and not or_reduce(range_vectors_s2(y*(N_CHUNKS_PER_PRT+2)+x)(3 to 4));
---        else
-          mask((2*y+1)*N_CHUNKS_PER_PRT + x) := not or_reduce(range_vectors_s2(y*N_CHUNKS_PER_PRT+x));  
---        end if;
-
+      for x in 0 to N_SEGS_PRT-1 loop
+        --If not in range of any real segs, keep. Otherwise, kill.
+        mask((2*y+1)*N_SEGS_PRT + x) := not or_reduce(range_vectors_s2(y*N_SEGS_PRT+x));  
       end loop;
     end loop;
     
     return mask;
   end function;
-   
 
 begin
-
   --Zero pad 2d segment array on left and right
   segs_padded <= pad_segs_in(segs_i);
   
