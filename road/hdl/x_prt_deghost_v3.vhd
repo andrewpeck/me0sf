@@ -22,6 +22,7 @@ use work.pat_types.all;
 use work.pat_pkg.all;
 use work.patterns.all;
 
+
 -- Each [] represents a "chunk" from intra-partition deghosting. Each chunk contains either one segment, or none (lc=0).
 -- A chunk is represented by a segment.
 --   ...[][][]...   Real partition
@@ -38,16 +39,16 @@ entity x_prt_deghost_v3 is
   port(
     clock      : in  std_logic;
 
-    dav_i      : in  std_logic;
-    dav_o      : out std_logic;
+    dav_i      : in  std_logic_vector (NUM_FINDERS-1 downto 0);
+    dav_o      : out std_logic_vector (NUM_FINDERS-1 downto 0);
 
-    segs_i : in  segment_list_t (0 to NUM_FINDERS*N_SEGS_PRT - 1);
+    segs_i : in segment_list_t (0 to NUM_FINDERS*N_SEGS_PRT - 1);
     segs_o : out segment_list_t (0 to NUM_FINDERS*N_SEGS_PRT - 1)
     );
 end x_prt_deghost_v3;
 
 architecture behavioral of x_prt_deghost_v3 is
-
+  
   -- Assuming chunk size is a power of 2, then the "strip" attribute of segments can be interpreted as:
   -- strip = [chunk_number][offset_in_chunk]
   -- Since we are only comparing chunks that are -1,0,1 apart, the whole chunk_number is unecessary for the subtraction operation.
