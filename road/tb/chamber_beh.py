@@ -13,51 +13,49 @@ from subfunc import *
 
 def cross_partition_cancellation(segments : List[List[Segment]],
                                  cross_part_seg_width : int) -> List[List[Segment]]:
-
-    for i in range(1,15,2):
-        
+    segs_real_killed = [prt for prt in deepcopy(segments)]
+    for i in range(1,15,2):        
         for (l,seg) in enumerate(segments[i]):
-            if seg.id == 0:
+            if seg.lc == 0:
                 continue
-            #print ("Seg 0: ", l, seg, seg.strip)
+
             strip = seg.strip
-            #quality = seg.quality
-            seg1_max_quality = -9999
-            seg2_max_quality = -9999
-            seg1_max_quality_index = -9999
-            seg2_max_quality_index = -9999
+            segs_above = []
+            segs_below = []
 
             for (j,seg1) in enumerate(segments[i-1]):
-                if seg1.id == 0:
-                    continue
-                #print ("Seg 1: ", l, seg1, seg1.strip)
-                if abs(strip - seg1.strip) <= cross_part_seg_width:
-                    if seg1.quality > seg1_max_quality:
-                        if seg1_max_quality_index != -9999:
-                            segments[i-1][seg1_max_quality_index].reset()
-                        seg1_max_quality_index = j
-                        seg1_max_quality = seg1.quality
-
+                if seg1.lc != 0 and  abs(strip - seg1.strip) <= cross_part_seg_width:
+                    segs_above.append(j)
             for (k,seg2) in enumerate(segments[i+1]):
-                if seg2.id == 0:
-                    continue
-                #print ("Seg 2: ", l, seg2, seg2.strip)
-                if abs(strip - seg2.strip) <= cross_part_seg_width:
-                    if seg2.quality > seg2_max_quality:
-                        if seg2_max_quality_index != -9999:
-                            segments[i+1][seg2_max_quality_index].reset()
-                        seg2_max_quality_index = k
-                        seg2_max_quality = seg2.quality
+                if seg2.lc != 0 and abs(strip - seg2.strip) <= cross_part_seg_width:
+                    segs_below.append(k)
+                   
+            if len(segs_above) > 0 and len(segs_below) > 0:
+                for above_seg in segs_above:
+                    segs_real_killed[i-1][above_seg].reset()
+                for below_seg in segs_below:
+                    segs_real_killed[i+1][below_seg].reset()
 
-            if seg1_max_quality_index != -9999 and seg2_max_quality_index != -9999:
-                segments[i-1][seg1_max_quality_index].reset()
-                segments[i+1][seg2_max_quality_index].reset()
-            elif seg1_max_quality_index != -9999:
-                segments[i][l].reset()
-            elif seg2_max_quality_index != -9999:
-                segments[i][l].reset()
+    segs_o = [prt for prt in deepcopy(segs_real_killed)]
 
-    return segments
+    for i in range(1, 15, 2):
+        for (l,seg) in enumerate(segs_real_killed[i]):
+            if seg.lc == 0:
+                continue
+            strip = seg.strip
+
+            kill = False
+            for seg_up in segs_real_killed[i-1]:
+                if seg_up.lc != 0 and abs(strip - seg_up.strip) <= cross_part_seg_width:
+                    kill = True
+            for seg_down in segs_real_killed[i+1]:
+                if seg_down.lc != 0 and  abs(strip - seg_down.strip) <= cross_part_seg_width:
+                    kill = True
+
+            if kill:
+                segs_o[i][l].reset()
+
+    return segs_o
 
 def process_chamber(chamber_data : List[List[int]], config : Config, chamber_bx_data):
 

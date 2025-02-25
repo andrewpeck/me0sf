@@ -8,6 +8,8 @@ from cocotb.triggers import RisingEdge
 from cocotb_test.simulator import run
 
 from tb_common import (get_segments_from_dut, generate_dav, monitor_dav, measure_latency)
+from subfunc import Segment
+from chamber_beh import cross_partition_cancellation 
 
 CHUNK_WIDTH = 16
 RADIUS = 2
@@ -15,19 +17,12 @@ RADIUS = 2
 NUM_FINDERS = 15
 NUM_SEGS_PER_PRT = 12
 
-class seg:
-    def __init__ (self, lc, strip, pid, part):
-        self.lc = lc
-        self.strip = strip
-        self.pid = pid
-        self.part = part
-
 def input_fw(dut, segs):
     for i,my_seg in enumerate(segs):
         dut.segs_i[i].lc.value = my_seg.lc
         dut.segs_i[i].strip.value = my_seg.strip
-        dut.segs_i[i].id.value = my_seg.pid
-        dut.segs_i[i].partition.value = my_seg.part
+        dut.segs_i[i].id.value = my_seg.id
+        dut.segs_i[i].partition.value = my_seg.partition
 
 def setup(dut):
     c = Clock(dut.clock, 12, "ns")
@@ -35,7 +30,7 @@ def setup(dut):
     cocotb.start_soon(generate_dav(dut))
 
 @cocotb.test() # type: ignore
-async def chamber_test_ff(dut, nloops=10): 
+async def chamber_test_ff(dut, nloops=10000): 
    await chamber_test(dut, "SEGMENTS", nloops) 
 
 async def chamber_test(dut, test, nloops=512, verbose=True):
@@ -46,7 +41,7 @@ async def chamber_test(dut, test, nloops=512, verbose=True):
     checkfn = lambda : dut.range_vectors[0].value.is_resolvable #and dut.out_bits.value.integer > 0
     
     def setfn(dut, x):
-       input_fw(dut, [seg(x,0,0,0) for _ in range(NUM_FINDERS*NUM_SEGS_PER_PRT)])
+       input_fw(dut, [Segment(lc=x,id=0) for _ in range(NUM_FINDERS*NUM_SEGS_PER_PRT)])
  
     setfn(dut, 0)
     
@@ -83,9 +78,7 @@ async def chamber_test(dut, test, nloops=512, verbose=True):
                 for prt in range(NUM_FINDERS):
                     for chunk in range(NUM_SEGS_PER_PRT):
                         strip = randint(chunk*CHUNK_WIDTH, (chunk+1)*CHUNK_WIDTH - 1)
-                        segments_data.append(seg(4, strip, 0, prt))
-                        #segments_data.append(seg(4, loop, 0, prt))
-      
+                        segments_data.append(Segment(lc=4, strip=strip, id=15, partition=prt))
             else:
                 raise Exception("Test not found")
             queue.append(segments_data)
@@ -95,13 +88,9 @@ async def chamber_test(dut, test, nloops=512, verbose=True):
         # pop old data on dav_o
         if dut.dav_o.value == 1 and loop > LATENCY:
             sw_segs = queue.pop(0)
-            # out_str = ""
-            # for i in range(1, 7):
-            #     if (sw_segs[i].lc > 0 and abs(sw_segs[i].strip - sw_segs[0].strip) <= RADIUS):
-            #         out_str += "1"
-            #     else:
-            #         out_str += "0"
-
+            sw_segs_2d = [[sw_segs[y*NUM_SEGS_PER_PRT+x] for x in range(NUM_SEGS_PER_PRT)] for y in range(NUM_FINDERS)]
+            cancelled_sw_segs_2d = cross_partition_cancellation(sw_segs_2d, RADIUS)
+            
             print("\n")
 
             orig_segs_1d = [my_seg.strip for my_seg in sw_segs]
@@ -109,10 +98,10 @@ async def chamber_test(dut, test, nloops=512, verbose=True):
             for i in range(NUM_FINDERS):
                 print(str(orig_segs_1d[NUM_SEGS_PER_PRT*i:NUM_SEGS_PER_PRT*(i+1)]))
 
-            pad_segs_1d = [my_seg.strip.value.integer for my_seg in dut.segs_padded]
-            print("Padded segs:")
-            for i in range(NUM_FINDERS):
-                print(str(pad_segs_1d[(NUM_SEGS_PER_PRT+2)*i:(NUM_SEGS_PER_PRT+2)*(i+1)]))
+           # pad_segs_1d = [my_seg.strip.value.integer for my_seg in dut.segs_padded]
+           # print("Padded segs:")
+           # for i in range(NUM_FINDERS):
+           #     print(str(pad_segs_1d[(NUM_SEGS_PER_PRT+2)*i:(NUM_SEGS_PER_PRT+2)*(i+1)]))
 
             range_vectors_1d = [my_range.value for my_range in dut.range_vectors]
             print("Range vectors:")
@@ -121,7 +110,7 @@ async def chamber_test(dut, test, nloops=512, verbose=True):
 
             mask_1d = [val.value for val in dut.mask]
             print("Mask:")
-            for i in range((NUM_FINDERS+1)//2):
+            for i in range(NUM_FINDERS):
                 print(str(mask_1d[NUM_SEGS_PER_PRT*i:NUM_SEGS_PER_PRT*(i+1)]))
 
             segs_o = [my_seg.lc.value.integer for my_seg in dut.segs_o]
@@ -129,8 +118,14 @@ async def chamber_test(dut, test, nloops=512, verbose=True):
             for i in range(NUM_FINDERS):
                 print(str(segs_o[NUM_SEGS_PER_PRT*i:NUM_SEGS_PER_PRT*(i+1)]))
 
+            print("\nSW x-prt-deghosted segs:")
+            for i in range(NUM_FINDERS):
+                print([seg.lc for seg in cancelled_sw_segs_2d[i]])
+
             print("\n")
-            # assert str(dut.out_bits.value) == out_str[::-1]
+            for y in range(NUM_FINDERS):
+                for x in range(NUM_SEGS_PER_PRT):
+                    assert(cancelled_sw_segs_2d[y][x].lc == segs_o[y*NUM_SEGS_PER_PRT+x])
 
         await RisingEdge(dut.clock)
 
