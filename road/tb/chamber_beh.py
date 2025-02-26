@@ -30,7 +30,7 @@ def cross_partition_cancellation(segments : List[List[Segment]],
             for (j,seg1) in enumerate(segments[i-1]):
                 if seg1.id == 0:
                     continue
-                #print ("Seg 1: ", l, seg1, seg1.strip)
+                #print ("  Seg 1: ", j, seg1, seg1.strip)
                 if abs(strip - seg1.strip) <= cross_part_seg_width:
                     if seg1.quality > seg1_max_quality:
                         if seg1_max_quality_index != -9999:
@@ -41,7 +41,7 @@ def cross_partition_cancellation(segments : List[List[Segment]],
             for (k,seg2) in enumerate(segments[i+1]):
                 if seg2.id == 0:
                     continue
-                #print ("Seg 2: ", l, seg2, seg2.strip)
+                #print ("  Seg 2: ", k, seg2, seg2.strip)
                 if abs(strip - seg2.strip) <= cross_part_seg_width:
                     if seg2.quality > seg2_max_quality:
                         if seg2_max_quality_index != -9999:
@@ -49,13 +49,13 @@ def cross_partition_cancellation(segments : List[List[Segment]],
                         seg2_max_quality_index = k
                         seg2_max_quality = seg2.quality
 
-            if seg.quality >= seg1_max_quality_index and seg.quality >= seg2_max_quality_index:
+            if seg.quality >= seg1_max_quality and seg.quality >= seg2_max_quality:
                 if seg1_max_quality_index != -9999:
                     segments[i-1][seg1_max_quality_index].reset()
                 if seg2_max_quality_index != -9999:
                     segments[i+1][seg2_max_quality_index].reset()
             else:
-                if seg2_max_quality_index >= seg1_max_quality_index:
+                if seg2_max_quality >= seg1_max_quality:
                     segments[i][l].reset()
                     if seg1_max_quality_index != -9999:
                         segments[i-1][seg1_max_quality_index].reset()
