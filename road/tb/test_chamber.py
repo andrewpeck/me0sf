@@ -19,41 +19,41 @@ from subfunc import Config
 from tb_common import (get_max_span_from_dut, get_segments_from_dut,
                        monitor_dav, setup, measure_latency)
 
-#@cocotb.test() # type: ignore
-#async def chamber_test_ff(dut, nloops=20):
-#   await chamber_test(dut, "FF", nloops)
-#
-#@cocotb.test() # type: ignore
-#async def chamber_test_5a(dut, nloops=20):
-#   await chamber_test(dut, "5A", nloops)
-#
-#@cocotb.test() # type: ignore
-#async def chamber_test_walking1(dut, nloops=191):
-#   await chamber_test(dut, "WALKING1", nloops)
-#
-#@cocotb.test() # type: ignore
-#async def chamber_test_walkingf(dut, nloops=192):
-#   await chamber_test(dut, "WALKINGF", nloops)
-#
-#@cocotb.test() # type: ignore
-#async def chamber_test_xprt(dut, nloops=100):
-#   await chamber_test(dut, "XPRT", nloops)
-#
-#@cocotb.test() # type: ignore
-#async def chamber_test_segs(dut, nloops=100):
-#   await chamber_test(dut, "SEGMENTS", nloops)
-#
-#@cocotb.test() # type: ignore
-#async def chamber_test_random(dut, nloops=100):
-#    await chamber_test(dut, "RANDOM", nloops)
-   
-# @cocotb.test() # type: ignore
-# async def chamber_test_deghost(dut, nloops=20):
-#    await chamber_test(dut, "DEGHOST", nloops)   
+@cocotb.test() # type: ignore
+async def chamber_test_ff(dut, nloops=20):
+   await chamber_test(dut, "FF", nloops)
 
 @cocotb.test() # type: ignore
-async def chamber_test_deghost(dut, nloops=20):
-   await chamber_test(dut, "TEST_PAT", nloops)   
+async def chamber_test_5a(dut, nloops=20):
+   await chamber_test(dut, "5A", nloops)
+
+@cocotb.test() # type: ignore
+async def chamber_test_walking1(dut, nloops=191):
+   await chamber_test(dut, "WALKING1", nloops)
+
+@cocotb.test() # type: ignore
+async def chamber_test_walkingf(dut, nloops=192):
+   await chamber_test(dut, "WALKINGF", nloops)
+
+@cocotb.test() # type: ignore
+async def chamber_test_xprt(dut, nloops=100):
+   await chamber_test(dut, "XPRT", nloops)
+
+@cocotb.test() # type: ignore
+async def chamber_test_segs(dut, nloops=100):
+   await chamber_test(dut, "SEGMENTS", nloops)
+
+@cocotb.test() # type: ignore
+async def chamber_test_random(dut, nloops=100):
+    await chamber_test(dut, "RANDOM", nloops)
+  
+#@cocotb.test() # type: ignore
+#async def chamber_test_deghost(dut, nloops=20):
+#    await chamber_test(dut, "DEGHOST", nloops)   
+
+#@cocotb.test() # type: ignore
+#async def chamber_test_dat(dut, nloops=20):
+#   await chamber_test(dut, "TEST_DAT", nloops)   
 
 async def chamber_test(dut, test, nloops=512, verbose=True):
 
@@ -82,7 +82,7 @@ async def chamber_test(dut, test, nloops=512, verbose=True):
     config.group_width = dut.partition_gen[0].partition_gen_real.partition_inst.S0_WIDTH.value
     config.num_outputs= dut.NUM_SEGMENTS.value
     config.ly_thresh_patid = [7, 7, 7, 7, 7, 7, 7, 7, 7, 7, 5, 5, 4, 4, 4, 4, 4]
-    config.cross_part_seg_width = 0 # set to zero to disable until implmented in fw
+    config.cross_part_seg_width = 2 # set to zero to disable until implmented in fw
 
     en_hc_compress = True #this is a generic, so need to set it here and in top level in FW
 
@@ -241,18 +241,10 @@ async def chamber_test(dut, test, nloops=512, verbose=True):
                 chamber_data[1][4] = (2**192-1) & (2**26)
                 chamber_data[1][5] = (2**192-1) & (2**26)
             
-            elif test=="TEST_PAT":
+            elif test=="TEST_DAT":
 
-                chamber_data = NULL()
+                chamber_data = [[120527522816, 34493956200, 17179873280, 290816, 234881252, 30064771072], [67108864, 537395212, 2147487778, 25769803776, 103079739392, 266240], [12289, 34361573376, 92274688, 2684354688, 51759810560, 271581184], [256, 68920830080, 1073741824, 117473280, 553648128, 120259088640], [1711292416, 268468864, 15032389632, 129390215168, 17179869184, 103079215104], [2149580800, 1075839104, 38117867584, 3892314112, 1006637088, 163577856], [1073750017, 268566528, 3087007744, 234897408, 1835008, 4324329474], [6553600, 126648320, 16891912, 1610612736, 12885168128, 103146323996]]
                 
-                chamber_data[1][0] = (2**192-1) & (2**7 | 2**8 | 2**9 | 2**10 | 2**11)
-                #chamber_data[1][0] = (2**192-1) & (2**10 | 2**11) 
-                #chamber_data[1][0] = (2**192-1) & (2**14)
-                chamber_data[1][1] = (2**192-1) & (2**10)
-                chamber_data[1][3] = (2**192-1) & (2**12)
-                chamber_data[1][4] = (2**192-1) & (2**14)
-                chamber_data[1][5] = (2**192-1) & (2**12 | 2**13 | 2**14 | 2**15 | 2**16 | 2**17)        
-
             else:
                 chamber_data = NULL()
 
@@ -295,6 +287,7 @@ async def chamber_test(dut, test, nloops=512, verbose=True):
                 err = "   "
                 if loop > LATENCY+2:
                     if sw_segments[i] != fw_segments[i]:
+                        print(popped_data)
                         err = "ERR"
                         print(f" {err} seg {i}:")
                         print("   > sw: " + str(sw_segments[i]))
@@ -342,13 +335,14 @@ def test_chamber():
         os.path.join(rtl_dir, "dav_to_phase.vhd"),
         os.path.join(rtl_dir, "pat_unit_mux.vhd"),
         os.path.join(rtl_dir, "deghost.vhd"),
+        os.path.join(rtl_dir, "x_prt_deghost_v3.vhd"),
         os.path.join(rtl_dir, "partition.vhd"),
         os.path.join(rtl_dir, "pulse_extension.vhd"),
         os.path.join(rtl_dir, "chamber_pulse_extension.vhd"),
         os.path.join(rtl_dir, "chamber.vhd")]
 
     #parameters = {"PULSE_EXTEND": 1, "DEADTIME": 0, "DISABLE_PEAKING": True}
-    parameters = {"DISABLE_PEAKING": True}
+    parameters = {"DISABLE_PEAKING": True, "X_DEGHOST_EN": True}
 
     os.environ["SIM"] = "questa"
     #os.environ["COCOTB_RESULTS_FILE"] = f"../log/{module}.xml"

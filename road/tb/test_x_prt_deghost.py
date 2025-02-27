@@ -79,6 +79,8 @@ async def chamber_test(dut, test, nloops=512, verbose=True):
                     for chunk in range(NUM_SEGS_PER_PRT):
                         strip = randint(chunk*CHUNK_WIDTH, (chunk+1)*CHUNK_WIDTH - 1)
                         segments_data.append(Segment(lc=4, strip=strip, id=15, partition=prt))
+            elif test == "TEST_FAIL":
+                segments_data = [[120527522816, 34493956200, 17179873280, 290816, 234881252, 30064771072], [67108864, 537395212, 2147487778, 25769803776, 103079739392, 266240], [12289, 34361573376, 92274688, 2684354688, 51759810560, 271581184], [256, 68920830080, 1073741824, 117473280, 553648128, 120259088640], [1711292416, 268468864, 15032389632, 129390215168, 17179869184, 103079215104], [2149580800, 1075839104, 38117867584, 3892314112, 1006637088, 163577856], [1073750017, 268566528, 3087007744, 234897408, 1835008, 4324329474], [6553600, 126648320, 16891912, 1610612736, 12885168128, 103146323996]]
             else:
                 raise Exception("Test not found")
             queue.append(segments_data)
@@ -154,3 +156,4 @@ def test_chamber():
 
 if __name__ == "__main__":
     test_chamber()
+

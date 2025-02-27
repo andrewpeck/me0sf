@@ -69,8 +69,8 @@ entity chamber is
     dav_o_phase       : out natural range 0 to 7;
     -- synthesis translate_on
 
-    --sbits_i           : in  chamber_t;
-    --vfat_pretrigger_o : out std_logic_vector (23 downto 0);
+    sbits_i           : in  chamber_t;
+    vfat_pretrigger_o : out std_logic_vector (23 downto 0);
     segments_o        : out segment_list_t (NUM_SEGMENTS-1 downto 0)
     );
     
@@ -86,15 +86,15 @@ architecture behavioral of chamber is
   --Used for testing, delete later. Allows to set all inputs to 0 and leave them hanging,
   --since there are not enough real I/O pins to use chamber as a top level entity.--
   --------------------------------------------------------------------------------
- signal sbits_i : chamber_t;
- attribute dont_touch : string;
- attribute dont_touch of sbits_i : signal is "true";
-  
- constant std_zeroed : std_logic_vector(192*6-1 downto 0) := (others => '0');
- constant partition_zeroed : partition_t := convert(std_zeroed, sbits_i(0));
-  
- signal vfat_pretrigger_o : std_logic_vector(23 downto 0);
- attribute dont_touch of vfat_pretrigger_o : signal is "true";
+-- signal sbits_i : chamber_t;
+-- attribute dont_touch : string;
+-- attribute dont_touch of sbits_i : signal is "true";
+--  
+-- constant std_zeroed : std_logic_vector(192*6-1 downto 0) := (others => '0');
+-- constant partition_zeroed : partition_t := convert(std_zeroed, sbits_i(0));
+--  
+-- signal vfat_pretrigger_o : std_logic_vector(23 downto 0);
+-- attribute dont_touch of vfat_pretrigger_o : signal is "true";
   --------------------------------------------------------------------------------
 
   constant NUM_PARTITIONS : integer := 8;
@@ -212,13 +212,13 @@ begin
   ly_thresh_strict_compressed <= compress_ly_count(ly_thresh_strict_full) when EN_HC_COMPRESS else ly_thresh_strict_full;
 
 --set all sbits to 0, only for development, remove later
- process (clock) begin
-   if (rising_edge(clock)) then
-     for i in 0 to 7 loop
-       sbits_i(i) <= partition_zeroed;
-     end loop;
-   end if;
- end process;
+-- process (clock) begin
+--   if (rising_edge(clock)) then
+--     for i in 0 to 7 loop
+--       sbits_i(i) <= partition_zeroed;
+--     end loop;
+--   end if;
+-- end process;
 
   assert S1_REUSE = 1 or S1_REUSE = 2 or S1_REUSE = 4
     report "Only allowed values for s1 reuse are 1,2, and 4"
@@ -526,7 +526,7 @@ begin
         )
       port map (
         clock  => clock,
-        dav_i  => all_segs_dav(I),
+        dav_i  => all_segs_dav_deghosted(I),
         dav_o  => one_prt_sorted_dav(I),
         segs_i => all_segs_x_deghosted((I+1)*NUM_SEGS_PER_PRT-1 downto I*NUM_SEGS_PER_PRT),
         segs_o => one_prt_sorted_segs((I+1)*NUM_SEGMENTS-1 downto I*NUM_SEGMENTS)

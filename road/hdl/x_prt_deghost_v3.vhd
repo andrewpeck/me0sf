@@ -108,8 +108,9 @@ architecture behavioral of x_prt_deghost_v3 is
   --   ...[][][]...   Real partition
   function get_dists(v_seg : segment_t; r_segs : segment_list_t (0 to 5)) return std_logic_vector is
     -- Bit to left append strip number of virtual and real segments
-    constant append_v : std_logic_vector (0 to 5) := "100100";
-    constant append_r : std_logic_vector (0 to 5) := "001001";
+    -- Strip 0 is rightmost, strip 192 is leftmost
+    constant append_v : std_logic_vector (5 downto 0) := "100100";
+    constant append_r : std_logic_vector (5 downto 0) := "001001";
     constant chunk_bits : natural := natural(log2(real(PRT_WIDTH/N_SEGS_PRT)));
     constant intra_chunk_bits : natural := strip_bits - chunk_bits;
 
