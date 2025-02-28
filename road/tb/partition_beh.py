@@ -67,7 +67,7 @@ def cancel_edges(segments : List[Segment],
 
     def is_at_edge(x):
         if group_width > 0:
-            return x % group_width < edge_distance or (x % group_width) >= (group_width-edge_distance)
+            return (x % group_width <= edge_distance) or (x % group_width) >= (group_width-edge_distance-1)
         else:
             return True
 
@@ -79,7 +79,7 @@ def cancel_edges(segments : List[Segment],
             #
             comps = \
                 [x for x in range(i-ghost_width, i, 1) if x >= 0] + \
-                [x for x in range(i+1,i+ghost_width+1,  1) if x < len(segments)]
+                [x for x in range(i+1, i+ghost_width+1, 1) if x < len(segments)]
 
             if verbose:
                 print(f"Comparing strip {i} to strips %s" % str(comps))

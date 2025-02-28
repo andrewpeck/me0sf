@@ -532,7 +532,7 @@ def analysis(root_dat, hits, bx, bx_list, cross_part, verbose, pu, num_or):
             config = Config()
             config.num_outputs = 10
             config.cross_part_seg_width = 4
-            config.ghost_width = 10
+            #config.ghost_width = 10
             num_or_to_span = {2:37, 4:19, 8:11, 16:7}
             config.max_span = num_or_to_span[num_or]
             config.num_or = num_or
