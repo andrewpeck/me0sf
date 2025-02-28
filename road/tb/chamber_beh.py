@@ -14,6 +14,7 @@ from subfunc import *
 def cross_partition_cancellation(segments : List[List[Segment]],
                                  cross_part_seg_width : int) -> List[List[Segment]]:
 
+    segs_out = deepcopy(segments)
     for i in range(1,15,2):
         
         for (l,seg) in enumerate(segments[i]):
@@ -34,7 +35,8 @@ def cross_partition_cancellation(segments : List[List[Segment]],
                 if abs(strip - seg1.strip) <= cross_part_seg_width:
                     if seg1.quality > seg1_max_quality:
                         if seg1_max_quality_index != -9999:
-                            segments[i-1][seg1_max_quality_index].reset()
+                            segs_out[i-1][seg1_max_quality_index].reset()
+                            #segments[i-1][seg1_max_quality_index].reset()
                         seg1_max_quality_index = j
                         seg1_max_quality = seg1.quality
 
@@ -45,35 +47,46 @@ def cross_partition_cancellation(segments : List[List[Segment]],
                 if abs(strip - seg2.strip) <= cross_part_seg_width:
                     if seg2.quality > seg2_max_quality:
                         if seg2_max_quality_index != -9999:
-                            segments[i+1][seg2_max_quality_index].reset()
+                            segs_out[i+1][seg2_max_quality_index].reset()
+                            #segments[i+1][seg2_max_quality_index].reset()
                         seg2_max_quality_index = k
                         seg2_max_quality = seg2.quality
 
             if seg.quality >= seg1_max_quality and seg.quality >= seg2_max_quality:
                 if seg1_max_quality_index != -9999:
-                    segments[i-1][seg1_max_quality_index].reset()
+                    segs_out[i-1][seg1_max_quality_index].reset()
+                    #segments[i-1][seg1_max_quality_index].reset()
                 if seg2_max_quality_index != -9999:
-                    segments[i+1][seg2_max_quality_index].reset()
+                    segs_out[i+1][seg2_max_quality_index].reset()
+                    #segments[i+1][seg2_max_quality_index].reset()
             else:
                 if seg2_max_quality >= seg1_max_quality:
-                    segments[i][l].reset()
+                    segs_out[i][l].reset()
+                    #segments[i][l].reset()
                     if seg1_max_quality_index != -9999:
-                        segments[i-1][seg1_max_quality_index].reset()
+                        segs_out[i-1][seg1_max_quality_index].reset()
+                        #segments[i-1][seg1_max_quality_index].reset()
                 else:
                     segments[i][l].reset()
                     if seg2_max_quality_index != -9999:
-                        segments[i+1][seg2_max_quality_index].reset()
+                        segs_out[i+1][seg2_max_quality_index].reset()
+                        #segments[i+1][seg2_max_quality_index].reset()
             '''
             if seg1_max_quality_index != -9999 and seg2_max_quality_index != -9999:
-                segments[i-1][seg1_max_quality_index].reset()
-                segments[i+1][seg2_max_quality_index].reset()
+                segs_out[i-1][seg1_max_quality_index].reset()
+                segs_out[i+1][seg2_max_quality_index].reset()
+                #segments[i-1][seg1_max_quality_index].reset()
+                #segments[i+1][seg2_max_quality_index].reset()
             elif seg1_max_quality_index != -9999:
-                segments[i][l].reset()
+                segs_out[i][l].reset()
+                #segments[i][l].reset()
             elif seg2_max_quality_index != -9999:
-                segments[i][l].reset()
+                segs_out[i][l].reset()
+                #segments[i][l].reset()
             '''
 
-    return segments
+    #return segments
+    return segs_out
 
 def process_chamber(chamber_data : List[List[int]], config : Config, chamber_bx_data):
 
