@@ -190,7 +190,7 @@ begin
 
   s0_gen : for region in 0 to PRT_WIDTH/S0_WIDTH-1 generate
     signal best                 : std_logic_vector (pat_unit_mux_t'w - 1 downto 0);
-    signal segments_deghost_slv : bus_array (0 to S0_WIDTH-1) (pat_unit_mux_t'w - 1 downto 0);
+    signal segments_deghost_slv : bus_array (S0_WIDTH-1 downto 0) (pat_unit_mux_t'w - 1 downto 0);
   begin
 
     cand_to_slv : for I in 0 to S0_WIDTH-1 generate
@@ -202,7 +202,7 @@ begin
       generic map (
         DAT_BITS    => best'length,
         QLT_BITS    => best'length,
-        IGNORE_BITS => 0,
+        IGNORE_BITS => 8,
         WIDTH       => segments_deghost_slv'length,
         REG_INPUT   => true,
         REG_OUTPUT  => true,
