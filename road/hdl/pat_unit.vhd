@@ -48,7 +48,7 @@ entity pat_unit is
     dav_i : in  std_logic;
     dav_o : out std_logic;
 
-    ly_thresh : in ly_thresh_t;
+    ly_thresh : in ly_thresh_prt;
 
     ly0 : in std_logic_vector (LY0_SPAN-1 downto 0);
     ly1 : in std_logic_vector (LY1_SPAN-1 downto 0);

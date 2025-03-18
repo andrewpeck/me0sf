@@ -49,7 +49,7 @@ entity partition is
     dav_o_phase : out natural range 0 to 7 := 0;
     -- synthesis translate_on
 
-    ly_thresh : in ly_thresh_t;
+    ly_thresh : in ly_thresh_prt;
 
     --------------------------------------------------------------------------------
     -- Inputs
@@ -190,7 +190,7 @@ begin
 
   s0_gen : for region in 0 to PRT_WIDTH/S0_WIDTH-1 generate
     signal best                 : std_logic_vector (pat_unit_mux_t'w - 1 downto 0);
-    signal segments_deghost_slv : bus_array (S0_WIDTH-1 downto 0) (pat_unit_mux_t'w - 1 downto 0);
+    signal segments_deghost_slv : bus_array (0 to S0_WIDTH-1) (pat_unit_mux_t'w - 1 downto 0);
   begin
 
     cand_to_slv : for I in 0 to S0_WIDTH-1 generate

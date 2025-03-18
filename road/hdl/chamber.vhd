@@ -44,7 +44,7 @@ entity chamber is
     --PULSE_EXTEND    : integer := 0;      -- how long pulses should be extended by
     --DEADTIME        : natural := 3;      -- deadtime in bx
     EN_HC_COMPRESS : boolean := true;   -- true to enable compression of hit count function (REQUIRED: minimum ly_thresh value is 4)
-    X_DEGHOST_EN : boolean := false;     -- true to enable cross partition deghosting
+    X_DEGHOST_EN : boolean := true;     -- true to enable cross partition deghosting
     X_DEGHOST_EDGE_DIST : natural := 2;  -- radius for cross partition deghosting
     
     LY0_SPAN : natural := get_max_span(patdef_array);
@@ -60,18 +60,19 @@ entity chamber is
     clock             : in  std_logic;                     -- MUST BE 320MHZ
     clock40           : in  std_logic;                     -- MUST BE  40MHZ
 
-    ly_thresh_i         : in  ly_thresh_t; -- Layer threshold, 0 to 6
+    --ly_thresh_i         : in  ly_thresh_chamber; -- Layer threshold, 0 to 6
 
-    dav_i             : in  std_logic;
-    dav_o             : out std_logic;
     -- synthesis translate_off
     dav_i_phase       : out natural range 0 to 7;
     dav_o_phase       : out natural range 0 to 7;
     -- synthesis translate_on
+    
+    dav_i             : in  std_logic;
+    dav_o             : out std_logic
 
-    sbits_i           : in  chamber_t;
-    vfat_pretrigger_o : out std_logic_vector (23 downto 0);
-    segments_o        : out segment_list_t (NUM_SEGMENTS-1 downto 0)
+--    sbits_i           : in  chamber_t;
+--    vfat_pretrigger_o : out std_logic_vector (23 downto 0);
+--    segments_o        : out segment_list_t (NUM_SEGMENTS-1 downto 0)
     );
     
 end chamber;
@@ -86,15 +87,21 @@ architecture behavioral of chamber is
   --Used for testing, delete later. Allows to set all inputs to 0 and leave them hanging,
   --since there are not enough real I/O pins to use chamber as a top level entity.--
   --------------------------------------------------------------------------------
--- signal sbits_i : chamber_t;
--- attribute dont_touch : string;
--- attribute dont_touch of sbits_i : signal is "true";
---  
--- constant std_zeroed : std_logic_vector(192*6-1 downto 0) := (others => '0');
--- constant partition_zeroed : partition_t := convert(std_zeroed, sbits_i(0));
---  
--- signal vfat_pretrigger_o : std_logic_vector(23 downto 0);
--- attribute dont_touch of vfat_pretrigger_o : signal is "true";
+ signal sbits_i : chamber_t;
+ attribute dont_touch : string;
+ attribute dont_touch of sbits_i : signal is "true";
+  
+ constant std_zeroed : std_logic_vector(192*6-1 downto 0) := (others => '0');
+ constant partition_zeroed : partition_t := convert(std_zeroed, sbits_i(0));
+  
+ signal vfat_pretrigger_o : std_logic_vector(23 downto 0);
+ attribute dont_touch of vfat_pretrigger_o : signal is "true";
+ 
+ signal segments_o        : segment_list_t (NUM_SEGMENTS-1 downto 0);
+ attribute dont_touch of segments_o : signal is "true";
+ 
+ signal ly_thresh_i : ly_thresh_chamber;
+ 
   --------------------------------------------------------------------------------
 
   constant NUM_PARTITIONS : integer := 8;
@@ -172,44 +179,46 @@ architecture behavioral of chamber is
   --------------------------------------------------------------------------------
   -- Layer Thresholding
   --------------------------------------------------------------------------------
-  signal ly_thresh_strict_full : ly_thresh_t;
-  signal ly_thresh_compressed : ly_thresh_t;
-  signal ly_thresh_strict_compressed : ly_thresh_t;
+  signal ly_thresh_compressed : ly_thresh_chamber;
   
   --Function to save on bits required to represent layer hits. Instead of a real layer count
   --such as 4, changes the threshold to 0, with the understanding this is the value above
   --the minimum threshold.
-  function compress_ly_count (ly_thresh : ly_thresh_t)
-    return ly_thresh_t is
-    variable ly_thresh_compressed : ly_thresh_t;
+  function compress_ly_count (ly_thresh : ly_thresh_chamber)
+    return ly_thresh_chamber is
+    variable ly_thresh_compressed : ly_thresh_chamber;
   begin
-    for i in 0 to NUM_PATTERNS-1 loop
-      ly_thresh_compressed(i) := std_logic_vector(unsigned(ly_thresh(i)) - MIN_LY_THRESH);
+    for i in 0 to 15-1 loop
+      for j in 0 to NUM_PATTERNS-1 loop
+        ly_thresh_compressed(i)(j) := std_logic_vector(unsigned(ly_thresh(i)(j)) - MIN_LY_THRESH);
+      end loop;
     end loop;
     return ly_thresh_compressed;
   end;
   
   --Function to increase all thresholds by 1, to a maximum of 5. Values already greater
-  --than 5 remain unchanged.
-  function increase_ly_thresh (ly_thresh : ly_thresh_t)
-    return ly_thresh_t is
-    variable ly_thresh_strict : ly_thresh_t;
-  begin
-    for i in 0 to NUM_PATTERNS-1 loop
-        if (unsigned(ly_thresh(i)) >= 5) then
-          ly_thresh_strict(i) := ly_thresh(i);
-        else
-          ly_thresh_strict(i) := std_logic_vector(unsigned(ly_thresh(i)) + 1);
-        end if;
-    end loop;
-    return ly_thresh_strict;
-  end;
+  --than 5 remain unchanged. Now outdated since eta-dependent thresholding, maybe remove later.
+--  function increase_ly_thresh (ly_thresh : ly_thresh_t)
+--    return ly_thresh_t is
+--    variable ly_thresh_strict : ly_thresh_t;
+--  begin
+--    for i in 0 to NUM_PATTERNS-1 loop
+--        if (unsigned(ly_thresh(i)) >= 5) then
+--          ly_thresh_strict(i) := ly_thresh(i);
+--        else
+--          ly_thresh_strict(i) := std_logic_vector(unsigned(ly_thresh(i)) + 1);
+--        end if;
+--    end loop;
+--    return ly_thresh_strict;
+--  end;
 
 begin
 
-  ly_thresh_strict_full <= increase_ly_thresh(ly_thresh_i) when X_PRT_EN else ly_thresh_i;
+  assert X_PRT_EN = TRUE
+    report "Disabling cross partitions is not compatible with eta-dependent thresholding"
+    severity error;
+
   ly_thresh_compressed <= compress_ly_count(ly_thresh_i) when EN_HC_COMPRESS else ly_thresh_i;
-  ly_thresh_strict_compressed <= compress_ly_count(ly_thresh_strict_full) when EN_HC_COMPRESS else ly_thresh_strict_full;
 
 --set all sbits to 0, only for development, remove later
 -- process (clock) begin
@@ -220,6 +229,17 @@ begin
 --   end if;
 -- end process;
 
+--set all thresholds to 4, for testing
+   process (clock) begin
+     if (rising_edge(clock)) then
+       for i in 0 to 15-1 loop
+         for j in 0 to NUM_PATTERNS-1 loop
+           ly_thresh_i(i)(j) <= "100";
+         end loop;
+       end loop;
+     end if;
+   end process;
+
   assert S1_REUSE = 1 or S1_REUSE = 2 or S1_REUSE = 4
     report "Only allowed values for s1 reuse are 1,2, and 4"
     severity error;
@@ -227,8 +247,10 @@ begin
   --Safety check to ensure compression works correctly
   process (clock) begin
     if (rising_edge(clock)) then
-      for i in 0 to ly_thresh_i'length-1 loop
-        assert not EN_HC_COMPRESS or unsigned(ly_thresh_i(i)) >= 4 report "Minimum threshold cannot be below 4 if compression is enabled" severity error;
+      for i in 0 to 15-1 loop
+        for j in 0 to ly_thresh_i'length-1 loop
+          assert not EN_HC_COMPRESS or unsigned(ly_thresh_i(i)(j)) >= 4 report "Minimum threshold cannot be below 4 if compression is enabled" severity error;
+        end loop;
       end loop;
     end if;
   end process;
@@ -329,7 +351,7 @@ begin
 
           partition_num => I,
 
-          ly_thresh  => ly_thresh_compressed,
+          ly_thresh  => ly_thresh_compressed(I),
 
           -- primary layer
           partition_i => partition_or_reg,
@@ -359,7 +381,7 @@ begin
 
         partition_num => I,
 
-        ly_thresh  => ly_thresh_strict_compressed,
+        ly_thresh  => ly_thresh_compressed(I),
 
         -- primary layer
         partition_i => partition_or_reg,

@@ -52,7 +52,7 @@ entity pat_unit_mux is
 
     clock : in std_logic;
 
-    ly_thresh : in ly_thresh_t;
+    ly_thresh : in ly_thresh_prt;
 
     dav_i : in  std_logic;
     dav_o : out std_logic := '0';
