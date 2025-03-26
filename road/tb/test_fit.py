@@ -67,7 +67,8 @@ async def fit_tb(dut, NLOOPS=10000):
     dut.ly4.value = 5
     dut.ly5.value = 6
 
-    LATENCY = dut.N_STAGES.value + 1
+    #LATENCY = dut.N_STAGES.value + 1
+    LATENCY = dut.N_STAGES.value + 6 #Latency introduced by adding pipeline registers (for timing constraints)
 
     for _ in range(LATENCY):
         await RisingEdge(dut.clock)
@@ -99,13 +100,12 @@ async def fit_tb(dut, NLOOPS=10000):
         dut.ly5.value = y[5]
 
         data.append(y)
-
+        m, b = fit_modified(x, y)
         await RisingEdge(dut.clock)  # Synchronize with the clock
 
         this_data = data.pop(0)
         m, b = fit_modified(x, this_data)
 
-        # sfixed --> float
         slope = dut.slope_o.value.signed_integer / (2**slope_fracb - 1)
 
         intercept = dut.intercept_o.value.signed_integer / (2**intercept_fracb - 1)
@@ -116,19 +116,8 @@ async def fit_tb(dut, NLOOPS=10000):
         max_error_strips = 0.5
         max_error_intercept = 0.5
 
-        # slope = round(slope, 1)
-        # intercept = round(intercept, 1)
-        # m = round(m, 1)
-        # b = round(b, 1)
-
-        # if (slope != m or intercept != b):
-        #    print_slope(slope, intercept, m, b)
 
         key_s = m * 2.5 + b
-
-        # print(this_data)
-        # print_slope(slope, intercept, m, b)
-        # print_slope(slope, intercept, key_strip, m, b, key_s)
 
         assert abs(b - intercept) < max_error_intercept, \
             print_slope(slope, intercept, key_strip, m, b, key_s)
@@ -139,6 +128,8 @@ async def fit_tb(dut, NLOOPS=10000):
 
         if iloop % 1000 == 0:
             print("%d fits tested" % iloop)
+            print(this_data)
+            print_slope(slope, intercept, key_strip, m, b, key_s)
 
     print("="*80)
     print("%d fits tested" % NLOOPS)
@@ -150,10 +141,12 @@ def test_fit():
     tests_dir = os.path.abspath(os.path.dirname(__file__))
     rtl_dir = os.path.abspath(os.path.join(tests_dir, "..", "hdl"))
     module = os.path.splitext(os.path.basename(__file__))[0]
-
+    
     vhdl_sources = [os.path.join(rtl_dir, "reciprocal.vhd"),
                     os.path.join(rtl_dir, "pipelined_mult.vhd"),
+                    os.path.join(rtl_dir, "pipelined_mult_check.vhd"),
                     os.path.join(rtl_dir, "fit.vhd")]
+
 
     sim = "questa"
     os.environ["SIM"] = sim
@@ -163,6 +156,9 @@ def test_fit():
         opts = ["--std=08"]
     if sim == "questa":
         opts = ["-2008"]
+    if sim == "xsim":
+        opts = ["-2008"]
+
 
     run(vhdl_sources=vhdl_sources,
         module=module,  # name of cocotb test module
