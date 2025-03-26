@@ -31,7 +31,7 @@ use work.patterns.all;
 --
 -- Each virtual segment is compared to chunks offset by -1,0,1 in the neighboring (real) partitions.
 
-entity x_prt_deghost_v3 is
+entity x_prt_deghost_qual is
   generic(
     NUM_FINDERS : integer := 15;
     RADIUS : natural := 2
@@ -45,9 +45,9 @@ entity x_prt_deghost_v3 is
     segs_i : in segment_list_t (0 to NUM_FINDERS*N_SEGS_PRT - 1);
     segs_o : out segment_list_t (0 to NUM_FINDERS*N_SEGS_PRT - 1)
     );
-end x_prt_deghost_v3;
+end x_prt_deghost_qual;
 
-architecture behavioral of x_prt_deghost_v3 is
+architecture behavioral of x_prt_deghost_qual is
   
   -- Assuming chunk size is a power of 2, then the "strip" attribute of segments can be interpreted as:
   -- strip = [chunk_number][offset_in_chunk]
@@ -149,7 +149,7 @@ architecture behavioral of x_prt_deghost_v3 is
     return out_bits;
   end function;
   
-  function get_mask(range_vectors : range_vector_padded_arr, better_vectors : better_vector_padded_arr) return std_logic_vector is
+  function get_mask(range_vectors : range_vector_padded_arr; better_vectors : range_vector_padded_arr) return std_logic_vector is
   
     type range_vector_or_arr is array (0 to (N_X_PRTS+2)*(N_SEGS_PRT+2)-1) of std_logic_vector(0 to 1); 
     variable range_vectors_or : range_vector_or_arr;
