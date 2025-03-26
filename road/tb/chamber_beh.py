@@ -57,6 +57,45 @@ def cross_partition_cancellation(segments : List[List[Segment]],
 
     return segs_o
 
+def deghosting_clearance(segments : List[List[Segment]],
+                         clearance_width : int) -> List[List[Segment]]:
+    # Make a copy of input array to do concurrent deghosting, as FW will do
+    segs_out = deepcopy(segments)
+
+    # Look at each chunk in each partition. In real partitions, only look left and right. In virtual partitions, look in all (max 8) directions.
+    for prt_i in range(0,len(segments)):
+        for seg_i in range(0, len(segments[prt_i])):
+
+            prts = [0]
+            chunks = [0]
+
+            # If virtual partition, do x-prt deghosting. If at top or bottom, don't try to look out of bounds.
+            if (prt_i % 2 == 1):
+                if prt_i != 0:
+                    prts.append(-1)
+                if prt_i != len(segments)-1:
+                    prts.append(1)
+
+            # Don't look out of bounds
+            if seg_i != 0:
+                chunks.append(-1)
+            if seg_i != len(segments[prt_i])-1:
+                chunks.append(1)
+            
+            # Generate all permutations of (relative_partition, relative_chunk)
+            relative_indices = [(prt, chunk) for prt in prts for chunk in chunks]
+            # Don't compare with self: remove (0,0)
+            relative_indices.remove((0,0))
+
+            seg = segments[prt_i][seg_i]
+            for x,y in relative_indices:
+                if (abs(segments[prt_i+x][seg_i+y].strip - seg.strip) <= clearance_width):
+                    if seg > segments[prt_i+x][seg_i+y]:
+                        segs_out[prt_i+x][seg_i+y].reset()
+                    else:
+                        segs_out[prt_i][seg_i].reset()
+    return segs_out
+
 def process_chamber(chamber_data : List[List[int]], config : Config, chamber_bx_data):
 
     # gather segments from each partition
