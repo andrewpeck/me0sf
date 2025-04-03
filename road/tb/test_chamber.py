@@ -81,6 +81,7 @@ async def chamber_test(dut, test, nloops=512, verbose=True):
     config.deghost_post = dut.partition_gen[0].partition_gen_real.partition_inst.DEGHOST_POST.value
     config.group_width = dut.partition_gen[0].partition_gen_real.partition_inst.S0_WIDTH.value
     config.num_outputs= dut.NUM_SEGMENTS.value
+    config.ly_thresh_eta = [4, 5, 4, 5, 4, 5, 4, 5, 4, 5, 4, 5, 4, 5, 4]
     config.ly_thresh_patid = [7, 7, 7, 7, 7, 7, 7, 7, 7, 7, 5, 5, 4, 4, 4, 4, 4]
     config.cross_part_seg_width = 2 # set to zero to disable until implmented in fw
 
@@ -90,9 +91,9 @@ async def chamber_test(dut, test, nloops=512, verbose=True):
     NULL = lambda : [[0 for _ in range(6)] for _ in range(8)]
     dut.sbits_i.value = NULL()
 
-    dut.ly_thresh_i.value = config.ly_thresh_patid
+    dut.ly_thresh_i.value = [[max(eta_thresh, id_thresh) for id_thresh in config.ly_thresh_patid] for eta_thresh in config.ly_thresh_eta]
 
-    # flush the bufers
+    # flush the buffers
     for _ in range(256):
         await RisingEdge(dut.clock)
 
@@ -108,7 +109,7 @@ async def chamber_test(dut, test, nloops=512, verbose=True):
 
     LATENCY = ceil(meas_latency)-1
 
-    # flush the bufers
+    # flush the buffers
     dut.sbits_i.value = NULL()
     for _ in range(LATENCY*8+1):
         await RisingEdge(dut.clock)
