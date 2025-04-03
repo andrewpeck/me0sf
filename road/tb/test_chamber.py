@@ -133,7 +133,7 @@ async def chamber_test(dut, test, nloops=512, verbose=True):
         if dut.dav_i_phase.value == 7:
 
             if verbose:
-                print(f"{loop=}")
+                print(f"{loop}=")
 
             # (1) generate new random data
             # (2) push it onto the queue
@@ -273,7 +273,7 @@ async def chamber_test(dut, test, nloops=512, verbose=True):
                         segment.update_quality()
 
             if verbose:
-                print(f'{loop=}')
+                print(f'{loop}=')
                 for i in range(len(fw_segments)):
                     print("  > fw: " + str(fw_segments[i]))
                     print("  > sw: " + str(sw_segments[i]))
