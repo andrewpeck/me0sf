@@ -233,8 +233,8 @@ def pat_unit(data,
         best.reset()
 
     # (8) remove very wide segments
-    if (best.id <= 10):
-        best.reset()
+    #if (best.id <= 10):
+        #best.reset()
 
     #for i in seg_list:
     #    if i.id == 17:
