@@ -19,22 +19,22 @@ from subfunc import Config
 from tb_common import (get_max_span_from_dut, get_segments_from_dut,
                        monitor_dav, setup, measure_latency)
 
-#@cocotb.test() # type: ignore
-#async def chamber_test_ff(dut, nloops=20):
-#   await chamber_test(dut, "FF", nloops)
-#
-#@cocotb.test() # type: ignore
-#async def chamber_test_5a(dut, nloops=20):
-#   await chamber_test(dut, "5A", nloops)
-#
-#@cocotb.test() # type: ignore
-#async def chamber_test_walking1(dut, nloops=191):
-#   await chamber_test(dut, "WALKING1", nloops)
-#
-#@cocotb.test() # type: ignore
-#async def chamber_test_walkingf(dut, nloops=192):
-#   await chamber_test(dut, "WALKINGF", nloops)
-#
+@cocotb.test() # type: ignore
+async def chamber_test_ff(dut, nloops=20):
+   await chamber_test(dut, "FF", nloops)
+
+@cocotb.test() # type: ignore
+async def chamber_test_5a(dut, nloops=20):
+   await chamber_test(dut, "5A", nloops)
+
+@cocotb.test() # type: ignore
+async def chamber_test_walking1(dut, nloops=191):
+   await chamber_test(dut, "WALKING1", nloops)
+
+@cocotb.test() # type: ignore
+async def chamber_test_walkingf(dut, nloops=192):
+   await chamber_test(dut, "WALKINGF", nloops)
+
 @cocotb.test() # type: ignore
 async def chamber_test_xprt(dut, nloops=100):
    await chamber_test(dut, "XPRT", nloops)
@@ -83,7 +83,7 @@ async def chamber_test(dut, test, nloops=512, verbose=True):
     config.num_outputs= dut.NUM_SEGMENTS.value
     config.ly_thresh_eta = [4, 5, 4, 5, 4, 5, 4, 5, 4, 5, 4, 5, 4, 5, 4]
     config.ly_thresh_patid = [7, 7, 7, 7, 7, 7, 7, 7, 7, 7, 5, 5, 4, 4, 4, 4, 4]
-    config.cross_part_seg_width = 2 # set to zero to disable until implmented in fw
+    config.cross_part_seg_width = dut.X_DEGHOST_EDGE_DIST.value # set to zero to disable until implmented in fw
 
     en_hc_compress = True #this is a generic, so need to set it here and in top level in FW
 
@@ -344,7 +344,7 @@ def test_chamber():
         os.path.join(rtl_dir, "chamber.vhd")]
 
     #parameters = {"PULSE_EXTEND": 1, "DEADTIME": 0, "DISABLE_PEAKING": True}
-    parameters = {"DISABLE_PEAKING": True, "X_DEGHOST_EN": True}
+    parameters = {"DISABLE_PEAKING": True, "X_DEGHOST_EDGE_DIST" : 2}
 
     os.environ["SIM"] = "questa"
     #os.environ["COCOTB_RESULTS_FILE"] = f"../log/{module}.xml"
