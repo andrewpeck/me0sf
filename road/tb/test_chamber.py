@@ -47,14 +47,18 @@ async def chamber_test_segs(dut, nloops=100):
 @cocotb.test() # type: ignore
 async def chamber_test_random(dut, nloops=100):
     await chamber_test(dut, "RANDOM", nloops)
-  
+ 
 #@cocotb.test() # type: ignore
 #async def chamber_test_deghost(dut, nloops=20):
 #    await chamber_test(dut, "DEGHOST", nloops)   
 
-#@cocotb.test() # type: ignore
-#async def chamber_test_dat(dut, nloops=20):
-#   await chamber_test(dut, "TEST_DAT", nloops)   
+@cocotb.test() # type: ignore
+async def chamber_test_dat(dut, nloops=20):
+   await chamber_test(dut, "TEST_DAT", nloops)
+
+@cocotb.test() # type: ignore
+async def chamber_test_stack(dut, nloops=100):
+    await chamber_test(dut, "STACK_DAT", nloops)   
 
 async def chamber_test(dut, test, nloops=512, verbose=True):
 
@@ -246,11 +250,20 @@ async def chamber_test(dut, test, nloops=512, verbose=True):
             elif test=="TEST_DAT":
 
                 #chamber_data = [[120527522816, 34493956200, 17179873280, 290816, 234881252, 30064771072], [67108864, 537395212, 2147487778, 25769803776, 103079739392, 266240], [12289, 34361573376, 92274688, 2684354688, 51759810560, 271581184], [256, 68920830080, 1073741824, 117473280, 553648128, 120259088640], [1711292416, 268468864, 15032389632, 129390215168, 17179869184, 103079215104], [2149580800, 1075839104, 38117867584, 3892314112, 1006637088, 163577856], [1073750017, 268566528, 3087007744, 234897408, 1835008, 4324329474], [6553600, 126648320, 16891912, 1610612736, 12885168128, 103146323996]]
-                chamber_data = [[15535702016, 805306368, 57998835840, 9663676416, 68853760016, 0], [57344, 393472, 98635776, 234881280, 536870912, 112742899712], [2149580832, 5398069248, 12398364672, 1811939328, 6190809088, 3758096384], [151126044, 3221225612, 2, 4294967822, 68719476800, 8589934592], [335544320, 3670036, 69236352, 2147485760, 3145728, 0], [1077940224, 117440512, 34360656900, 6442452992, 34762915856, 2149580800], [2156333056, 7405568, 25166344, 134234112, 805306368, 120309415968], [552600576, 26230800, 786944, 4152, 68719477120, 2621440]]
+                #chamber_data = [[15535702016, 805306368, 57998835840, 9663676416, 68853760016, 0], [57344, 393472, 98635776, 234881280, 536870912, 112742899712], [2149580832, 5398069248, 12398364672, 1811939328, 6190809088, 3758096384], [151126044, 3221225612, 2, 4294967822, 68719476800, 8589934592], [335544320, 3670036, 69236352, 2147485760, 3145728, 0], [1077940224, 117440512, 34360656900, 6442452992, 34762915856, 2149580800], [2156333056, 7405568, 25166344, 134234112, 805306368, 120309415968], [552600576, 26230800, 786944, 4152, 68719477120, 2621440]]
+                zeros = [0]*6
+                chamber_data = [zeros, zeros, zeros, [41484288, 1310720, 393440, 917536, 16973968, 17182064696], [34359738370, 16, 393228, 2097600, 50399232, 939982976], zeros, zeros, zeros] 
                 
             elif test=="STACK_DAT":
                 if (loop == 0):
-                    events = read_ntuple_stack("00001199.root")
+                    if (os.path.exists("00001199.root")):
+                        i_file_path = "00001199.root"
+                    elif (os.path.exists("../00001199.root")):
+                        i_file_path = "../00001199.root"
+                    else:
+                        raise Exception("Root file not found")
+
+                    events = read_ntuple_stack(i_file_path)
 
                 if (loop < len(events)):
                     event = events[loop]
@@ -350,7 +363,7 @@ def test_chamber():
         os.path.join(rtl_dir, "dav_to_phase.vhd"),
         os.path.join(rtl_dir, "pat_unit_mux.vhd"),
         os.path.join(rtl_dir, "deghost.vhd"),
-        os.path.join(rtl_dir, "x_prt_deghost_v3.vhd"),
+        os.path.join(rtl_dir, "x_prt_deghost_qual.vhd"),
         os.path.join(rtl_dir, "partition.vhd"),
         os.path.join(rtl_dir, "pulse_extension.vhd"),
         os.path.join(rtl_dir, "chamber_pulse_extension.vhd"),

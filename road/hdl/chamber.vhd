@@ -492,7 +492,7 @@ begin
   end generate;
 
   x_part_deghost : if (X_PRT_EN and X_DEGHOST_EDGE_DIST > 0) generate
-    x_prt_deghost : entity work.x_prt_deghost_v3
+    x_prt_deghost : entity work.x_prt_deghost_qual
     generic map (
       NUM_FINDERS => NUM_FINDERS,
       RADIUS => X_DEGHOST_EDGE_DIST

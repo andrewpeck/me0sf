@@ -68,10 +68,10 @@ def cross_partition_cancellation(segments : List[List[Segment]],
                 continue
 
             for (seg_above_i, seg_above) in enumerate(segments[i-1]):
-                if seg_above.lc != 0 and abs(v_seg.strip - seg_above.strip) <= cross_part_seg_width and (v_seg.quality >> 17 > seg_above.quality >> 17):
+                if seg_above.lc != 0 and abs(v_seg.strip - seg_above.strip) <= cross_part_seg_width and ((v_seg.lc<<5) + v_seg.id > (seg_above.lc<<5) + seg_above.id):
                     segs_real_killed[i-1][seg_above_i].reset()
             for (seg_below_i, seg_below) in enumerate(segments[i+1]):
-                if seg_below.lc != 0 and abs(v_seg.strip - seg_below.strip) <= cross_part_seg_width and (v_seg.quality >> 17 > seg_below.quality >> 17):
+                if seg_below.lc != 0 and abs(v_seg.strip - seg_below.strip) <= cross_part_seg_width and ((v_seg.lc<<5) + v_seg.id > (seg_below.lc<<5) + seg_below.id):
                     segs_real_killed[i+1][seg_below_i].reset()
     # Make a copy, to update segments for Step 2
     segs_o = [prt for prt in deepcopy(segs_real_killed)]
@@ -81,10 +81,10 @@ def cross_partition_cancellation(segments : List[List[Segment]],
             if v_seg.lc == 0:
                 continue
 
-            for (seg_above_i, seg_above) in enumerate(segments[i-1]):
+            for (seg_above_i, seg_above) in enumerate(segs_real_killed[i-1]):
                 if seg_above.lc != 0 and abs(v_seg.strip - seg_above.strip) <= cross_part_seg_width:
                     segs_o[i][v_seg_i].reset()
-            for (seg_below_i, seg_below) in enumerate(segments[i+1]):
+            for (seg_below_i, seg_below) in enumerate(segs_real_killed[i+1]):
                 if seg_below.lc != 0 and abs(v_seg.strip - seg_below.strip) <= cross_part_seg_width:
                     segs_o[i][v_seg_i].reset()
 
