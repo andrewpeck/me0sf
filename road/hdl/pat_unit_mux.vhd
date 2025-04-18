@@ -174,7 +174,7 @@ begin
 
   patgen : for I in 0 to NUM_SECTORS-1 generate
 
-    signal ly0_unit : stad_logic_vector (LY0_SPAN-1 downto 0) := (others => '0');
+    signal ly0_unit : std_logic_vector (LY0_SPAN-1 downto 0) := (others => '0');
     signal ly1_unit, ly2_unit, ly3_unit, ly4_unit, ly5_unit
       : std_logic_vector (LY_SPAN - 1 downto 0) := (others => '0');
 
