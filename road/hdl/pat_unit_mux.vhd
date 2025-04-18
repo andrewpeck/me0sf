@@ -87,10 +87,12 @@ architecture behavioral of pat_unit_mux is
   end;
 
   constant PADDING : natural := (get_max_span(patdef_array)-1)/2;
+  constant PADDING_LY0 : natural := (get_max_span_ly(patdef_array, 0)-1)/2;
 
   constant NUM_SECTORS : positive := WIDTH/MUX_FACTOR;
 
   constant LY_SPAN : natural := get_max_span(patdef_array);
+  constant LY0_SPAN : natural := get_max_span_ly(patdef_array, 0);
 
   signal ly0_padded : std_logic_vector (WIDTH-1 + 2*PADDING downto 0);
   signal ly1_padded : std_logic_vector (WIDTH-1 + 2*PADDING downto 0);
@@ -148,7 +150,7 @@ begin
   -- can still do pattern finding using the normal machanism
   --------------------------------------------------------------------------------
 
-  ly0_padded <= pad_layer(PADDING, ly0);
+  ly0_padded <= pad_layer(PADDING_LY0, ly0);
   ly1_padded <= pad_layer(PADDING, ly1);
   ly2_padded <= pad_layer(PADDING, ly2);
   ly3_padded <= pad_layer(PADDING, ly3);
@@ -172,7 +174,8 @@ begin
 
   patgen : for I in 0 to NUM_SECTORS-1 generate
 
-    signal ly0_unit, ly1_unit, ly2_unit, ly3_unit, ly4_unit, ly5_unit
+    signal ly0_unit : std_logic_vector (LY0_SPAN-1 downto 0) := (others => '0');
+    signal ly1_unit, ly2_unit, ly3_unit, ly4_unit, ly5_unit
       : std_logic_vector (LY_SPAN - 1 downto 0) := (others => '0');
 
     signal lyx_unit_dav : std_logic := '0';
@@ -183,7 +186,7 @@ begin
     begin
       if (rising_edge(clock)) then
 
-        ly0_unit <= ly0_padded (phase_i+I*MUX_FACTOR+PADDING*2 downto phase_i+I*MUX_FACTOR);
+        ly0_unit <= ly0_padded (phase_i+I*MUX_FACTOR+PADDING_LY0*2 downto phase_i+I*MUX_FACTOR);
         ly1_unit <= ly1_padded (phase_i+I*MUX_FACTOR+PADDING*2 downto phase_i+I*MUX_FACTOR);
         ly2_unit <= ly2_padded (phase_i+I*MUX_FACTOR+PADDING*2 downto phase_i+I*MUX_FACTOR);
         ly3_unit <= ly3_padded (phase_i+I*MUX_FACTOR+PADDING*2 downto phase_i+I*MUX_FACTOR);

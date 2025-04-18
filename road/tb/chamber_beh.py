@@ -11,49 +11,82 @@ from partition_beh import process_partition
 from subfunc import *
 
 
+# def cross_partition_cancellation(segments : List[List[Segment]],
+#                                  cross_part_seg_width : int) -> List[List[Segment]]:
+#     segs_real_killed = [prt for prt in deepcopy(segments)]
+#     for i in range(1,15,2):        
+#         for (l,seg) in enumerate(segments[i]):
+#             if seg.lc == 0:
+#                 continue
+
+#             strip = seg.strip
+#             segs_above = []
+#             segs_below = []
+
+#             for (j,seg1) in enumerate(segments[i-1]):
+#                 if seg1.lc != 0 and abs(strip - seg1.strip) <= cross_part_seg_width:
+#                     segs_above.append(j)
+#             for (k,seg2) in enumerate(segments[i+1]):
+#                 if seg2.lc != 0 and abs(strip - seg2.strip) <= cross_part_seg_width:
+#                     segs_below.append(k)
+                   
+#             if len(segs_above) > 0 and len(segs_below) > 0:
+#                 for above_seg in segs_above:
+#                     segs_real_killed[i-1][above_seg].reset()
+#                 for below_seg in segs_below:
+#                     segs_real_killed[i+1][below_seg].reset()
+
+#     segs_o = [prt for prt in deepcopy(segs_real_killed)]
+
+#     for i in range(1, 15, 2):
+#         for (l,seg) in enumerate(segs_real_killed[i]):
+#             if seg.lc == 0:
+#                 continue
+#             strip = seg.strip
+
+#             kill = False
+#             for seg_up in segs_real_killed[i-1]:
+#                 if seg_up.lc != 0 and abs(strip - seg_up.strip) <= cross_part_seg_width:
+#                     kill = True
+#             for seg_down in segs_real_killed[i+1]:
+#                 if seg_down.lc != 0 and  abs(strip - seg_down.strip) <= cross_part_seg_width:
+#                     kill = True
+
+#             if kill:
+#                 segs_o[i][l].reset()
+
+#     return segs_o
+
 def cross_partition_cancellation(segments : List[List[Segment]],
                                  cross_part_seg_width : int) -> List[List[Segment]]:
+    # Make a copy of the segments so each step is effectively done in parallel (as FW does it)
     segs_real_killed = [prt for prt in deepcopy(segments)]
+    # Step 1: Kill real segments with a better nearby virtual segment
     for i in range(1,15,2):        
-        for (l,seg) in enumerate(segments[i]):
-            if seg.lc == 0:
+        for (v_seg_i, v_seg) in enumerate(segments[i]):
+            if v_seg.lc == 0:
                 continue
 
-            strip = seg.strip
-            segs_above = []
-            segs_below = []
-
-            for (j,seg1) in enumerate(segments[i-1]):
-                if seg1.lc != 0 and  abs(strip - seg1.strip) <= cross_part_seg_width:
-                    segs_above.append(j)
-            for (k,seg2) in enumerate(segments[i+1]):
-                if seg2.lc != 0 and abs(strip - seg2.strip) <= cross_part_seg_width:
-                    segs_below.append(k)
-                   
-            if len(segs_above) > 0 and len(segs_below) > 0:
-                for above_seg in segs_above:
-                    segs_real_killed[i-1][above_seg].reset()
-                for below_seg in segs_below:
-                    segs_real_killed[i+1][below_seg].reset()
-
+            for (seg_above_i, seg_above) in enumerate(segments[i-1]):
+                if seg_above.lc != 0 and abs(v_seg.strip - seg_above.strip) <= cross_part_seg_width and ((v_seg.lc<<5) + v_seg.id > (seg_above.lc<<5) + seg_above.id):
+                    segs_real_killed[i-1][seg_above_i].reset()
+            for (seg_below_i, seg_below) in enumerate(segments[i+1]):
+                if seg_below.lc != 0 and abs(v_seg.strip - seg_below.strip) <= cross_part_seg_width and ((v_seg.lc<<5) + v_seg.id > (seg_below.lc<<5) + seg_below.id):
+                    segs_real_killed[i+1][seg_below_i].reset()
+    # Make a copy, to update segments for Step 2
     segs_o = [prt for prt in deepcopy(segs_real_killed)]
-
+    # Step 2: Kill virtual segments that still have a nearby real segment (i.e. virtual segments with a better nearby real segment)
     for i in range(1, 15, 2):
-        for (l,seg) in enumerate(segs_real_killed[i]):
-            if seg.lc == 0:
+        for (v_seg_i, v_seg) in enumerate(segs_real_killed[i]):
+            if v_seg.lc == 0:
                 continue
-            strip = seg.strip
 
-            kill = False
-            for seg_up in segs_real_killed[i-1]:
-                if seg_up.lc != 0 and abs(strip - seg_up.strip) <= cross_part_seg_width:
-                    kill = True
-            for seg_down in segs_real_killed[i+1]:
-                if seg_down.lc != 0 and  abs(strip - seg_down.strip) <= cross_part_seg_width:
-                    kill = True
-
-            if kill:
-                segs_o[i][l].reset()
+            for (seg_above_i, seg_above) in enumerate(segs_real_killed[i-1]):
+                if seg_above.lc != 0 and abs(v_seg.strip - seg_above.strip) <= cross_part_seg_width:
+                    segs_o[i][v_seg_i].reset()
+            for (seg_below_i, seg_below) in enumerate(segs_real_killed[i+1]):
+                if seg_below.lc != 0 and abs(v_seg.strip - seg_below.strip) <= cross_part_seg_width:
+                    segs_o[i][v_seg_i].reset()
 
     return segs_o
 

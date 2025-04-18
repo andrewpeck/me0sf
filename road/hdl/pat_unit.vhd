@@ -33,7 +33,7 @@ entity pat_unit is
     PATLIST : patdef_array_t := patdef_array;
     EN_HC_COMPRESS : boolean := false;
 
-    LY0_SPAN : natural := get_max_span(patdef_array);
+    LY0_SPAN : natural := get_max_span_ly(patdef_array, 0);
     LY1_SPAN : natural := get_max_span(patdef_array);
     LY2_SPAN : natural := get_max_span(patdef_array);
     LY3_SPAN : natural := get_max_span(patdef_array);
