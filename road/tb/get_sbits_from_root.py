@@ -52,7 +52,7 @@ if __name__ == "__main__":
     
     segs = read_ntuple_stack("00001199.root")
 
-    for i in range(5):
+    for i in range(1, 2):
         print(f"\n\n\nEVENT {i}")
         hit_data = get_sbits_from_event(segs[i])
         
