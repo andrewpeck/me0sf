@@ -34,11 +34,11 @@ entity pat_unit is
     EN_HC_COMPRESS : boolean := false;
 
     LY0_SPAN : natural := get_max_span_ly(patdef_array, 0);
-    LY1_SPAN : natural := get_max_span(patdef_array);
-    LY2_SPAN : natural := get_max_span(patdef_array);
-    LY3_SPAN : natural := get_max_span(patdef_array);
-    LY4_SPAN : natural := get_max_span(patdef_array);
-    LY5_SPAN : natural := get_max_span(patdef_array)
+    LY1_SPAN : natural := get_max_span_ly(patdef_array, 1);
+    LY2_SPAN : natural := get_max_span_ly(patdef_array, 2);
+    LY3_SPAN : natural := get_max_span_ly(patdef_array, 3);
+    LY4_SPAN : natural := get_max_span_ly(patdef_array, 4);
+    LY5_SPAN : natural := get_max_span_ly(patdef_array, 5)
     );
 
   port(

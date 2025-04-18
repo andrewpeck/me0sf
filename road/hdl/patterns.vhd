@@ -219,8 +219,10 @@ package body patterns is
 
   function get_max_span_ly (list : patdef_array_t; ly : integer)
     return integer is
-    variable max : integer := 0;
-    variable tmp : integer := 0;
+    variable minl : integer := 99;
+    variable maxr : integer := -99;
+    variable tmpl : integer := 0;
+    variable tmpr : integer := 0;
     variable pat : hi_lo_t;
   begin
     for I in list'range loop
@@ -239,14 +241,18 @@ package body patterns is
         pat := list(I).ly5;
       end if;
 
-      tmp := get_ly_size(ly, pat);
+      tmpl := pat.lo;
+      tmpr := pat.hi;
 
-      if (tmp > max) then
-        max := tmp;
+      if (tmpl < minl) then
+        minl := tmpl;
+      end if;
+      if (tmpr > maxr) then
+        maxr := tmpr;
       end if;
     end loop;
 
-    return max;
+    return (maxr - minl)+1;
   end;
 
   function get_max_span (list : patdef_array_t) return integer is
