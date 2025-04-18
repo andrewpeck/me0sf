@@ -92,6 +92,7 @@ architecture behavioral of pat_unit_mux is
   constant NUM_SECTORS : positive := WIDTH/MUX_FACTOR;
 
   constant LY_SPAN : natural := get_max_span(patdef_array);
+  constant LY0_SPAN : natural := get_max_span_ly(patdef_array, 0);
 
   signal ly0_padded : std_logic_vector (WIDTH-1 + 2*PADDING downto 0);
   signal ly1_padded : std_logic_vector (WIDTH-1 + 2*PADDING downto 0);
