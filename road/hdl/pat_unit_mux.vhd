@@ -201,12 +201,12 @@ begin
     begin
       if (rising_edge(clock)) then
 
-        ly0_unit <= ly0_padded (phase_i+I*MUX_FACTOR+PADDING_LY0*2 downto phase_i+I*MUX_FACTOR);
-        ly1_unit <= ly1_padded (phase_i+I*MUX_FACTOR+PADDING_LY1*2 downto phase_i+I*MUX_FACTOR);
-        ly2_unit <= ly2_padded (phase_i+I*MUX_FACTOR+PADDING_LY2*2 downto phase_i+I*MUX_FACTOR);
-        ly3_unit <= ly3_padded (phase_i+I*MUX_FACTOR+PADDING_LY3*2 downto phase_i+I*MUX_FACTOR);
-        ly4_unit <= ly4_padded (phase_i+I*MUX_FACTOR+PADDING_LY4*2 downto phase_i+I*MUX_FACTOR);
-        ly5_unit <= ly5_padded (phase_i+I*MUX_FACTOR+PADDING_LY5*2 downto phase_i+I*MUX_FACTOR);
+        ly0_unit <= ly0_padded (I+phase_i*NUM_SECTORS+PADDING_LY0*2 downto I+phase_i*NUM_SECTORS);
+        ly1_unit <= ly1_padded (I+phase_i*NUM_SECTORS+PADDING_LY1*2 downto I+phase_i*NUM_SECTORS);
+        ly2_unit <= ly2_padded (I+phase_i*NUM_SECTORS+PADDING_LY2*2 downto I+phase_i*NUM_SECTORS);
+        ly3_unit <= ly3_padded (I+phase_i*NUM_SECTORS+PADDING_LY3*2 downto I+phase_i*NUM_SECTORS);
+        ly4_unit <= ly4_padded (I+phase_i*NUM_SECTORS+PADDING_LY4*2 downto I+phase_i*NUM_SECTORS);
+        ly5_unit <= ly5_padded (I+phase_i*NUM_SECTORS+PADDING_LY5*2 downto I+phase_i*NUM_SECTORS);
 
         lyx_unit_dav <= dav_i;
 
@@ -258,9 +258,9 @@ begin
 
       -- unfold the pattern unit multiplexer and assign the strip number
       for I in 0 to NUM_SECTORS-1 loop
-        strips_demux(I*MUX_FACTOR+patterns_mux_phase).id    <= patterns_mux(I).id;
-        strips_demux(I*MUX_FACTOR+patterns_mux_phase).lc    <= patterns_mux(I).lc;
-        strips_demux(I*MUX_FACTOR+patterns_mux_phase).strip <= to_unsigned(I*MUX_FACTOR+patterns_mux_phase, STRIP_BITS);
+        strips_demux(I+patterns_mux_phase*NUM_SECTORS).id    <= patterns_mux(I).id;
+        strips_demux(I+patterns_mux_phase*NUM_SECTORS).lc    <= patterns_mux(I).lc;
+        strips_demux(I+patterns_mux_phase*NUM_SECTORS).strip <= to_unsigned(I+patterns_mux_phase*NUM_SECTORS, STRIP_BITS);
         
       end loop;
 
