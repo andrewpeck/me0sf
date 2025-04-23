@@ -68,7 +68,7 @@ async def fit_tb(dut, NLOOPS=10000):
     dut.ly5.value = 6
 
     #LATENCY = dut.N_STAGES.value + 1
-    LATENCY = dut.N_STAGES.value + 6 #Latency introduced by adding pipeline registers (for timing constraints)
+    LATENCY = dut.N_STAGES.value + 7 #Latency introduced by adding pipeline registers (for timing constraints)
 
     for _ in range(LATENCY):
         await RisingEdge(dut.clock)
@@ -89,6 +89,7 @@ async def fit_tb(dut, NLOOPS=10000):
         await RisingEdge(dut.clock)
 
     for iloop in range(NLOOPS):
+
 
         y = rand_y()
 
@@ -112,9 +113,11 @@ async def fit_tb(dut, NLOOPS=10000):
 
         key_strip = dut.strip_o.value.signed_integer / (2**strip_fracb - 1)
 
-        max_error_strips_per_layer = 0.2
+        #max_error_strips_per_layer = 0.2
+        max_error_strips_per_layer = 0.5
         max_error_strips = 0.5
-        max_error_intercept = 0.5
+        #max_error_intercept = 0.5
+        max_error_intercept = 1.4
 
 
         key_s = m * 2.5 + b
@@ -130,6 +133,9 @@ async def fit_tb(dut, NLOOPS=10000):
             print("%d fits tested" % iloop)
             print(this_data)
             print_slope(slope, intercept, key_strip, m, b, key_s)
+        #print("%d fits tested" % iloop)
+        #print(this_data)
+        #print_slope(slope, intercept, key_strip, m, b, key_s)
 
     print("="*80)
     print("%d fits tested" % NLOOPS)

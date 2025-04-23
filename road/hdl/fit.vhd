@@ -14,8 +14,6 @@ use ieee.std_logic_1164.all;
 use ieee.std_logic_misc.all;
 use ieee.numeric_std.all;
 use ieee.math_real.all;
-
-library ieee;
 use ieee.fixed_pkg.all;
 
 library work;
@@ -66,8 +64,7 @@ end fit;
 architecture behavioral of fit is
 
   -- Array (0 to N_LAYERS-1) of layer hits
-  type ly_array_t is array (integer range 0 to N_LAYERS-1) of
-    signed (STRIP_BITS-1 downto 0);
+  type ly_array_t is array (integer range 0 to N_LAYERS-1) of signed (STRIP_BITS-1 downto 0);
   signal ly : ly_array_t := (others => (others => '0'));
 
   --------------------------------------------------------------------------------
@@ -82,39 +79,33 @@ architecture behavioral of fit is
   -- s1
   --------------------------------------------------------------------------------
 
-  type cnt_array_t is array (integer range 0 to 7) of
-    integer range 0 to 6;               -- number of layers hit
+  type cnt_array_t is array (integer range 0 to 13) of integer range 0 to 6;
   signal cnt : cnt_array_t := (others => 6);
 
-  type x_sum_array_t is array (integer range 1 to 6) of integer range 0 to 15;  -- (min=0, max=0+1+2+3+4+5)
-  signal x_sum : x_sum_array_t := (others => 0);                                -- sum (x_i)
+  type x_sum_array_t is array (integer range 1 to 6) of integer range 0 to 15;  
+  signal x_sum : x_sum_array_t := (others => 0);
 
-  signal x_sum_fixed : sfixed(5 downto 0) := (others => '0');
-  signal x_sum_fixed_temp : sfixed(5 downto 0) := (others => '0');
+  signal x_sum_fixed : sfixed(4 downto 0) := (others => '0');
+  --signal x_sum_fixed_temp : sfixed(5 downto 0) := (others => '0');
 
-  -- since tracks are designed to go through the center, the positive and negative
-  -- will mostly offset and the sum will mostly be a small number, so the range can be restricted
-  -- the simulator will barf if we exceed it
-  type y_sum_array_t is array (integer range 1 to 7) of integer range -63 to 63;
+  --type y_sum_array_t is array (integer range 1 to 7) of integer range -63 to 63;
+  type y_sum_array_t is array (integer range 1 to 15) of integer range -40 to 40;
   signal y_sum : y_sum_array_t := (others => 0);  -- sum (y_i)
-  signal y_sum_s7 : y_sum_array_t := (others => 0);  -- sum (y_i)
-  signal y_sum_s6 : y_sum_array_t := (others => 0);  -- sum (y_i)
-  signal y_sum_s5 : y_sum_array_t := (others => 0);  -- sum (y_i)
+
 
   -- n * x
-  type n_x_array_t is array (integer range 0 to N_LAYERS-1) of integer range 0 to 5*6;  -- ly=5 * cnt=6
-  type n_y_array_t is array (integer range 0 to N_LAYERS-1) of integer range -255 to 255;
-  signal n_x : n_x_array_t := (others => 1);
+  type n_x_array_t is array (integer range 0 to 5) of integer range 0 to 30;  -- ly=5 * cnt=6
+  type n_y_array_t is array (integer range 0 to 5) of integer range -255 to 255;
+  signal n_x : n_x_array_t := (others => 0);
   signal n_y : n_y_array_t := (others => 0);
 
   --------------------------------------------------------------------------------
   -- s2
   --------------------------------------------------------------------------------
 
-  type x_diff_array_t is array (integer range 0 to N_LAYERS-1) of integer range -15 to 15;
-
-  type y_diff_array_t is array (integer range 0 to N_LAYERS-1) of integer range -127 to 127;
-  signal x_diff : x_diff_array_t := (others => 1);  -- (x - mean(x))
+  type x_diff_array_t is array (integer range 0 to 5) of integer range -15 to 15;
+  type y_diff_array_t is array (integer range 0 to 5) of integer range -127 to 127;
+  signal x_diff : x_diff_array_t := (others => 0);  -- (x - mean(x))
   signal y_diff : y_diff_array_t := (others => 0);  -- (y - mean(y))
 
   signal result : integer;
@@ -123,11 +114,34 @@ architecture behavioral of fit is
   -- s3
   --------------------------------------------------------------------------------
 
-  type square_array_t is array (integer range 0 to N_LAYERS-1) of integer range 0 to 255;
-  type product_array_t is array (integer range 0 to N_LAYERS-1) of integer range -4095 to 4095;
+  type square_array_t is array (integer range 0 to 5) of integer range -2047 to 2047;
 
-  signal product : product_array_t := (others => 0);  -- (x - mean(x)) * (y - mean(y))
-  signal square  : square_array_t  := (others => 0);  -- (x - mean(x)) ** 2
+  --type product_small_array_t is array (integer range 0 to 5) of integer range -2047 to 2047;
+  --type product_smaller_array_t is array (integer range 0 to 5) of integer range -1023 to 1023;
+  --type product_temp_array_t is array (integer range 0 to 5) of integer range -8191 to 8191;
+  type product_1_array_t is array (integer range 0 to 5) of integer range -8191 to 8191;
+  type product_2_array_t is array (integer range 0 to 5) of integer range -2047 to 2047;
+  type product_3_array_t is array (integer range 0 to 5) of integer range -4095 to 4095;
+  type product_4_array_t is array (integer range 0 to 5) of integer range -2047 to 2047;
+  type product_array_t is array (integer range 0 to 5) of integer range -8191 to 8191;
+
+
+  signal square_sum_1 : integer;
+  signal square_sum_2 : integer;
+  signal square_sum_3 : integer;
+
+  --signal product, product_2, product_3, product_4, product_temp1, product_temp2  : product_array_t := (others => 0);  -- (x - mean(x)) * (y - mean(y))
+  --signal product_3, product_3_reg, product_temp2  : product_array_t := (others => 0);
+  --signal product_2, product_2_reg, product_4  : product_small_array_t := (others => 0); 
+  --signal product_3, product_3_reg, product_temp2, product_1, product_1_reg, product_temp1, product : product_temp_array_t := (others => 0);  
+  signal square_a, square_b, square_c, square, square_temp, square_1, square_1_reg, square_2_reg, square_3_reg, square_4_reg, square_2, square_3, square_4, square_temp1, square_temp2 : square_array_t  := (others => 0);
+
+  signal product_1, product_1_reg, product_1_a, product_1_b, product_1_c, product_1_d  : product_1_array_t := (others => 0);
+  signal product_2, product_2_reg  : product_2_array_t := (others => 0);
+  signal product_3, product_3_reg, product_3_a, product_3_b, product_3_c, product_3_d  : product_3_array_t := (others => 0);
+  signal product_4, product_4_a, product_4_b, product_4_c, product_4_d : product_4_array_t := (others => 0);
+  signal product, product_temp1, product_temp2 : product_array_t := (others => 0);
+
   
   --------------------------------------------------------------------------------
   -- s4
@@ -136,70 +150,57 @@ architecture behavioral of fit is
   -- Σ (n*xi - Σx)*(n*yi - Σy)
   --
   signal product_sum : integer range -8191 to 8191 := 0;
-  signal product_sum_1 : integer range -8191 to 8191 := 0;
-  signal product_sum_2 : integer range -8191 to 8191 := 0;
+  signal product_sum_1 : integer range -4095 to 4095 := 0;
+  signal product_sum_2 : integer range -4095 to 4095 := 0;
+  signal product_sum_3 : integer range -4095 to 4095 := 0;
 
-  -- Σ (n*xi - Σx)^2
-  --
-  -- since x is just a set of numbers from 0-5, this number can't possibly be
-  -- bigger than +630 so only 11 bits are needed to represent it (it could be a
-  -- 10 bit unsigned, just just put the extra bit here to keep everything
-  -- signed)
-  --
-  -- 630 = 6^2 * [ (0 - 2.5)^2 + (1 - 2.5)^2 + (2 - 2.5)^2 + (3 - 2.5)^2 + (4 - 2.5)^2 + (5 - 2.5)^2 ]
-  --
-  -- initialize to 1 to prevent a divide by zero in simulation
-  --
+  
   signal square_sum_reciprocal : sfixed (1 downto -13);
+  signal square_sum_reciprocal_narrow : sfixed(1 downto -12);
 
   --------------------------------------------------------------------------------
   -- s5
   --------------------------------------------------------------------------------
 
-  -- type slope_array_t is array (integer range 5 to 8) of
-  --   sfixed (M_INT_BITS-1 downto - M_FRAC_BITS) := (others => '0');
+  signal slope_signed : signed (28 downto 0) := (others => '0');
+  --signal slope_signed : signed (27 downto 0) := (others => '0');
+  signal slope_sfixed : sfixed (15 downto -13) := (others => '0');
+  --signal slope_sfixed : sfixed (15 downto -12) := (others => '0');
 
-  constant product_sum_cntb : integer := 14; -- from # of bits to represent -8191-8191
+  signal slope, slope_s5, slope_s6, slope_s7, slope_s8, slope_s9, slope_s10, slope_s11: sfixed (3 downto -4) := (others => '0');
 
-  signal slope_signed : signed (square_sum_reciprocal'length+product_sum_cntb-1 downto 0) := (others => '0');
-  signal slope_sfixed : sfixed (slope_signed'length+square_sum_reciprocal'low-1 downto square_sum_reciprocal'low) := (others => '0');
 
-  signal slope, slope_s5, slope_s6, slope_s7, slope_s8, slope_s9, slope_s10, slope_s11, slope_s12 :
-    sfixed (M_INT_BITS-1 downto - (M_FRAC_BITS)) := (others => '0');
-
-  signal slope_s7_x5 : sfixed (M_INT_BITS+3-1 downto -(M_FRAC_BITS-4));
+  signal slope_s7_x5 : sfixed (6 downto -2);
+  signal slope_s6_mult : sfixed (7 downto -8);
 
   signal slope_s8_2p5, slope_s9_2p5, slope_s10_2p5, slope_s11_2p5, slope_s12_2p5 : sfixed (M_INT_BITS+2-1 downto -(M_FRAC_BITS-4));
 
   signal reciprocal_input : integer;
-  signal reciprocal_input_1 : integer;
-  signal reciprocal_input_2 : integer;
-
 
   --------------------------------------------------------------------------------
   -- s6
   --------------------------------------------------------------------------------
 
-  signal slope_mult : sfixed(5+M_INT_BITS downto -M_FRAC_BITS) := (others => '0');
-  signal slope_times_x : sfixed(4+M_INT_BITS-1 downto -M_FRAC_BITS-1) := (others => '0');
+  signal slope_mult : sfixed(8 downto -4) := (others => '0');
+  signal slope_times_x : sfixed(7 downto -5) := (others => '0');
 
   --------------------------------------------------------------------------------
-  -- s7
+  -- s7int
   --------------------------------------------------------------------------------
 
-  signal y_minus_mb : sfixed(3+B_INT_BITS-1 downto -(M_FRAC_BITS+1)) := (others => '0');
-  signal y_minus_mb_s6 : sfixed(3+B_INT_BITS-1 downto -(M_FRAC_BITS+1)) := (others => '0');
+  signal y_minus_mb : sfixed(8 downto -5) := (others => '0');
+  signal y_minus_mb_s6 : sfixed(8 downto -5) := (others => '0');
 
   --------------------------------------------------------------------------------
   -- s8
   --------------------------------------------------------------------------------
 
   constant MULT_RECIP_FRACB : integer := 14;
-  signal intercept_mult : sfixed(y_minus_mb'high + reciprocal6(cnt(7), MULT_RECIP_FRACB)'high+1 downto y_minus_mb'low + reciprocal6(cnt(7), MULT_RECIP_FRACB)'low);
-  signal intercept_mult_reg : sfixed(y_minus_mb'high + reciprocal6(cnt(7), MULT_RECIP_FRACB)'high+1 downto y_minus_mb'low + reciprocal6(cnt(7), MULT_RECIP_FRACB)'low);
+  signal intercept_mult : sfixed(10 downto -15);
+  signal intercept : sfixed(5 downto -6) := (others => '0');
 
-  signal intercept : sfixed(B_INT_BITS-1 downto - B_FRAC_BITS) := (others => '0');
-  signal intercept_reg : sfixed(B_INT_BITS-1 downto - B_FRAC_BITS) := (others => '0');
+
+  type signed_vector is array (natural range <>) of signed;
 
   --------------------------------------------------------------------------------
   -- functions
@@ -276,6 +277,7 @@ begin
 
   cnt(0) <= zero_to_one(count_ones(valid_i));
 
+
   process (clock) is
   begin
     if (rising_edge(clock)) then
@@ -290,25 +292,11 @@ begin
 
       --------------------------------------------------------------------------------
       -- s1
-      --
-      -- + count the # of layers hit
-      -- + take the Σx, Σy
-      -- + ff stage for registering the inputs
       --------------------------------------------------------------------------------
 
       -- Σx, Σy
-      y_sum(1) <= sum6(to_integer(ly(0)), to_integer(ly(1)), to_integer(ly(2)),
-                       to_integer(ly(3)), to_integer(ly(4)), to_integer(ly(5)), valid_i);
       x_sum(1) <= sum6(0, 1, 2, 3, 4, 5, valid_i);
-
-      -- n * y_i
-      -- n * x_i
-      n_xy_loop : for I in 0 to N_LAYERS-1 loop
-        n_y(I) <= cnt(0) * to_integer(ly(I));
-        n_x(I) <= cnt(0) * I;
-      end loop;
-
-      -- delays
+      y_sum(1) <= sum6(to_integer(ly(0)), to_integer(ly(1)), to_integer(ly(2)), to_integer(ly(3)), to_integer(ly(4)), to_integer(ly(5)), valid_i);
 
       cnt(1) <= cnt(0);
       cnt(2) <= cnt(1);
@@ -317,84 +305,97 @@ begin
       cnt(5) <= cnt(4);
       cnt(6) <= cnt(5);
       cnt(7) <= cnt(6);
-      -- cnt_dly : for idly in 2 to 7 loop
-      --   cnt(idly) <= cnt(idly-1);
-      -- end loop;
 
-      x_sum_dly : for I in x_sum'low+1 to x_sum'high loop
+      x_sum_dly : for I in 2 to 6 loop
         x_sum(I) <= x_sum(I-1);
       end loop;
 
-      y_sum_dly : for I in y_sum'low+1 to y_sum'high loop
+      y_sum_dly : for I in 2 to 7 loop
         y_sum(I) <= y_sum(I-1);
       end loop;
 
       --------------------------------------------------------------------------------
       -- s2
       --------------------------------------------------------------------------------
-      -- (n * x_i - Σx)
-      -- (n * y_i - Σy)
+
       diff_loop : for I in 0 to N_LAYERS-1 loop
-        x_diff(I) <= n_x(I) - x_sum(1);
-        y_diff(I) <= n_y(I) - y_sum(1);
+        n_x(I) <= cnt(0) * I;
+        product_2_reg(I) <= cnt(0) * y_sum(1); 
+        product_2(I) <= n_x(I) * y_sum(1);
+        product_1_reg(I) <= n_x(I) * to_integer(ly(I)); 
+        product_1(I) <= product_1_reg(I) * cnt(0);
+        product_4(I) <= x_sum(1) * y_sum(1);
+        product_3_reg(I) <= x_sum(1) * to_integer(ly(I)); 
+        product_3(I) <= cnt(0) * product_3_reg(I); 
+        product_temp1(I) <= product_4(I) + product_1(I);
+        product_temp2(I) <= product_3(I) + product_2(I);
+        product(I) <= product_temp1(I) - product_temp2(I);
+      end loop;
+
+      s3_loop : for I in 0 to 5 loop
+        square_1(I) <= n_x(I) * n_x(I);
+        square_2(I) <= n_x(I) * x_sum(1);
+        square_3(I) <= n_x(I) * x_sum(1);
+        square_4(I) <= x_sum(1) * x_sum(1);
+        square_temp1(I) <= square_1(I) + square_4(I);
+        square_temp2(I) <= square_2(I) + square_3(I);
+        square(I) <= square_temp1(I) - square_temp2(I); 
       end loop;
 
       --------------------------------------------------------------------------------
       -- s3
       --------------------------------------------------------------------------------
-      -- (n*xi - Σx)(n*yi - Σy)
-      -- (n*xi - Σx)^2
-      s3_loop : for I in 0 to N_LAYERS-1 loop
-        product(I) <= x_diff(I) * y_diff(I);
-        square(I)  <= x_diff(I) * x_diff(I);
-      end loop;
 
       --------------------------------------------------------------------------------
       -- s4
       --------------------------------------------------------------------------------
 
-      -- Σ (n*xi - Σx)*(n*yi - Σy)
-      product_sum_1 <= product(0) + product(1) + product(2);
-      product_sum_2 <= product(3) + product(4) + product(5);
-      product_sum <= product_sum_1 + product_sum_2;
+      product_sum_1 <= product(0) + product(1);             
+      product_sum_2 <= product(2) + product(3);                 
+      product_sum_3 <= product(4) + product(5);   
 
-      -- Σ (n*xi - Σx)^2
+      product_sum <= product_sum_1 + product_sum_2 + product_sum_3; 
 
-      reciprocal_input <= sum6(square(0), square(1), square(2), square(3), square(4), square(5), valid(3)); --This could be a problem since for now its always 630
-      square_sum_reciprocal <= reciprocal (reciprocal_input,-square_sum_reciprocal'low);
+      square_sum_1 <= square(0) + square(1);
+      square_sum_2 <= square(2) + square(3);
+      square_sum_3 <= square(4) + square(5);
+
+      reciprocal_input <= square_sum_1 + square_sum_2 + square_sum_3; 
+      --square_sum_reciprocal_narrow <= reciprocal (reciprocal_input, 12);
+      square_sum_reciprocal <= reciprocal (reciprocal_input, 13);
 
       --------------------------------------------------------------------------------
       -- s5: slope= Σ (n*xi - Σx)*(n*yi - Σy) / Σ (n*xi - Σx)^2
       --------------------------------------------------------------------------------
 
       slope_s5 <= slope;
-      x_sum_fixed_temp <= to_sfixed(x_sum(6), 5);                  
-      x_sum_fixed <= x_sum_fixed_temp;                            
-      slope_mult <= slope_s5 * x_sum_fixed;                       
-      slope_times_x <= resize(slope_mult, slope_times_x);   
-      y_sum_s5 <= y_sum;  
-      y_sum_s6 <= y_sum_s5; 
-      y_sum_s7 <= y_sum_s6;
+      x_sum_fixed<= to_sfixed(x_sum(6), 4);
+      slope_mult <= slope_s5 * x_sum_fixed; 
+      slope_times_x <= resize(slope_mult, slope_times_x); 
+
+      y_sum_dly_2 : for I in 7 to 12 loop
+        y_sum(I) <= y_sum(I-1);
+      end loop;
 
       --------------------------------------------------------------------------------
       -- s6: b = (Σy - slope*Σx) / n
       -- s6: Σy-mb = Σy - slope*Σx
       --------------------------------------------------------------------------------
 
-      y_minus_mb <= to_sfixed(y_sum_s7(7), 7) - slope_times_x;
-      y_minus_mb_s6 <= resize(y_minus_mb, y_minus_mb_s6); 
-      intercept_mult_reg <= reciprocal6(cnt(7), MULT_RECIP_FRACB) * y_minus_mb_s6;      
-      intercept_mult <= intercept_mult_reg;
-      intercept <=resize (intercept_mult, intercept);
+      y_minus_mb <= to_sfixed(y_sum(12), 7) - slope_times_x;
+      y_minus_mb_s6 <= y_minus_mb(y_minus_mb_s6'high downto y_minus_mb_s6'low) ;  
+      intercept_mult <= reciprocal6(cnt(7), 10) * y_minus_mb_s6;          
+      intercept <= intercept_mult(5 downto -6);
       slope_s6 <= slope_s5;
 
       --------------------------------------------------------------------------------
       -- s7, s8, s9, s10, s11, s12: Coordinate transform, delay slope and output
       --------------------------------------------------------------------------------
 
-      slope_s7 <= slope_s6;
-      slope_s7_x5 <= resize(slope_s6*5.0, slope_s7_x5);
+      slope_s6_mult <= slope_s6*5.0;
+      slope_s7_x5 <= slope_s6_mult(slope_s7_x5'high downto slope_s7_x5'low);
 
+      slope_s7 <= slope_s6;
       slope_s8 <= slope_s7;      
       slope_s8_2p5 <= resize(slope_s7_x5/2.0, slope_s8_2p5);                               
       
@@ -405,34 +406,36 @@ begin
       slope_s10_2p5 <= slope_s9_2p5;
 
       slope_s11 <= slope_s10;
-      slope_s11_2p5 <= slope_s10_2p5;
 
-      slope_s12 <= slope_s11;
-      slope_s12_2p5 <= slope_s11_2p5;
-
-      strip_o     <= resize(slope_s12_2p5 + intercept, strip_o);
+      strip_o     <= resize(slope_s10_2p5 + intercept, strip_o);
       intercept_o <= resize(intercept, intercept_o);        
-      slope_o     <= resize(slope_s12, slope_o);                                                   
+      slope_o     <= resize(slope_s11, slope_o);                                                         
 
     end if;
   end process;
 
-  --------------------------------------------------------------------------------
-  -- Slope Pipelined Multiply
-  --------------------------------------------------------------------------------
 
-  slope_multiplier : entity work.pipelined_smult
+
+  slope_multiplier : entity work.mult_sgn_12x12
     generic map (
-      WIDTH_A => product_sum_cntb,
-      WIDTH_B => square_sum_reciprocal'length
+      WIDTH_A => 14,
+      WIDTH_B => 15
+      --WIDTH_B => 14
       )
     port map (
       clock   => clock,
-      input_a => to_signed(product_sum, product_sum_cntb),
+      input_a => to_signed(product_sum, 14),
+      --input_b => signed(to_slv(square_sum_reciprocal_narrow)),
       input_b => signed(to_slv(square_sum_reciprocal)),
       output  => slope_signed
       );
   slope_sfixed <= to_sfixed(std_logic_vector(slope_signed), slope_sfixed'high, slope_sfixed'low);
   slope <= resize(slope_sfixed, slope);
-
 end behavioral;
+
+
+
+
+
+
+
