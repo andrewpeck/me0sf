@@ -86,9 +86,7 @@ architecture behavioral of fit is
   signal x_sum : x_sum_array_t := (others => 0);
 
   signal x_sum_fixed : sfixed(4 downto 0) := (others => '0');
-  --signal x_sum_fixed_temp : sfixed(5 downto 0) := (others => '0');
 
-  --type y_sum_array_t is array (integer range 1 to 7) of integer range -63 to 63;
   type y_sum_array_t is array (integer range 1 to 15) of integer range -40 to 40;
   signal y_sum : y_sum_array_t := (others => 0);  -- sum (y_i)
 
@@ -116,9 +114,6 @@ architecture behavioral of fit is
 
   type square_array_t is array (integer range 0 to 5) of integer range -2047 to 2047;
 
-  --type product_small_array_t is array (integer range 0 to 5) of integer range -2047 to 2047;
-  --type product_smaller_array_t is array (integer range 0 to 5) of integer range -1023 to 1023;
-  --type product_temp_array_t is array (integer range 0 to 5) of integer range -8191 to 8191;
   type product_1_array_t is array (integer range 0 to 5) of integer range -8191 to 8191;
   type product_2_array_t is array (integer range 0 to 5) of integer range -2047 to 2047;
   type product_3_array_t is array (integer range 0 to 5) of integer range -4095 to 4095;
@@ -130,16 +125,12 @@ architecture behavioral of fit is
   signal square_sum_2 : integer;
   signal square_sum_3 : integer;
 
-  --signal product, product_2, product_3, product_4, product_temp1, product_temp2  : product_array_t := (others => 0);  -- (x - mean(x)) * (y - mean(y))
-  --signal product_3, product_3_reg, product_temp2  : product_array_t := (others => 0);
-  --signal product_2, product_2_reg, product_4  : product_small_array_t := (others => 0); 
-  --signal product_3, product_3_reg, product_temp2, product_1, product_1_reg, product_temp1, product : product_temp_array_t := (others => 0);  
-  signal square_a, square_b, square_c, square, square_temp, square_1, square_1_reg, square_2_reg, square_3_reg, square_4_reg, square_2, square_3, square_4, square_temp1, square_temp2 : square_array_t  := (others => 0);
+  signal square, square_temp, square_1, square_1_reg, square_2_reg, square_3_reg, square_4_reg, square_2, square_3, square_4, square_temp1, square_temp2 : square_array_t  := (others => 0);
 
-  signal product_1, product_1_reg, product_1_a, product_1_b, product_1_c, product_1_d  : product_1_array_t := (others => 0);
+  signal product_1, product_1_reg : product_1_array_t := (others => 0);
   signal product_2, product_2_reg  : product_2_array_t := (others => 0);
-  signal product_3, product_3_reg, product_3_a, product_3_b, product_3_c, product_3_d  : product_3_array_t := (others => 0);
-  signal product_4, product_4_a, product_4_b, product_4_c, product_4_d : product_4_array_t := (others => 0);
+  signal product_3, product_3_reg : product_3_array_t := (others => 0);
+  signal product_4 : product_4_array_t := (others => 0);
   signal product, product_temp1, product_temp2 : product_array_t := (others => 0);
 
   
