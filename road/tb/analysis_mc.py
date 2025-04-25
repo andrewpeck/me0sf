@@ -1371,7 +1371,7 @@ def analysis(root_dat, hits, bx, bx_list, cross_part, verbose, pu, num_or):
         st_eff_pt.Write("st_eff_pt")
 
         c_pt_eta_low = ROOT.TCanvas('', '', 800, 650)
-        c6.SetLeftMargin(0.15)
+        c_pt_eta_low.SetLeftMargin(0.15)
         c_pt_eta_low.SetGrid()
         c_pt_eta_low.DrawFrame(0, 0, 50, 1.1, ";pT (GeV);Efficiency")
         st_eff_eta_low_pt = ROOT.TEfficiency(st_effi_eta_low_passed_pt, st_effi_eta_low_total_pt)
@@ -2194,7 +2194,7 @@ def analysis(root_dat, hits, bx, bx_list, cross_part, verbose, pu, num_or):
     latex.DrawLatex(0.42, 0.91,plot_text2)
     c11a.Print("num_seg_per_chamber_%s_bx%s_crosspart_%s_or%d_log.pdf"%(hits, bx, cross_part, num_or))
     num_seg_per_chamber.Write()
-    
+
     c11b = ROOT.TCanvas('', '', 800, 650)
     c11b.SetLeftMargin(0.15)
     c11b.SetGrid()
