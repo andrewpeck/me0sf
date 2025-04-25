@@ -1210,12 +1210,12 @@ def analysis(root_dat, hits, bx, bx_list, cross_part, verbose, pu, num_or):
     latex.SetTextAlign(31)
     latex.SetTextSize(0.035)
     Lint = (5 * 10 ** 34) * (float(pu)/140.0)
-    if (pu == 0):
+    if (pu == "0"):
         #plot_text1 = "Muon Gun (0 PU)"
         plot_text1 = "PU 0 (14 TeV)"
     else:
         #plot_text1 = "L = %.1e"%(Lint) + " Hz/cm^{2} (" + pu + " PU)"
-        plot_text1 = "PU %d (14 TeV)"%pu
+        plot_text1 = "PU %s (14 TeV)"%pu
     #plot_text2 = "CMS Simulation #sqrt{s}=14 TeV"
     plot_text2 = "CMS Simulation Preliminary"
 
