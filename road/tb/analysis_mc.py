@@ -29,6 +29,7 @@ def analysis(root_dat, hits, bx, bx_list, cross_part, verbose, pu, num_or):
     num_seg_per_chamber_offline = ROOT.TH1D("num_seg_per_chamber_offline","Fraction of Events vs Number of Segments per Chamber",13,-0.5,12.5)
 
     # Nr. of background segments per chamber per event
+    num_bkg_seg_per_chamber = ROOT.TH1D("num_bkg_seg_per_chamber","Fraction of Events vs Number of Segments per Chamber",13,-0.5,12.5)
     num_bkg_seg_per_chamber_per_event_eta = ROOT.TH1F("num_bkg_seg_per_chamber_per_event_eta", "num_bkg_seg_per_chamber_per_event_eta",8,0.5,8.5)
     num_bkg_seg_per_chamber_per_event_bending = ROOT.TH1F("num_bkg_seg_per_chamber_per_event_bending", "num_bkg_seg_per_chamber_per_event_bending",80,-4,4)
     num_bkg_seg_per_chamber_per_event_bending1 = ROOT.TH1F("num_bkg_seg_per_chamber_per_event_bending1", "num_bkg_seg_per_chamber_per_event_bending1",80,-4,4) 
@@ -939,6 +940,7 @@ def analysis(root_dat, hits, bx, bx_list, cross_part, verbose, pu, num_or):
 
         # Checking Purity w.r.t sim tracks and offline segments
         for chamber in online_segment_chamber: 
+            n_bkg_seg = 0
             for seg in online_segment_chamber[chamber]:
                 online_eta_partition = seg.partition
                 online_substrip = seg.substrip+seg.strip
@@ -1123,7 +1125,9 @@ def analysis(root_dat, hits, bx, bx_list, cross_part, verbose, pu, num_or):
                     elif (online_eta_partition+1) == 8:
                         num_bkg_seg_per_chamber_per_event_nlayers_eta8.Fill(online_lc)
 
+                    n_bkg_seg += 1
                     n_bkg_seg_per_chamber_per_event += 1
+            num_bkg_seg_per_chamber.Fill(n_bkg_seg)
 
         if verbose:
             file_out_summary.write("  Online Segments: \n")
@@ -1237,7 +1241,7 @@ def analysis(root_dat, hits, bx, bx_list, cross_part, verbose, pu, num_or):
     latex.DrawLatex(0.9, 0.91,plot_text1)
     latex.DrawLatex(0.42, 0.91,plot_text2)
     c1.Print("offline_eff_bending_%s_bx%s_crosspart_%s_or%d.pdf"%(hits, bx, cross_part, num_or))
-    offline_eff_bending.Write()
+    offline_eff_bending.Write("offline_eff_bending")
 
     c1eta = ROOT.TCanvas('', '', 800, 650)
     c1eta.SetLeftMargin(0.15)
@@ -1257,7 +1261,7 @@ def analysis(root_dat, hits, bx, bx_list, cross_part, verbose, pu, num_or):
     latex.DrawLatex(0.9, 0.91,plot_text1)
     latex.DrawLatex(0.42, 0.91,plot_text2)
     c1eta.Print("offline_eff_eta_%s_bx%s_crosspart_%s_or%d.pdf"%(hits, bx, cross_part, num_or))
-    offline_eff_eta.Write()
+    offline_eff_eta.Write("offline_eff_eta")
 
 
     c1id = ROOT.TCanvas('', '', 800, 650)
@@ -1278,7 +1282,7 @@ def analysis(root_dat, hits, bx, bx_list, cross_part, verbose, pu, num_or):
     latex.DrawLatex(0.9, 0.91,plot_text1)
     latex.DrawLatex(0.42, 0.91,plot_text2)
     c1id.Print("offline_eff_id_%s_bx%s_crosspart_%s_or%d.pdf"%(hits, bx, cross_part, num_or))
-    offline_eff_id.Write()
+    offline_eff_id.Write("offline_eff_id")
 
     c2 = ROOT.TCanvas('', '', 800, 650)
     c2.SetLeftMargin(0.15)
@@ -1300,7 +1304,7 @@ def analysis(root_dat, hits, bx, bx_list, cross_part, verbose, pu, num_or):
     latex.DrawLatex(0.9, 0.91,plot_text1)
     latex.DrawLatex(0.42, 0.91,plot_text2)
     c2.Print("offline_effi_mres_%s_bx%s_crosspart_%s_or%d.pdf"%(hits, bx, cross_part, num_or))
-    offline_effi_mres.Write()
+    offline_effi_mres.Write("offline_effi_mres")
 
     c3 = ROOT.TCanvas('', '', 800, 650)
     c3.SetLeftMargin(0.15)
@@ -1323,7 +1327,7 @@ def analysis(root_dat, hits, bx, bx_list, cross_part, verbose, pu, num_or):
     latex.DrawLatex(0.9, 0.91,plot_text1)
     latex.DrawLatex(0.42, 0.91,plot_text2)
     c3.Print("offline_effi_sres_%s_bx%s_crosspart_%s_or%d.pdf"%(hits, bx, cross_part, num_or))
-    offline_effi_sres.Write()
+    offline_effi_sres.Write("offline_effi_sres")
 
     if n_st_effi_total != 0:
         c4 = ROOT.TCanvas('', '', 800, 650)
@@ -1344,7 +1348,7 @@ def analysis(root_dat, hits, bx, bx_list, cross_part, verbose, pu, num_or):
         latex.DrawLatex(0.9, 0.91,plot_text1)
         latex.DrawLatex(0.42, 0.91,plot_text2)
         c4.Print("st_eff_bending_%s_bx%s_crosspart_%s_or%d.pdf"%(hits, bx, cross_part, num_or))
-        st_eff_bending_bending.Write()
+        st_eff_bending_bending.Write("st_eff_bending")
 
         c5 = ROOT.TCanvas('', '', 800, 650)
         c5.SetLeftMargin(0.15)
@@ -1364,7 +1368,7 @@ def analysis(root_dat, hits, bx, bx_list, cross_part, verbose, pu, num_or):
         latex.DrawLatex(0.9, 0.91,plot_text1)
         latex.DrawLatex(0.42, 0.91,plot_text2)
         c5.Print("st_eff_pt_%s_bx%s_crosspart_%s_or%d.pdf"%(hits, bx, cross_part, num_or))
-        st_eff_pt.Write()
+        st_eff_pt.Write("st_eff_pt")
 
         c_pt_eta_low = ROOT.TCanvas('', '', 800, 650)
         c6.SetLeftMargin(0.15)
@@ -1384,7 +1388,7 @@ def analysis(root_dat, hits, bx, bx_list, cross_part, verbose, pu, num_or):
         latex.DrawLatex(0.9, 0.91,plot_text1)
         latex.DrawLatex(0.42, 0.91,plot_text2)
         c_pt_eta_low.Print("st_eff_eta_low_pt_%s_bx%s_crosspart_%s_or%d.pdf"%(hits, bx, cross_part, num_or))
-        st_eff_eta_low_pt.Write()
+        st_eff_eta_low_pt.Write("st_eff_eta_low_pt")
 
         c_pt_eta_high = ROOT.TCanvas('', '', 800, 650)
         c_pt_eta_high.SetLeftMargin(0.15)
@@ -1404,7 +1408,7 @@ def analysis(root_dat, hits, bx, bx_list, cross_part, verbose, pu, num_or):
         latex.DrawLatex(0.9, 0.91,plot_text1)
         latex.DrawLatex(0.42, 0.91,plot_text2)
         c_pt_eta_high.Print("st_eff_eta_high_pt_%s_bx%s_crosspart_%s_or%d.pdf"%(hits, bx, cross_part, num_or))
-        st_eff_eta_high_pt.Write()
+        st_eff_eta_high_pt.Write("st_eff_eta_high_pt")
 
         c_pt_1 = ROOT.TCanvas('', '', 800, 650)
         c_pt_1.SetLeftMargin(0.15)
@@ -1424,7 +1428,7 @@ def analysis(root_dat, hits, bx, bx_list, cross_part, verbose, pu, num_or):
         latex.DrawLatex(0.9, 0.91,plot_text1)
         latex.DrawLatex(0.42, 0.91,plot_text2)
         c_pt_1.Print("st_eff_pt_id1_%s_bx%s_crosspart_%s_or%d.pdf"%(hits, bx, cross_part, num_or))
-        st_eff_pt_1.Write()
+        st_eff_pt_1.Write("st_eff_pt_id1")
 
         c_pt_2 = ROOT.TCanvas('', '', 800, 650)
         c_pt_2.SetLeftMargin(0.15)
@@ -1444,7 +1448,7 @@ def analysis(root_dat, hits, bx, bx_list, cross_part, verbose, pu, num_or):
         latex.DrawLatex(0.9, 0.91,plot_text1)
         latex.DrawLatex(0.42, 0.91,plot_text2)
         c_pt_2.Print("st_eff_pt_id2_%s_bx%s_crosspart_%s_or%d.pdf"%(hits, bx, cross_part, num_or))
-        st_eff_pt_2.Write()
+        st_eff_pt_2.Write("st_eff_pt_id2")
 
         c_pt_3 = ROOT.TCanvas('', '', 800, 650)
         c_pt_3.SetLeftMargin(0.15)
@@ -1464,7 +1468,7 @@ def analysis(root_dat, hits, bx, bx_list, cross_part, verbose, pu, num_or):
         latex.DrawLatex(0.9, 0.91,plot_text1)
         latex.DrawLatex(0.42, 0.91,plot_text2)
         c_pt_3.Print("st_eff_pt_id3_%s_bx%s_crosspart_%s_or%d.pdf"%(hits, bx, cross_part, num_or))
-        st_eff_pt_3.Write()
+        st_eff_pt_3.Write("st_eff_pt_id3")
 
         c_pt_4 = ROOT.TCanvas('', '', 800, 650)
         c_pt_4.SetLeftMargin(0.15)
@@ -1484,7 +1488,7 @@ def analysis(root_dat, hits, bx, bx_list, cross_part, verbose, pu, num_or):
         latex.DrawLatex(0.9, 0.91,plot_text1)
         latex.DrawLatex(0.42, 0.91,plot_text2)
         c_pt_4.Print("st_eff_pt_id4_%s_bx%s_crosspart_%s_or%d.pdf"%(hits, bx, cross_part, num_or))
-        st_eff_pt_4.Write()
+        st_eff_pt_4.Write("st_eff_pt_id4")
 
         c_pt_5 = ROOT.TCanvas('', '', 800, 650)
         c_pt_5.SetLeftMargin(0.15)
@@ -1504,7 +1508,7 @@ def analysis(root_dat, hits, bx, bx_list, cross_part, verbose, pu, num_or):
         latex.DrawLatex(0.9, 0.91,plot_text1)
         latex.DrawLatex(0.42, 0.91,plot_text2)
         c_pt_5.Print("st_eff_pt_id5_%s_bx%s_crosspart_%s_or%d.pdf"%(hits, bx, cross_part, num_or))
-        st_eff_pt_5.Write()
+        st_eff_pt_5.Write("st_eff_pt_id5")
 
         c_pt_6 = ROOT.TCanvas('', '', 800, 650)
         c_pt_6.SetLeftMargin(0.15)
@@ -1524,7 +1528,7 @@ def analysis(root_dat, hits, bx, bx_list, cross_part, verbose, pu, num_or):
         latex.DrawLatex(0.9, 0.91,plot_text1)
         latex.DrawLatex(0.42, 0.91,plot_text2)
         c_pt_6.Print("st_eff_pt_id6_%s_bx%s_crosspart_%s_or%d.pdf"%(hits, bx, cross_part, num_or))
-        st_eff_pt_6.Write()
+        st_eff_pt_6.Write("st_eff_pt_id6")
 
         c_pt_7 = ROOT.TCanvas('', '', 800, 650)
         c_pt_7.SetLeftMargin(0.15)
@@ -1544,7 +1548,7 @@ def analysis(root_dat, hits, bx, bx_list, cross_part, verbose, pu, num_or):
         latex.DrawLatex(0.9, 0.91,plot_text1)
         latex.DrawLatex(0.42, 0.91,plot_text2)
         c_pt_7.Print("st_eff_pt_id7_%s_bx%s_crosspart_%s_or%d.pdf"%(hits, bx, cross_part, num_or))
-        st_eff_pt_7.Write()
+        st_eff_pt_7.Write("st_eff_pt_id7")
 
         c_pt_8 = ROOT.TCanvas('', '', 800, 650)
         c_pt_8.SetLeftMargin(0.15)
@@ -1564,7 +1568,7 @@ def analysis(root_dat, hits, bx, bx_list, cross_part, verbose, pu, num_or):
         latex.DrawLatex(0.9, 0.91,plot_text1)
         latex.DrawLatex(0.42, 0.91,plot_text2)
         c_pt_8.Print("st_eff_pt_id8_%s_bx%s_crosspart_%s_or%d.pdf"%(hits, bx, cross_part, num_or))
-        st_eff_pt_8.Write()
+        st_eff_pt_8.Write("st_eff_pt_id8")
 
         c_pt_9 = ROOT.TCanvas('', '', 800, 650)
         c_pt_9.SetLeftMargin(0.15)
@@ -1584,7 +1588,7 @@ def analysis(root_dat, hits, bx, bx_list, cross_part, verbose, pu, num_or):
         latex.DrawLatex(0.9, 0.91,plot_text1)
         latex.DrawLatex(0.42, 0.91,plot_text2)
         c_pt_9.Print("st_eff_pt_id9_%s_bx%s_crosspart_%s_or%d.pdf"%(hits, bx, cross_part, num_or))
-        st_eff_pt_9.Write()
+        st_eff_pt_9.Write("st_eff_pt_id9")
 
         c_pt_10 = ROOT.TCanvas('', '', 800, 650)
         c_pt_10.SetLeftMargin(0.15)
@@ -1604,7 +1608,7 @@ def analysis(root_dat, hits, bx, bx_list, cross_part, verbose, pu, num_or):
         latex.DrawLatex(0.9, 0.91,plot_text1)
         latex.DrawLatex(0.42, 0.91,plot_text2)
         c_pt_10.Print("st_eff_pt_id10_%s_bx%s_crosspart_%s_or%d.pdf"%(hits, bx, cross_part, num_or))
-        st_eff_pt_10.Write()
+        st_eff_pt_10.Write("st_eff_pt_id10")
 
         c_pt_11 = ROOT.TCanvas('', '', 800, 650)
         c_pt_11.SetLeftMargin(0.15)
@@ -1624,7 +1628,7 @@ def analysis(root_dat, hits, bx, bx_list, cross_part, verbose, pu, num_or):
         latex.DrawLatex(0.9, 0.91,plot_text1)
         latex.DrawLatex(0.42, 0.91,plot_text2)
         c_pt_11.Print("st_eff_pt_id11_%s_bx%s_crosspart_%s_or%d.pdf"%(hits, bx, cross_part, num_or))
-        st_eff_pt_11.Write()
+        st_eff_pt_11.Write("st_eff_pt_id11")
 
         c_pt_12 = ROOT.TCanvas('', '', 800, 650)
         c_pt_12.SetLeftMargin(0.15)
@@ -1644,7 +1648,7 @@ def analysis(root_dat, hits, bx, bx_list, cross_part, verbose, pu, num_or):
         latex.DrawLatex(0.9, 0.91,plot_text1)
         latex.DrawLatex(0.42, 0.91,plot_text2)
         c_pt_12.Print("st_eff_pt_id12_%s_bx%s_crosspart_%s_or%d.pdf"%(hits, bx, cross_part, num_or))
-        st_eff_pt_12.Write()
+        st_eff_pt_12.Write("st_eff_pt_id12")
 
         c_pt_13 = ROOT.TCanvas('', '', 800, 650)
         c_pt_13.SetLeftMargin(0.15)
@@ -1664,7 +1668,7 @@ def analysis(root_dat, hits, bx, bx_list, cross_part, verbose, pu, num_or):
         latex.DrawLatex(0.9, 0.91,plot_text1)
         latex.DrawLatex(0.42, 0.91,plot_text2)
         c_pt_13.Print("st_eff_pt_id13_%s_bx%s_crosspart_%s_or%d.pdf"%(hits, bx, cross_part, num_or))
-        st_eff_pt_13.Write()
+        st_eff_pt_13.Write("st_eff_pt_id13")
 
         c_pt_14 = ROOT.TCanvas('', '', 800, 650)
         c_pt_14.SetLeftMargin(0.15)
@@ -1684,7 +1688,7 @@ def analysis(root_dat, hits, bx, bx_list, cross_part, verbose, pu, num_or):
         latex.DrawLatex(0.9, 0.91,plot_text1)
         latex.DrawLatex(0.42, 0.91,plot_text2)
         c_pt_14.Print("st_eff_pt_id14_%s_bx%s_crosspart_%s_or%d.pdf"%(hits, bx, cross_part, num_or))
-        st_eff_pt_14.Write()
+        st_eff_pt_14.Write("st_eff_pt_id14")
 
         c_pt_15 = ROOT.TCanvas('', '', 800, 650)
         c_pt_15.SetLeftMargin(0.15)
@@ -1704,7 +1708,7 @@ def analysis(root_dat, hits, bx, bx_list, cross_part, verbose, pu, num_or):
         latex.DrawLatex(0.9, 0.91,plot_text1)
         latex.DrawLatex(0.42, 0.91,plot_text2)
         c_pt_15.Print("st_eff_pt_id15_%s_bx%s_crosspart_%s_or%d.pdf"%(hits, bx, cross_part, num_or))
-        st_eff_pt_15.Write()
+        st_eff_pt_15.Write("st_eff_pt_id15")
 
         c_pt_16 = ROOT.TCanvas('', '', 800, 650)
         c_pt_16.SetLeftMargin(0.15)
@@ -1724,7 +1728,7 @@ def analysis(root_dat, hits, bx, bx_list, cross_part, verbose, pu, num_or):
         latex.DrawLatex(0.9, 0.91,plot_text1)
         latex.DrawLatex(0.42, 0.91,plot_text2)
         c_pt_16.Print("st_eff_pt_id16_%s_bx%s_crosspart_%s_or%d.pdf"%(hits, bx, cross_part, num_or))
-        st_eff_pt_16.Write()
+        st_eff_pt_16.Write("st_eff_pt_id16")
 
         c_pt_17 = ROOT.TCanvas('', '', 800, 650)
         c_pt_17.SetLeftMargin(0.15)
@@ -1744,7 +1748,7 @@ def analysis(root_dat, hits, bx, bx_list, cross_part, verbose, pu, num_or):
         latex.DrawLatex(0.9, 0.91,plot_text1)
         latex.DrawLatex(0.42, 0.91,plot_text2)
         c_pt_17.Print("st_eff_pt_id17_%s_bx%s_crosspart_%s_or%d.pdf"%(hits, bx, cross_part, num_or))
-        st_eff_pt_17.Write()
+        st_eff_pt_17.Write("st_eff_pt_id17")
 
         c_pt_all = ROOT.TCanvas('', '', 800, 650)
         c_pt_all.SetLeftMargin(0.15)
@@ -1961,7 +1965,7 @@ def analysis(root_dat, hits, bx, bx_list, cross_part, verbose, pu, num_or):
         latex.DrawLatex(0.9, 0.91,plot_text1)
         latex.DrawLatex(0.42, 0.91,plot_text2)
         c6.Print("st_eff_eta_%s_bx%s_crosspart_%s_or%d.pdf"%(hits, bx, cross_part, num_or))
-        st_eff_eta.Write()
+        st_eff_eta.Write("st_eff_eta")
 
         c2d_eta_pt = ROOT.TCanvas('', '', 800, 650)
         c2d_eta_pt.SetLeftMargin(0.15)
@@ -1972,7 +1976,7 @@ def analysis(root_dat, hits, bx, bx_list, cross_part, verbose, pu, num_or):
         latex.DrawLatex(0.9, 0.91,plot_text1)
         latex.DrawLatex(0.42, 0.91,plot_text2)
         c2d_eta_pt.Print("st_eff_pt_eta_%s_bx%s_crosspart_%s_or%d.pdf"%(hits, bx, cross_part, num_or))
-        st_eff_pt_eta.Write()
+        st_eff_pt_eta.Write("st_eff_pt_eta")
 
         c6id = ROOT.TCanvas('', '', 800, 650)
         c6id.SetLeftMargin(0.15)
@@ -1992,7 +1996,7 @@ def analysis(root_dat, hits, bx, bx_list, cross_part, verbose, pu, num_or):
         latex.DrawLatex(0.9, 0.91,plot_text1)
         latex.DrawLatex(0.42, 0.91,plot_text2)
         c6id.Print("st_eff_id_%s_bx%s_crosspart_%s_or%d.pdf"%(hits, bx, cross_part, num_or))
-        st_eff_id.Write()
+        st_eff_id.Write("st_eff_id")
 
         c7 = ROOT.TCanvas('', '', 800, 650)
         c7.SetLeftMargin(0.15)
@@ -2014,7 +2018,7 @@ def analysis(root_dat, hits, bx, bx_list, cross_part, verbose, pu, num_or):
         latex.DrawLatex(0.9, 0.91,plot_text1)
         latex.DrawLatex(0.42, 0.91,plot_text2)
         c7.Print("st_effi_mres_%s_bx%s_crosspart_%s_or%d.pdf"%(hits, bx, cross_part, num_or))
-        st_effi_mres.Write()
+        st_effi_mres.Write("st_effi_mres")
 
         c8 = ROOT.TCanvas('', '', 800, 650)
         c8.SetLeftMargin(0.15)
@@ -2036,7 +2040,7 @@ def analysis(root_dat, hits, bx, bx_list, cross_part, verbose, pu, num_or):
         latex.DrawLatex(0.9, 0.91,plot_text1)
         latex.DrawLatex(0.42, 0.91,plot_text2)
         c8.Print("st_effi_sres_%s_bx%s_crosspart_%s_or%d.pdf"%(hits, bx, cross_part, num_or))
-        st_effi_sres.Write()
+        st_effi_sres.Write("st_effi_sres")
 
     c9 = ROOT.TCanvas('', '', 800, 650)
     c9.SetLeftMargin(0.15)
@@ -2056,7 +2060,7 @@ def analysis(root_dat, hits, bx, bx_list, cross_part, verbose, pu, num_or):
     latex.DrawLatex(0.9, 0.91,plot_text1)
     latex.DrawLatex(0.42, 0.91,plot_text2)
     c9.Print("st_purity_eta_%s_bx%s_crosspart_%s_or%d.pdf"%(hits, bx, cross_part, num_or))
-    st_purity_eta.Write()
+    st_purity_eta.Write("st_purity_eta")
 
     c10 = ROOT.TCanvas('', '', 800, 650)
     c10.SetLeftMargin(0.15)
@@ -2076,7 +2080,7 @@ def analysis(root_dat, hits, bx, bx_list, cross_part, verbose, pu, num_or):
     latex.DrawLatex(0.9, 0.91,plot_text1)
     latex.DrawLatex(0.42, 0.91,plot_text2)
     c10.Print("st_purity_bending_%s_bx%s_crosspart_%s_or%d.pdf"%(hits, bx, cross_part, num_or))
-    st_purity_bending.Write()
+    st_purity_bending.Write("st_purity_bending")
 
     c10id = ROOT.TCanvas('', '', 800, 650)
     c10id.SetLeftMargin(0.15)
@@ -2096,7 +2100,7 @@ def analysis(root_dat, hits, bx, bx_list, cross_part, verbose, pu, num_or):
     latex.DrawLatex(0.9, 0.91,plot_text1)
     latex.DrawLatex(0.42, 0.91,plot_text2)
     c10id.Print("st_purity_id_%s_bx%s_crosspart_%s_or%d.pdf"%(hits, bx, cross_part, num_or))
-    st_purity_id.Write()
+    st_purity_id.Write("st_purity_id")
 
     c9_off = ROOT.TCanvas('', '', 800, 650)
     c9_off.SetLeftMargin(0.15)
@@ -2116,7 +2120,7 @@ def analysis(root_dat, hits, bx, bx_list, cross_part, verbose, pu, num_or):
     latex.DrawLatex(0.9, 0.91,plot_text1)
     latex.DrawLatex(0.42, 0.91,plot_text2)
     c9_off.Print("offline_purity_eta_%s_bx%s_crosspart_%s_or%d.pdf"%(hits, bx, cross_part, num_or))
-    offline_purity_eta.Write()
+    offline_purity_eta.Write("offline_purity_eta")
 
     c10_off = ROOT.TCanvas('', '', 800, 650)
     c10_off.SetLeftMargin(0.15)
@@ -2136,7 +2140,7 @@ def analysis(root_dat, hits, bx, bx_list, cross_part, verbose, pu, num_or):
     latex.DrawLatex(0.9, 0.91,plot_text1)
     latex.DrawLatex(0.42, 0.91,plot_text2)
     c10_off.Print("offline_purity_bending_%s_bx%s_crosspart_%s_or%d.pdf"%(hits, bx, cross_part, num_or))
-    offline_purity_bending.Write()
+    offline_purity_bending.Write("offline_purity_bending")
 
     c10_offid = ROOT.TCanvas('', '', 800, 650)
     c10_offid.SetLeftMargin(0.15)
@@ -2156,7 +2160,7 @@ def analysis(root_dat, hits, bx, bx_list, cross_part, verbose, pu, num_or):
     latex.DrawLatex(0.9, 0.91,plot_text1)
     latex.DrawLatex(0.42, 0.91,plot_text2)
     c10_offid.Print("offline_purity_id_%s_bx%s_crosspart_%s_or%d.pdf"%(hits, bx, cross_part, num_or))
-    offline_purity_id.Write()
+    offline_purity_id.Write("offline_purity_id")
 
     c11 = ROOT.TCanvas('', '', 800, 650)
     c11.SetLeftMargin(0.15)
@@ -2190,6 +2194,39 @@ def analysis(root_dat, hits, bx, bx_list, cross_part, verbose, pu, num_or):
     latex.DrawLatex(0.42, 0.91,plot_text2)
     c11a.Print("num_seg_per_chamber_%s_bx%s_crosspart_%s_or%d_log.pdf"%(hits, bx, cross_part, num_or))
     num_seg_per_chamber.Write()
+    
+    c11b = ROOT.TCanvas('', '', 800, 650)
+    c11b.SetLeftMargin(0.15)
+    c11b.SetGrid()
+    c11b.DrawFrame(-0.5, -0.05, 12.5, 1.05, ";Number of Segments per Chamber/Event;Fraction of Events")
+    num_bkg_seg_per_chamber.Scale(1.0/num_bkg_seg_per_chamber.Integral())
+    num_bkg_seg_per_chamber.Draw("same HE")
+    num_bkg_seg_per_chamber.SetMarkerStyle(8)
+    num_bkg_seg_per_chamber.SetMarkerSize(1)
+    num_bkg_seg_per_chamber.SetMarkerColor(1)
+    num_bkg_seg_per_chamber.SetLineWidth(1)
+    num_bkg_seg_per_chamber.SetLineColor(1)
+    latex.DrawLatex(0.9, 0.91,plot_text1)
+    latex.DrawLatex(0.42, 0.91,plot_text2)
+    c11b.Print("num_bkg_seg_per_chamber_%s_bx%s_crosspart_%s_or%d.pdf"%(hits, bx, cross_part, num_or))
+    num_bkg_seg_per_chamber.Write()
+
+    c11c = ROOT.TCanvas('', '', 800, 650)
+    c11c.SetLeftMargin(0.15)
+    c11c.SetLogy()
+    c11c.SetGrid()
+    c11c.DrawFrame(-0.5, 0.000001, 12.5, 1.5, ";Number of Segments per Chamber/Event;Fraction of Events")
+    num_bkg_seg_per_chamber.Scale(1.0/num_bkg_seg_per_chamber.Integral())
+    num_bkg_seg_per_chamber.Draw("same HE")
+    num_bkg_seg_per_chamber.SetMarkerStyle(8)
+    num_bkg_seg_per_chamber.SetMarkerSize(1)
+    num_bkg_seg_per_chamber.SetMarkerColor(1)
+    num_bkg_seg_per_chamber.SetLineWidth(1)
+    num_bkg_seg_per_chamber.SetLineColor(1)
+    latex.DrawLatex(0.9, 0.91,plot_text1)
+    latex.DrawLatex(0.42, 0.91,plot_text2)
+    c11c.Print("num_bkg_seg_per_chamber_%s_bx%s_crosspart_%s_or%d_log.pdf"%(hits, bx, cross_part, num_or))
+    num_bkg_seg_per_chamber.Write()
 
     c12 = ROOT.TCanvas('', '', 800, 650)
     c12.SetLeftMargin(0.15)
@@ -3497,7 +3534,7 @@ def analysis(root_dat, hits, bx, bx_list, cross_part, verbose, pu, num_or):
     latex.DrawLatex(0.9, 0.91,plot_text1)
     latex.DrawLatex(0.42, 0.91,plot_text2)
     c_max_cluster_size_p.Print("st_purity_max_cluster_size_%s_bx%s_crosspart_%s_or%d.pdf"%(hits, bx, cross_part, num_or))
-    st_purity_max_cluster_size.Write()
+    st_purity_max_cluster_size.Write("st_purity_max_cluster_size")
 
     c_max_noise_p = ROOT.TCanvas('', '', 800, 650)
     c_max_noise_p.SetLeftMargin(0.15)
@@ -3517,7 +3554,7 @@ def analysis(root_dat, hits, bx, bx_list, cross_part, verbose, pu, num_or):
     latex.DrawLatex(0.9, 0.91,plot_text1)
     latex.DrawLatex(0.42, 0.91,plot_text2)
     c_max_noise_p.Print("st_purity_max_noise_%s_bx%s_crosspart_%s_or%d.pdf"%(hits, bx, cross_part, num_or))
-    st_purity_max_noise.Write()
+    st_purity_max_noise.Write("st_purity_max_noise")
 
     c_nlayers_withcsg3_p = ROOT.TCanvas('', '', 800, 650)
     c_nlayers_withcsg3_p.SetLeftMargin(0.15)
@@ -3537,7 +3574,7 @@ def analysis(root_dat, hits, bx, bx_list, cross_part, verbose, pu, num_or):
     latex.DrawLatex(0.9, 0.91,plot_text1)
     latex.DrawLatex(0.42, 0.91,plot_text2)
     c_nlayers_withcsg3_p.Print("st_purity_nlayers_withcsg3_%s_bx%s_crosspart_%s_or%d.pdf"%(hits, bx, cross_part, num_or))
-    st_purity_nlayers_withcsg3.Write()
+    st_purity_nlayers_withcsg3.Write("st_purity_nlayers_withcsg3")
 
     c_nlayers_withcsg5_p = ROOT.TCanvas('', '', 800, 650)
     c_nlayers_withcsg5_p.SetLeftMargin(0.15)
@@ -3557,7 +3594,7 @@ def analysis(root_dat, hits, bx, bx_list, cross_part, verbose, pu, num_or):
     latex.DrawLatex(0.9, 0.91,plot_text1)
     latex.DrawLatex(0.42, 0.91,plot_text2)
     c_nlayers_withcsg5_p.Print("st_purity_nlayers_withcsg5_%s_bx%s_crosspart_%s_or%d.pdf"%(hits, bx, cross_part, num_or))
-    st_purity_nlayers_withcsg5.Write()
+    st_purity_nlayers_withcsg5.Write("st_purity_nlayers_withcsg5")
 
     c_nlayers_withcsg10_p = ROOT.TCanvas('', '', 800, 650)
     c_nlayers_withcsg10_p.SetLeftMargin(0.15)
@@ -3577,7 +3614,7 @@ def analysis(root_dat, hits, bx, bx_list, cross_part, verbose, pu, num_or):
     latex.DrawLatex(0.9, 0.91,plot_text1)
     latex.DrawLatex(0.42, 0.91,plot_text2)
     c_nlayers_withcsg10_p.Print("st_purity_nlayers_withcsg10_%s_bx%s_crosspart_%s_or%d.pdf"%(hits, bx, cross_part, num_or))
-    st_purity_nlayers_withcsg10.Write()
+    st_purity_nlayers_withcsg10.Write("st_purity_nlayers_withcsg10")
 
     c_nlayers_withcsg15_p = ROOT.TCanvas('', '', 800, 650)
     c_nlayers_withcsg15_p.SetLeftMargin(0.15)
@@ -3597,7 +3634,7 @@ def analysis(root_dat, hits, bx, bx_list, cross_part, verbose, pu, num_or):
     latex.DrawLatex(0.9, 0.91,plot_text1)
     latex.DrawLatex(0.42, 0.91,plot_text2)
     c_nlayers_withcsg15_p.Print("st_purity_nlayers_withcsg15_%s_bx%s_crosspart_%s_or%d.pdf"%(hits, bx, cross_part, num_or))
-    st_purity_nlayers_withcsg15.Write()
+    st_purity_nlayers_withcsg15.Write("st_purity_nlayers_withcsg15")
 
     c_nlayers_withnoiseg3_p = ROOT.TCanvas('', '', 800, 650)
     c_nlayers_withnoiseg3_p.SetLeftMargin(0.15)
@@ -3617,7 +3654,7 @@ def analysis(root_dat, hits, bx, bx_list, cross_part, verbose, pu, num_or):
     latex.DrawLatex(0.9, 0.91,plot_text1)
     latex.DrawLatex(0.42, 0.91,plot_text2)
     c_nlayers_withnoiseg3_p.Print("st_purity_nlayers_withnoiseg3_%s_bx%s_crosspart_%s_or%d.pdf"%(hits, bx, cross_part, num_or))
-    st_purity_nlayers_withnoiseg3.Write()
+    st_purity_nlayers_withnoiseg3.Write("st_purity_nlayers_withnoiseg3")
 
     c_nlayers_withnoiseg5_p = ROOT.TCanvas('', '', 800, 650)
     c_nlayers_withnoiseg5_p.SetLeftMargin(0.15)
@@ -3637,7 +3674,7 @@ def analysis(root_dat, hits, bx, bx_list, cross_part, verbose, pu, num_or):
     latex.DrawLatex(0.9, 0.91,plot_text1)
     latex.DrawLatex(0.42, 0.91,plot_text2)
     c_nlayers_withnoiseg5_p.Print("st_purity_nlayers_withnoiseg5_%s_bx%s_crosspart_%s_or%d.pdf"%(hits, bx, cross_part, num_or))
-    st_purity_nlayers_withnoiseg5.Write()
+    st_purity_nlayers_withnoiseg5.Write("st_purity_nlayers_withnoiseg5")
 
     c_nlayers_withnoiseg10_p = ROOT.TCanvas('', '', 800, 650)
     c_nlayers_withnoiseg10_p.SetLeftMargin(0.15)
@@ -3657,7 +3694,7 @@ def analysis(root_dat, hits, bx, bx_list, cross_part, verbose, pu, num_or):
     latex.DrawLatex(0.9, 0.91,plot_text1)
     latex.DrawLatex(0.42, 0.91,plot_text2)
     c_nlayers_withnoiseg10_p.Print("st_purity_nlayers_withnoiseg10_%s_bx%s_crosspart_%s_or%d.pdf"%(hits, bx, cross_part, num_or))
-    st_purity_nlayers_withnoiseg10.Write()
+    st_purity_nlayers_withnoiseg10.Write("st_purity_nlayers_withnoiseg10")
 
     c_nlayers_withnoiseg15_p = ROOT.TCanvas('', '', 800, 650)
     c_nlayers_withnoiseg15_p.SetLeftMargin(0.15)
@@ -3677,7 +3714,7 @@ def analysis(root_dat, hits, bx, bx_list, cross_part, verbose, pu, num_or):
     latex.DrawLatex(0.9, 0.91,plot_text1)
     latex.DrawLatex(0.42, 0.91,plot_text2)
     c_nlayers_withnoiseg15_p.Print("st_purity_nlayers_withnoiseg15_%s_bx%s_crosspart_%s_or%d.pdf"%(hits, bx, cross_part, num_or))
-    st_purity_nlayers_withnoiseg15.Write()
+    st_purity_nlayers_withnoiseg15.Write("st_purity_nlayers_withnoiseg15")
 
     c_max_cluster_size_e = ROOT.TCanvas('', '', 800, 650)
     c_max_cluster_size_e.SetLeftMargin(0.15)
@@ -3697,7 +3734,7 @@ def analysis(root_dat, hits, bx, bx_list, cross_part, verbose, pu, num_or):
     latex.DrawLatex(0.9, 0.91,plot_text1)
     latex.DrawLatex(0.42, 0.91,plot_text2)
     c_max_cluster_size_e.Print("st_effi_max_cluster_size_%s_bx%s_crosspart_%s_or%d.pdf"%(hits, bx, cross_part, num_or))
-    st_effi_max_cluster_size.Write()
+    st_effi_max_cluster_size.Write("st_effi_max_cluster_size")
 
     c_max_noise_e = ROOT.TCanvas('', '', 800, 650)
     c_max_noise_e.SetLeftMargin(0.15)
@@ -3717,7 +3754,7 @@ def analysis(root_dat, hits, bx, bx_list, cross_part, verbose, pu, num_or):
     latex.DrawLatex(0.9, 0.91,plot_text1)
     latex.DrawLatex(0.42, 0.91,plot_text2)
     c_max_noise_e.Print("st_effi_max_noise_%s_bx%s_crosspart_%s_or%d.pdf"%(hits, bx, cross_part, num_or))
-    st_effi_max_noise.Write()
+    st_effi_max_noise.Write("st_effi_max_noise")
 
     c_nlayers_withcsg3_e = ROOT.TCanvas('', '', 800, 650)
     c_nlayers_withcsg3_e.SetLeftMargin(0.15)
@@ -3737,7 +3774,7 @@ def analysis(root_dat, hits, bx, bx_list, cross_part, verbose, pu, num_or):
     latex.DrawLatex(0.9, 0.91,plot_text1)
     latex.DrawLatex(0.42, 0.91,plot_text2)
     c_nlayers_withcsg3_e.Print("st_effi_nlayers_withcsg3_%s_bx%s_crosspart_%s_or%d.pdf"%(hits, bx, cross_part, num_or))
-    st_effi_nlayers_withcsg3.Write()
+    st_effi_nlayers_withcsg3.Write("st_effi_nlayers_withcsg3")
 
     c_nlayers_withcsg5_e = ROOT.TCanvas('', '', 800, 650)
     c_nlayers_withcsg5_e.SetLeftMargin(0.15)
@@ -3757,7 +3794,7 @@ def analysis(root_dat, hits, bx, bx_list, cross_part, verbose, pu, num_or):
     latex.DrawLatex(0.9, 0.91,plot_text1)
     latex.DrawLatex(0.42, 0.91,plot_text2)
     c_nlayers_withcsg5_e.Print("st_effi_nlayers_withcsg5_%s_bx%s_crosspart_%s_or%d.pdf"%(hits, bx, cross_part, num_or))
-    st_effi_nlayers_withcsg5.Write()
+    st_effi_nlayers_withcsg5.Write("st_effi_nlayers_withcsg5")
 
     c_nlayers_withcsg10_e = ROOT.TCanvas('', '', 800, 650)
     c_nlayers_withcsg10_e.SetLeftMargin(0.15)
@@ -3777,7 +3814,7 @@ def analysis(root_dat, hits, bx, bx_list, cross_part, verbose, pu, num_or):
     latex.DrawLatex(0.9, 0.91,plot_text1)
     latex.DrawLatex(0.42, 0.91,plot_text2)
     c_nlayers_withcsg10_e.Print("st_effi_nlayers_withcsg10_%s_bx%s_crosspart_%s_or%d.pdf"%(hits, bx, cross_part, num_or))
-    st_effi_nlayers_withcsg10.Write()
+    st_effi_nlayers_withcsg10.Write("st_effi_nlayers_withcsg10")
 
     c_nlayers_withcsg15_e = ROOT.TCanvas('', '', 800, 650)
     c_nlayers_withcsg15_e.SetLeftMargin(0.15)
@@ -3797,7 +3834,7 @@ def analysis(root_dat, hits, bx, bx_list, cross_part, verbose, pu, num_or):
     latex.DrawLatex(0.9, 0.91,plot_text1)
     latex.DrawLatex(0.42, 0.91,plot_text2)
     c_nlayers_withcsg15_e.Print("st_effi_nlayers_withcsg15_%s_bx%s_crosspart_%s_or%d.pdf"%(hits, bx, cross_part, num_or))
-    st_effi_nlayers_withcsg15.Write()
+    st_effi_nlayers_withcsg15.Write("st_effi_nlayers_withcsg15")
 
     c_nlayers_withnoiseg3_e = ROOT.TCanvas('', '', 800, 650)
     c_nlayers_withnoiseg3_e.SetLeftMargin(0.15)
@@ -3817,7 +3854,7 @@ def analysis(root_dat, hits, bx, bx_list, cross_part, verbose, pu, num_or):
     latex.DrawLatex(0.9, 0.91,plot_text1)
     latex.DrawLatex(0.42, 0.91,plot_text2)
     c_nlayers_withnoiseg3_e.Print("st_effi_nlayers_withnoiseg3_%s_bx%s_crosspart_%s_or%d.pdf"%(hits, bx, cross_part, num_or))
-    st_effi_nlayers_withnoiseg3.Write()
+    st_effi_nlayers_withnoiseg3.Write("st_effi_nlayers_withnoiseg3")
 
     c_nlayers_withnoiseg5_e = ROOT.TCanvas('', '', 800, 650)
     c_nlayers_withnoiseg5_e.SetLeftMargin(0.15)
@@ -3837,7 +3874,7 @@ def analysis(root_dat, hits, bx, bx_list, cross_part, verbose, pu, num_or):
     latex.DrawLatex(0.9, 0.91,plot_text1)
     latex.DrawLatex(0.42, 0.91,plot_text2)
     c_nlayers_withnoiseg5_e.Print("st_effi_nlayers_withnoiseg5_%s_bx%s_crosspart_%s_or%d.pdf"%(hits, bx, cross_part, num_or))
-    st_effi_nlayers_withnoiseg5.Write()
+    st_effi_nlayers_withnoiseg5.Write("st_effi_nlayers_withnoiseg5")
 
     c_nlayers_withnoiseg10_e = ROOT.TCanvas('', '', 800, 650)
     c_nlayers_withnoiseg10_e.SetLeftMargin(0.15)
@@ -3857,7 +3894,7 @@ def analysis(root_dat, hits, bx, bx_list, cross_part, verbose, pu, num_or):
     latex.DrawLatex(0.9, 0.91,plot_text1)
     latex.DrawLatex(0.42, 0.91,plot_text2)
     c_nlayers_withnoiseg10_e.Print("st_effi_nlayers_withnoiseg10_%s_bx%s_crosspart_%s_or%d.pdf"%(hits, bx, cross_part, num_or))
-    st_effi_nlayers_withnoiseg10.Write()
+    st_effi_nlayers_withnoiseg10.Write("st_effi_nlayers_withnoiseg10")
 
     c_nlayers_withnoiseg15_e = ROOT.TCanvas('', '', 800, 650)
     c_nlayers_withnoiseg15_e.SetLeftMargin(0.15)
@@ -3877,7 +3914,7 @@ def analysis(root_dat, hits, bx, bx_list, cross_part, verbose, pu, num_or):
     latex.DrawLatex(0.9, 0.91,plot_text1)
     latex.DrawLatex(0.42, 0.91,plot_text2)
     c_nlayers_withnoiseg15_e.Print("st_effi_nlayers_withnoiseg15_%s_bx%s_crosspart_%s_or%d.pdf"%(hits, bx, cross_part, num_or))
-    st_effi_nlayers_withnoiseg15.Write()
+    st_effi_nlayers_withnoiseg15.Write("st_effi_nlayers_withnoiseg15")
     '''
 
     file_out.close()
