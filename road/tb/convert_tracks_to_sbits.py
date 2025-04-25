@@ -9,79 +9,7 @@ def read_stack_tracks(file_path, entry_start=None, entry_stop=None):
 
         # print("read all: ", tracks.keys())
         
-        events = tracks.arrays(
-            [
-                'orbitNumber',
-                'bunchCounter',
-                'eventCounter',
-                'rechitChamber',
-                'rechitEta',
-                'rechitLocalX',
-                'rechitLocalY',
-                'rechitR',
-                'rechitPhi',
-                'rechitErrorX',
-                'rechitErrorY',
-                'rechitGlobalX',
-                'rechitGlobalY',
-                'rechitErrorGlobalX',
-                'rechitErrorGlobalY',
-                'rechitClusterSize',
-                'rechitClusterSizeX',
-                'rechitClusterSizeY',
-                'rechitCharge',
-                'rechitTime',
-                'partialTrackChamber',
-                'partialTrackChi2',
-                'partialTrackNHits',
-                'partialTrackAverageTime',
-                'partialTrackMedianTime',
-                'partialTrackSlopeX',
-                'partialTrackSlopeY',
-                'partialTrackInterceptX',
-                'partialTrackInterceptY',
-                'partialTrackSlopeVarianceX',
-                'partialTrackSlopeVarianceY',
-                'partialTrackInterceptVarianceX',
-                'partialTrackInterceptVarianceY',
-                'partialTrackCovarianceX',
-                'partialTrackCovarianceY',
-                'partialProphitEta',
-                'partialProphitGlobalX',
-                'partialProphitGlobalY',
-                'partialProphitErrorX',
-                'partialProphitErrorY',
-                'partialProphitLocalX',
-                'partialProphitLocalY',
-                'partialProphitR',
-                'partialProphitPhi',
-                'trackChi2',
-                'trackNHits',
-                'trackAverageTime',
-                'trackMedianTime',
-                'trackSlopeX',
-                'trackSlopeY',
-                'trackInterceptX',
-                'trackInterceptY',
-                'trackSlopeVarianceX',
-                'trackSlopeVarianceY',
-                'trackInterceptVarianceX',
-                'trackInterceptVarianceY',
-                'trackCovarianceX',
-                'trackCovarianceY',
-                'allChi2',
-                'prophitChamber',
-                'prophitEta',
-                'prophitGlobalX',
-                'prophitGlobalY',
-                'prophitErrorX',
-                'prophitErrorY',
-                'prophitLocalX',
-                'prophitLocalY',
-                'prophitR',
-                'prophitPhi'
-            ], entry_start=entry_start, entry_stop=entry_stop
-        )
+        events = tracks.arrays(tracks.keys(), entry_start=entry_start, entry_stop=entry_stop)
 
         return events
 
@@ -93,7 +21,12 @@ LY_GAP = 35 # mm/ly
 def get_width_from_y(y):
     return BL - (y*(BL-BS))/H
 
-def get_sbits_from_track(x0, y0, x_slope, y_slope):
+def get_sbits_from_track(track):
+        x0 = track["trackInterceptX"]
+        y0 = track["trackInterceptY"]
+        x_slope = track["trackSlopeX"]
+        y_slope = track["trackSlopeY"]
+
         y0_shift_mm = H/2.0 - y0 
         y_proj_mm = [y0_shift_mm - ly*LY_GAP*y_slope for ly in range(6)]
 
@@ -110,13 +43,22 @@ def get_sbits_from_track(x0, y0, x_slope, y_slope):
  
         return (x_proj_strip, y_proj_eta)
 
+def format_seg(hits_strip, hits_eta):
+    hits_display = [[0 for _ in range(6)] for _ in range (8)]
+    for ly in range(6):
+        if not (hits_strip[ly] > 191 or hits_strip[ly] < 0):
+            hits_display[hits_eta[ly]][ly] = 2**(191-hits_strip[ly])
+    return hits_display
+
 if __name__ == "__main__":
     
-    tracks = read_stack_tracks("stack_testdata_tracks.root")
+    tracks = read_stack_tracks("tracks_1030.root")
+    #tracks = read_stack_tracks("stack_testdata_tracks.root")
 
     params = ("trackInterceptX", "trackInterceptY", "trackSlopeX", "trackSlopeY")
 
-    sbits_root = sfr.read_ntuple_stack("00001199.root")
+    #sbits_root = sfr.read_ntuple_stack("00001199.root")
+    sbits_root = sfr.read_ntuple_stack("digi_1030.root")
 
     for i in range(11, 14):
         print(f"\n\n\nEVENT {i}")
@@ -126,12 +68,9 @@ if __name__ == "__main__":
         for param in params:
             print(param + ": " + str(tracks[i][param]))
 
-        hits_strip, hits_eta = get_sbits_from_track(tracks[i]["trackInterceptX"], tracks[i]["trackInterceptY"], tracks[i]["trackSlopeX"], tracks[i]["trackSlopeY"])
+        hits_strip, hits_eta = get_sbits_from_track(tracks[i])
 
-        hits_display = [[0 for _ in range(6)] for _ in range (8)]
-        for ly in range(6):
-            if not (hits_strip[ly] > 191 or hits_strip[ly] < 0):
-                hits_display[hits_eta[ly]][ly] = 2**(191-hits_strip[ly])
+        hits_display = format_seg(hits_strip, hits_eta)
 
         for prt in range(8):
             print(f"Partition: {prt}")
