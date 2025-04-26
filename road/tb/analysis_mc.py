@@ -1224,7 +1224,7 @@ def analysis(root_dat, hits, bx, bx_list, cross_part, verbose, pu, num_or):
     plot_text2 = "CMS Simulation Preliminary"
 
     c1 = ROOT.TCanvas('', '', 800, 650)
-    c1.SetLeftMargin(0.15)
+    c1.SetLeftMargin(0.05)
     c1.SetGrid()
     c1.DrawFrame(-4, 0, 4, 1.1, ";Bending Angle (sbits/layer);Efficiency")
     offline_eff_bending = ROOT.TEfficiency(offline_effi_passed_bending, offline_effi_total_bending)
@@ -1244,7 +1244,7 @@ def analysis(root_dat, hits, bx, bx_list, cross_part, verbose, pu, num_or):
     offline_eff_bending.Write("offline_eff_bending")
 
     c1eta = ROOT.TCanvas('', '', 800, 650)
-    c1eta.SetLeftMargin(0.15)
+    c1eta.SetLeftMargin(0.05)
     c1eta.SetGrid()
     c1eta.DrawFrame(0, 0, 9, 1.1, ";#eta Partition;Efficiency")
     offline_eff_eta = ROOT.TEfficiency(offline_effi_passed_eta, offline_effi_total_eta)
@@ -1265,7 +1265,7 @@ def analysis(root_dat, hits, bx, bx_list, cross_part, verbose, pu, num_or):
 
 
     c1id = ROOT.TCanvas('', '', 800, 650)
-    c1id.SetLeftMargin(0.15)
+    c1id.SetLeftMargin(0.05)
     c1id.SetGrid()
     c1id.DrawFrame(0, 0, 18, 1.1, ";Pattern ID;Efficiency")
     offline_eff_id = ROOT.TEfficiency(offline_effi_passed_id, offline_effi_total_id)
@@ -1285,7 +1285,7 @@ def analysis(root_dat, hits, bx, bx_list, cross_part, verbose, pu, num_or):
     offline_eff_id.Write("offline_eff_id")
 
     c2 = ROOT.TCanvas('', '', 800, 650)
-    c2.SetLeftMargin(0.15)
+    c2.SetLeftMargin(0.05)
     c2.SetGrid()
     c2.DrawFrame(-1, 0, 1, 1.5, ";Bending Angle (sbits/layer);")
     #offline_effi_mres.SetTitle("Bending Angle Resolution w.r.t Offline Segments")
@@ -1307,7 +1307,7 @@ def analysis(root_dat, hits, bx, bx_list, cross_part, verbose, pu, num_or):
     offline_effi_mres.Write("offline_effi_mres")
 
     c3 = ROOT.TCanvas('', '', 800, 650)
-    c3.SetLeftMargin(0.15)
+    c3.SetLeftMargin(0.05)
     c3.SetGrid()
     c3.DrawFrame(-1, 0, 1, 1.5, ";Sbit;")
     #offline_effi_sres.SetTitle("Sbit Resolution w.r.t Offline Segments")
@@ -1331,7 +1331,7 @@ def analysis(root_dat, hits, bx, bx_list, cross_part, verbose, pu, num_or):
 
     if n_st_effi_total != 0:
         c4 = ROOT.TCanvas('', '', 800, 650)
-        c4.SetLeftMargin(0.15)
+        c4.SetLeftMargin(0.05)
         c4.SetGrid()
         c4.DrawFrame(-4, 0, 4, 1.1, ";Bending Angle (sbits/layer);Efficiency")
         st_eff_bending_bending = ROOT.TEfficiency(st_effi_passed_bending, st_effi_total_bending)
@@ -1351,7 +1351,7 @@ def analysis(root_dat, hits, bx, bx_list, cross_part, verbose, pu, num_or):
         st_eff_bending_bending.Write("st_eff_bending")
 
         c5 = ROOT.TCanvas('', '', 800, 650)
-        c5.SetLeftMargin(0.15)
+        c5.SetLeftMargin(0.05)
         c5.SetGrid()
         c5.DrawFrame(0, 0, 50, 1.1, ";pT (GeV);Efficiency")
         st_eff_pt = ROOT.TEfficiency(st_effi_passed_pt, st_effi_total_pt)
@@ -1371,7 +1371,7 @@ def analysis(root_dat, hits, bx, bx_list, cross_part, verbose, pu, num_or):
         st_eff_pt.Write("st_eff_pt")
 
         c_pt_eta_low = ROOT.TCanvas('', '', 800, 650)
-        c_pt_eta_low.SetLeftMargin(0.15)
+        c_pt_eta_low.SetLeftMargin(0.05)
         c_pt_eta_low.SetGrid()
         c_pt_eta_low.DrawFrame(0, 0, 50, 1.1, ";pT (GeV);Efficiency")
         st_eff_eta_low_pt = ROOT.TEfficiency(st_effi_eta_low_passed_pt, st_effi_eta_low_total_pt)
@@ -1391,7 +1391,7 @@ def analysis(root_dat, hits, bx, bx_list, cross_part, verbose, pu, num_or):
         st_eff_eta_low_pt.Write("st_eff_eta_low_pt")
 
         c_pt_eta_high = ROOT.TCanvas('', '', 800, 650)
-        c_pt_eta_high.SetLeftMargin(0.15)
+        c_pt_eta_high.SetLeftMargin(0.05)
         c_pt_eta_high.SetGrid()
         c_pt_eta_high.DrawFrame(0, 0, 50, 1.1, ";pT (GeV);Efficiency")
         st_eff_eta_high_pt = ROOT.TEfficiency(st_effi_eta_high_passed_pt, st_effi_eta_high_total_pt)
@@ -1411,7 +1411,7 @@ def analysis(root_dat, hits, bx, bx_list, cross_part, verbose, pu, num_or):
         st_eff_eta_high_pt.Write("st_eff_eta_high_pt")
 
         c_pt_1 = ROOT.TCanvas('', '', 800, 650)
-        c_pt_1.SetLeftMargin(0.15)
+        c_pt_1.SetLeftMargin(0.05)
         c_pt_1.SetGrid()
         c_pt_1.DrawFrame(0, 0, 50, 1.1, ";pT (GeV);Efficiency")
         st_eff_pt_1 = ROOT.TEfficiency(st_effi_passed_pt1, st_effi_total_pt)
@@ -1431,7 +1431,7 @@ def analysis(root_dat, hits, bx, bx_list, cross_part, verbose, pu, num_or):
         st_eff_pt_1.Write("st_eff_pt_id1")
 
         c_pt_2 = ROOT.TCanvas('', '', 800, 650)
-        c_pt_2.SetLeftMargin(0.15)
+        c_pt_2.SetLeftMargin(0.05)
         c_pt_2.SetGrid()
         c_pt_2.DrawFrame(0, 0, 50, 1.1, ";pT (GeV);Efficiency")
         st_eff_pt_2 = ROOT.TEfficiency(st_effi_passed_pt2, st_effi_total_pt)
@@ -1451,7 +1451,7 @@ def analysis(root_dat, hits, bx, bx_list, cross_part, verbose, pu, num_or):
         st_eff_pt_2.Write("st_eff_pt_id2")
 
         c_pt_3 = ROOT.TCanvas('', '', 800, 650)
-        c_pt_3.SetLeftMargin(0.15)
+        c_pt_3.SetLeftMargin(0.05)
         c_pt_3.SetGrid()
         c_pt_3.DrawFrame(0, 0, 50, 1.1, ";pT (GeV);Efficiency")
         st_eff_pt_3 = ROOT.TEfficiency(st_effi_passed_pt3, st_effi_total_pt)
@@ -1471,7 +1471,7 @@ def analysis(root_dat, hits, bx, bx_list, cross_part, verbose, pu, num_or):
         st_eff_pt_3.Write("st_eff_pt_id3")
 
         c_pt_4 = ROOT.TCanvas('', '', 800, 650)
-        c_pt_4.SetLeftMargin(0.15)
+        c_pt_4.SetLeftMargin(0.05)
         c_pt_4.SetGrid()
         c_pt_4.DrawFrame(0, 0, 50, 1.1, ";pT (GeV);Efficiency")
         st_eff_pt_4 = ROOT.TEfficiency(st_effi_passed_pt4, st_effi_total_pt)
@@ -1491,7 +1491,7 @@ def analysis(root_dat, hits, bx, bx_list, cross_part, verbose, pu, num_or):
         st_eff_pt_4.Write("st_eff_pt_id4")
 
         c_pt_5 = ROOT.TCanvas('', '', 800, 650)
-        c_pt_5.SetLeftMargin(0.15)
+        c_pt_5.SetLeftMargin(0.05)
         c_pt_5.SetGrid()
         c_pt_5.DrawFrame(0, 0, 50, 1.1, ";pT (GeV);Efficiency")
         st_eff_pt_5 = ROOT.TEfficiency(st_effi_passed_pt5, st_effi_total_pt)
@@ -1511,7 +1511,7 @@ def analysis(root_dat, hits, bx, bx_list, cross_part, verbose, pu, num_or):
         st_eff_pt_5.Write("st_eff_pt_id5")
 
         c_pt_6 = ROOT.TCanvas('', '', 800, 650)
-        c_pt_6.SetLeftMargin(0.15)
+        c_pt_6.SetLeftMargin(0.05)
         c_pt_6.SetGrid()
         c_pt_6.DrawFrame(0, 0, 50, 1.1, ";pT (GeV);Efficiency")
         st_eff_pt_6 = ROOT.TEfficiency(st_effi_passed_pt6, st_effi_total_pt)
@@ -1531,7 +1531,7 @@ def analysis(root_dat, hits, bx, bx_list, cross_part, verbose, pu, num_or):
         st_eff_pt_6.Write("st_eff_pt_id6")
 
         c_pt_7 = ROOT.TCanvas('', '', 800, 650)
-        c_pt_7.SetLeftMargin(0.15)
+        c_pt_7.SetLeftMargin(0.05)
         c_pt_7.SetGrid()
         c_pt_7.DrawFrame(0, 0, 50, 1.1, ";pT (GeV);Efficiency")
         st_eff_pt_7 = ROOT.TEfficiency(st_effi_passed_pt7, st_effi_total_pt)
@@ -1551,7 +1551,7 @@ def analysis(root_dat, hits, bx, bx_list, cross_part, verbose, pu, num_or):
         st_eff_pt_7.Write("st_eff_pt_id7")
 
         c_pt_8 = ROOT.TCanvas('', '', 800, 650)
-        c_pt_8.SetLeftMargin(0.15)
+        c_pt_8.SetLeftMargin(0.05)
         c_pt_8.SetGrid()
         c_pt_8.DrawFrame(0, 0, 50, 1.1, ";pT (GeV);Efficiency")
         st_eff_pt_8 = ROOT.TEfficiency(st_effi_passed_pt8, st_effi_total_pt)
@@ -1571,7 +1571,7 @@ def analysis(root_dat, hits, bx, bx_list, cross_part, verbose, pu, num_or):
         st_eff_pt_8.Write("st_eff_pt_id8")
 
         c_pt_9 = ROOT.TCanvas('', '', 800, 650)
-        c_pt_9.SetLeftMargin(0.15)
+        c_pt_9.SetLeftMargin(0.05)
         c_pt_9.SetGrid()
         c_pt_9.DrawFrame(0, 0, 50, 1.1, ";pT (GeV);Efficiency")
         st_eff_pt_9 = ROOT.TEfficiency(st_effi_passed_pt9, st_effi_total_pt)
@@ -1591,7 +1591,7 @@ def analysis(root_dat, hits, bx, bx_list, cross_part, verbose, pu, num_or):
         st_eff_pt_9.Write("st_eff_pt_id9")
 
         c_pt_10 = ROOT.TCanvas('', '', 800, 650)
-        c_pt_10.SetLeftMargin(0.15)
+        c_pt_10.SetLeftMargin(0.05)
         c_pt_10.SetGrid()
         c_pt_10.DrawFrame(0, 0, 50, 1.1, ";pT (GeV);Efficiency")
         st_eff_pt_10 = ROOT.TEfficiency(st_effi_passed_pt10, st_effi_total_pt)
@@ -1611,7 +1611,7 @@ def analysis(root_dat, hits, bx, bx_list, cross_part, verbose, pu, num_or):
         st_eff_pt_10.Write("st_eff_pt_id10")
 
         c_pt_11 = ROOT.TCanvas('', '', 800, 650)
-        c_pt_11.SetLeftMargin(0.15)
+        c_pt_11.SetLeftMargin(0.05)
         c_pt_11.SetGrid()
         c_pt_11.DrawFrame(0, 0, 50, 1.1, ";pT (GeV);Efficiency")
         st_eff_pt_11 = ROOT.TEfficiency(st_effi_passed_pt11, st_effi_total_pt)
@@ -1631,7 +1631,7 @@ def analysis(root_dat, hits, bx, bx_list, cross_part, verbose, pu, num_or):
         st_eff_pt_11.Write("st_eff_pt_id11")
 
         c_pt_12 = ROOT.TCanvas('', '', 800, 650)
-        c_pt_12.SetLeftMargin(0.15)
+        c_pt_12.SetLeftMargin(0.05)
         c_pt_12.SetGrid()
         c_pt_12.DrawFrame(0, 0, 50, 1.1, ";pT (GeV);Efficiency")
         st_eff_pt_12 = ROOT.TEfficiency(st_effi_passed_pt12, st_effi_total_pt)
@@ -1651,7 +1651,7 @@ def analysis(root_dat, hits, bx, bx_list, cross_part, verbose, pu, num_or):
         st_eff_pt_12.Write("st_eff_pt_id12")
 
         c_pt_13 = ROOT.TCanvas('', '', 800, 650)
-        c_pt_13.SetLeftMargin(0.15)
+        c_pt_13.SetLeftMargin(0.05)
         c_pt_13.SetGrid()
         c_pt_13.DrawFrame(0, 0, 50, 1.1, ";pT (GeV);Efficiency")
         st_eff_pt_13 = ROOT.TEfficiency(st_effi_passed_pt13, st_effi_total_pt)
@@ -1671,7 +1671,7 @@ def analysis(root_dat, hits, bx, bx_list, cross_part, verbose, pu, num_or):
         st_eff_pt_13.Write("st_eff_pt_id13")
 
         c_pt_14 = ROOT.TCanvas('', '', 800, 650)
-        c_pt_14.SetLeftMargin(0.15)
+        c_pt_14.SetLeftMargin(0.05)
         c_pt_14.SetGrid()
         c_pt_14.DrawFrame(0, 0, 50, 1.1, ";pT (GeV);Efficiency")
         st_eff_pt_14 = ROOT.TEfficiency(st_effi_passed_pt14, st_effi_total_pt)
@@ -1691,7 +1691,7 @@ def analysis(root_dat, hits, bx, bx_list, cross_part, verbose, pu, num_or):
         st_eff_pt_14.Write("st_eff_pt_id14")
 
         c_pt_15 = ROOT.TCanvas('', '', 800, 650)
-        c_pt_15.SetLeftMargin(0.15)
+        c_pt_15.SetLeftMargin(0.05)
         c_pt_15.SetGrid()
         c_pt_15.DrawFrame(0, 0, 50, 1.1, ";pT (GeV);Efficiency")
         st_eff_pt_15 = ROOT.TEfficiency(st_effi_passed_pt15, st_effi_total_pt)
@@ -1711,7 +1711,7 @@ def analysis(root_dat, hits, bx, bx_list, cross_part, verbose, pu, num_or):
         st_eff_pt_15.Write("st_eff_pt_id15")
 
         c_pt_16 = ROOT.TCanvas('', '', 800, 650)
-        c_pt_16.SetLeftMargin(0.15)
+        c_pt_16.SetLeftMargin(0.05)
         c_pt_16.SetGrid()
         c_pt_16.DrawFrame(0, 0, 50, 1.1, ";pT (GeV);Efficiency")
         st_eff_pt_16 = ROOT.TEfficiency(st_effi_passed_pt16, st_effi_total_pt)
@@ -1731,7 +1731,7 @@ def analysis(root_dat, hits, bx, bx_list, cross_part, verbose, pu, num_or):
         st_eff_pt_16.Write("st_eff_pt_id16")
 
         c_pt_17 = ROOT.TCanvas('', '', 800, 650)
-        c_pt_17.SetLeftMargin(0.15)
+        c_pt_17.SetLeftMargin(0.05)
         c_pt_17.SetGrid()
         c_pt_17.DrawFrame(0, 0, 50, 1.1, ";pT (GeV);Efficiency")
         st_eff_pt_17 = ROOT.TEfficiency(st_effi_passed_pt17, st_effi_total_pt)
@@ -1751,7 +1751,7 @@ def analysis(root_dat, hits, bx, bx_list, cross_part, verbose, pu, num_or):
         st_eff_pt_17.Write("st_eff_pt_id17")
 
         c_pt_all = ROOT.TCanvas('', '', 800, 650)
-        c_pt_all.SetLeftMargin(0.15)
+        c_pt_all.SetLeftMargin(0.05)
         c_pt_all.SetGrid()
         c_pt_all.DrawFrame(0, 0, 50, 1.1, ";pT (GeV);Efficiency")
         st_eff_pt_1.Draw("same")
@@ -1831,7 +1831,7 @@ def analysis(root_dat, hits, bx, bx_list, cross_part, verbose, pu, num_or):
         c_pt_all.Print("st_eff_pt_id_all_%s_bx%s_crosspart_%s_or%d.pdf"%(hits, bx, cross_part, num_or))
 
         c_pt_stacked = ROOT.TCanvas('', '', 800, 650)
-        c_pt_stacked.SetLeftMargin(0.15)
+        c_pt_stacked.SetLeftMargin(0.05)
         c_pt_stacked.SetGrid()
         c_pt_stacked.DrawFrame(0, 0, 50, 1.1, ";pT (GeV);Efficiency")
         st_eff_stack_pt = ROOT.THStack("st_eff_hist", "st_eff_hist")
@@ -1948,7 +1948,7 @@ def analysis(root_dat, hits, bx, bx_list, cross_part, verbose, pu, num_or):
         c_pt_stacked.Print("st_eff_pt_id_allstacked_%s_bx%s_crosspart_%s_or%d.pdf"%(hits, bx, cross_part, num_or))
 
         c6 = ROOT.TCanvas('', '', 800, 650)
-        c6.SetLeftMargin(0.15)
+        c6.SetLeftMargin(0.05)
         c6.SetGrid()
         c6.DrawFrame(0, 0, 9, 1.1, ";#eta Partition;Efficiency")
         st_eff_eta = ROOT.TEfficiency(st_effi_passed_eta, st_effi_total_eta)
@@ -1968,7 +1968,7 @@ def analysis(root_dat, hits, bx, bx_list, cross_part, verbose, pu, num_or):
         st_eff_eta.Write("st_eff_eta")
 
         c2d_eta_pt = ROOT.TCanvas('', '', 800, 650)
-        c2d_eta_pt.SetLeftMargin(0.15)
+        c2d_eta_pt.SetLeftMargin(0.05)
         c2d_eta_pt.SetGrid()
         c2d_eta_pt.DrawFrame(0, 0, 50, 9, ";pT (GeV);#eta Partition")
         st_eff_pt_eta = ROOT.TEfficiency(st_effi_passed_pt_eta, st_effi_total_pt_eta)
@@ -1979,7 +1979,7 @@ def analysis(root_dat, hits, bx, bx_list, cross_part, verbose, pu, num_or):
         st_eff_pt_eta.Write("st_eff_pt_eta")
 
         c6id = ROOT.TCanvas('', '', 800, 650)
-        c6id.SetLeftMargin(0.15)
+        c6id.SetLeftMargin(0.05)
         c6id.SetGrid()
         c6id.DrawFrame(0, 0, 18, 1.1, ";Pattern ID;Efficiency")
         st_eff_id = ROOT.TEfficiency(st_effi_passed_id, st_effi_total_id)
@@ -1999,7 +1999,7 @@ def analysis(root_dat, hits, bx, bx_list, cross_part, verbose, pu, num_or):
         st_eff_id.Write("st_eff_id")
 
         c7 = ROOT.TCanvas('', '', 800, 650)
-        c7.SetLeftMargin(0.15)
+        c7.SetLeftMargin(0.05)
         c7.SetGrid()
         c7.DrawFrame(-1, 0, 1, 1.5, ";Bending Angle (sbits/layer);")
         #st_effi_mres.SetTitle("Bending Angle Resolution w.r.t Sim Tracks")
@@ -2021,7 +2021,7 @@ def analysis(root_dat, hits, bx, bx_list, cross_part, verbose, pu, num_or):
         st_effi_mres.Write("st_effi_mres")
 
         c8 = ROOT.TCanvas('', '', 800, 650)
-        c8.SetLeftMargin(0.15)
+        c8.SetLeftMargin(0.05)
         c8.SetGrid()
         c8.DrawFrame(-1, 0, 1, 1.5, ";Sbit;")
         #st_effi_sres.SetTitle("Sbit Resolution w.r.t Sim Tracks")
@@ -2043,7 +2043,7 @@ def analysis(root_dat, hits, bx, bx_list, cross_part, verbose, pu, num_or):
         st_effi_sres.Write("st_effi_sres")
 
     c9 = ROOT.TCanvas('', '', 800, 650)
-    c9.SetLeftMargin(0.15)
+    c9.SetLeftMargin(0.05)
     c9.SetGrid()
     c9.DrawFrame(0, 0, 9, 1.1, ";#eta Partition;Purity")
     st_purity_eta = ROOT.TEfficiency(st_purity_passed_eta, st_purity_total_eta)
@@ -2063,7 +2063,7 @@ def analysis(root_dat, hits, bx, bx_list, cross_part, verbose, pu, num_or):
     st_purity_eta.Write("st_purity_eta")
 
     c10 = ROOT.TCanvas('', '', 800, 650)
-    c10.SetLeftMargin(0.15)
+    c10.SetLeftMargin(0.05)
     c10.SetGrid()
     c10.DrawFrame(-4, 0, 4, 1.1, ";Bending Angle (sbits/layer);Purity")
     st_purity_bending = ROOT.TEfficiency(st_purity_passed_bending, st_purity_total_bending)
@@ -2083,7 +2083,7 @@ def analysis(root_dat, hits, bx, bx_list, cross_part, verbose, pu, num_or):
     st_purity_bending.Write("st_purity_bending")
 
     c10id = ROOT.TCanvas('', '', 800, 650)
-    c10id.SetLeftMargin(0.15)
+    c10id.SetLeftMargin(0.05)
     c10id.SetGrid()
     c10id.DrawFrame(0, 0, 18, 1.1, ";Pattern ID;Purity")
     st_purity_id = ROOT.TEfficiency(st_purity_passed_id, st_purity_total_id)
@@ -2103,7 +2103,7 @@ def analysis(root_dat, hits, bx, bx_list, cross_part, verbose, pu, num_or):
     st_purity_id.Write("st_purity_id")
 
     c9_off = ROOT.TCanvas('', '', 800, 650)
-    c9_off.SetLeftMargin(0.15)
+    c9_off.SetLeftMargin(0.05)
     c9_off.SetGrid()
     c9_off.DrawFrame(0, 0, 9, 1.1, ";#eta Partition;Purity")
     offline_purity_eta = ROOT.TEfficiency(offline_purity_passed_eta, offline_purity_total_eta)
@@ -2123,7 +2123,7 @@ def analysis(root_dat, hits, bx, bx_list, cross_part, verbose, pu, num_or):
     offline_purity_eta.Write("offline_purity_eta")
 
     c10_off = ROOT.TCanvas('', '', 800, 650)
-    c10_off.SetLeftMargin(0.15)
+    c10_off.SetLeftMargin(0.05)
     c10_off.SetGrid()
     c10_off.DrawFrame(-4, 0, 4, 1.1, ";Bending Angle (sbits/layer);Purity")
     offline_purity_bending = ROOT.TEfficiency(offline_purity_passed_bending, offline_purity_total_bending)
@@ -2143,7 +2143,7 @@ def analysis(root_dat, hits, bx, bx_list, cross_part, verbose, pu, num_or):
     offline_purity_bending.Write("offline_purity_bending")
 
     c10_offid = ROOT.TCanvas('', '', 800, 650)
-    c10_offid.SetLeftMargin(0.15)
+    c10_offid.SetLeftMargin(0.05)
     c10_offid.SetGrid()
     c10_offid.DrawFrame(0, 0, 18, 1.1, ";Pattern ID;Purity")
     offline_purity_id = ROOT.TEfficiency(offline_purity_passed_id, offline_purity_total_id)
@@ -2163,7 +2163,7 @@ def analysis(root_dat, hits, bx, bx_list, cross_part, verbose, pu, num_or):
     offline_purity_id.Write("offline_purity_id")
 
     c11 = ROOT.TCanvas('', '', 800, 650)
-    c11.SetLeftMargin(0.15)
+    c11.SetLeftMargin(0.05)
     c11.SetGrid()
     c11.DrawFrame(-0.5, -0.05, 12.5, 1.05, ";Number of Segments per Chamber/Event;Fraction of Events")
     num_seg_per_chamber.Scale(1.0/num_seg_per_chamber.Integral())
@@ -2179,7 +2179,7 @@ def analysis(root_dat, hits, bx, bx_list, cross_part, verbose, pu, num_or):
     num_seg_per_chamber.Write()
 
     c11a = ROOT.TCanvas('', '', 800, 650)
-    c11a.SetLeftMargin(0.15)
+    c11a.SetLeftMargin(0.05)
     c11a.SetLogy()
     c11a.SetGrid()
     c11a.DrawFrame(-0.5, 0.000001, 12.5, 1.5, ";Number of Segments per Chamber/Event;Fraction of Events")
@@ -2193,10 +2193,9 @@ def analysis(root_dat, hits, bx, bx_list, cross_part, verbose, pu, num_or):
     latex.DrawLatex(0.9, 0.91,plot_text1)
     latex.DrawLatex(0.42, 0.91,plot_text2)
     c11a.Print("num_seg_per_chamber_%s_bx%s_crosspart_%s_or%d_log.pdf"%(hits, bx, cross_part, num_or))
-    num_seg_per_chamber.Write()
 
     c11b = ROOT.TCanvas('', '', 800, 650)
-    c11b.SetLeftMargin(0.15)
+    c11b.SetLeftMargin(0.05)
     c11b.SetGrid()
     c11b.DrawFrame(-0.5, -0.05, 12.5, 1.05, ";Number of Segments per Chamber/Event;Fraction of Events")
     num_bkg_seg_per_chamber.Scale(1.0/num_bkg_seg_per_chamber.Integral())
@@ -2212,7 +2211,7 @@ def analysis(root_dat, hits, bx, bx_list, cross_part, verbose, pu, num_or):
     num_bkg_seg_per_chamber.Write()
 
     c11c = ROOT.TCanvas('', '', 800, 650)
-    c11c.SetLeftMargin(0.15)
+    c11c.SetLeftMargin(0.05)
     c11c.SetLogy()
     c11c.SetGrid()
     c11c.DrawFrame(-0.5, 0.000001, 12.5, 1.5, ";Number of Segments per Chamber/Event;Fraction of Events")
@@ -2226,10 +2225,9 @@ def analysis(root_dat, hits, bx, bx_list, cross_part, verbose, pu, num_or):
     latex.DrawLatex(0.9, 0.91,plot_text1)
     latex.DrawLatex(0.42, 0.91,plot_text2)
     c11c.Print("num_bkg_seg_per_chamber_%s_bx%s_crosspart_%s_or%d_log.pdf"%(hits, bx, cross_part, num_or))
-    num_bkg_seg_per_chamber.Write()
 
     c12 = ROOT.TCanvas('', '', 800, 650)
-    c12.SetLeftMargin(0.15)
+    c12.SetLeftMargin(0.05)
     c12.SetGrid()
     c12.DrawFrame(-0.5, -0.05, 12.5, 1.05, ";Number of Offline Segments per Chamber/Event;Fraction of Events")
     num_seg_per_chamber_offline.Scale(1.0/num_seg_per_chamber_offline.Integral())
@@ -2245,7 +2243,7 @@ def analysis(root_dat, hits, bx, bx_list, cross_part, verbose, pu, num_or):
     num_seg_per_chamber_offline.Write()
 
     c12a = ROOT.TCanvas('', '', 800, 650)
-    c12a.SetLeftMargin(0.15)
+    c12a.SetLeftMargin(0.05)
     c12a.SetLogy()
     c12a.SetGrid()
     c12a.DrawFrame(-0.5, 0.000001, 12.5, 1.5, ";Number of Offline Segments per Chamber/Event;Fraction of Events")
@@ -2259,10 +2257,9 @@ def analysis(root_dat, hits, bx, bx_list, cross_part, verbose, pu, num_or):
     latex.DrawLatex(0.9, 0.91,plot_text1)
     latex.DrawLatex(0.42, 0.91,plot_text2)
     c12a.Print("num_seg_per_chamber_offline_%s_bx%s_crosspart_%s_or%d_log.pdf"%(hits, bx, cross_part, num_or))
-    num_seg_per_chamber_offline.Write()
 
     c13a = ROOT.TCanvas('', '', 800, 650)
-    c13a.SetLeftMargin(0.15)
+    c13a.SetLeftMargin(0.05)
     c13a.SetGrid()
     c13a.DrawFrame(0, 0, 9, 1.05, ";#eta Partition;Nr. of Segments per Chamber per BX")
     num_bkg_seg_per_chamber_per_event_eta.SetStats(False)
@@ -2283,7 +2280,7 @@ def analysis(root_dat, hits, bx, bx_list, cross_part, verbose, pu, num_or):
     num_bkg_seg_per_chamber_per_event_eta.Write()
 
     c13b = ROOT.TCanvas('', '', 800, 650)
-    c13b.SetLeftMargin(0.15)
+    c13b.SetLeftMargin(0.05)
     c13b.SetGrid()
     num_bkg_seg_per_chamber_per_event_bending.SetStats(False)
     num_bkg_seg_per_chamber_per_event_bending.SetTitle("")
@@ -2303,7 +2300,7 @@ def analysis(root_dat, hits, bx, bx_list, cross_part, verbose, pu, num_or):
     num_bkg_seg_per_chamber_per_event_bending.Write()
 
     c13b_eta1 = ROOT.TCanvas('', '', 800, 650)
-    c13b_eta1.SetLeftMargin(0.15)
+    c13b_eta1.SetLeftMargin(0.05)
     c13b_eta1.SetGrid()
     num_bkg_seg_per_chamber_per_event_bending_eta1.SetStats(False)
     num_bkg_seg_per_chamber_per_event_bending_eta1.SetTitle("")
@@ -2323,7 +2320,7 @@ def analysis(root_dat, hits, bx, bx_list, cross_part, verbose, pu, num_or):
     num_bkg_seg_per_chamber_per_event_bending_eta1.Write()
 
     c13b_eta2 = ROOT.TCanvas('', '', 800, 650)
-    c13b_eta2.SetLeftMargin(0.15)
+    c13b_eta2.SetLeftMargin(0.05)
     c13b_eta2.SetGrid()
     num_bkg_seg_per_chamber_per_event_bending_eta2.SetStats(False)
     num_bkg_seg_per_chamber_per_event_bending_eta2.SetTitle("")
@@ -2343,7 +2340,7 @@ def analysis(root_dat, hits, bx, bx_list, cross_part, verbose, pu, num_or):
     num_bkg_seg_per_chamber_per_event_bending_eta2.Write()
 
     c13b_eta3 = ROOT.TCanvas('', '', 800, 650)
-    c13b_eta3.SetLeftMargin(0.15)
+    c13b_eta3.SetLeftMargin(0.05)
     c13b_eta3.SetGrid()
     num_bkg_seg_per_chamber_per_event_bending_eta3.SetStats(False)
     num_bkg_seg_per_chamber_per_event_bending_eta3.SetTitle("")
@@ -2363,7 +2360,7 @@ def analysis(root_dat, hits, bx, bx_list, cross_part, verbose, pu, num_or):
     num_bkg_seg_per_chamber_per_event_bending_eta3.Write()
 
     c13b_eta4 = ROOT.TCanvas('', '', 800, 650)
-    c13b_eta4.SetLeftMargin(0.15)
+    c13b_eta4.SetLeftMargin(0.05)
     c13b_eta4.SetGrid()
     num_bkg_seg_per_chamber_per_event_bending_eta4.SetStats(False)
     num_bkg_seg_per_chamber_per_event_bending_eta4.SetTitle("")
@@ -2383,7 +2380,7 @@ def analysis(root_dat, hits, bx, bx_list, cross_part, verbose, pu, num_or):
     num_bkg_seg_per_chamber_per_event_bending_eta4.Write()
 
     c13b_eta5 = ROOT.TCanvas('', '', 800, 650)
-    c13b_eta5.SetLeftMargin(0.15)
+    c13b_eta5.SetLeftMargin(0.05)
     c13b_eta5.SetGrid()
     num_bkg_seg_per_chamber_per_event_bending_eta5.SetStats(False)
     num_bkg_seg_per_chamber_per_event_bending_eta5.SetTitle("")
@@ -2403,7 +2400,7 @@ def analysis(root_dat, hits, bx, bx_list, cross_part, verbose, pu, num_or):
     num_bkg_seg_per_chamber_per_event_bending_eta5.Write()
 
     c13b_eta6 = ROOT.TCanvas('', '', 800, 650)
-    c13b_eta6.SetLeftMargin(0.15)
+    c13b_eta6.SetLeftMargin(0.05)
     c13b_eta6.SetGrid()
     num_bkg_seg_per_chamber_per_event_bending_eta6.SetStats(False)
     num_bkg_seg_per_chamber_per_event_bending_eta6.SetTitle("")
@@ -2423,7 +2420,7 @@ def analysis(root_dat, hits, bx, bx_list, cross_part, verbose, pu, num_or):
     num_bkg_seg_per_chamber_per_event_bending_eta6.Write()
 
     c13b_eta7 = ROOT.TCanvas('', '', 800, 650)
-    c13b_eta7.SetLeftMargin(0.15)
+    c13b_eta7.SetLeftMargin(0.05)
     c13b_eta7.SetGrid()
     num_bkg_seg_per_chamber_per_event_bending_eta7.SetStats(False)
     num_bkg_seg_per_chamber_per_event_bending_eta7.SetTitle("")
@@ -2443,7 +2440,7 @@ def analysis(root_dat, hits, bx, bx_list, cross_part, verbose, pu, num_or):
     num_bkg_seg_per_chamber_per_event_bending_eta7.Write()
 
     c13b_eta8 = ROOT.TCanvas('', '', 800, 650)
-    c13b_eta8.SetLeftMargin(0.15)
+    c13b_eta8.SetLeftMargin(0.05)
     c13b_eta8.SetGrid()
     num_bkg_seg_per_chamber_per_event_bending_eta8.SetStats(False)
     num_bkg_seg_per_chamber_per_event_bending_eta8.SetTitle("")
@@ -2463,7 +2460,7 @@ def analysis(root_dat, hits, bx, bx_list, cross_part, verbose, pu, num_or):
     num_bkg_seg_per_chamber_per_event_bending_eta8.Write()
 
     c13c = ROOT.TCanvas('', '', 800, 650)
-    c13c.SetLeftMargin(0.15)
+    c13c.SetLeftMargin(0.05)
     c13c.SetGrid()
     c13c.DrawFrame(-4, 0, 4, 1.1*num_bkg_seg_per_chamber_per_event_bending.GetMaximum(), ";Bending Angle (sbits/layer);Nr. of Segments per Chamber per BX")
     num_bkg_seg_per_chamber_per_event_bending_stack = ROOT.THStack("num_bkg_seg_per_chamber_per_event_bending_stack", "num_bkg_seg_per_chamber_per_event_bending_stack")
@@ -2561,7 +2558,7 @@ def analysis(root_dat, hits, bx, bx_list, cross_part, verbose, pu, num_or):
     num_bkg_seg_per_chamber_per_event_bending17.Write()
 
     c13d = ROOT.TCanvas('', '', 800, 650)
-    c13d.SetLeftMargin(0.15)
+    c13d.SetLeftMargin(0.05)
     c13d.SetGrid()
     num_signal_seg_per_chamber_per_event_bending.SetStats(False)
     num_signal_seg_per_chamber_per_event_bending.SetTitle("")
@@ -2581,7 +2578,7 @@ def analysis(root_dat, hits, bx, bx_list, cross_part, verbose, pu, num_or):
     num_signal_seg_per_chamber_per_event_bending.Write()
 
     c13d_eta1 = ROOT.TCanvas('', '', 800, 650)
-    c13d_eta1.SetLeftMargin(0.15)
+    c13d_eta1.SetLeftMargin(0.05)
     c13d_eta1.SetGrid()
     num_signal_seg_per_chamber_per_event_bending_eta1.SetStats(False)
     num_signal_seg_per_chamber_per_event_bending_eta1.SetTitle("")
@@ -2601,7 +2598,7 @@ def analysis(root_dat, hits, bx, bx_list, cross_part, verbose, pu, num_or):
     num_signal_seg_per_chamber_per_event_bending_eta1.Write()
 
     c13d_eta2 = ROOT.TCanvas('', '', 800, 650)
-    c13d_eta2.SetLeftMargin(0.15)
+    c13d_eta2.SetLeftMargin(0.05)
     c13d_eta2.SetGrid()
     num_signal_seg_per_chamber_per_event_bending_eta2.SetStats(False)
     num_signal_seg_per_chamber_per_event_bending_eta2.SetTitle("")
@@ -2621,7 +2618,7 @@ def analysis(root_dat, hits, bx, bx_list, cross_part, verbose, pu, num_or):
     num_signal_seg_per_chamber_per_event_bending_eta2.Write()
 
     c13d_eta3 = ROOT.TCanvas('', '', 800, 650)
-    c13d_eta3.SetLeftMargin(0.15)
+    c13d_eta3.SetLeftMargin(0.05)
     c13d_eta3.SetGrid()
     num_signal_seg_per_chamber_per_event_bending_eta3.SetStats(False)
     num_signal_seg_per_chamber_per_event_bending_eta3.SetTitle("")
@@ -2641,7 +2638,7 @@ def analysis(root_dat, hits, bx, bx_list, cross_part, verbose, pu, num_or):
     num_signal_seg_per_chamber_per_event_bending_eta3.Write()
 
     c13d_eta4 = ROOT.TCanvas('', '', 800, 650)
-    c13d_eta4.SetLeftMargin(0.15)
+    c13d_eta4.SetLeftMargin(0.05)
     c13d_eta4.SetGrid()
     num_signal_seg_per_chamber_per_event_bending_eta4.SetStats(False)
     num_signal_seg_per_chamber_per_event_bending_eta4.SetTitle("")
@@ -2661,7 +2658,7 @@ def analysis(root_dat, hits, bx, bx_list, cross_part, verbose, pu, num_or):
     num_signal_seg_per_chamber_per_event_bending_eta4.Write()
 
     c13d_eta5 = ROOT.TCanvas('', '', 800, 650)
-    c13d_eta5.SetLeftMargin(0.15)
+    c13d_eta5.SetLeftMargin(0.05)
     c13d_eta5.SetGrid()
     num_signal_seg_per_chamber_per_event_bending_eta5.SetStats(False)
     num_signal_seg_per_chamber_per_event_bending_eta5.SetTitle("")
@@ -2681,7 +2678,7 @@ def analysis(root_dat, hits, bx, bx_list, cross_part, verbose, pu, num_or):
     num_signal_seg_per_chamber_per_event_bending_eta5.Write()
 
     c13d_eta6 = ROOT.TCanvas('', '', 800, 650)
-    c13d_eta6.SetLeftMargin(0.15)
+    c13d_eta6.SetLeftMargin(0.05)
     c13d_eta6.SetGrid()
     num_signal_seg_per_chamber_per_event_bending_eta6.SetStats(False)
     num_signal_seg_per_chamber_per_event_bending_eta6.SetTitle("")
@@ -2701,7 +2698,7 @@ def analysis(root_dat, hits, bx, bx_list, cross_part, verbose, pu, num_or):
     num_signal_seg_per_chamber_per_event_bending_eta6.Write()
 
     c13d_eta7 = ROOT.TCanvas('', '', 800, 650)
-    c13d_eta7.SetLeftMargin(0.15)
+    c13d_eta7.SetLeftMargin(0.05)
     c13d_eta7.SetGrid()
     num_signal_seg_per_chamber_per_event_bending_eta7.SetStats(False)
     num_signal_seg_per_chamber_per_event_bending_eta7.SetTitle("")
@@ -2721,7 +2718,7 @@ def analysis(root_dat, hits, bx, bx_list, cross_part, verbose, pu, num_or):
     num_signal_seg_per_chamber_per_event_bending_eta7.Write()
 
     c13d_eta8 = ROOT.TCanvas('', '', 800, 650)
-    c13d_eta8.SetLeftMargin(0.15)
+    c13d_eta8.SetLeftMargin(0.05)
     c13d_eta8.SetGrid()
     num_signal_seg_per_chamber_per_event_bending_eta8.SetStats(False)
     num_signal_seg_per_chamber_per_event_bending_eta8.SetTitle("")
@@ -2741,7 +2738,7 @@ def analysis(root_dat, hits, bx, bx_list, cross_part, verbose, pu, num_or):
     num_signal_seg_per_chamber_per_event_bending_eta8.Write()
 
     c13e = ROOT.TCanvas('', '', 800, 650)
-    c13e.SetLeftMargin(0.15)
+    c13e.SetLeftMargin(0.05)
     c13e.SetGrid()
     c13e.DrawFrame(-2, 0, 2, 1.1*num_signal_seg_per_chamber_per_event_bending.GetMaximum(), ";Bending Angle (sbits/layer);Nr. of Signal Segments per Chamber per BX")
     num_signal_seg_per_chamber_per_event_bending_stack = ROOT.THStack("num_signal_seg_per_chamber_per_event_bending_stack", "num_signal_seg_per_chamber_per_event_bending_stack")
@@ -2839,7 +2836,7 @@ def analysis(root_dat, hits, bx, bx_list, cross_part, verbose, pu, num_or):
     num_signal_seg_per_chamber_per_event_bending17.Write()
 
     c13f = ROOT.TCanvas('', '', 800, 650)
-    c13f.SetLeftMargin(0.15)
+    c13f.SetLeftMargin(0.05)
     c13f.SetGrid()
     num_bkg_seg_per_chamber_per_event_nlayers.SetStats(False)
     num_bkg_seg_per_chamber_per_event_nlayers.SetTitle("")
@@ -2859,7 +2856,7 @@ def analysis(root_dat, hits, bx, bx_list, cross_part, verbose, pu, num_or):
     num_bkg_seg_per_chamber_per_event_nlayers.Write()
 
     c13f_eta1 = ROOT.TCanvas('', '', 800, 650)
-    c13f_eta1.SetLeftMargin(0.15)
+    c13f_eta1.SetLeftMargin(0.05)
     c13f_eta1.SetGrid()
     num_bkg_seg_per_chamber_per_event_nlayers_eta1.SetStats(False)
     num_bkg_seg_per_chamber_per_event_nlayers_eta1.SetTitle("")
@@ -2879,7 +2876,7 @@ def analysis(root_dat, hits, bx, bx_list, cross_part, verbose, pu, num_or):
     num_bkg_seg_per_chamber_per_event_nlayers_eta1.Write()
 
     c13f_eta2 = ROOT.TCanvas('', '', 800, 650)
-    c13f_eta2.SetLeftMargin(0.15)
+    c13f_eta2.SetLeftMargin(0.05)
     c13f_eta2.SetGrid()
     num_bkg_seg_per_chamber_per_event_nlayers_eta2.SetStats(False)
     num_bkg_seg_per_chamber_per_event_nlayers_eta2.SetTitle("")
@@ -2899,7 +2896,7 @@ def analysis(root_dat, hits, bx, bx_list, cross_part, verbose, pu, num_or):
     num_bkg_seg_per_chamber_per_event_nlayers_eta2.Write()
 
     c13f_eta3 = ROOT.TCanvas('', '', 800, 650)
-    c13f_eta3.SetLeftMargin(0.15)
+    c13f_eta3.SetLeftMargin(0.05)
     c13f_eta3.SetGrid()
     num_bkg_seg_per_chamber_per_event_nlayers_eta3.SetStats(False)
     num_bkg_seg_per_chamber_per_event_nlayers_eta3.SetTitle("")
@@ -2919,7 +2916,7 @@ def analysis(root_dat, hits, bx, bx_list, cross_part, verbose, pu, num_or):
     num_bkg_seg_per_chamber_per_event_nlayers_eta3.Write()
 
     c13f_eta4 = ROOT.TCanvas('', '', 800, 650)
-    c13f_eta4.SetLeftMargin(0.15)
+    c13f_eta4.SetLeftMargin(0.05)
     c13f_eta4.SetGrid()
     num_bkg_seg_per_chamber_per_event_nlayers_eta4.SetStats(False)
     num_bkg_seg_per_chamber_per_event_nlayers_eta4.SetTitle("")
@@ -2939,7 +2936,7 @@ def analysis(root_dat, hits, bx, bx_list, cross_part, verbose, pu, num_or):
     num_bkg_seg_per_chamber_per_event_nlayers_eta4.Write()
 
     c13f_eta5 = ROOT.TCanvas('', '', 800, 650)
-    c13f_eta5.SetLeftMargin(0.15)
+    c13f_eta5.SetLeftMargin(0.05)
     c13f_eta5.SetGrid()
     num_bkg_seg_per_chamber_per_event_nlayers_eta5.SetStats(False)
     num_bkg_seg_per_chamber_per_event_nlayers_eta5.SetTitle("")
@@ -2959,7 +2956,7 @@ def analysis(root_dat, hits, bx, bx_list, cross_part, verbose, pu, num_or):
     num_bkg_seg_per_chamber_per_event_nlayers_eta5.Write()
 
     c13f_eta6 = ROOT.TCanvas('', '', 800, 650)
-    c13f_eta6.SetLeftMargin(0.15)
+    c13f_eta6.SetLeftMargin(0.05)
     c13f_eta6.SetGrid()
     num_bkg_seg_per_chamber_per_event_nlayers_eta6.SetStats(False)
     num_bkg_seg_per_chamber_per_event_nlayers_eta6.SetTitle("")
@@ -2979,7 +2976,7 @@ def analysis(root_dat, hits, bx, bx_list, cross_part, verbose, pu, num_or):
     num_bkg_seg_per_chamber_per_event_nlayers_eta6.Write()
 
     c13f_eta7 = ROOT.TCanvas('', '', 800, 650)
-    c13f_eta7.SetLeftMargin(0.15)
+    c13f_eta7.SetLeftMargin(0.05)
     c13f_eta7.SetGrid()
     num_bkg_seg_per_chamber_per_event_nlayers_eta7.SetStats(False)
     num_bkg_seg_per_chamber_per_event_nlayers_eta7.SetTitle("")
@@ -2999,7 +2996,7 @@ def analysis(root_dat, hits, bx, bx_list, cross_part, verbose, pu, num_or):
     num_bkg_seg_per_chamber_per_event_nlayers_eta7.Write()
 
     c13f_eta8 = ROOT.TCanvas('', '', 800, 650)
-    c13f_eta8.SetLeftMargin(0.15)
+    c13f_eta8.SetLeftMargin(0.05)
     c13f_eta8.SetGrid()
     num_bkg_seg_per_chamber_per_event_nlayers_eta8.SetStats(False)
     num_bkg_seg_per_chamber_per_event_nlayers_eta8.SetTitle("")
@@ -3019,7 +3016,7 @@ def analysis(root_dat, hits, bx, bx_list, cross_part, verbose, pu, num_or):
     num_bkg_seg_per_chamber_per_event_nlayers_eta8.Write()
 
     c13g = ROOT.TCanvas('', '', 800, 650)
-    c13g.SetLeftMargin(0.15)
+    c13g.SetLeftMargin(0.05)
     c13g.SetGrid()
     c13g.DrawFrame(0, 0, 7, 1.1*num_bkg_seg_per_chamber_per_event_nlayers.GetMaximum(), ";Number of Layers Hit;Nr. of Segments per Chamber per BX")
     num_bkg_seg_per_chamber_per_event_nlayers_stack = ROOT.THStack("num_bkg_seg_per_chamber_per_event_nlayers_stack", "num_bkg_seg_per_chamber_per_event_nlayers_stack")
@@ -3117,7 +3114,7 @@ def analysis(root_dat, hits, bx, bx_list, cross_part, verbose, pu, num_or):
     num_bkg_seg_per_chamber_per_event_nlayers17.Write()
 
     c13h = ROOT.TCanvas('', '', 800, 650)
-    c13h.SetLeftMargin(0.15)
+    c13h.SetLeftMargin(0.05)
     c13h.SetGrid()
     num_signal_seg_per_chamber_per_event_nlayers.SetStats(False)
     num_signal_seg_per_chamber_per_event_nlayers.SetTitle("")
@@ -3137,7 +3134,7 @@ def analysis(root_dat, hits, bx, bx_list, cross_part, verbose, pu, num_or):
     num_signal_seg_per_chamber_per_event_nlayers.Write()
 
     c13h_eta1 = ROOT.TCanvas('', '', 800, 650)
-    c13h_eta1.SetLeftMargin(0.15)
+    c13h_eta1.SetLeftMargin(0.05)
     c13h_eta1.SetGrid()
     num_signal_seg_per_chamber_per_event_nlayers_eta1.SetStats(False)
     num_signal_seg_per_chamber_per_event_nlayers_eta1.SetTitle("")
@@ -3157,7 +3154,7 @@ def analysis(root_dat, hits, bx, bx_list, cross_part, verbose, pu, num_or):
     num_signal_seg_per_chamber_per_event_nlayers_eta1.Write()
 
     c13h_eta2 = ROOT.TCanvas('', '', 800, 650)
-    c13h_eta2.SetLeftMargin(0.15)
+    c13h_eta2.SetLeftMargin(0.05)
     c13h_eta2.SetGrid()
     num_signal_seg_per_chamber_per_event_nlayers_eta2.SetStats(False)
     num_signal_seg_per_chamber_per_event_nlayers_eta2.SetTitle("")
@@ -3177,7 +3174,7 @@ def analysis(root_dat, hits, bx, bx_list, cross_part, verbose, pu, num_or):
     num_signal_seg_per_chamber_per_event_nlayers_eta2.Write()
 
     c13h_eta3 = ROOT.TCanvas('', '', 800, 650)
-    c13h_eta3.SetLeftMargin(0.15)
+    c13h_eta3.SetLeftMargin(0.05)
     c13h_eta3.SetGrid()
     num_signal_seg_per_chamber_per_event_nlayers_eta3.SetStats(False)
     num_signal_seg_per_chamber_per_event_nlayers_eta3.SetTitle("")
@@ -3197,7 +3194,7 @@ def analysis(root_dat, hits, bx, bx_list, cross_part, verbose, pu, num_or):
     num_signal_seg_per_chamber_per_event_nlayers_eta3.Write()
 
     c13h_eta4 = ROOT.TCanvas('', '', 800, 650)
-    c13h_eta4.SetLeftMargin(0.15)
+    c13h_eta4.SetLeftMargin(0.05)
     c13h_eta4.SetGrid()
     num_signal_seg_per_chamber_per_event_nlayers_eta4.SetStats(False)
     num_signal_seg_per_chamber_per_event_nlayers_eta4.SetTitle("")
@@ -3236,7 +3233,7 @@ def analysis(root_dat, hits, bx, bx_list, cross_part, verbose, pu, num_or):
     num_signal_seg_per_chamber_per_event_nlayers_eta5.Write()
 
     c13h_eta6 = ROOT.TCanvas('', '', 800, 650)
-    c13h_eta6.SetLeftMargin(0.15)
+    c13h_eta6.SetLeftMargin(0.05)
     c13h_eta6.SetGrid()
     num_signal_seg_per_chamber_per_event_nlayers_eta6.SetStats(False)
     num_signal_seg_per_chamber_per_event_nlayers_eta6.SetTitle("")
@@ -3256,7 +3253,7 @@ def analysis(root_dat, hits, bx, bx_list, cross_part, verbose, pu, num_or):
     num_signal_seg_per_chamber_per_event_nlayers_eta6.Write()
 
     c13h_eta7 = ROOT.TCanvas('', '', 800, 650)
-    c13h_eta7.SetLeftMargin(0.15)
+    c13h_eta7.SetLeftMargin(0.05)
     c13h_eta7.SetGrid()
     num_signal_seg_per_chamber_per_event_nlayers_eta7.SetStats(False)
     num_signal_seg_per_chamber_per_event_nlayers_eta7.SetTitle("")
@@ -3276,7 +3273,7 @@ def analysis(root_dat, hits, bx, bx_list, cross_part, verbose, pu, num_or):
     num_signal_seg_per_chamber_per_event_nlayers_eta7.Write()
 
     c13h_eta8 = ROOT.TCanvas('', '', 800, 650)
-    c13h_eta8.SetLeftMargin(0.15)
+    c13h_eta8.SetLeftMargin(0.05)
     c13h_eta8.SetGrid()
     num_signal_seg_per_chamber_per_event_nlayers_eta8.SetStats(False)
     num_signal_seg_per_chamber_per_event_nlayers_eta8.SetTitle("")
@@ -3296,7 +3293,7 @@ def analysis(root_dat, hits, bx, bx_list, cross_part, verbose, pu, num_or):
     num_signal_seg_per_chamber_per_event_nlayers_eta8.Write()
 
     c13i = ROOT.TCanvas('', '', 800, 650)
-    c13i.SetLeftMargin(0.15)
+    c13i.SetLeftMargin(0.05)
     c13i.SetGrid()
     c13i.DrawFrame(0, 0, 7, 1.1*num_signal_seg_per_chamber_per_event_nlayers.GetMaximum(), ";Number of Layers Hit;Nr. of Signal Segments per Chamber per BX")
     num_signal_seg_per_chamber_per_event_nlayers_stack = ROOT.THStack("num_signal_seg_per_chamber_per_event_nlayers_stack", "num_signal_seg_per_chamber_per_event_nlayers_stack")
@@ -3394,7 +3391,7 @@ def analysis(root_dat, hits, bx, bx_list, cross_part, verbose, pu, num_or):
     num_signal_seg_per_chamber_per_event_nlayers17.Write()
 
     c13i_2 = ROOT.TCanvas('', '', 800, 650)
-    c13i_2.SetLeftMargin(0.15)
+    c13i_2.SetLeftMargin(0.05)
     c13i_2.SetGrid()
     c13i_2.DrawFrame(-2, 0, 2, 50, ";Bending Angle (sbits/layer);pT (GeV)")
     num_signal_seg_per_chamber_per_event_bending_pt.Scale(1/(36.0*n_total_events))
@@ -3405,7 +3402,7 @@ def analysis(root_dat, hits, bx, bx_list, cross_part, verbose, pu, num_or):
     num_signal_seg_per_chamber_per_event_bending_pt.Write()
 
     c13i_eta1 = ROOT.TCanvas('', '', 800, 650)
-    c13i_eta1.SetLeftMargin(0.15)
+    c13i_eta1.SetLeftMargin(0.05)
     c13i_eta1.SetGrid()
     c13i_eta1.DrawFrame(-2, 0, 2, 50, ";Bending Angle (sbits/layer);pT (GeV)")
     num_signal_seg_per_chamber_per_event_bending_pt_eta1.Scale(1/(36.0*n_total_events))
@@ -3416,7 +3413,7 @@ def analysis(root_dat, hits, bx, bx_list, cross_part, verbose, pu, num_or):
     num_signal_seg_per_chamber_per_event_bending_pt_eta1.Write()
 
     c13i_eta2 = ROOT.TCanvas('', '', 800, 650)
-    c13i_eta2.SetLeftMargin(0.15)
+    c13i_eta2.SetLeftMargin(0.05)
     c13i_eta2.SetGrid()
     c13i_eta2.DrawFrame(-2, 0, 2, 50, ";Bending Angle (sbits/layer);pT (GeV)")
     num_signal_seg_per_chamber_per_event_bending_pt_eta2.Scale(1/(36.0*n_total_events))
@@ -3427,7 +3424,7 @@ def analysis(root_dat, hits, bx, bx_list, cross_part, verbose, pu, num_or):
     num_signal_seg_per_chamber_per_event_bending_pt_eta2.Write()
 
     c13i_eta3 = ROOT.TCanvas('', '', 800, 650)
-    c13i_eta3.SetLeftMargin(0.15)
+    c13i_eta3.SetLeftMargin(0.05)
     c13i_eta3.SetGrid()
     c13i_eta3.DrawFrame(-2, 0, 2, 50, ";Bending Angle (sbits/layer);pT (GeV)")
     num_signal_seg_per_chamber_per_event_bending_pt_eta3.Scale(1/(36.0*n_total_events))
@@ -3438,7 +3435,7 @@ def analysis(root_dat, hits, bx, bx_list, cross_part, verbose, pu, num_or):
     num_signal_seg_per_chamber_per_event_bending_pt_eta3.Write()
 
     c13i_eta4 = ROOT.TCanvas('', '', 800, 650)
-    c13i_eta4.SetLeftMargin(0.15)
+    c13i_eta4.SetLeftMargin(0.05)
     c13i_eta4.SetGrid()
     c13i_eta4.DrawFrame(-2, 0, 2, 50, ";Bending Angle (sbits/layer);pT (GeV)")
     num_signal_seg_per_chamber_per_event_bending_pt_eta4.Scale(1/(36.0*n_total_events))
@@ -3449,7 +3446,7 @@ def analysis(root_dat, hits, bx, bx_list, cross_part, verbose, pu, num_or):
     num_signal_seg_per_chamber_per_event_bending_pt_eta4.Write()
 
     c13i_eta5 = ROOT.TCanvas('', '', 800, 650)
-    c13i_eta5.SetLeftMargin(0.15)
+    c13i_eta5.SetLeftMargin(0.05)
     c13i_eta5.SetGrid()
     c13i_eta5.DrawFrame(-2, 0, 2, 50, ";Bending Angle (sbits/layer);pT (GeV)")
     num_signal_seg_per_chamber_per_event_bending_pt_eta5.Scale(1/(36.0*n_total_events))
@@ -3460,7 +3457,7 @@ def analysis(root_dat, hits, bx, bx_list, cross_part, verbose, pu, num_or):
     num_signal_seg_per_chamber_per_event_bending_pt_eta5.Write()
 
     c13i_eta6 = ROOT.TCanvas('', '', 800, 650)
-    c13i_eta6.SetLeftMargin(0.15)
+    c13i_eta6.SetLeftMargin(0.05)
     c13i_eta6.SetGrid()
     c13i_eta6.DrawFrame(-2, 0, 2, 50, ";Bending Angle (sbits/layer);pT (GeV)")
     num_signal_seg_per_chamber_per_event_bending_pt_eta6.Scale(1/(36.0*n_total_events))
@@ -3471,7 +3468,7 @@ def analysis(root_dat, hits, bx, bx_list, cross_part, verbose, pu, num_or):
     num_signal_seg_per_chamber_per_event_bending_pt_eta6.Write()
 
     c13i_eta7 = ROOT.TCanvas('', '', 800, 650)
-    c13i_eta7.SetLeftMargin(0.15)
+    c13i_eta7.SetLeftMargin(0.05)
     c13i_eta7.SetGrid()
     c13i_eta7.DrawFrame(-2, 0, 2, 50, ";Bending Angle (sbits/layer);pT (GeV)")
     num_signal_seg_per_chamber_per_event_bending_pt_eta7.Scale(1/(36.0*n_total_events))
@@ -3482,7 +3479,7 @@ def analysis(root_dat, hits, bx, bx_list, cross_part, verbose, pu, num_or):
     num_signal_seg_per_chamber_per_event_bending_pt_eta7.Write()
 
     c13i_eta8 = ROOT.TCanvas('', '', 800, 650)
-    c13i_eta8.SetLeftMargin(0.15)
+    c13i_eta8.SetLeftMargin(0.05)
     c13i_eta8.SetGrid()
     c13i_eta8.DrawFrame(-2, 0, 2, 50, ";Bending Angle (sbits/layer);pT (GeV)")
     num_signal_seg_per_chamber_per_event_bending_pt_eta8.Scale(1/(36.0*n_total_events))
@@ -3493,7 +3490,7 @@ def analysis(root_dat, hits, bx, bx_list, cross_part, verbose, pu, num_or):
     num_signal_seg_per_chamber_per_event_bending_pt_eta8.Write()
     
     cg = ROOT.TCanvas('', '', 800, 650)
-    cg.SetLeftMargin(0.15)
+    cg.SetLeftMargin(0.05)
     cg.SetGrid()
     cg.DrawFrame(-2, 0, 2, 50, ";Bending Angle (sbits/layer);pT (GeV)")
     online_seg_sim_track_matched_pt = [float(x) for x in online_seg_sim_track_matched_pt]
@@ -3517,7 +3514,7 @@ def analysis(root_dat, hits, bx, bx_list, cross_part, verbose, pu, num_or):
 
     '''
     c_max_cluster_size_p = ROOT.TCanvas('', '', 800, 650)
-    c_max_cluster_size_p.SetLeftMargin(0.15)
+    c_max_cluster_size_p.SetLeftMargin(0.05)
     c_max_cluster_size_p.SetGrid()
     c_max_cluster_size_p.DrawFrame(0, 0, 38, 1.1, ";Max Cluster Size;Purity")
     st_purity_max_cluster_size = ROOT.TEfficiency(st_purity_passed_max_cluster_size, st_purity_total_max_cluster_size)
@@ -3537,7 +3534,7 @@ def analysis(root_dat, hits, bx, bx_list, cross_part, verbose, pu, num_or):
     st_purity_max_cluster_size.Write("st_purity_max_cluster_size")
 
     c_max_noise_p = ROOT.TCanvas('', '', 800, 650)
-    c_max_noise_p.SetLeftMargin(0.15)
+    c_max_noise_p.SetLeftMargin(0.05)
     c_max_noise_p.SetGrid()
     c_max_noise_p.DrawFrame(0, 0, 38, 1.1, ";Max Noise;Purity")
     st_purity_max_noise = ROOT.TEfficiency(st_purity_passed_max_noise, st_purity_total_max_noise)
@@ -3557,7 +3554,7 @@ def analysis(root_dat, hits, bx, bx_list, cross_part, verbose, pu, num_or):
     st_purity_max_noise.Write("st_purity_max_noise")
 
     c_nlayers_withcsg3_p = ROOT.TCanvas('', '', 800, 650)
-    c_nlayers_withcsg3_p.SetLeftMargin(0.15)
+    c_nlayers_withcsg3_p.SetLeftMargin(0.05)
     c_nlayers_withcsg3_p.SetGrid()
     c_nlayers_withcsg3_p.DrawFrame(0, 0, 7, 1.1, ";Nr. of Layers;Purity")
     st_purity_nlayers_withcsg3 = ROOT.TEfficiency(st_purity_passed_nlayers_withcsg3, st_purity_total_nlayers_withcsg3)
@@ -3577,7 +3574,7 @@ def analysis(root_dat, hits, bx, bx_list, cross_part, verbose, pu, num_or):
     st_purity_nlayers_withcsg3.Write("st_purity_nlayers_withcsg3")
 
     c_nlayers_withcsg5_p = ROOT.TCanvas('', '', 800, 650)
-    c_nlayers_withcsg5_p.SetLeftMargin(0.15)
+    c_nlayers_withcsg5_p.SetLeftMargin(0.05)
     c_nlayers_withcsg5_p.SetGrid()
     c_nlayers_withcsg5_p.DrawFrame(0, 0, 7, 1.1, ";Nr. of Layers;Purity")
     st_purity_nlayers_withcsg5 = ROOT.TEfficiency(st_purity_passed_nlayers_withcsg5, st_purity_total_nlayers_withcsg5)
@@ -3597,7 +3594,7 @@ def analysis(root_dat, hits, bx, bx_list, cross_part, verbose, pu, num_or):
     st_purity_nlayers_withcsg5.Write("st_purity_nlayers_withcsg5")
 
     c_nlayers_withcsg10_p = ROOT.TCanvas('', '', 800, 650)
-    c_nlayers_withcsg10_p.SetLeftMargin(0.15)
+    c_nlayers_withcsg10_p.SetLeftMargin(0.05)
     c_nlayers_withcsg10_p.SetGrid()
     c_nlayers_withcsg10_p.DrawFrame(0, 0, 7, 1.1, ";Nr. of Layers;Purity")
     st_purity_nlayers_withcsg10 = ROOT.TEfficiency(st_purity_passed_nlayers_withcsg10, st_purity_total_nlayers_withcsg10)
@@ -3617,7 +3614,7 @@ def analysis(root_dat, hits, bx, bx_list, cross_part, verbose, pu, num_or):
     st_purity_nlayers_withcsg10.Write("st_purity_nlayers_withcsg10")
 
     c_nlayers_withcsg15_p = ROOT.TCanvas('', '', 800, 650)
-    c_nlayers_withcsg15_p.SetLeftMargin(0.15)
+    c_nlayers_withcsg15_p.SetLeftMargin(0.05)
     c_nlayers_withcsg15_p.SetGrid()
     c_nlayers_withcsg15_p.DrawFrame(0, 0, 7, 1.1, ";Nr. of Layerse;Purity")
     st_purity_nlayers_withcsg15 = ROOT.TEfficiency(st_purity_passed_nlayers_withcsg15, st_purity_total_nlayers_withcsg15)
@@ -3637,7 +3634,7 @@ def analysis(root_dat, hits, bx, bx_list, cross_part, verbose, pu, num_or):
     st_purity_nlayers_withcsg15.Write("st_purity_nlayers_withcsg15")
 
     c_nlayers_withnoiseg3_p = ROOT.TCanvas('', '', 800, 650)
-    c_nlayers_withnoiseg3_p.SetLeftMargin(0.15)
+    c_nlayers_withnoiseg3_p.SetLeftMargin(0.05)
     c_nlayers_withnoiseg3_p.SetGrid()
     c_nlayers_withnoiseg3_p.DrawFrame(0, 0, 7, 1.1, ";Nr. of Layers;Purity")
     st_purity_nlayers_withnoiseg3 = ROOT.TEfficiency(st_purity_passed_nlayers_withnoiseg3, st_purity_total_nlayers_withnoiseg3)
@@ -3657,7 +3654,7 @@ def analysis(root_dat, hits, bx, bx_list, cross_part, verbose, pu, num_or):
     st_purity_nlayers_withnoiseg3.Write("st_purity_nlayers_withnoiseg3")
 
     c_nlayers_withnoiseg5_p = ROOT.TCanvas('', '', 800, 650)
-    c_nlayers_withnoiseg5_p.SetLeftMargin(0.15)
+    c_nlayers_withnoiseg5_p.SetLeftMargin(0.05)
     c_nlayers_withnoiseg5_p.SetGrid()
     c_nlayers_withnoiseg5_p.DrawFrame(0, 0, 7, 1.1, ";Nr. of Layers;Purity")
     st_purity_nlayers_withnoiseg5 = ROOT.TEfficiency(st_purity_passed_nlayers_withnoiseg5, st_purity_total_nlayers_withnoiseg5)
@@ -3677,7 +3674,7 @@ def analysis(root_dat, hits, bx, bx_list, cross_part, verbose, pu, num_or):
     st_purity_nlayers_withnoiseg5.Write("st_purity_nlayers_withnoiseg5")
 
     c_nlayers_withnoiseg10_p = ROOT.TCanvas('', '', 800, 650)
-    c_nlayers_withnoiseg10_p.SetLeftMargin(0.15)
+    c_nlayers_withnoiseg10_p.SetLeftMargin(0.05)
     c_nlayers_withnoiseg10_p.SetGrid()
     c_nlayers_withnoiseg10_p.DrawFrame(0, 0, 7, 1.1, ";Nr. of Layers;Purity")
     st_purity_nlayers_withnoiseg10 = ROOT.TEfficiency(st_purity_passed_nlayers_withnoiseg10, st_purity_total_nlayers_withnoiseg10)
@@ -3697,7 +3694,7 @@ def analysis(root_dat, hits, bx, bx_list, cross_part, verbose, pu, num_or):
     st_purity_nlayers_withnoiseg10.Write("st_purity_nlayers_withnoiseg10")
 
     c_nlayers_withnoiseg15_p = ROOT.TCanvas('', '', 800, 650)
-    c_nlayers_withnoiseg15_p.SetLeftMargin(0.15)
+    c_nlayers_withnoiseg15_p.SetLeftMargin(0.05)
     c_nlayers_withnoiseg15_p.SetGrid()
     c_nlayers_withnoiseg15_p.DrawFrame(0, 0, 7, 1.1, ";Nr. of Layerse;Purity")
     st_purity_nlayers_withnoiseg15 = ROOT.TEfficiency(st_purity_passed_nlayers_withnoiseg15, st_purity_total_nlayers_withnoiseg15)
@@ -3717,7 +3714,7 @@ def analysis(root_dat, hits, bx, bx_list, cross_part, verbose, pu, num_or):
     st_purity_nlayers_withnoiseg15.Write("st_purity_nlayers_withnoiseg15")
 
     c_max_cluster_size_e = ROOT.TCanvas('', '', 800, 650)
-    c_max_cluster_size_e.SetLeftMargin(0.15)
+    c_max_cluster_size_e.SetLeftMargin(0.05)
     c_max_cluster_size_e.SetGrid()
     c_max_cluster_size_e.DrawFrame(0, 0, 38, 1.1, ";Max Cluster Size;Efficiency")
     st_effi_max_cluster_size = ROOT.TEfficiency(st_effi_passed_max_cluster_size, st_effi_total_max_cluster_size)
@@ -3737,7 +3734,7 @@ def analysis(root_dat, hits, bx, bx_list, cross_part, verbose, pu, num_or):
     st_effi_max_cluster_size.Write("st_effi_max_cluster_size")
 
     c_max_noise_e = ROOT.TCanvas('', '', 800, 650)
-    c_max_noise_e.SetLeftMargin(0.15)
+    c_max_noise_e.SetLeftMargin(0.05)
     c_max_noise_e.SetGrid()
     c_max_noise_e.DrawFrame(0, 0, 38, 1.1, ";Max Noise;Efficiency")
     st_effi_max_noise = ROOT.TEfficiency(st_effi_passed_max_noise, st_effi_total_max_noise)
@@ -3757,7 +3754,7 @@ def analysis(root_dat, hits, bx, bx_list, cross_part, verbose, pu, num_or):
     st_effi_max_noise.Write("st_effi_max_noise")
 
     c_nlayers_withcsg3_e = ROOT.TCanvas('', '', 800, 650)
-    c_nlayers_withcsg3_e.SetLeftMargin(0.15)
+    c_nlayers_withcsg3_e.SetLeftMargin(0.05)
     c_nlayers_withcsg3_e.SetGrid()
     c_nlayers_withcsg3_e.DrawFrame(0, 0, 7, 1.1, ";Nr. of Layers;Efficiency")
     st_effi_nlayers_withcsg3 = ROOT.TEfficiency(st_effi_passed_nlayers_withcsg3, st_effi_total_nlayers_withcsg3)
@@ -3777,7 +3774,7 @@ def analysis(root_dat, hits, bx, bx_list, cross_part, verbose, pu, num_or):
     st_effi_nlayers_withcsg3.Write("st_effi_nlayers_withcsg3")
 
     c_nlayers_withcsg5_e = ROOT.TCanvas('', '', 800, 650)
-    c_nlayers_withcsg5_e.SetLeftMargin(0.15)
+    c_nlayers_withcsg5_e.SetLeftMargin(0.05)
     c_nlayers_withcsg5_e.SetGrid()
     c_nlayers_withcsg5_e.DrawFrame(0, 0, 7, 1.1, ";Nr. of Layers;Efficiency")
     st_effi_nlayers_withcsg5 = ROOT.TEfficiency(st_effi_passed_nlayers_withcsg5, st_effi_total_nlayers_withcsg5)
@@ -3797,7 +3794,7 @@ def analysis(root_dat, hits, bx, bx_list, cross_part, verbose, pu, num_or):
     st_effi_nlayers_withcsg5.Write("st_effi_nlayers_withcsg5")
 
     c_nlayers_withcsg10_e = ROOT.TCanvas('', '', 800, 650)
-    c_nlayers_withcsg10_e.SetLeftMargin(0.15)
+    c_nlayers_withcsg10_e.SetLeftMargin(0.05)
     c_nlayers_withcsg10_e.SetGrid()
     c_nlayers_withcsg10_e.DrawFrame(0, 0, 7, 1.1, ";Nr. of Layers;Efficiency")
     st_effi_nlayers_withcsg10 = ROOT.TEfficiency(st_effi_passed_nlayers_withcsg10, st_effi_total_nlayers_withcsg10)
@@ -3817,7 +3814,7 @@ def analysis(root_dat, hits, bx, bx_list, cross_part, verbose, pu, num_or):
     st_effi_nlayers_withcsg10.Write("st_effi_nlayers_withcsg10")
 
     c_nlayers_withcsg15_e = ROOT.TCanvas('', '', 800, 650)
-    c_nlayers_withcsg15_e.SetLeftMargin(0.15)
+    c_nlayers_withcsg15_e.SetLeftMargin(0.05)
     c_nlayers_withcsg15_e.SetGrid()
     c_nlayers_withcsg15_e.DrawFrame(0, 0, 7, 1.1, ";Nr. of Layerse;Efficiency")
     st_effi_nlayers_withcsg15 = ROOT.TEfficiency(st_effi_passed_nlayers_withcsg15, st_effi_total_nlayers_withcsg15)
@@ -3837,7 +3834,7 @@ def analysis(root_dat, hits, bx, bx_list, cross_part, verbose, pu, num_or):
     st_effi_nlayers_withcsg15.Write("st_effi_nlayers_withcsg15")
 
     c_nlayers_withnoiseg3_e = ROOT.TCanvas('', '', 800, 650)
-    c_nlayers_withnoiseg3_e.SetLeftMargin(0.15)
+    c_nlayers_withnoiseg3_e.SetLeftMargin(0.05)
     c_nlayers_withnoiseg3_e.SetGrid()
     c_nlayers_withnoiseg3_e.DrawFrame(0, 0, 7, 1.1, ";Nr. of Layers;Efficiency")
     st_effi_nlayers_withnoiseg3 = ROOT.TEfficiency(st_effi_passed_nlayers_withnoiseg3, st_effi_total_nlayers_withnoiseg3)
@@ -3857,7 +3854,7 @@ def analysis(root_dat, hits, bx, bx_list, cross_part, verbose, pu, num_or):
     st_effi_nlayers_withnoiseg3.Write("st_effi_nlayers_withnoiseg3")
 
     c_nlayers_withnoiseg5_e = ROOT.TCanvas('', '', 800, 650)
-    c_nlayers_withnoiseg5_e.SetLeftMargin(0.15)
+    c_nlayers_withnoiseg5_e.SetLeftMargin(0.05)
     c_nlayers_withnoiseg5_e.SetGrid()
     c_nlayers_withnoiseg5_e.DrawFrame(0, 0, 7, 1.1, ";Nr. of Layers;Efficiency")
     st_effi_nlayers_withnoiseg5 = ROOT.TEfficiency(st_effi_passed_nlayers_withnoiseg5, st_effi_total_nlayers_withnoiseg5)
@@ -3877,7 +3874,7 @@ def analysis(root_dat, hits, bx, bx_list, cross_part, verbose, pu, num_or):
     st_effi_nlayers_withnoiseg5.Write("st_effi_nlayers_withnoiseg5")
 
     c_nlayers_withnoiseg10_e = ROOT.TCanvas('', '', 800, 650)
-    c_nlayers_withnoiseg10_e.SetLeftMargin(0.15)
+    c_nlayers_withnoiseg10_e.SetLeftMargin(0.05)
     c_nlayers_withnoiseg10_e.SetGrid()
     c_nlayers_withnoiseg10_e.DrawFrame(0, 0, 7, 1.1, ";Nr. of Layers;Efficiency")
     st_effi_nlayers_withnoiseg10 = ROOT.TEfficiency(st_effi_passed_nlayers_withnoiseg10, st_effi_total_nlayers_withnoiseg10)
@@ -3897,7 +3894,7 @@ def analysis(root_dat, hits, bx, bx_list, cross_part, verbose, pu, num_or):
     st_effi_nlayers_withnoiseg10.Write("st_effi_nlayers_withnoiseg10")
 
     c_nlayers_withnoiseg15_e = ROOT.TCanvas('', '', 800, 650)
-    c_nlayers_withnoiseg15_e.SetLeftMargin(0.15)
+    c_nlayers_withnoiseg15_e.SetLeftMargin(0.05)
     c_nlayers_withnoiseg15_e.SetGrid()
     c_nlayers_withnoiseg15_e.DrawFrame(0, 0, 7, 1.1, ";Nr. of Layerse;Efficiency")
     st_effi_nlayers_withnoiseg15 = ROOT.TEfficiency(st_effi_passed_nlayers_withnoiseg15, st_effi_total_nlayers_withnoiseg15)

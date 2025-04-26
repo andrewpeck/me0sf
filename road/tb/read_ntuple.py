@@ -150,5 +150,9 @@ def read_ntuple(file_path, entry_start=None, entry_stop=None):
                 'me0_seg_param_x_i': "seg_param_x", 
                 'me0_seg_param_y_i': "seg_param_y", 
                 'me0_seg_rec_hit_index_i': "seg_rec_hit_index"
-            })
+            },
+            entry_start=entry_start, 
+            entry_stop=entry_stop
+        )
+        
     return events
