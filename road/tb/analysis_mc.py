@@ -1239,7 +1239,7 @@ def analysis(root_dat, hits, bx, bx_list, cross_part, verbose, pu, num_or):
     offline_eff_bending.GetPaintedGraph().GetXaxis().SetLabelSize(0.04)
     ROOT.gPad.Update()
     latex.DrawLatex(0.9, 0.91,plot_text1)
-    latex.DrawLatex(0.42, 0.91,plot_text2)
+    latex.DrawLatex(0.5, 0.91,plot_text2)
     c1.Print("offline_eff_bending_%s_bx%s_crosspart_%s_or%d.pdf"%(hits, bx, cross_part, num_or))
     offline_eff_bending.Write("offline_eff_bending")
 
@@ -1259,7 +1259,7 @@ def analysis(root_dat, hits, bx, bx_list, cross_part, verbose, pu, num_or):
     offline_eff_eta.GetPaintedGraph().GetXaxis().SetLabelSize(0.04)
     ROOT.gPad.Update()
     latex.DrawLatex(0.9, 0.91,plot_text1)
-    latex.DrawLatex(0.42, 0.91,plot_text2)
+    latex.DrawLatex(0.5, 0.91,plot_text2)
     c1eta.Print("offline_eff_eta_%s_bx%s_crosspart_%s_or%d.pdf"%(hits, bx, cross_part, num_or))
     offline_eff_eta.Write("offline_eff_eta")
 
@@ -1280,7 +1280,7 @@ def analysis(root_dat, hits, bx, bx_list, cross_part, verbose, pu, num_or):
     offline_eff_id.GetPaintedGraph().GetXaxis().SetLabelSize(0.04)
     ROOT.gPad.Update()
     latex.DrawLatex(0.9, 0.91,plot_text1)
-    latex.DrawLatex(0.42, 0.91,plot_text2)
+    latex.DrawLatex(0.5, 0.91,plot_text2)
     c1id.Print("offline_eff_id_%s_bx%s_crosspart_%s_or%d.pdf"%(hits, bx, cross_part, num_or))
     offline_eff_id.Write("offline_eff_id")
 
@@ -1302,7 +1302,7 @@ def analysis(root_dat, hits, bx, bx_list, cross_part, verbose, pu, num_or):
     offline_effi_mres.SetLineWidth(1)
     offline_effi_mres.SetLineColor(1)
     latex.DrawLatex(0.9, 0.91,plot_text1)
-    latex.DrawLatex(0.42, 0.91,plot_text2)
+    latex.DrawLatex(0.5, 0.91,plot_text2)
     c2.Print("offline_effi_mres_%s_bx%s_crosspart_%s_or%d.pdf"%(hits, bx, cross_part, num_or))
     offline_effi_mres.Write("offline_effi_mres")
 
@@ -1325,7 +1325,7 @@ def analysis(root_dat, hits, bx, bx_list, cross_part, verbose, pu, num_or):
     offline_effi_sres.SetLineWidth(1)
     offline_effi_sres.SetLineColor(1)
     latex.DrawLatex(0.9, 0.91,plot_text1)
-    latex.DrawLatex(0.42, 0.91,plot_text2)
+    latex.DrawLatex(0.5, 0.91,plot_text2)
     c3.Print("offline_effi_sres_%s_bx%s_crosspart_%s_or%d.pdf"%(hits, bx, cross_part, num_or))
     offline_effi_sres.Write("offline_effi_sres")
 
@@ -1346,7 +1346,7 @@ def analysis(root_dat, hits, bx, bx_list, cross_part, verbose, pu, num_or):
         st_eff_bending_bending.GetPaintedGraph().GetXaxis().SetLabelSize(0.04)
         ROOT.gPad.Update()
         latex.DrawLatex(0.9, 0.91,plot_text1)
-        latex.DrawLatex(0.42, 0.91,plot_text2)
+        latex.DrawLatex(0.5, 0.91,plot_text2)
         c4.Print("st_eff_bending_%s_bx%s_crosspart_%s_or%d.pdf"%(hits, bx, cross_part, num_or))
         st_eff_bending_bending.Write("st_eff_bending")
 
@@ -1366,7 +1366,7 @@ def analysis(root_dat, hits, bx, bx_list, cross_part, verbose, pu, num_or):
         st_eff_pt.GetPaintedGraph().GetXaxis().SetLabelSize(0.04)
         ROOT.gPad.Update()
         latex.DrawLatex(0.9, 0.91,plot_text1)
-        latex.DrawLatex(0.42, 0.91,plot_text2)
+        latex.DrawLatex(0.5, 0.91,plot_text2)
         c5.Print("st_eff_pt_%s_bx%s_crosspart_%s_or%d.pdf"%(hits, bx, cross_part, num_or))
         st_eff_pt.Write("st_eff_pt")
 
@@ -1386,7 +1386,7 @@ def analysis(root_dat, hits, bx, bx_list, cross_part, verbose, pu, num_or):
         st_eff_eta_low_pt.GetPaintedGraph().GetXaxis().SetLabelSize(0.04)
         ROOT.gPad.Update()
         latex.DrawLatex(0.9, 0.91,plot_text1)
-        latex.DrawLatex(0.42, 0.91,plot_text2)
+        latex.DrawLatex(0.5, 0.91,plot_text2)
         c_pt_eta_low.Print("st_eff_eta_low_pt_%s_bx%s_crosspart_%s_or%d.pdf"%(hits, bx, cross_part, num_or))
         st_eff_eta_low_pt.Write("st_eff_eta_low_pt")
 
@@ -1406,7 +1406,7 @@ def analysis(root_dat, hits, bx, bx_list, cross_part, verbose, pu, num_or):
         st_eff_eta_high_pt.GetPaintedGraph().GetXaxis().SetLabelSize(0.04)
         ROOT.gPad.Update()
         latex.DrawLatex(0.9, 0.91,plot_text1)
-        latex.DrawLatex(0.42, 0.91,plot_text2)
+        latex.DrawLatex(0.5, 0.91,plot_text2)
         c_pt_eta_high.Print("st_eff_eta_high_pt_%s_bx%s_crosspart_%s_or%d.pdf"%(hits, bx, cross_part, num_or))
         st_eff_eta_high_pt.Write("st_eff_eta_high_pt")
 
@@ -1426,7 +1426,7 @@ def analysis(root_dat, hits, bx, bx_list, cross_part, verbose, pu, num_or):
         st_eff_pt_1.GetPaintedGraph().GetXaxis().SetLabelSize(0.04)
         ROOT.gPad.Update()
         latex.DrawLatex(0.9, 0.91,plot_text1)
-        latex.DrawLatex(0.42, 0.91,plot_text2)
+        latex.DrawLatex(0.5, 0.91,plot_text2)
         c_pt_1.Print("st_eff_pt_id1_%s_bx%s_crosspart_%s_or%d.pdf"%(hits, bx, cross_part, num_or))
         st_eff_pt_1.Write("st_eff_pt_id1")
 
@@ -1446,7 +1446,7 @@ def analysis(root_dat, hits, bx, bx_list, cross_part, verbose, pu, num_or):
         st_eff_pt_2.GetPaintedGraph().GetXaxis().SetLabelSize(0.04)
         ROOT.gPad.Update()
         latex.DrawLatex(0.9, 0.91,plot_text1)
-        latex.DrawLatex(0.42, 0.91,plot_text2)
+        latex.DrawLatex(0.5, 0.91,plot_text2)
         c_pt_2.Print("st_eff_pt_id2_%s_bx%s_crosspart_%s_or%d.pdf"%(hits, bx, cross_part, num_or))
         st_eff_pt_2.Write("st_eff_pt_id2")
 
@@ -1466,7 +1466,7 @@ def analysis(root_dat, hits, bx, bx_list, cross_part, verbose, pu, num_or):
         st_eff_pt_3.GetPaintedGraph().GetXaxis().SetLabelSize(0.04)
         ROOT.gPad.Update()
         latex.DrawLatex(0.9, 0.91,plot_text1)
-        latex.DrawLatex(0.42, 0.91,plot_text2)
+        latex.DrawLatex(0.5, 0.91,plot_text2)
         c_pt_3.Print("st_eff_pt_id3_%s_bx%s_crosspart_%s_or%d.pdf"%(hits, bx, cross_part, num_or))
         st_eff_pt_3.Write("st_eff_pt_id3")
 
@@ -1486,7 +1486,7 @@ def analysis(root_dat, hits, bx, bx_list, cross_part, verbose, pu, num_or):
         st_eff_pt_4.GetPaintedGraph().GetXaxis().SetLabelSize(0.04)
         ROOT.gPad.Update()
         latex.DrawLatex(0.9, 0.91,plot_text1)
-        latex.DrawLatex(0.42, 0.91,plot_text2)
+        latex.DrawLatex(0.5, 0.91,plot_text2)
         c_pt_4.Print("st_eff_pt_id4_%s_bx%s_crosspart_%s_or%d.pdf"%(hits, bx, cross_part, num_or))
         st_eff_pt_4.Write("st_eff_pt_id4")
 
@@ -1506,7 +1506,7 @@ def analysis(root_dat, hits, bx, bx_list, cross_part, verbose, pu, num_or):
         st_eff_pt_5.GetPaintedGraph().GetXaxis().SetLabelSize(0.04)
         ROOT.gPad.Update()
         latex.DrawLatex(0.9, 0.91,plot_text1)
-        latex.DrawLatex(0.42, 0.91,plot_text2)
+        latex.DrawLatex(0.5, 0.91,plot_text2)
         c_pt_5.Print("st_eff_pt_id5_%s_bx%s_crosspart_%s_or%d.pdf"%(hits, bx, cross_part, num_or))
         st_eff_pt_5.Write("st_eff_pt_id5")
 
@@ -1526,7 +1526,7 @@ def analysis(root_dat, hits, bx, bx_list, cross_part, verbose, pu, num_or):
         st_eff_pt_6.GetPaintedGraph().GetXaxis().SetLabelSize(0.04)
         ROOT.gPad.Update()
         latex.DrawLatex(0.9, 0.91,plot_text1)
-        latex.DrawLatex(0.42, 0.91,plot_text2)
+        latex.DrawLatex(0.5, 0.91,plot_text2)
         c_pt_6.Print("st_eff_pt_id6_%s_bx%s_crosspart_%s_or%d.pdf"%(hits, bx, cross_part, num_or))
         st_eff_pt_6.Write("st_eff_pt_id6")
 
@@ -1546,7 +1546,7 @@ def analysis(root_dat, hits, bx, bx_list, cross_part, verbose, pu, num_or):
         st_eff_pt_7.GetPaintedGraph().GetXaxis().SetLabelSize(0.04)
         ROOT.gPad.Update()
         latex.DrawLatex(0.9, 0.91,plot_text1)
-        latex.DrawLatex(0.42, 0.91,plot_text2)
+        latex.DrawLatex(0.5, 0.91,plot_text2)
         c_pt_7.Print("st_eff_pt_id7_%s_bx%s_crosspart_%s_or%d.pdf"%(hits, bx, cross_part, num_or))
         st_eff_pt_7.Write("st_eff_pt_id7")
 
@@ -1566,7 +1566,7 @@ def analysis(root_dat, hits, bx, bx_list, cross_part, verbose, pu, num_or):
         st_eff_pt_8.GetPaintedGraph().GetXaxis().SetLabelSize(0.04)
         ROOT.gPad.Update()
         latex.DrawLatex(0.9, 0.91,plot_text1)
-        latex.DrawLatex(0.42, 0.91,plot_text2)
+        latex.DrawLatex(0.5, 0.91,plot_text2)
         c_pt_8.Print("st_eff_pt_id8_%s_bx%s_crosspart_%s_or%d.pdf"%(hits, bx, cross_part, num_or))
         st_eff_pt_8.Write("st_eff_pt_id8")
 
@@ -1586,7 +1586,7 @@ def analysis(root_dat, hits, bx, bx_list, cross_part, verbose, pu, num_or):
         st_eff_pt_9.GetPaintedGraph().GetXaxis().SetLabelSize(0.04)
         ROOT.gPad.Update()
         latex.DrawLatex(0.9, 0.91,plot_text1)
-        latex.DrawLatex(0.42, 0.91,plot_text2)
+        latex.DrawLatex(0.5, 0.91,plot_text2)
         c_pt_9.Print("st_eff_pt_id9_%s_bx%s_crosspart_%s_or%d.pdf"%(hits, bx, cross_part, num_or))
         st_eff_pt_9.Write("st_eff_pt_id9")
 
@@ -1606,7 +1606,7 @@ def analysis(root_dat, hits, bx, bx_list, cross_part, verbose, pu, num_or):
         st_eff_pt_10.GetPaintedGraph().GetXaxis().SetLabelSize(0.04)
         ROOT.gPad.Update()
         latex.DrawLatex(0.9, 0.91,plot_text1)
-        latex.DrawLatex(0.42, 0.91,plot_text2)
+        latex.DrawLatex(0.5, 0.91,plot_text2)
         c_pt_10.Print("st_eff_pt_id10_%s_bx%s_crosspart_%s_or%d.pdf"%(hits, bx, cross_part, num_or))
         st_eff_pt_10.Write("st_eff_pt_id10")
 
@@ -1626,7 +1626,7 @@ def analysis(root_dat, hits, bx, bx_list, cross_part, verbose, pu, num_or):
         st_eff_pt_11.GetPaintedGraph().GetXaxis().SetLabelSize(0.04)
         ROOT.gPad.Update()
         latex.DrawLatex(0.9, 0.91,plot_text1)
-        latex.DrawLatex(0.42, 0.91,plot_text2)
+        latex.DrawLatex(0.5, 0.91,plot_text2)
         c_pt_11.Print("st_eff_pt_id11_%s_bx%s_crosspart_%s_or%d.pdf"%(hits, bx, cross_part, num_or))
         st_eff_pt_11.Write("st_eff_pt_id11")
 
@@ -1646,7 +1646,7 @@ def analysis(root_dat, hits, bx, bx_list, cross_part, verbose, pu, num_or):
         st_eff_pt_12.GetPaintedGraph().GetXaxis().SetLabelSize(0.04)
         ROOT.gPad.Update()
         latex.DrawLatex(0.9, 0.91,plot_text1)
-        latex.DrawLatex(0.42, 0.91,plot_text2)
+        latex.DrawLatex(0.5, 0.91,plot_text2)
         c_pt_12.Print("st_eff_pt_id12_%s_bx%s_crosspart_%s_or%d.pdf"%(hits, bx, cross_part, num_or))
         st_eff_pt_12.Write("st_eff_pt_id12")
 
@@ -1666,7 +1666,7 @@ def analysis(root_dat, hits, bx, bx_list, cross_part, verbose, pu, num_or):
         st_eff_pt_13.GetPaintedGraph().GetXaxis().SetLabelSize(0.04)
         ROOT.gPad.Update()
         latex.DrawLatex(0.9, 0.91,plot_text1)
-        latex.DrawLatex(0.42, 0.91,plot_text2)
+        latex.DrawLatex(0.5, 0.91,plot_text2)
         c_pt_13.Print("st_eff_pt_id13_%s_bx%s_crosspart_%s_or%d.pdf"%(hits, bx, cross_part, num_or))
         st_eff_pt_13.Write("st_eff_pt_id13")
 
@@ -1686,7 +1686,7 @@ def analysis(root_dat, hits, bx, bx_list, cross_part, verbose, pu, num_or):
         st_eff_pt_14.GetPaintedGraph().GetXaxis().SetLabelSize(0.04)
         ROOT.gPad.Update()
         latex.DrawLatex(0.9, 0.91,plot_text1)
-        latex.DrawLatex(0.42, 0.91,plot_text2)
+        latex.DrawLatex(0.5, 0.91,plot_text2)
         c_pt_14.Print("st_eff_pt_id14_%s_bx%s_crosspart_%s_or%d.pdf"%(hits, bx, cross_part, num_or))
         st_eff_pt_14.Write("st_eff_pt_id14")
 
@@ -1706,7 +1706,7 @@ def analysis(root_dat, hits, bx, bx_list, cross_part, verbose, pu, num_or):
         st_eff_pt_15.GetPaintedGraph().GetXaxis().SetLabelSize(0.04)
         ROOT.gPad.Update()
         latex.DrawLatex(0.9, 0.91,plot_text1)
-        latex.DrawLatex(0.42, 0.91,plot_text2)
+        latex.DrawLatex(0.5, 0.91,plot_text2)
         c_pt_15.Print("st_eff_pt_id15_%s_bx%s_crosspart_%s_or%d.pdf"%(hits, bx, cross_part, num_or))
         st_eff_pt_15.Write("st_eff_pt_id15")
 
@@ -1726,7 +1726,7 @@ def analysis(root_dat, hits, bx, bx_list, cross_part, verbose, pu, num_or):
         st_eff_pt_16.GetPaintedGraph().GetXaxis().SetLabelSize(0.04)
         ROOT.gPad.Update()
         latex.DrawLatex(0.9, 0.91,plot_text1)
-        latex.DrawLatex(0.42, 0.91,plot_text2)
+        latex.DrawLatex(0.5, 0.91,plot_text2)
         c_pt_16.Print("st_eff_pt_id16_%s_bx%s_crosspart_%s_or%d.pdf"%(hits, bx, cross_part, num_or))
         st_eff_pt_16.Write("st_eff_pt_id16")
 
@@ -1746,7 +1746,7 @@ def analysis(root_dat, hits, bx, bx_list, cross_part, verbose, pu, num_or):
         st_eff_pt_17.GetPaintedGraph().GetXaxis().SetLabelSize(0.04)
         ROOT.gPad.Update()
         latex.DrawLatex(0.9, 0.91,plot_text1)
-        latex.DrawLatex(0.42, 0.91,plot_text2)
+        latex.DrawLatex(0.5, 0.91,plot_text2)
         c_pt_17.Print("st_eff_pt_id17_%s_bx%s_crosspart_%s_or%d.pdf"%(hits, bx, cross_part, num_or))
         st_eff_pt_17.Write("st_eff_pt_id17")
 
@@ -1827,7 +1827,7 @@ def analysis(root_dat, hits, bx, bx_list, cross_part, verbose, pu, num_or):
         leg.AddEntry(st_eff_pt_17,"ID 17","l")
         leg.Draw()
         latex.DrawLatex(0.9, 0.91,plot_text1)
-        latex.DrawLatex(0.42, 0.91,plot_text2)
+        latex.DrawLatex(0.5, 0.91,plot_text2)
         c_pt_all.Print("st_eff_pt_id_all_%s_bx%s_crosspart_%s_or%d.pdf"%(hits, bx, cross_part, num_or))
 
         c_pt_stacked = ROOT.TCanvas('', '', 800, 650)
@@ -1944,7 +1944,7 @@ def analysis(root_dat, hits, bx, bx_list, cross_part, verbose, pu, num_or):
         leg2.AddEntry(st_eff_hist_17,"ID 17", "f")
         leg2.Draw()
         latex.DrawLatex(0.9, 0.91,plot_text1)
-        latex.DrawLatex(0.42, 0.91,plot_text2)
+        latex.DrawLatex(0.5, 0.91,plot_text2)
         c_pt_stacked.Print("st_eff_pt_id_allstacked_%s_bx%s_crosspart_%s_or%d.pdf"%(hits, bx, cross_part, num_or))
 
         c6 = ROOT.TCanvas('', '', 800, 650)
@@ -1963,7 +1963,7 @@ def analysis(root_dat, hits, bx, bx_list, cross_part, verbose, pu, num_or):
         st_eff_eta.GetPaintedGraph().GetXaxis().SetLabelSize(0.04)
         ROOT.gPad.Update()
         latex.DrawLatex(0.9, 0.91,plot_text1)
-        latex.DrawLatex(0.42, 0.91,plot_text2)
+        latex.DrawLatex(0.5, 0.91,plot_text2)
         c6.Print("st_eff_eta_%s_bx%s_crosspart_%s_or%d.pdf"%(hits, bx, cross_part, num_or))
         st_eff_eta.Write("st_eff_eta")
 
@@ -1974,7 +1974,7 @@ def analysis(root_dat, hits, bx, bx_list, cross_part, verbose, pu, num_or):
         st_eff_pt_eta = ROOT.TEfficiency(st_effi_passed_pt_eta, st_effi_total_pt_eta)
         st_eff_pt_eta.Draw("same COLZ")
         latex.DrawLatex(0.9, 0.91,plot_text1)
-        latex.DrawLatex(0.42, 0.91,plot_text2)
+        latex.DrawLatex(0.5, 0.91,plot_text2)
         c2d_eta_pt.Print("st_eff_pt_eta_%s_bx%s_crosspart_%s_or%d.pdf"%(hits, bx, cross_part, num_or))
         st_eff_pt_eta.Write("st_eff_pt_eta")
 
@@ -1994,7 +1994,7 @@ def analysis(root_dat, hits, bx, bx_list, cross_part, verbose, pu, num_or):
         st_eff_id.GetPaintedGraph().GetXaxis().SetLabelSize(0.04)
         ROOT.gPad.Update()
         latex.DrawLatex(0.9, 0.91,plot_text1)
-        latex.DrawLatex(0.42, 0.91,plot_text2)
+        latex.DrawLatex(0.5, 0.91,plot_text2)
         c6id.Print("st_eff_id_%s_bx%s_crosspart_%s_or%d.pdf"%(hits, bx, cross_part, num_or))
         st_eff_id.Write("st_eff_id")
 
@@ -2016,7 +2016,7 @@ def analysis(root_dat, hits, bx, bx_list, cross_part, verbose, pu, num_or):
         st_effi_mres.SetLineWidth(1)
         st_effi_mres.SetLineColor(1)
         latex.DrawLatex(0.9, 0.91,plot_text1)
-        latex.DrawLatex(0.42, 0.91,plot_text2)
+        latex.DrawLatex(0.5, 0.91,plot_text2)
         c7.Print("st_effi_mres_%s_bx%s_crosspart_%s_or%d.pdf"%(hits, bx, cross_part, num_or))
         st_effi_mres.Write("st_effi_mres")
 
@@ -2038,7 +2038,7 @@ def analysis(root_dat, hits, bx, bx_list, cross_part, verbose, pu, num_or):
         st_effi_sres.SetLineWidth(1)
         st_effi_sres.SetLineColor(1)
         latex.DrawLatex(0.9, 0.91,plot_text1)
-        latex.DrawLatex(0.42, 0.91,plot_text2)
+        latex.DrawLatex(0.5, 0.91,plot_text2)
         c8.Print("st_effi_sres_%s_bx%s_crosspart_%s_or%d.pdf"%(hits, bx, cross_part, num_or))
         st_effi_sres.Write("st_effi_sres")
 
@@ -2058,7 +2058,7 @@ def analysis(root_dat, hits, bx, bx_list, cross_part, verbose, pu, num_or):
     st_purity_eta.GetPaintedGraph().GetXaxis().SetLabelSize(0.04)
     ROOT.gPad.Update()
     latex.DrawLatex(0.9, 0.91,plot_text1)
-    latex.DrawLatex(0.42, 0.91,plot_text2)
+    latex.DrawLatex(0.5, 0.91,plot_text2)
     c9.Print("st_purity_eta_%s_bx%s_crosspart_%s_or%d.pdf"%(hits, bx, cross_part, num_or))
     st_purity_eta.Write("st_purity_eta")
 
@@ -2078,7 +2078,7 @@ def analysis(root_dat, hits, bx, bx_list, cross_part, verbose, pu, num_or):
     st_purity_bending.GetPaintedGraph().GetXaxis().SetLabelSize(0.04)
     ROOT.gPad.Update()
     latex.DrawLatex(0.9, 0.91,plot_text1)
-    latex.DrawLatex(0.42, 0.91,plot_text2)
+    latex.DrawLatex(0.5, 0.91,plot_text2)
     c10.Print("st_purity_bending_%s_bx%s_crosspart_%s_or%d.pdf"%(hits, bx, cross_part, num_or))
     st_purity_bending.Write("st_purity_bending")
 
@@ -2098,7 +2098,7 @@ def analysis(root_dat, hits, bx, bx_list, cross_part, verbose, pu, num_or):
     st_purity_id.GetPaintedGraph().GetXaxis().SetLabelSize(0.04)
     ROOT.gPad.Update()
     latex.DrawLatex(0.9, 0.91,plot_text1)
-    latex.DrawLatex(0.42, 0.91,plot_text2)
+    latex.DrawLatex(0.5, 0.91,plot_text2)
     c10id.Print("st_purity_id_%s_bx%s_crosspart_%s_or%d.pdf"%(hits, bx, cross_part, num_or))
     st_purity_id.Write("st_purity_id")
 
@@ -2118,7 +2118,7 @@ def analysis(root_dat, hits, bx, bx_list, cross_part, verbose, pu, num_or):
     offline_purity_eta.GetPaintedGraph().GetXaxis().SetLabelSize(0.04)
     ROOT.gPad.Update()
     latex.DrawLatex(0.9, 0.91,plot_text1)
-    latex.DrawLatex(0.42, 0.91,plot_text2)
+    latex.DrawLatex(0.5, 0.91,plot_text2)
     c9_off.Print("offline_purity_eta_%s_bx%s_crosspart_%s_or%d.pdf"%(hits, bx, cross_part, num_or))
     offline_purity_eta.Write("offline_purity_eta")
 
@@ -2138,7 +2138,7 @@ def analysis(root_dat, hits, bx, bx_list, cross_part, verbose, pu, num_or):
     offline_purity_bending.GetPaintedGraph().GetXaxis().SetLabelSize(0.04)
     ROOT.gPad.Update()
     latex.DrawLatex(0.9, 0.91,plot_text1)
-    latex.DrawLatex(0.42, 0.91,plot_text2)
+    latex.DrawLatex(0.5, 0.91,plot_text2)
     c10_off.Print("offline_purity_bending_%s_bx%s_crosspart_%s_or%d.pdf"%(hits, bx, cross_part, num_or))
     offline_purity_bending.Write("offline_purity_bending")
 
@@ -2158,7 +2158,7 @@ def analysis(root_dat, hits, bx, bx_list, cross_part, verbose, pu, num_or):
     offline_purity_id.GetPaintedGraph().GetXaxis().SetLabelSize(0.04)
     ROOT.gPad.Update()
     latex.DrawLatex(0.9, 0.91,plot_text1)
-    latex.DrawLatex(0.42, 0.91,plot_text2)
+    latex.DrawLatex(0.5, 0.91,plot_text2)
     c10_offid.Print("offline_purity_id_%s_bx%s_crosspart_%s_or%d.pdf"%(hits, bx, cross_part, num_or))
     offline_purity_id.Write("offline_purity_id")
 
@@ -2174,7 +2174,7 @@ def analysis(root_dat, hits, bx, bx_list, cross_part, verbose, pu, num_or):
     num_seg_per_chamber.SetLineWidth(1)
     num_seg_per_chamber.SetLineColor(1)
     latex.DrawLatex(0.9, 0.91,plot_text1)
-    latex.DrawLatex(0.42, 0.91,plot_text2)
+    latex.DrawLatex(0.5, 0.91,plot_text2)
     c11.Print("num_seg_per_chamber_%s_bx%s_crosspart_%s_or%d.pdf"%(hits, bx, cross_part, num_or))
     num_seg_per_chamber.Write()
 
@@ -2191,7 +2191,7 @@ def analysis(root_dat, hits, bx, bx_list, cross_part, verbose, pu, num_or):
     num_seg_per_chamber.SetLineWidth(1)
     num_seg_per_chamber.SetLineColor(1)
     latex.DrawLatex(0.9, 0.91,plot_text1)
-    latex.DrawLatex(0.42, 0.91,plot_text2)
+    latex.DrawLatex(0.5, 0.91,plot_text2)
     c11a.Print("num_seg_per_chamber_%s_bx%s_crosspart_%s_or%d_log.pdf"%(hits, bx, cross_part, num_or))
 
     c11b = ROOT.TCanvas('', '', 800, 650)
@@ -2206,7 +2206,7 @@ def analysis(root_dat, hits, bx, bx_list, cross_part, verbose, pu, num_or):
     num_bkg_seg_per_chamber.SetLineWidth(1)
     num_bkg_seg_per_chamber.SetLineColor(1)
     latex.DrawLatex(0.9, 0.91,plot_text1)
-    latex.DrawLatex(0.42, 0.91,plot_text2)
+    latex.DrawLatex(0.5, 0.91,plot_text2)
     c11b.Print("num_bkg_seg_per_chamber_%s_bx%s_crosspart_%s_or%d.pdf"%(hits, bx, cross_part, num_or))
     num_bkg_seg_per_chamber.Write()
 
@@ -2223,7 +2223,7 @@ def analysis(root_dat, hits, bx, bx_list, cross_part, verbose, pu, num_or):
     num_bkg_seg_per_chamber.SetLineWidth(1)
     num_bkg_seg_per_chamber.SetLineColor(1)
     latex.DrawLatex(0.9, 0.91,plot_text1)
-    latex.DrawLatex(0.42, 0.91,plot_text2)
+    latex.DrawLatex(0.5, 0.91,plot_text2)
     c11c.Print("num_bkg_seg_per_chamber_%s_bx%s_crosspart_%s_or%d_log.pdf"%(hits, bx, cross_part, num_or))
 
     c12 = ROOT.TCanvas('', '', 800, 650)
@@ -2238,7 +2238,7 @@ def analysis(root_dat, hits, bx, bx_list, cross_part, verbose, pu, num_or):
     num_seg_per_chamber_offline.SetLineWidth(1)
     num_seg_per_chamber_offline.SetLineColor(1)
     latex.DrawLatex(0.9, 0.91,plot_text1)
-    latex.DrawLatex(0.42, 0.91,plot_text2)
+    latex.DrawLatex(0.5, 0.91,plot_text2)
     c12.Print("num_seg_per_chamber_offline_%s_bx%s_crosspart_%s_or%d.pdf"%(hits, bx, cross_part, num_or))
     num_seg_per_chamber_offline.Write()
 
@@ -2255,7 +2255,7 @@ def analysis(root_dat, hits, bx, bx_list, cross_part, verbose, pu, num_or):
     num_seg_per_chamber_offline.SetLineWidth(1)
     num_seg_per_chamber_offline.SetLineColor(1)
     latex.DrawLatex(0.9, 0.91,plot_text1)
-    latex.DrawLatex(0.42, 0.91,plot_text2)
+    latex.DrawLatex(0.5, 0.91,plot_text2)
     c12a.Print("num_seg_per_chamber_offline_%s_bx%s_crosspart_%s_or%d_log.pdf"%(hits, bx, cross_part, num_or))
 
     c13a = ROOT.TCanvas('', '', 800, 650)
@@ -2275,7 +2275,7 @@ def analysis(root_dat, hits, bx, bx_list, cross_part, verbose, pu, num_or):
     num_bkg_seg_per_chamber_per_event_eta.SetLineColor(1)
     ROOT.gPad.Update()
     latex.DrawLatex(0.9, 0.91,plot_text1)
-    latex.DrawLatex(0.42, 0.91,plot_text2)
+    latex.DrawLatex(0.5, 0.91,plot_text2)
     c13a.Print("num_bkg_seg_per_chamber_per_event_eta_%s_bx%s_crosspart_%s_or%d.pdf"%(hits, bx, cross_part, num_or))
     num_bkg_seg_per_chamber_per_event_eta.Write()
 
@@ -2295,7 +2295,7 @@ def analysis(root_dat, hits, bx, bx_list, cross_part, verbose, pu, num_or):
     num_bkg_seg_per_chamber_per_event_bending.SetLineColor(1)
     ROOT.gPad.Update()
     latex.DrawLatex(0.9, 0.91,plot_text1)
-    latex.DrawLatex(0.42, 0.91,plot_text2)
+    latex.DrawLatex(0.5, 0.91,plot_text2)
     c13b.Print("num_bkg_seg_per_chamber_per_event_bending_%s_bx%s_crosspart_%s_or%d.pdf"%(hits, bx, cross_part, num_or))
     num_bkg_seg_per_chamber_per_event_bending.Write()
 
@@ -2315,7 +2315,7 @@ def analysis(root_dat, hits, bx, bx_list, cross_part, verbose, pu, num_or):
     num_bkg_seg_per_chamber_per_event_bending_eta1.SetLineColor(1)
     ROOT.gPad.Update()
     latex.DrawLatex(0.9, 0.91,plot_text1)
-    latex.DrawLatex(0.42, 0.91,plot_text2)
+    latex.DrawLatex(0.5, 0.91,plot_text2)
     c13b_eta1.Print("num_bkg_seg_per_chamber_per_event_bending_eta1_%s_bx%s_crosspart_%s_or%d.pdf"%(hits, bx, cross_part, num_or))
     num_bkg_seg_per_chamber_per_event_bending_eta1.Write()
 
@@ -2335,7 +2335,7 @@ def analysis(root_dat, hits, bx, bx_list, cross_part, verbose, pu, num_or):
     num_bkg_seg_per_chamber_per_event_bending_eta2.SetLineColor(1)
     ROOT.gPad.Update()
     latex.DrawLatex(0.9, 0.91,plot_text1)
-    latex.DrawLatex(0.42, 0.91,plot_text2)
+    latex.DrawLatex(0.5, 0.91,plot_text2)
     c13b_eta2.Print("num_bkg_seg_per_chamber_per_event_bending_eta2_%s_bx%s_crosspart_%s_or%d.pdf"%(hits, bx, cross_part, num_or))
     num_bkg_seg_per_chamber_per_event_bending_eta2.Write()
 
@@ -2355,7 +2355,7 @@ def analysis(root_dat, hits, bx, bx_list, cross_part, verbose, pu, num_or):
     num_bkg_seg_per_chamber_per_event_bending_eta3.SetLineColor(1)
     ROOT.gPad.Update()
     latex.DrawLatex(0.9, 0.91,plot_text1)
-    latex.DrawLatex(0.42, 0.91,plot_text2)
+    latex.DrawLatex(0.5, 0.91,plot_text2)
     c13b_eta3.Print("num_bkg_seg_per_chamber_per_event_bending_eta3_%s_bx%s_crosspart_%s_or%d.pdf"%(hits, bx, cross_part, num_or))
     num_bkg_seg_per_chamber_per_event_bending_eta3.Write()
 
@@ -2375,7 +2375,7 @@ def analysis(root_dat, hits, bx, bx_list, cross_part, verbose, pu, num_or):
     num_bkg_seg_per_chamber_per_event_bending_eta4.SetLineColor(1)
     ROOT.gPad.Update()
     latex.DrawLatex(0.9, 0.91,plot_text1)
-    latex.DrawLatex(0.42, 0.91,plot_text2)
+    latex.DrawLatex(0.5, 0.91,plot_text2)
     c13b_eta4.Print("num_bkg_seg_per_chamber_per_event_bending_eta4_%s_bx%s_crosspart_%s_or%d.pdf"%(hits, bx, cross_part, num_or))
     num_bkg_seg_per_chamber_per_event_bending_eta4.Write()
 
@@ -2395,7 +2395,7 @@ def analysis(root_dat, hits, bx, bx_list, cross_part, verbose, pu, num_or):
     num_bkg_seg_per_chamber_per_event_bending_eta5.SetLineColor(1)
     ROOT.gPad.Update()
     latex.DrawLatex(0.9, 0.91,plot_text1)
-    latex.DrawLatex(0.42, 0.91,plot_text2)
+    latex.DrawLatex(0.5, 0.91,plot_text2)
     c13b_eta5.Print("num_bkg_seg_per_chamber_per_event_bending_eta5_%s_bx%s_crosspart_%s_or%d.pdf"%(hits, bx, cross_part, num_or))
     num_bkg_seg_per_chamber_per_event_bending_eta5.Write()
 
@@ -2415,7 +2415,7 @@ def analysis(root_dat, hits, bx, bx_list, cross_part, verbose, pu, num_or):
     num_bkg_seg_per_chamber_per_event_bending_eta6.SetLineColor(1)
     ROOT.gPad.Update()
     latex.DrawLatex(0.9, 0.91,plot_text1)
-    latex.DrawLatex(0.42, 0.91,plot_text2)
+    latex.DrawLatex(0.5, 0.91,plot_text2)
     c13b_eta6.Print("num_bkg_seg_per_chamber_per_event_bending_eta6_%s_bx%s_crosspart_%s_or%d.pdf"%(hits, bx, cross_part, num_or))
     num_bkg_seg_per_chamber_per_event_bending_eta6.Write()
 
@@ -2435,7 +2435,7 @@ def analysis(root_dat, hits, bx, bx_list, cross_part, verbose, pu, num_or):
     num_bkg_seg_per_chamber_per_event_bending_eta7.SetLineColor(1)
     ROOT.gPad.Update()
     latex.DrawLatex(0.9, 0.91,plot_text1)
-    latex.DrawLatex(0.42, 0.91,plot_text2)
+    latex.DrawLatex(0.5, 0.91,plot_text2)
     c13b_eta7.Print("num_bkg_seg_per_chamber_per_event_bending_eta7_%s_bx%s_crosspart_%s_or%d.pdf"%(hits, bx, cross_part, num_or))
     num_bkg_seg_per_chamber_per_event_bending_eta7.Write()
 
@@ -2455,7 +2455,7 @@ def analysis(root_dat, hits, bx, bx_list, cross_part, verbose, pu, num_or):
     num_bkg_seg_per_chamber_per_event_bending_eta8.SetLineColor(1)
     ROOT.gPad.Update()
     latex.DrawLatex(0.9, 0.91,plot_text1)
-    latex.DrawLatex(0.42, 0.91,plot_text2)
+    latex.DrawLatex(0.5, 0.91,plot_text2)
     c13b_eta8.Print("num_bkg_seg_per_chamber_per_event_bending_eta8_%s_bx%s_crosspart_%s_or%d.pdf"%(hits, bx, cross_part, num_or))
     num_bkg_seg_per_chamber_per_event_bending_eta8.Write()
 
@@ -2537,7 +2537,7 @@ def analysis(root_dat, hits, bx, bx_list, cross_part, verbose, pu, num_or):
     leg13c.AddEntry(num_bkg_seg_per_chamber_per_event_bending17,"ID 17", "f")
     leg13c.Draw()
     latex.DrawLatex(0.9, 0.91,plot_text1)
-    latex.DrawLatex(0.42, 0.91,plot_text2)
+    latex.DrawLatex(0.5, 0.91,plot_text2)
     c13c.Print("num_bkg_seg_per_chamber_per_event_bending_stacked_%s_bx%s_crosspart_%s_or%d.pdf"%(hits, bx, cross_part, num_or))
     num_bkg_seg_per_chamber_per_event_bending1.Write()
     num_bkg_seg_per_chamber_per_event_bending2.Write()
@@ -2573,7 +2573,7 @@ def analysis(root_dat, hits, bx, bx_list, cross_part, verbose, pu, num_or):
     num_signal_seg_per_chamber_per_event_bending.SetLineColor(1)
     ROOT.gPad.Update()
     latex.DrawLatex(0.9, 0.91,plot_text1)
-    latex.DrawLatex(0.42, 0.91,plot_text2)
+    latex.DrawLatex(0.5, 0.91,plot_text2)
     c13d.Print("num_signal_seg_per_chamber_per_event_bending_%s_bx%s_crosspart_%s_or%d.pdf"%(hits, bx, cross_part, num_or))
     num_signal_seg_per_chamber_per_event_bending.Write()
 
@@ -2593,7 +2593,7 @@ def analysis(root_dat, hits, bx, bx_list, cross_part, verbose, pu, num_or):
     num_signal_seg_per_chamber_per_event_bending_eta1.SetLineColor(1)
     ROOT.gPad.Update()
     latex.DrawLatex(0.9, 0.91,plot_text1)
-    latex.DrawLatex(0.42, 0.91,plot_text2)
+    latex.DrawLatex(0.5, 0.91,plot_text2)
     c13d_eta1.Print("num_signal_seg_per_chamber_per_event_bending_eta1_%s_bx%s_crosspart_%s_or%d.pdf"%(hits, bx, cross_part, num_or))
     num_signal_seg_per_chamber_per_event_bending_eta1.Write()
 
@@ -2613,7 +2613,7 @@ def analysis(root_dat, hits, bx, bx_list, cross_part, verbose, pu, num_or):
     num_signal_seg_per_chamber_per_event_bending_eta2.SetLineColor(1)
     ROOT.gPad.Update()
     latex.DrawLatex(0.9, 0.91,plot_text1)
-    latex.DrawLatex(0.42, 0.91,plot_text2)
+    latex.DrawLatex(0.5, 0.91,plot_text2)
     c13d_eta2.Print("num_signal_seg_per_chamber_per_event_bending_eta2_%s_bx%s_crosspart_%s_or%d.pdf"%(hits, bx, cross_part, num_or))
     num_signal_seg_per_chamber_per_event_bending_eta2.Write()
 
@@ -2633,7 +2633,7 @@ def analysis(root_dat, hits, bx, bx_list, cross_part, verbose, pu, num_or):
     num_signal_seg_per_chamber_per_event_bending_eta3.SetLineColor(1)
     ROOT.gPad.Update()
     latex.DrawLatex(0.9, 0.91,plot_text1)
-    latex.DrawLatex(0.42, 0.91,plot_text2)
+    latex.DrawLatex(0.5, 0.91,plot_text2)
     c13d_eta3.Print("num_signal_seg_per_chamber_per_event_bending_eta3_%s_bx%s_crosspart_%s_or%d.pdf"%(hits, bx, cross_part, num_or))
     num_signal_seg_per_chamber_per_event_bending_eta3.Write()
 
@@ -2653,7 +2653,7 @@ def analysis(root_dat, hits, bx, bx_list, cross_part, verbose, pu, num_or):
     num_signal_seg_per_chamber_per_event_bending_eta4.SetLineColor(1)
     ROOT.gPad.Update()
     latex.DrawLatex(0.9, 0.91,plot_text1)
-    latex.DrawLatex(0.42, 0.91,plot_text2)
+    latex.DrawLatex(0.5, 0.91,plot_text2)
     c13d_eta4.Print("num_signal_seg_per_chamber_per_event_bending_eta4_%s_bx%s_crosspart_%s_or%d.pdf"%(hits, bx, cross_part, num_or))
     num_signal_seg_per_chamber_per_event_bending_eta4.Write()
 
@@ -2673,7 +2673,7 @@ def analysis(root_dat, hits, bx, bx_list, cross_part, verbose, pu, num_or):
     num_signal_seg_per_chamber_per_event_bending_eta5.SetLineColor(1)
     ROOT.gPad.Update()
     latex.DrawLatex(0.9, 0.91,plot_text1)
-    latex.DrawLatex(0.42, 0.91,plot_text2)
+    latex.DrawLatex(0.5, 0.91,plot_text2)
     c13d_eta5.Print("num_signal_seg_per_chamber_per_event_bending_eta5_%s_bx%s_crosspart_%s_or%d.pdf"%(hits, bx, cross_part, num_or))
     num_signal_seg_per_chamber_per_event_bending_eta5.Write()
 
@@ -2693,7 +2693,7 @@ def analysis(root_dat, hits, bx, bx_list, cross_part, verbose, pu, num_or):
     num_signal_seg_per_chamber_per_event_bending_eta6.SetLineColor(1)
     ROOT.gPad.Update()
     latex.DrawLatex(0.9, 0.91,plot_text1)
-    latex.DrawLatex(0.42, 0.91,plot_text2)
+    latex.DrawLatex(0.5, 0.91,plot_text2)
     c13d_eta6.Print("num_signal_seg_per_chamber_per_event_bending_eta6_%s_bx%s_crosspart_%s_or%d.pdf"%(hits, bx, cross_part, num_or))
     num_signal_seg_per_chamber_per_event_bending_eta6.Write()
 
@@ -2713,7 +2713,7 @@ def analysis(root_dat, hits, bx, bx_list, cross_part, verbose, pu, num_or):
     num_signal_seg_per_chamber_per_event_bending_eta7.SetLineColor(1)
     ROOT.gPad.Update()
     latex.DrawLatex(0.9, 0.91,plot_text1)
-    latex.DrawLatex(0.42, 0.91,plot_text2)
+    latex.DrawLatex(0.5, 0.91,plot_text2)
     c13d_eta7.Print("num_signal_seg_per_chamber_per_event_bending_eta7_%s_bx%s_crosspart_%s_or%d.pdf"%(hits, bx, cross_part, num_or))
     num_signal_seg_per_chamber_per_event_bending_eta7.Write()
 
@@ -2733,7 +2733,7 @@ def analysis(root_dat, hits, bx, bx_list, cross_part, verbose, pu, num_or):
     num_signal_seg_per_chamber_per_event_bending_eta8.SetLineColor(1)
     ROOT.gPad.Update()
     latex.DrawLatex(0.9, 0.91,plot_text1)
-    latex.DrawLatex(0.42, 0.91,plot_text2)
+    latex.DrawLatex(0.5, 0.91,plot_text2)
     c13d_eta8.Print("num_signal_seg_per_chamber_per_event_bending_eta8_%s_bx%s_crosspart_%s_or%d.pdf"%(hits, bx, cross_part, num_or))
     num_signal_seg_per_chamber_per_event_bending_eta8.Write()
 
@@ -2815,7 +2815,7 @@ def analysis(root_dat, hits, bx, bx_list, cross_part, verbose, pu, num_or):
     leg13e.AddEntry(num_signal_seg_per_chamber_per_event_bending17,"ID 17", "f")
     leg13e.Draw()
     latex.DrawLatex(0.9, 0.91,plot_text1)
-    latex.DrawLatex(0.42, 0.91,plot_text2)
+    latex.DrawLatex(0.5, 0.91,plot_text2)
     c13e.Print("num_signal_seg_per_chamber_per_event_bending_stacked_%s_bx%s_crosspart_%s_or%d.pdf"%(hits, bx, cross_part, num_or))
     num_signal_seg_per_chamber_per_event_bending1.Write()
     num_signal_seg_per_chamber_per_event_bending2.Write()
@@ -2851,7 +2851,7 @@ def analysis(root_dat, hits, bx, bx_list, cross_part, verbose, pu, num_or):
     num_bkg_seg_per_chamber_per_event_nlayers.SetLineColor(1)
     ROOT.gPad.Update()
     latex.DrawLatex(0.9, 0.91,plot_text1)
-    latex.DrawLatex(0.42, 0.91,plot_text2)
+    latex.DrawLatex(0.5, 0.91,plot_text2)
     c13f.Print("num_bkg_seg_per_chamber_per_event_nlayers_%s_bx%s_crosspart_%s_or%d.pdf"%(hits, bx, cross_part, num_or))
     num_bkg_seg_per_chamber_per_event_nlayers.Write()
 
@@ -2871,7 +2871,7 @@ def analysis(root_dat, hits, bx, bx_list, cross_part, verbose, pu, num_or):
     num_bkg_seg_per_chamber_per_event_nlayers_eta1.SetLineColor(1)
     ROOT.gPad.Update()
     latex.DrawLatex(0.9, 0.91,plot_text1)
-    latex.DrawLatex(0.42, 0.91,plot_text2)
+    latex.DrawLatex(0.5, 0.91,plot_text2)
     c13f_eta1.Print("num_bkg_seg_per_chamber_per_event_nlayers_eta1_%s_bx%s_crosspart_%s_or%d.pdf"%(hits, bx, cross_part, num_or))
     num_bkg_seg_per_chamber_per_event_nlayers_eta1.Write()
 
@@ -2891,7 +2891,7 @@ def analysis(root_dat, hits, bx, bx_list, cross_part, verbose, pu, num_or):
     num_bkg_seg_per_chamber_per_event_nlayers_eta2.SetLineColor(1)
     ROOT.gPad.Update()
     latex.DrawLatex(0.9, 0.91,plot_text1)
-    latex.DrawLatex(0.42, 0.91,plot_text2)
+    latex.DrawLatex(0.5, 0.91,plot_text2)
     c13f_eta2.Print("num_bkg_seg_per_chamber_per_event_nlayers_eta2_%s_bx%s_crosspart_%s_or%d.pdf"%(hits, bx, cross_part, num_or))
     num_bkg_seg_per_chamber_per_event_nlayers_eta2.Write()
 
@@ -2911,7 +2911,7 @@ def analysis(root_dat, hits, bx, bx_list, cross_part, verbose, pu, num_or):
     num_bkg_seg_per_chamber_per_event_nlayers_eta3.SetLineColor(1)
     ROOT.gPad.Update()
     latex.DrawLatex(0.9, 0.91,plot_text1)
-    latex.DrawLatex(0.42, 0.91,plot_text2)
+    latex.DrawLatex(0.5, 0.91,plot_text2)
     c13f_eta3.Print("num_bkg_seg_per_chamber_per_event_nlayers_eta3_%s_bx%s_crosspart_%s_or%d.pdf"%(hits, bx, cross_part, num_or))
     num_bkg_seg_per_chamber_per_event_nlayers_eta3.Write()
 
@@ -2931,7 +2931,7 @@ def analysis(root_dat, hits, bx, bx_list, cross_part, verbose, pu, num_or):
     num_bkg_seg_per_chamber_per_event_nlayers_eta4.SetLineColor(1)
     ROOT.gPad.Update()
     latex.DrawLatex(0.9, 0.91,plot_text1)
-    latex.DrawLatex(0.42, 0.91,plot_text2)
+    latex.DrawLatex(0.5, 0.91,plot_text2)
     c13f_eta4.Print("num_bkg_seg_per_chamber_per_event_nlayers_eta4_%s_bx%s_crosspart_%s_or%d.pdf"%(hits, bx, cross_part, num_or))
     num_bkg_seg_per_chamber_per_event_nlayers_eta4.Write()
 
@@ -2951,7 +2951,7 @@ def analysis(root_dat, hits, bx, bx_list, cross_part, verbose, pu, num_or):
     num_bkg_seg_per_chamber_per_event_nlayers_eta5.SetLineColor(1)
     ROOT.gPad.Update()
     latex.DrawLatex(0.9, 0.91,plot_text1)
-    latex.DrawLatex(0.42, 0.91,plot_text2)
+    latex.DrawLatex(0.5, 0.91,plot_text2)
     c13f_eta5.Print("num_bkg_seg_per_chamber_per_event_nlayers_eta5_%s_bx%s_crosspart_%s_or%d.pdf"%(hits, bx, cross_part, num_or))
     num_bkg_seg_per_chamber_per_event_nlayers_eta5.Write()
 
@@ -2971,7 +2971,7 @@ def analysis(root_dat, hits, bx, bx_list, cross_part, verbose, pu, num_or):
     num_bkg_seg_per_chamber_per_event_nlayers_eta6.SetLineColor(1)
     ROOT.gPad.Update()
     latex.DrawLatex(0.9, 0.91,plot_text1)
-    latex.DrawLatex(0.42, 0.91,plot_text2)
+    latex.DrawLatex(0.5, 0.91,plot_text2)
     c13f_eta6.Print("num_bkg_seg_per_chamber_per_event_nlayers_eta6_%s_bx%s_crosspart_%s_or%d.pdf"%(hits, bx, cross_part, num_or))
     num_bkg_seg_per_chamber_per_event_nlayers_eta6.Write()
 
@@ -2991,7 +2991,7 @@ def analysis(root_dat, hits, bx, bx_list, cross_part, verbose, pu, num_or):
     num_bkg_seg_per_chamber_per_event_nlayers_eta7.SetLineColor(1)
     ROOT.gPad.Update()
     latex.DrawLatex(0.9, 0.91,plot_text1)
-    latex.DrawLatex(0.42, 0.91,plot_text2)
+    latex.DrawLatex(0.5, 0.91,plot_text2)
     c13f_eta7.Print("num_bkg_seg_per_chamber_per_event_nlayers_eta7_%s_bx%s_crosspart_%s_or%d.pdf"%(hits, bx, cross_part, num_or))
     num_bkg_seg_per_chamber_per_event_nlayers_eta7.Write()
 
@@ -3011,7 +3011,7 @@ def analysis(root_dat, hits, bx, bx_list, cross_part, verbose, pu, num_or):
     num_bkg_seg_per_chamber_per_event_nlayers_eta8.SetLineColor(1)
     ROOT.gPad.Update()
     latex.DrawLatex(0.9, 0.91,plot_text1)
-    latex.DrawLatex(0.42, 0.91,plot_text2)
+    latex.DrawLatex(0.5, 0.91,plot_text2)
     c13f_eta8.Print("num_bkg_seg_per_chamber_per_event_nlayers_eta8_%s_bx%s_crosspart_%s_or%d.pdf"%(hits, bx, cross_part, num_or))
     num_bkg_seg_per_chamber_per_event_nlayers_eta8.Write()
 
@@ -3093,7 +3093,7 @@ def analysis(root_dat, hits, bx, bx_list, cross_part, verbose, pu, num_or):
     leg13g.AddEntry(num_bkg_seg_per_chamber_per_event_nlayers17,"ID 17", "f")
     leg13g.Draw()
     latex.DrawLatex(0.9, 0.91,plot_text1)
-    latex.DrawLatex(0.42, 0.91,plot_text2)
+    latex.DrawLatex(0.5, 0.91,plot_text2)
     c13g.Print("num_bkg_seg_per_chamber_per_event_nlayers_stacked_%s_bx%s_crosspart_%s_or%d.pdf"%(hits, bx, cross_part, num_or))
     num_bkg_seg_per_chamber_per_event_nlayers1.Write()
     num_bkg_seg_per_chamber_per_event_nlayers2.Write()
@@ -3129,7 +3129,7 @@ def analysis(root_dat, hits, bx, bx_list, cross_part, verbose, pu, num_or):
     num_signal_seg_per_chamber_per_event_nlayers.SetLineColor(1)
     ROOT.gPad.Update()
     latex.DrawLatex(0.9, 0.91,plot_text1)
-    latex.DrawLatex(0.42, 0.91,plot_text2)
+    latex.DrawLatex(0.5, 0.91,plot_text2)
     c13h.Print("num_signal_seg_per_chamber_per_event_nlayers_%s_bx%s_crosspart_%s_or%d.pdf"%(hits, bx, cross_part, num_or))
     num_signal_seg_per_chamber_per_event_nlayers.Write()
 
@@ -3149,7 +3149,7 @@ def analysis(root_dat, hits, bx, bx_list, cross_part, verbose, pu, num_or):
     num_signal_seg_per_chamber_per_event_nlayers_eta1.SetLineColor(1)
     ROOT.gPad.Update()
     latex.DrawLatex(0.9, 0.91,plot_text1)
-    latex.DrawLatex(0.42, 0.91,plot_text2)
+    latex.DrawLatex(0.5, 0.91,plot_text2)
     c13h_eta1.Print("num_signal_seg_per_chamber_per_event_nlayers_eta1_%s_bx%s_crosspart_%s_or%d.pdf"%(hits, bx, cross_part, num_or))
     num_signal_seg_per_chamber_per_event_nlayers_eta1.Write()
 
@@ -3169,7 +3169,7 @@ def analysis(root_dat, hits, bx, bx_list, cross_part, verbose, pu, num_or):
     num_signal_seg_per_chamber_per_event_nlayers_eta2.SetLineColor(1)
     ROOT.gPad.Update()
     latex.DrawLatex(0.9, 0.91,plot_text1)
-    latex.DrawLatex(0.42, 0.91,plot_text2)
+    latex.DrawLatex(0.5, 0.91,plot_text2)
     c13h_eta2.Print("num_signal_seg_per_chamber_per_event_nlayers_eta2_%s_bx%s_crosspart_%s_or%d.pdf"%(hits, bx, cross_part, num_or))
     num_signal_seg_per_chamber_per_event_nlayers_eta2.Write()
 
@@ -3189,7 +3189,7 @@ def analysis(root_dat, hits, bx, bx_list, cross_part, verbose, pu, num_or):
     num_signal_seg_per_chamber_per_event_nlayers_eta3.SetLineColor(1)
     ROOT.gPad.Update()
     latex.DrawLatex(0.9, 0.91,plot_text1)
-    latex.DrawLatex(0.42, 0.91,plot_text2)
+    latex.DrawLatex(0.5, 0.91,plot_text2)
     c13h_eta3.Print("num_signal_seg_per_chamber_per_event_nlayers_eta3_%s_bx%s_crosspart_%s_or%d.pdf"%(hits, bx, cross_part, num_or))
     num_signal_seg_per_chamber_per_event_nlayers_eta3.Write()
 
@@ -3209,7 +3209,7 @@ def analysis(root_dat, hits, bx, bx_list, cross_part, verbose, pu, num_or):
     num_signal_seg_per_chamber_per_event_nlayers_eta4.SetLineColor(1)
     ROOT.gPad.Update()
     latex.DrawLatex(0.9, 0.91,plot_text1)
-    latex.DrawLatex(0.42, 0.91,plot_text2)
+    latex.DrawLatex(0.5, 0.91,plot_text2)
     c13h_eta4.Print("num_signal_seg_per_chamber_per_event_nlayers_eta4_%s_bx%s_crosspart_%s_or%d.pdf"%(hits, bx, cross_part, num_or))
     num_signal_seg_per_chamber_per_event_nlayers_eta4.Write()
 
@@ -3228,7 +3228,7 @@ def analysis(root_dat, hits, bx, bx_list, cross_part, verbose, pu, num_or):
     num_signal_seg_per_chamber_per_event_nlayers_eta5.SetLineColor(1)
     ROOT.gPad.Update()
     latex.DrawLatex(0.9, 0.91,plot_text1)
-    latex.DrawLatex(0.42, 0.91,plot_text2)
+    latex.DrawLatex(0.5, 0.91,plot_text2)
     c13h_eta5.Print("num_signal_seg_per_chamber_per_event_nlayers_eta5_%s_bx%s_crosspart_%s_or%d.pdf"%(hits, bx, cross_part, num_or))
     num_signal_seg_per_chamber_per_event_nlayers_eta5.Write()
 
@@ -3248,7 +3248,7 @@ def analysis(root_dat, hits, bx, bx_list, cross_part, verbose, pu, num_or):
     num_signal_seg_per_chamber_per_event_nlayers_eta6.SetLineColor(1)
     ROOT.gPad.Update()
     latex.DrawLatex(0.9, 0.91,plot_text1)
-    latex.DrawLatex(0.42, 0.91,plot_text2)
+    latex.DrawLatex(0.5, 0.91,plot_text2)
     c13h_eta6.Print("num_signal_seg_per_chamber_per_event_nlayers_eta6_%s_bx%s_crosspart_%s_or%d.pdf"%(hits, bx, cross_part, num_or))
     num_signal_seg_per_chamber_per_event_nlayers_eta6.Write()
 
@@ -3268,7 +3268,7 @@ def analysis(root_dat, hits, bx, bx_list, cross_part, verbose, pu, num_or):
     num_signal_seg_per_chamber_per_event_nlayers_eta7.SetLineColor(1)
     ROOT.gPad.Update()
     latex.DrawLatex(0.9, 0.91,plot_text1)
-    latex.DrawLatex(0.42, 0.91,plot_text2)
+    latex.DrawLatex(0.5, 0.91,plot_text2)
     c13h_eta7.Print("num_signal_seg_per_chamber_per_event_nlayers_eta7_%s_bx%s_crosspart_%s_or%d.pdf"%(hits, bx, cross_part, num_or))
     num_signal_seg_per_chamber_per_event_nlayers_eta7.Write()
 
@@ -3288,7 +3288,7 @@ def analysis(root_dat, hits, bx, bx_list, cross_part, verbose, pu, num_or):
     num_signal_seg_per_chamber_per_event_nlayers_eta8.SetLineColor(1)
     ROOT.gPad.Update()
     latex.DrawLatex(0.9, 0.91,plot_text1)
-    latex.DrawLatex(0.42, 0.91,plot_text2)
+    latex.DrawLatex(0.5, 0.91,plot_text2)
     c13h_eta8.Print("num_signal_seg_per_chamber_per_event_nlayers_eta8_%s_bx%s_crosspart_%s_or%d.pdf"%(hits, bx, cross_part, num_or))
     num_signal_seg_per_chamber_per_event_nlayers_eta8.Write()
 
@@ -3370,7 +3370,7 @@ def analysis(root_dat, hits, bx, bx_list, cross_part, verbose, pu, num_or):
     leg13i.AddEntry(num_signal_seg_per_chamber_per_event_nlayers17,"ID 17", "f")
     leg13i.Draw()
     latex.DrawLatex(0.9, 0.91,plot_text1)
-    latex.DrawLatex(0.42, 0.91,plot_text2)
+    latex.DrawLatex(0.5, 0.91,plot_text2)
     c13i.Print("num_signal_seg_per_chamber_per_event_nlayers_stacked_%s_bx%s_crosspart_%s_or%d.pdf"%(hits, bx, cross_part, num_or))
     num_signal_seg_per_chamber_per_event_nlayers1.Write()
     num_signal_seg_per_chamber_per_event_nlayers2.Write()
@@ -3397,7 +3397,7 @@ def analysis(root_dat, hits, bx, bx_list, cross_part, verbose, pu, num_or):
     num_signal_seg_per_chamber_per_event_bending_pt.Scale(1/(36.0*n_total_events))
     num_signal_seg_per_chamber_per_event_bending_pt.Draw("same COLZ")
     latex.DrawLatex(0.9, 0.91,plot_text1)
-    latex.DrawLatex(0.42, 0.91,plot_text2)
+    latex.DrawLatex(0.5, 0.91,plot_text2)
     c13i_2.Print("num_signal_seg_per_chamber_per_event_bending_pt_%s_bx%s_crosspart_%s_or%d.pdf"%(hits, bx, cross_part, num_or))
     num_signal_seg_per_chamber_per_event_bending_pt.Write()
 
@@ -3408,7 +3408,7 @@ def analysis(root_dat, hits, bx, bx_list, cross_part, verbose, pu, num_or):
     num_signal_seg_per_chamber_per_event_bending_pt_eta1.Scale(1/(36.0*n_total_events))
     num_signal_seg_per_chamber_per_event_bending_pt_eta1.Draw("same COLZ")
     latex.DrawLatex(0.9, 0.91,plot_text1)
-    latex.DrawLatex(0.42, 0.91,plot_text2)
+    latex.DrawLatex(0.5, 0.91,plot_text2)
     c13i_eta1.Print("num_signal_seg_per_chamber_per_event_bending_pt_eta1_%s_bx%s_crosspart_%s_or%d.pdf"%(hits, bx, cross_part, num_or))
     num_signal_seg_per_chamber_per_event_bending_pt_eta1.Write()
 
@@ -3419,7 +3419,7 @@ def analysis(root_dat, hits, bx, bx_list, cross_part, verbose, pu, num_or):
     num_signal_seg_per_chamber_per_event_bending_pt_eta2.Scale(1/(36.0*n_total_events))
     num_signal_seg_per_chamber_per_event_bending_pt_eta2.Draw("same COLZ")
     latex.DrawLatex(0.9, 0.91,plot_text1)
-    latex.DrawLatex(0.42, 0.91,plot_text2)
+    latex.DrawLatex(0.5, 0.91,plot_text2)
     c13i_eta2.Print("num_signal_seg_per_chamber_per_event_bending_pt_eta2_%s_bx%s_crosspart_%s_or%d.pdf"%(hits, bx, cross_part, num_or))
     num_signal_seg_per_chamber_per_event_bending_pt_eta2.Write()
 
@@ -3430,7 +3430,7 @@ def analysis(root_dat, hits, bx, bx_list, cross_part, verbose, pu, num_or):
     num_signal_seg_per_chamber_per_event_bending_pt_eta3.Scale(1/(36.0*n_total_events))
     num_signal_seg_per_chamber_per_event_bending_pt_eta3.Draw("same COLZ")
     latex.DrawLatex(0.9, 0.91,plot_text1)
-    latex.DrawLatex(0.42, 0.91,plot_text2)
+    latex.DrawLatex(0.5, 0.91,plot_text2)
     c13i_eta3.Print("num_signal_seg_per_chamber_per_event_bending_pt_eta3_%s_bx%s_crosspart_%s_or%d.pdf"%(hits, bx, cross_part, num_or))
     num_signal_seg_per_chamber_per_event_bending_pt_eta3.Write()
 
@@ -3441,7 +3441,7 @@ def analysis(root_dat, hits, bx, bx_list, cross_part, verbose, pu, num_or):
     num_signal_seg_per_chamber_per_event_bending_pt_eta4.Scale(1/(36.0*n_total_events))
     num_signal_seg_per_chamber_per_event_bending_pt_eta4.Draw("same COLZ")
     latex.DrawLatex(0.9, 0.91,plot_text1)
-    latex.DrawLatex(0.42, 0.91,plot_text2)
+    latex.DrawLatex(0.5, 0.91,plot_text2)
     c13i_eta4.Print("num_signal_seg_per_chamber_per_event_bending_pt_eta4_%s_bx%s_crosspart_%s_or%d.pdf"%(hits, bx, cross_part, num_or))
     num_signal_seg_per_chamber_per_event_bending_pt_eta4.Write()
 
@@ -3452,7 +3452,7 @@ def analysis(root_dat, hits, bx, bx_list, cross_part, verbose, pu, num_or):
     num_signal_seg_per_chamber_per_event_bending_pt_eta5.Scale(1/(36.0*n_total_events))
     num_signal_seg_per_chamber_per_event_bending_pt_eta5.Draw("same COLZ")
     latex.DrawLatex(0.9, 0.91,plot_text1)
-    latex.DrawLatex(0.42, 0.91,plot_text2)
+    latex.DrawLatex(0.5, 0.91,plot_text2)
     c13i_eta5.Print("num_signal_seg_per_chamber_per_event_bending_pt_eta5_%s_bx%s_crosspart_%s_or%d.pdf"%(hits, bx, cross_part, num_or))
     num_signal_seg_per_chamber_per_event_bending_pt_eta5.Write()
 
@@ -3463,7 +3463,7 @@ def analysis(root_dat, hits, bx, bx_list, cross_part, verbose, pu, num_or):
     num_signal_seg_per_chamber_per_event_bending_pt_eta6.Scale(1/(36.0*n_total_events))
     num_signal_seg_per_chamber_per_event_bending_pt_eta6.Draw("same COLZ")
     latex.DrawLatex(0.9, 0.91,plot_text1)
-    latex.DrawLatex(0.42, 0.91,plot_text2)
+    latex.DrawLatex(0.5, 0.91,plot_text2)
     c13i_eta6.Print("num_signal_seg_per_chamber_per_event_bending_pt_eta6_%s_bx%s_crosspart_%s_or%d.pdf"%(hits, bx, cross_part, num_or))
     num_signal_seg_per_chamber_per_event_bending_pt_eta6.Write()
 
@@ -3474,7 +3474,7 @@ def analysis(root_dat, hits, bx, bx_list, cross_part, verbose, pu, num_or):
     num_signal_seg_per_chamber_per_event_bending_pt_eta7.Scale(1/(36.0*n_total_events))
     num_signal_seg_per_chamber_per_event_bending_pt_eta7.Draw("same COLZ")
     latex.DrawLatex(0.9, 0.91,plot_text1)
-    latex.DrawLatex(0.42, 0.91,plot_text2)
+    latex.DrawLatex(0.5, 0.91,plot_text2)
     c13i_eta7.Print("num_signal_seg_per_chamber_per_event_bending_pt_eta7_%s_bx%s_crosspart_%s_or%d.pdf"%(hits, bx, cross_part, num_or))
     num_signal_seg_per_chamber_per_event_bending_pt_eta7.Write()
 
@@ -3485,7 +3485,7 @@ def analysis(root_dat, hits, bx, bx_list, cross_part, verbose, pu, num_or):
     num_signal_seg_per_chamber_per_event_bending_pt_eta8.Scale(1/(36.0*n_total_events))
     num_signal_seg_per_chamber_per_event_bending_pt_eta8.Draw("same COLZ")
     latex.DrawLatex(0.9, 0.91,plot_text1)
-    latex.DrawLatex(0.42, 0.91,plot_text2)
+    latex.DrawLatex(0.5, 0.91,plot_text2)
     c13i_eta8.Print("num_signal_seg_per_chamber_per_event_bending_pt_eta8_%s_bx%s_crosspart_%s_or%d.pdf"%(hits, bx, cross_part, num_or))
     num_signal_seg_per_chamber_per_event_bending_pt_eta8.Write()
     
@@ -3509,7 +3509,7 @@ def analysis(root_dat, hits, bx, bx_list, cross_part, verbose, pu, num_or):
         st_pt_bending_total.SetLineColor(1)
         ROOT.gPad.Update()
         latex.DrawLatex(0.9, 0.91,plot_text1)
-        latex.DrawLatex(0.42, 0.91,plot_text2)
+        latex.DrawLatex(0.5, 0.91,plot_text2)
         cg.Print("sim_track_pt_vs_bending_angle_%s_bx%s_crosspart_%s_or%d.pdf"%(hits, bx, cross_part, num_or))
         st_pt_bending_total.Write()
 
@@ -3530,7 +3530,7 @@ def analysis(root_dat, hits, bx, bx_list, cross_part, verbose, pu, num_or):
     st_purity_max_cluster_size.GetPaintedGraph().GetXaxis().SetLabelSize(0.04)
     ROOT.gPad.Update()
     latex.DrawLatex(0.9, 0.91,plot_text1)
-    latex.DrawLatex(0.42, 0.91,plot_text2)
+    latex.DrawLatex(0.5, 0.91,plot_text2)
     c_max_cluster_size_p.Print("st_purity_max_cluster_size_%s_bx%s_crosspart_%s_or%d.pdf"%(hits, bx, cross_part, num_or))
     st_purity_max_cluster_size.Write("st_purity_max_cluster_size")
 
@@ -3550,7 +3550,7 @@ def analysis(root_dat, hits, bx, bx_list, cross_part, verbose, pu, num_or):
     st_purity_max_noise.GetPaintedGraph().GetXaxis().SetLabelSize(0.04)
     ROOT.gPad.Update()
     latex.DrawLatex(0.9, 0.91,plot_text1)
-    latex.DrawLatex(0.42, 0.91,plot_text2)
+    latex.DrawLatex(0.5, 0.91,plot_text2)
     c_max_noise_p.Print("st_purity_max_noise_%s_bx%s_crosspart_%s_or%d.pdf"%(hits, bx, cross_part, num_or))
     st_purity_max_noise.Write("st_purity_max_noise")
 
@@ -3570,7 +3570,7 @@ def analysis(root_dat, hits, bx, bx_list, cross_part, verbose, pu, num_or):
     st_purity_nlayers_withcsg3.GetPaintedGraph().GetXaxis().SetLabelSize(0.04)
     ROOT.gPad.Update()
     latex.DrawLatex(0.9, 0.91,plot_text1)
-    latex.DrawLatex(0.42, 0.91,plot_text2)
+    latex.DrawLatex(0.5, 0.91,plot_text2)
     c_nlayers_withcsg3_p.Print("st_purity_nlayers_withcsg3_%s_bx%s_crosspart_%s_or%d.pdf"%(hits, bx, cross_part, num_or))
     st_purity_nlayers_withcsg3.Write("st_purity_nlayers_withcsg3")
 
@@ -3590,7 +3590,7 @@ def analysis(root_dat, hits, bx, bx_list, cross_part, verbose, pu, num_or):
     st_purity_nlayers_withcsg5.GetPaintedGraph().GetXaxis().SetLabelSize(0.04)
     ROOT.gPad.Update()
     latex.DrawLatex(0.9, 0.91,plot_text1)
-    latex.DrawLatex(0.42, 0.91,plot_text2)
+    latex.DrawLatex(0.5, 0.91,plot_text2)
     c_nlayers_withcsg5_p.Print("st_purity_nlayers_withcsg5_%s_bx%s_crosspart_%s_or%d.pdf"%(hits, bx, cross_part, num_or))
     st_purity_nlayers_withcsg5.Write("st_purity_nlayers_withcsg5")
 
@@ -3610,7 +3610,7 @@ def analysis(root_dat, hits, bx, bx_list, cross_part, verbose, pu, num_or):
     st_purity_nlayers_withcsg10.GetPaintedGraph().GetXaxis().SetLabelSize(0.04)
     ROOT.gPad.Update()
     latex.DrawLatex(0.9, 0.91,plot_text1)
-    latex.DrawLatex(0.42, 0.91,plot_text2)
+    latex.DrawLatex(0.5, 0.91,plot_text2)
     c_nlayers_withcsg10_p.Print("st_purity_nlayers_withcsg10_%s_bx%s_crosspart_%s_or%d.pdf"%(hits, bx, cross_part, num_or))
     st_purity_nlayers_withcsg10.Write("st_purity_nlayers_withcsg10")
 
@@ -3630,7 +3630,7 @@ def analysis(root_dat, hits, bx, bx_list, cross_part, verbose, pu, num_or):
     st_purity_nlayers_withcsg15.GetPaintedGraph().GetXaxis().SetLabelSize(0.04)
     ROOT.gPad.Update()
     latex.DrawLatex(0.9, 0.91,plot_text1)
-    latex.DrawLatex(0.42, 0.91,plot_text2)
+    latex.DrawLatex(0.5, 0.91,plot_text2)
     c_nlayers_withcsg15_p.Print("st_purity_nlayers_withcsg15_%s_bx%s_crosspart_%s_or%d.pdf"%(hits, bx, cross_part, num_or))
     st_purity_nlayers_withcsg15.Write("st_purity_nlayers_withcsg15")
 
@@ -3650,7 +3650,7 @@ def analysis(root_dat, hits, bx, bx_list, cross_part, verbose, pu, num_or):
     st_purity_nlayers_withnoiseg3.GetPaintedGraph().GetXaxis().SetLabelSize(0.04)
     ROOT.gPad.Update()
     latex.DrawLatex(0.9, 0.91,plot_text1)
-    latex.DrawLatex(0.42, 0.91,plot_text2)
+    latex.DrawLatex(0.5, 0.91,plot_text2)
     c_nlayers_withnoiseg3_p.Print("st_purity_nlayers_withnoiseg3_%s_bx%s_crosspart_%s_or%d.pdf"%(hits, bx, cross_part, num_or))
     st_purity_nlayers_withnoiseg3.Write("st_purity_nlayers_withnoiseg3")
 
@@ -3670,7 +3670,7 @@ def analysis(root_dat, hits, bx, bx_list, cross_part, verbose, pu, num_or):
     st_purity_nlayers_withnoiseg5.GetPaintedGraph().GetXaxis().SetLabelSize(0.04)
     ROOT.gPad.Update()
     latex.DrawLatex(0.9, 0.91,plot_text1)
-    latex.DrawLatex(0.42, 0.91,plot_text2)
+    latex.DrawLatex(0.5, 0.91,plot_text2)
     c_nlayers_withnoiseg5_p.Print("st_purity_nlayers_withnoiseg5_%s_bx%s_crosspart_%s_or%d.pdf"%(hits, bx, cross_part, num_or))
     st_purity_nlayers_withnoiseg5.Write("st_purity_nlayers_withnoiseg5")
 
@@ -3690,7 +3690,7 @@ def analysis(root_dat, hits, bx, bx_list, cross_part, verbose, pu, num_or):
     st_purity_nlayers_withnoiseg10.GetPaintedGraph().GetXaxis().SetLabelSize(0.04)
     ROOT.gPad.Update()
     latex.DrawLatex(0.9, 0.91,plot_text1)
-    latex.DrawLatex(0.42, 0.91,plot_text2)
+    latex.DrawLatex(0.5, 0.91,plot_text2)
     c_nlayers_withnoiseg10_p.Print("st_purity_nlayers_withnoiseg10_%s_bx%s_crosspart_%s_or%d.pdf"%(hits, bx, cross_part, num_or))
     st_purity_nlayers_withnoiseg10.Write("st_purity_nlayers_withnoiseg10")
 
@@ -3710,7 +3710,7 @@ def analysis(root_dat, hits, bx, bx_list, cross_part, verbose, pu, num_or):
     st_purity_nlayers_withnoiseg15.GetPaintedGraph().GetXaxis().SetLabelSize(0.04)
     ROOT.gPad.Update()
     latex.DrawLatex(0.9, 0.91,plot_text1)
-    latex.DrawLatex(0.42, 0.91,plot_text2)
+    latex.DrawLatex(0.5, 0.91,plot_text2)
     c_nlayers_withnoiseg15_p.Print("st_purity_nlayers_withnoiseg15_%s_bx%s_crosspart_%s_or%d.pdf"%(hits, bx, cross_part, num_or))
     st_purity_nlayers_withnoiseg15.Write("st_purity_nlayers_withnoiseg15")
 
@@ -3730,7 +3730,7 @@ def analysis(root_dat, hits, bx, bx_list, cross_part, verbose, pu, num_or):
     st_effi_max_cluster_size.GetPaintedGraph().GetXaxis().SetLabelSize(0.04)
     ROOT.gPad.Update()
     latex.DrawLatex(0.9, 0.91,plot_text1)
-    latex.DrawLatex(0.42, 0.91,plot_text2)
+    latex.DrawLatex(0.5, 0.91,plot_text2)
     c_max_cluster_size_e.Print("st_effi_max_cluster_size_%s_bx%s_crosspart_%s_or%d.pdf"%(hits, bx, cross_part, num_or))
     st_effi_max_cluster_size.Write("st_effi_max_cluster_size")
 
@@ -3750,7 +3750,7 @@ def analysis(root_dat, hits, bx, bx_list, cross_part, verbose, pu, num_or):
     st_effi_max_noise.GetPaintedGraph().GetXaxis().SetLabelSize(0.04)
     ROOT.gPad.Update()
     latex.DrawLatex(0.9, 0.91,plot_text1)
-    latex.DrawLatex(0.42, 0.91,plot_text2)
+    latex.DrawLatex(0.5, 0.91,plot_text2)
     c_max_noise_e.Print("st_effi_max_noise_%s_bx%s_crosspart_%s_or%d.pdf"%(hits, bx, cross_part, num_or))
     st_effi_max_noise.Write("st_effi_max_noise")
 
@@ -3770,7 +3770,7 @@ def analysis(root_dat, hits, bx, bx_list, cross_part, verbose, pu, num_or):
     st_effi_nlayers_withcsg3.GetPaintedGraph().GetXaxis().SetLabelSize(0.04)
     ROOT.gPad.Update()
     latex.DrawLatex(0.9, 0.91,plot_text1)
-    latex.DrawLatex(0.42, 0.91,plot_text2)
+    latex.DrawLatex(0.5, 0.91,plot_text2)
     c_nlayers_withcsg3_e.Print("st_effi_nlayers_withcsg3_%s_bx%s_crosspart_%s_or%d.pdf"%(hits, bx, cross_part, num_or))
     st_effi_nlayers_withcsg3.Write("st_effi_nlayers_withcsg3")
 
@@ -3790,7 +3790,7 @@ def analysis(root_dat, hits, bx, bx_list, cross_part, verbose, pu, num_or):
     st_effi_nlayers_withcsg5.GetPaintedGraph().GetXaxis().SetLabelSize(0.04)
     ROOT.gPad.Update()
     latex.DrawLatex(0.9, 0.91,plot_text1)
-    latex.DrawLatex(0.42, 0.91,plot_text2)
+    latex.DrawLatex(0.5, 0.91,plot_text2)
     c_nlayers_withcsg5_e.Print("st_effi_nlayers_withcsg5_%s_bx%s_crosspart_%s_or%d.pdf"%(hits, bx, cross_part, num_or))
     st_effi_nlayers_withcsg5.Write("st_effi_nlayers_withcsg5")
 
@@ -3810,7 +3810,7 @@ def analysis(root_dat, hits, bx, bx_list, cross_part, verbose, pu, num_or):
     st_effi_nlayers_withcsg10.GetPaintedGraph().GetXaxis().SetLabelSize(0.04)
     ROOT.gPad.Update()
     latex.DrawLatex(0.9, 0.91,plot_text1)
-    latex.DrawLatex(0.42, 0.91,plot_text2)
+    latex.DrawLatex(0.5, 0.91,plot_text2)
     c_nlayers_withcsg10_e.Print("st_effi_nlayers_withcsg10_%s_bx%s_crosspart_%s_or%d.pdf"%(hits, bx, cross_part, num_or))
     st_effi_nlayers_withcsg10.Write("st_effi_nlayers_withcsg10")
 
@@ -3830,7 +3830,7 @@ def analysis(root_dat, hits, bx, bx_list, cross_part, verbose, pu, num_or):
     st_effi_nlayers_withcsg15.GetPaintedGraph().GetXaxis().SetLabelSize(0.04)
     ROOT.gPad.Update()
     latex.DrawLatex(0.9, 0.91,plot_text1)
-    latex.DrawLatex(0.42, 0.91,plot_text2)
+    latex.DrawLatex(0.5, 0.91,plot_text2)
     c_nlayers_withcsg15_e.Print("st_effi_nlayers_withcsg15_%s_bx%s_crosspart_%s_or%d.pdf"%(hits, bx, cross_part, num_or))
     st_effi_nlayers_withcsg15.Write("st_effi_nlayers_withcsg15")
 
@@ -3850,7 +3850,7 @@ def analysis(root_dat, hits, bx, bx_list, cross_part, verbose, pu, num_or):
     st_effi_nlayers_withnoiseg3.GetPaintedGraph().GetXaxis().SetLabelSize(0.04)
     ROOT.gPad.Update()
     latex.DrawLatex(0.9, 0.91,plot_text1)
-    latex.DrawLatex(0.42, 0.91,plot_text2)
+    latex.DrawLatex(0.5, 0.91,plot_text2)
     c_nlayers_withnoiseg3_e.Print("st_effi_nlayers_withnoiseg3_%s_bx%s_crosspart_%s_or%d.pdf"%(hits, bx, cross_part, num_or))
     st_effi_nlayers_withnoiseg3.Write("st_effi_nlayers_withnoiseg3")
 
@@ -3870,7 +3870,7 @@ def analysis(root_dat, hits, bx, bx_list, cross_part, verbose, pu, num_or):
     st_effi_nlayers_withnoiseg5.GetPaintedGraph().GetXaxis().SetLabelSize(0.04)
     ROOT.gPad.Update()
     latex.DrawLatex(0.9, 0.91,plot_text1)
-    latex.DrawLatex(0.42, 0.91,plot_text2)
+    latex.DrawLatex(0.5, 0.91,plot_text2)
     c_nlayers_withnoiseg5_e.Print("st_effi_nlayers_withnoiseg5_%s_bx%s_crosspart_%s_or%d.pdf"%(hits, bx, cross_part, num_or))
     st_effi_nlayers_withnoiseg5.Write("st_effi_nlayers_withnoiseg5")
 
@@ -3890,7 +3890,7 @@ def analysis(root_dat, hits, bx, bx_list, cross_part, verbose, pu, num_or):
     st_effi_nlayers_withnoiseg10.GetPaintedGraph().GetXaxis().SetLabelSize(0.04)
     ROOT.gPad.Update()
     latex.DrawLatex(0.9, 0.91,plot_text1)
-    latex.DrawLatex(0.42, 0.91,plot_text2)
+    latex.DrawLatex(0.5, 0.91,plot_text2)
     c_nlayers_withnoiseg10_e.Print("st_effi_nlayers_withnoiseg10_%s_bx%s_crosspart_%s_or%d.pdf"%(hits, bx, cross_part, num_or))
     st_effi_nlayers_withnoiseg10.Write("st_effi_nlayers_withnoiseg10")
 
@@ -3910,7 +3910,7 @@ def analysis(root_dat, hits, bx, bx_list, cross_part, verbose, pu, num_or):
     st_effi_nlayers_withnoiseg15.GetPaintedGraph().GetXaxis().SetLabelSize(0.04)
     ROOT.gPad.Update()
     latex.DrawLatex(0.9, 0.91,plot_text1)
-    latex.DrawLatex(0.42, 0.91,plot_text2)
+    latex.DrawLatex(0.5, 0.91,plot_text2)
     c_nlayers_withnoiseg15_e.Print("st_effi_nlayers_withnoiseg15_%s_bx%s_crosspart_%s_or%d.pdf"%(hits, bx, cross_part, num_or))
     st_effi_nlayers_withnoiseg15.Write("st_effi_nlayers_withnoiseg15")
     '''
