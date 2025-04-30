@@ -550,7 +550,8 @@ def analysis(root_dat, hits, bx, bx_list, cross_part, verbose, pu, num_or):
                 else:
                     config.ly_thresh_eta : list[int] = [4, 4, 4, 4, 4, 4, 4, 4]
             elif pu == "200":
-                config.ly_thresh_patid : list[int] = [7, 7, 7, 7, 7, 7, 7, 7, 7, 7, 5, 5, 5, 5, 5, 5, 4]
+                config.ly_thresh_patid : list[int] = [7, 7, 7, 7, 7, 7, 7, 7, 7, 7, 5, 5, 4, 4, 4, 4, 4]
+                #config.ly_thresh_patid : list[int] = [7, 7, 7, 7, 7, 7, 7, 7, 7, 7, 5, 5, 5, 5, 5, 5, 4]
                 if config.x_prt_en:
                     config.ly_thresh_eta : list[int] = [4, 5, 4, 5, 4, 5, 4, 5, 4, 5, 4, 5, 4, 5, 5]
                 else:
@@ -565,9 +566,9 @@ def analysis(root_dat, hits, bx, bx_list, cross_part, verbose, pu, num_or):
                 if pu == "200":
                     if abs(seg.bend_ang) > 1: 
                         seg.id = 0
-                    if seg.partition >= 9: 
-                        if abs(seg.bend_ang) > 0.5: 
-                            seg.id = 0
+                    #if seg.partition >= 9: 
+                    #    if abs(seg.bend_ang) > 0.5: 
+                    #        seg.id = 0
                 if seg.id == 0:
                     continue
                 #mse_collections.append(seg.mse)
