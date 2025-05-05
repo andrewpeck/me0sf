@@ -4019,7 +4019,7 @@ if __name__ == "__main__":
     parser = argparse.ArgumentParser(description='Emulator for Online ME0 Segment Finder')
     parser.add_argument("-f", "--file_path", action="store", dest="file_path", help="file_path = the .root file path to be read")
     parser.add_argument("-t", "--hits", action="store", dest="hits", default="digi", help="hits = digi or rec")
-    parser.add_argument("-b", "--bx", action="store", dest="bx", default="all", help="bx = all or nr. of BXs to consider")
+    parser.add_argument("-b", "--bx", action="store", dest="bx", default="3", help="bx = all or nr. of BXs to consider")
     #parser.add_argument("-c", "--cross_part", action="store", dest="cross_part", help="cross_part = 'full' or 'partial' or 'none'")
     parser.add_argument("-v", "--verbose", action="store_true", dest="verbose", help="whether to print all track segment matching info")
     parser.add_argument("-p", "--pu", action="store", dest="pu", help="PU")
