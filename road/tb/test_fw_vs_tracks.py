@@ -12,8 +12,8 @@ from get_sbits_from_root import (read_ntuple_stack, get_sbits_from_event)
 from convert_tracks_to_sbits import *
 
 @cocotb.test() # type: ignore
-async def chamber_test_ff(dut, nloops=20):
-   await chamber_test(dut, "FF", nloops)
+async def chamber_test_tracks(dut, nloops=20):
+   await chamber_test(dut, "TRACKS", nloops)
 
 async def chamber_test(dut, test, nloops=512, verbose=True):
 
@@ -21,10 +21,10 @@ async def chamber_test(dut, test, nloops=512, verbose=True):
     Test the chamber.vhd module
     '''
     # Read in ROOT file for sbit data
-    sbit_root = read_ntuple_stack("00001199.root")
+    sbit_root = read_ntuple_stack("../digi_1199.root")
 
     # Read in ROOT file for tracks
-    track_root = read_stack_tracks("stack_testdata_tracks.root")
+    track_root = read_stack_tracks("../tracks_1199.root")
 
     # setup the dut and extract constants from it
 
@@ -86,7 +86,7 @@ async def chamber_test(dut, test, nloops=512, verbose=True):
 
     for _ in range(LATENCY-1):
         await RisingEdge(dut.dav_i)
-        queue.append(NULL())
+        queue.append(0)
 
     # loop over some number of test cases
     istrip = 0
@@ -116,11 +116,11 @@ async def chamber_test(dut, test, nloops=512, verbose=True):
 
             # Get track output
             popped_iteration = queue.pop(0)
-
+ 
             track = track_root[popped_iteration]
-            track_hits_prt_list, track_hits_strip_list = get_sbits_from_track(track)
-            track_prt = track_hits_prt_list[3]
-            track_strip = track_hits_strip_list[3]
+            track_hits_strip_list, track_hits_prt_list = get_sbits_from_track(track)
+            track_prt = 2 * track_hits_prt_list[3] # Tracks don't have x-partitions, so multiply by 2 to compare
+            track_strip = 191 - track_hits_strip_list[3] # Track x-axis is flipped
 
             if (popped_iteration != 0):
                 same = True
@@ -149,28 +149,30 @@ async def chamber_test(dut, test, nloops=512, verbose=True):
                     print("  > fw: " + str(fw_segments[i]))
                     print("  > track: Prt: " + str(track_prt) + " Strip: " + str(track_strip))
 
-            err = "   "
-            if loop > LATENCY+2:
+            exclude_list = (3)
+
+            if loop > LATENCY and track["trackSlopeY"] < 0.01 and popped_iteration not in exclude_list:
+
                 # Check if FW returned nothing, but SW returned something
                 if (fw_segments[0].id == 0 and not same):
-                    print(popped_iteration)
-                    err = "ERR"
-                    print(f" {err} seg {i}:")
+                    print(f"Event {popped_iteration} ERROR")
+                    print("ERR: No segments from FW, but segment from SW")
                     print("   > track: Prt: " + str(track_prt) + " Strip: " + str(track_strip))
                     print("   > fw: No segments")
                     assert False
+
                 # Check if FW returned something, but SW returned nothing
                 elif (fw_segments[0].id != 0 and same):
-                    print(popped_iteration)
-                    err = "ERR"
-                    print(f" {err} seg {i}:")
+                    print(f"Event {popped_iteration} ERROR")
+                    print("ERR: Segment from FW, but no segment from SW")
                     print("   > track: No segments")
                     print("   > fw: Prt: " + str(fw_segments[0].partition) + " Strip: " + str(fw_segments[0].strip))
+                    assert False
+
                 # Check if both FW and SW returned something, they are similar segments
-                elif abs(track_strip - fw_segments[0].strip) > 10 or abs(track_prt - fw_segments[0].partition) > 3:
-                    print(popped_iteration)
-                    err = "ERR"
-                    print(f" {err} seg {i}:")
+                elif fw_segments[0].id != 0 and (abs(track_strip - fw_segments[0].strip) > 10 or abs(track_prt - fw_segments[0].partition) > 3):
+                    print(f"Event {popped_iteration} ERROR")
+                    print("ERR: Segments do not match")
                     print("   > track: Prt: " + str(track_prt) + " Strip: " + str(track_strip))
                     print("   > fw: Prt: " + str(fw_segments[0].partition) + " Strip: " + str(fw_segments[0].strip))
                     assert False
