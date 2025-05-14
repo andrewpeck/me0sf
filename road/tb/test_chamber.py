@@ -88,7 +88,8 @@ async def chamber_test(dut, test, nloops=512, verbose=True):
     config.num_outputs= dut.NUM_SEGMENTS.value
     config.ly_thresh_eta = [4, 5, 4, 5, 4, 5, 4, 5, 4, 5, 4, 5, 4, 5, 4]
     config.ly_thresh_patid = [7, 7, 7, 7, 7, 7, 7, 7, 7, 7, 5, 5, 4, 4, 4, 4, 4]
-    config.cross_part_seg_width = dut.X_DEGHOST_EDGE_DIST.value # set to zero to disable until implmented in fw
+    config.cross_part_seg_width = dut.X_DEGHOST_EDGE_DIST.value # set to zero to disable x-partition deghosting
+    config.disable_peaking = False
 
     en_hc_compress = True #this is a generic, so need to set it here and in top level in FW
 
@@ -370,7 +371,7 @@ def test_chamber():
         os.path.join(rtl_dir, "chamber.vhd")]
 
     #parameters = {"PULSE_EXTEND": 1, "DEADTIME": 0, "DISABLE_PEAKING": True}
-    parameters = {"DISABLE_PEAKING": True, "X_DEGHOST_EDGE_DIST" : 2}
+    parameters = {"DISABLE_PEAKING": False, "X_DEGHOST_EDGE_DIST" : 2}
 
     os.environ["SIM"] = "questa"
     #os.environ["COCOTB_RESULTS_FILE"] = f"../log/{module}.xml"
