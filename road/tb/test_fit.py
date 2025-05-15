@@ -68,7 +68,7 @@ async def fit_tb(dut, NLOOPS=10000):
     dut.ly5.value = 6
 
     #LATENCY = dut.N_STAGES.value + 1
-    LATENCY = dut.N_STAGES.value + 7 #Latency introduced by adding pipeline registers (for timing constraints)
+    LATENCY = dut.N_STAGES.value + 6 #Latency introduced by adding pipeline registers (for timing constraints)
 
     for _ in range(LATENCY):
         await RisingEdge(dut.clock)
@@ -76,13 +76,8 @@ async def fit_tb(dut, NLOOPS=10000):
     data = []
 
     for _ in range(LATENCY - 1):
-
         y = rand_y()
         data.append(y)
-
-        # plot line
-        # plt.plot(x, y)
-        # plt.show()
 
         (dut.ly0.value, dut.ly1.value, dut.ly2.value, dut.ly3.value, dut.ly4.value, dut.ly5.value) = y
 
@@ -90,6 +85,8 @@ async def fit_tb(dut, NLOOPS=10000):
 
     for iloop in range(NLOOPS):
 
+        valid_layers = sorted(random.sample(range(6), random.randint(5, 6)))
+        #dut.valid_i.value = sum(1 << i for i in valid_layers)
 
         y = rand_y()
 
@@ -101,6 +98,7 @@ async def fit_tb(dut, NLOOPS=10000):
         dut.ly5.value = y[5]
 
         data.append(y)
+
         m, b = fit_modified(x, y)
         await RisingEdge(dut.clock)  # Synchronize with the clock
 
@@ -113,14 +111,19 @@ async def fit_tb(dut, NLOOPS=10000):
 
         key_strip = dut.strip_o.value.signed_integer / (2**strip_fracb - 1)
 
-        #max_error_strips_per_layer = 0.2
-        max_error_strips_per_layer = 0.5
+        max_error_strips_per_layer = 0.2
+        #max_error_strips_per_layer = 0.5
         max_error_strips = 0.5
-        #max_error_intercept = 0.5
+        #max_error_intercept = 4.5
         max_error_intercept = 1.4
 
-
         key_s = m * 2.5 + b
+        valid_mask = [(dut.valid_i.value.integer >> i) & 1 for i in range(6)]
+        masked_data = [v if valid else float('NaN') for v, valid in zip(this_data, valid_mask)]
+        #print(masked_data)
+        #print_slope(slope, intercept, key_strip, m, b, key_s)
+        #print(valid_mask)
+        #print(dut.valid_i.value)
 
         assert abs(b - intercept) < max_error_intercept, \
             print_slope(slope, intercept, key_strip, m, b, key_s)
@@ -128,9 +131,13 @@ async def fit_tb(dut, NLOOPS=10000):
             print_slope(slope, intercept, key_strip, m, b, key_s)
         assert abs(key_s - key_strip) < max_error_strips, \
             print_slope(slope, intercept, key_strip, m, b, key_s)
+        print("%d fits tested" % iloop)
 
         if iloop % 1000 == 0:
             print("%d fits tested" % iloop)
+            valid_mask = [(dut.valid_i.value.integer >> i) & 1 for i in range(6)]
+            masked_data = [v if valid else float('NaN') for v, valid in zip(this_data, valid_mask)]
+            print(masked_data)
             print(this_data)
             print_slope(slope, intercept, key_strip, m, b, key_s)
         #print("%d fits tested" % iloop)

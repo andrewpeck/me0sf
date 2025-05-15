@@ -113,25 +113,11 @@ architecture behavioral of fit is
   --------------------------------------------------------------------------------
 
   type square_array_t is array (integer range 0 to 5) of integer range -2047 to 2047;
-
-  type product_1_array_t is array (integer range 0 to 5) of integer range -8191 to 8191;
-  type product_2_array_t is array (integer range 0 to 5) of integer range -2047 to 2047;
-  type product_3_array_t is array (integer range 0 to 5) of integer range -4095 to 4095;
-  type product_4_array_t is array (integer range 0 to 5) of integer range -2047 to 2047;
   type product_array_t is array (integer range 0 to 5) of integer range -8191 to 8191;
 
 
-  signal square_sum_1 : integer;
-  signal square_sum_2 : integer;
-  signal square_sum_3 : integer;
-
-  signal square, square_temp, square_1, square_1_reg, square_2_reg, square_3_reg, square_4_reg, square_2, square_3, square_4, square_temp1, square_temp2 : square_array_t  := (others => 0);
-
-  signal product_1, product_1_reg : product_1_array_t := (others => 0);
-  signal product_2, product_2_reg  : product_2_array_t := (others => 0);
-  signal product_3, product_3_reg : product_3_array_t := (others => 0);
-  signal product_4 : product_4_array_t := (others => 0);
-  signal product, product_temp1, product_temp2 : product_array_t := (others => 0);
+  signal square : square_array_t  := (others => 0);
+  signal product : product_array_t := (others => 0);
 
   
   --------------------------------------------------------------------------------
@@ -141,13 +127,11 @@ architecture behavioral of fit is
   -- Σ (n*xi - Σx)*(n*yi - Σy)
   --
   signal product_sum : integer range -8191 to 8191 := 0;
-  signal product_sum_1 : integer range -4095 to 4095 := 0;
-  signal product_sum_2 : integer range -4095 to 4095 := 0;
-  signal product_sum_3 : integer range -4095 to 4095 := 0;
+  signal product_sum_1 : integer range -8191 to 8191 := 0;
 
   
   signal square_sum_reciprocal : sfixed (1 downto -13);
-  signal square_sum_reciprocal_narrow : sfixed(1 downto -12);
+  signal square_sum : integer range -8191 to 8191 := 0;
 
   --------------------------------------------------------------------------------
   -- s5
@@ -283,11 +267,26 @@ begin
 
       --------------------------------------------------------------------------------
       -- s1
+      --
+      -- + count the # of layers hit
+      -- + take the Σx, Σy
+      -- + ff stage for registering the inputs
       --------------------------------------------------------------------------------
 
       -- Σx, Σy
+
+      y_sum(1) <= sum6(to_integer(ly(0)), to_integer(ly(1)), to_integer(ly(2)),
+                       to_integer(ly(3)), to_integer(ly(4)), to_integer(ly(5)), valid_i);
       x_sum(1) <= sum6(0, 1, 2, 3, 4, 5, valid_i);
-      y_sum(1) <= sum6(to_integer(ly(0)), to_integer(ly(1)), to_integer(ly(2)), to_integer(ly(3)), to_integer(ly(4)), to_integer(ly(5)), valid_i);
+
+      -- n * y_i
+      -- n * x_i
+      n_xy_loop : for I in 0 to N_LAYERS-1 loop
+        n_y(I) <= cnt(0) * to_integer(ly(I));
+        n_x(I) <= cnt(0) * I;
+      end loop;
+
+      -- delays
 
       cnt(1) <= cnt(0);
       cnt(2) <= cnt(1);
@@ -296,12 +295,15 @@ begin
       cnt(5) <= cnt(4);
       cnt(6) <= cnt(5);
       cnt(7) <= cnt(6);
+      -- cnt_dly : for idly in 2 to 7 loop
+      --   cnt(idly) <= cnt(idly-1);
+      -- end loop;
 
-      x_sum_dly : for I in 2 to 6 loop
+      x_sum_dly : for I in x_sum'low+1 to x_sum'high loop
         x_sum(I) <= x_sum(I-1);
       end loop;
 
-      y_sum_dly : for I in 2 to 7 loop
+      y_sum_dly : for I in y_sum'low+1 to y_sum'high loop
         y_sum(I) <= y_sum(I-1);
       end loop;
 
@@ -309,51 +311,36 @@ begin
       -- s2
       --------------------------------------------------------------------------------
 
+      -- (n * x_i - Σx)
+      -- (n * y_i - Σy)
       diff_loop : for I in 0 to N_LAYERS-1 loop
-        n_x(I) <= cnt(0) * I;
-        product_2_reg(I) <= cnt(0) * y_sum(1); 
-        product_2(I) <= n_x(I) * y_sum(1);
-        product_1_reg(I) <= n_x(I) * to_integer(ly(I)); 
-        product_1(I) <= product_1_reg(I) * cnt(0);
-        product_4(I) <= x_sum(1) * y_sum(1);
-        product_3_reg(I) <= x_sum(1) * to_integer(ly(I)); 
-        product_3(I) <= cnt(0) * product_3_reg(I); 
-        product_temp1(I) <= product_4(I) + product_1(I);
-        product_temp2(I) <= product_3(I) + product_2(I);
-        product(I) <= product_temp1(I) - product_temp2(I);
-      end loop;
-
-      s3_loop : for I in 0 to 5 loop
-        square_1(I) <= n_x(I) * n_x(I);
-        square_2(I) <= n_x(I) * x_sum(1);
-        square_3(I) <= n_x(I) * x_sum(1);
-        square_4(I) <= x_sum(1) * x_sum(1);
-        square_temp1(I) <= square_1(I) + square_4(I);
-        square_temp2(I) <= square_2(I) + square_3(I);
-        square(I) <= square_temp1(I) - square_temp2(I); 
+        x_diff(I) <= n_x(I) - x_sum(1);
+        y_diff(I) <= n_y(I) - y_sum(1);
       end loop;
 
       --------------------------------------------------------------------------------
       -- s3
       --------------------------------------------------------------------------------
 
+      -- (n*xi - Σx)(n*yi - Σy)
+      -- (n*xi - Σx)^2
+      s3_loop : for I in 0 to N_LAYERS-1 loop
+        product(I) <= x_diff(I) * y_diff(I);
+        square(I)  <= x_diff(I) * x_diff(I);
+      end loop;
+
       --------------------------------------------------------------------------------
       -- s4
       --------------------------------------------------------------------------------
 
-      product_sum_1 <= product(0) + product(1);             
-      product_sum_2 <= product(2) + product(3);                 
-      product_sum_3 <= product(4) + product(5);   
+      -- Σ (n*xi - Σx)*(n*yi - Σy)
+      product_sum_1 <= sum6(product(0), product(1), product(2), product(3), product(4), product(5), valid(3));
+      product_sum <= product_sum_1;
 
-      product_sum <= product_sum_1 + product_sum_2 + product_sum_3; 
+      -- Σ (n*xi - Σx)^2
+      square_sum <= sum6(square(0), square(1), square(2), square(3), square(4), square(5), valid(3));
+      square_sum_reciprocal <= reciprocal (square_sum ,-square_sum_reciprocal'low);
 
-      square_sum_1 <= square(0) + square(1);
-      square_sum_2 <= square(2) + square(3);
-      square_sum_3 <= square(4) + square(5);
-
-      reciprocal_input <= square_sum_1 + square_sum_2 + square_sum_3; 
-      --square_sum_reciprocal_narrow <= reciprocal (reciprocal_input, 12);
-      square_sum_reciprocal <= reciprocal (reciprocal_input, 13);
 
       --------------------------------------------------------------------------------
       -- s5: slope= Σ (n*xi - Σx)*(n*yi - Σy) / Σ (n*xi - Σx)^2
@@ -373,7 +360,7 @@ begin
       -- s6: Σy-mb = Σy - slope*Σx
       --------------------------------------------------------------------------------
 
-      y_minus_mb <= to_sfixed(y_sum(12), 7) - slope_times_x;
+      y_minus_mb <= to_sfixed(y_sum(11), 7) - slope_times_x;
       y_minus_mb_s6 <= y_minus_mb(y_minus_mb_s6'high downto y_minus_mb_s6'low) ;  
       intercept_mult <= reciprocal6(cnt(7), 10) * y_minus_mb_s6;          
       intercept <= intercept_mult(5 downto -6);
@@ -423,10 +410,3 @@ begin
   slope_sfixed <= to_sfixed(std_logic_vector(slope_signed), slope_sfixed'high, slope_sfixed'low);
   slope <= resize(slope_sfixed, slope);
 end behavioral;
-
-
-
-
-
-
-

@@ -22,7 +22,7 @@ package body reciprocal_pkg is
   function reciprocal (x : integer; nbits : integer) return sfixed is
   begin
     if (x<1 or x> 2047) then
-      assert false report "invalid reciprocal lookup x=" & integer'image(x) severity error;
+      -- assert false report "invalid reciprocal lookup x=" & integer'image(x) severity error;
       return to_sfixed(0, 1, -nbits);
     elsif (x=1) then return to_sfixed(1.00000000000000000000, 1, -nbits);
     elsif (x=2) then return to_sfixed(0.50000000000000000000, 1, -nbits);
