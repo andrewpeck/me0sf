@@ -7,8 +7,12 @@ import math
 LAYER_MASK = None
 
 class Peaking_Manager:
-    segs : list[list["Segment"]] = [[0 for _ in range(192)] for _ in range(15)]
+    def __init__(self):
+        self.segs = [[Segment(0,0) for _ in range(192)] for _ in range(15)]       
 
+    def reset(self):
+        self.segs = [[Segment(0,0) for _ in range(192)] for _ in range(15)]
+ 
 class Config:
     def __init__(self):
         self.peaking_manager = Peaking_Manager()

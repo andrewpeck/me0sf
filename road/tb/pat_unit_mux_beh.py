@@ -62,7 +62,7 @@ def pat_mux(partition_data, partition, config : Config, partition_bx_data):
     old_segs = config.peaking_manager.segs[partition]
 
     # If a pattern unit has a worse segment than the previous bx, output the old segment (at its peak quality)
-    out_list = [old_segs[i] if old_segs[i] > new_segs[i] else Segment(0, 0) for i in range(config.width)]
+    out_list = [old_segs[i] if old_segs[i].lc > new_segs[i].lc else Segment(0, 0) for i in range(config.width)]
 
     # Update the peaking manager
     config.peaking_manager.segs[partition] = new_segs
