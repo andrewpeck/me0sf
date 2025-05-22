@@ -6,7 +6,17 @@ import math
 
 LAYER_MASK = None
 
+class Peaking_Manager:
+    def __init__(self):
+        self.segs = [[Segment(0,0) for _ in range(192)] for _ in range(15)]       
+
+    def reset(self):
+        self.segs = [[Segment(0,0) for _ in range(192)] for _ in range(15)]
+ 
 class Config:
+    def __init__(self):
+        self.peaking_manager = Peaking_Manager()
+
     skip_centroids : bool = False
     ly_thresh_patid : list[int] = [7, 7, 7, 7, 7, 7, 7, 7, 7, 7, 5, 5, 4, 4, 4, 4, 4]
     ly_thresh_eta : list[int] = [4, 5, 4, 5, 4, 5, 4, 5, 4, 5, 4, 5, 4, 5, 4]
@@ -23,6 +33,7 @@ class Config:
     check_ids : bool = False
     edge_distance : int = 2
     num_or : int = 2
+    disable_peaking : bool = True
 
 
 class hi_lo_t:

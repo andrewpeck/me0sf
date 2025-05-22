@@ -24,6 +24,8 @@ def printly_dat(mask=None, data=None, MAX_SPAN=37):
         print("ly%d " % (5-i), end="")
         for j in range(MAX_SPAN):
             if data is not None and mask is not None:
+                if iterable_data[i][j] == "1" and iterable_mask[i][j] == "1":
+                    print("O", end="")
                 if iterable_data[i][j] == "1":
                     print("1", end="")
                 elif iterable_mask[i][j] == "1":
