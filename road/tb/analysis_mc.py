@@ -445,8 +445,8 @@ def analysis(root_dat, hits, bx, bx_list, cross_part, verbose, pu, num_or):
                     nlayers += 1
             seg_nlayers.append(nlayers)
 
-        for bx in digihit_bx:
-            hist_digi_hit_bx.Fill(bx)
+        for bx_i in digihit_bx:
+            hist_digi_hit_bx.Fill(bx_i)
 
         # initialize the dat_list that will be used as input of emulator
         # 36 * 8 * 2 * [6, 2]
@@ -1176,12 +1176,12 @@ def analysis(root_dat, hits, bx, bx_list, cross_part, verbose, pu, num_or):
                     if abs(offline_substrip - st_substrip) <= 5: # match criteria for strip
                         match_found = 1
                         break
-                if match_found == 0:
-                    n_offline_bkg_seg_per_chamber_per_event += 1
-                    num_offline_bkg_seg_per_chamber_per_event_eta.Fill(online_eta_partition+1)
-                else:
-                    n_offline_signal_seg_per_chamber_per_event += 1
-                    num_offline_signal_seg_per_chamber_per_event_eta.Fill(online_eta_partition+1)
+            if match_found == 0:
+                n_offline_bkg_seg_per_chamber_per_event += 1
+                num_offline_bkg_seg_per_chamber_per_event_eta.Fill(online_eta_partition+1)
+            else:
+                n_offline_signal_seg_per_chamber_per_event += 1
+                num_offline_signal_seg_per_chamber_per_event_eta.Fill(online_eta_partition+1)
 
         if verbose:
             file_out_summary.write("  Online Segments: \n")
@@ -2379,7 +2379,7 @@ def analysis(root_dat, hits, bx, bx_list, cross_part, verbose, pu, num_or):
     c13a = ROOT.TCanvas('', '', 800, 650)
     c13a.SetLeftMargin(0.12)
     c13a.SetGrid()
-    c13a.DrawFrame(0, 0, 9, 1.05, ";#eta Partition;Nr. of Segments per Stack per BX")
+    c13a.DrawFrame(0, 0, 9, 0.4, ";#eta Partition;Nr. of Segments per Stack per BX")
     num_bkg_seg_per_chamber_per_event_eta.SetStats(False)
     num_bkg_seg_per_chamber_per_event_eta.Scale(1/(36.0*n_total_events))
     num_bkg_seg_per_chamber_per_event_eta.Draw("same HE")
@@ -2675,7 +2675,7 @@ def analysis(root_dat, hits, bx, bx_list, cross_part, verbose, pu, num_or):
     c13dd = ROOT.TCanvas('', '', 800, 650)
     c13dd.SetLeftMargin(0.12)
     c13dd.SetGrid()
-    c13dd.DrawFrame(0, 0, 9, 1.05, ";#eta Partition;Nr. of Segments per Stack per BX")
+    c13dd.DrawFrame(0, 0, 9, 0.4, ";#eta Partition;Nr. of Segments per Stack per BX")
     num_signal_seg_per_chamber_per_event_eta.SetStats(False)
     num_signal_seg_per_chamber_per_event_eta.Scale(1/(36.0*n_total_events))
     num_signal_seg_per_chamber_per_event_eta.Draw("same HE")
@@ -3649,7 +3649,7 @@ def analysis(root_dat, hits, bx, bx_list, cross_part, verbose, pu, num_or):
     c14_a = ROOT.TCanvas('', '', 800, 650)
     c14_a.SetLeftMargin(0.12)
     c14_a.SetGrid()
-    c14_a.DrawFrame(0, 0, 200, 1, ";pT (GeV);Fraction of Sim Tracks")
+    c14_a.DrawFrame(0, 0, 200, 0.1, ";pT (GeV);Fraction of Sim Tracks")
     hist_sim_track_pt.Scale(1/(hist_sim_track_pt.Integral()))
     hist_sim_track_pt.Draw("same")
     latex.DrawLatex(0.9, 0.91,plot_text1)
@@ -3660,7 +3660,7 @@ def analysis(root_dat, hits, bx, bx_list, cross_part, verbose, pu, num_or):
     c14_b = ROOT.TCanvas('', '', 800, 650)
     c14_b.SetLeftMargin(0.12)
     c14_b.SetGrid()
-    c14_b.DrawFrame(0, 0, 9, 1, ";#eta Partition;Fraction of Sim Tracks")
+    c14_b.DrawFrame(0, 0, 9, 0.3, ";#eta Partition;Fraction of Sim Tracks")
     hist_sim_track_eta.Scale(1/(hist_sim_track_eta.Integral()))
     hist_sim_track_eta.Draw("same")
     latex.DrawLatex(0.9, 0.91,plot_text1)
@@ -3671,7 +3671,7 @@ def analysis(root_dat, hits, bx, bx_list, cross_part, verbose, pu, num_or):
     c14_c = ROOT.TCanvas('', '', 800, 650)
     c14_c.SetLeftMargin(0.12)
     c14_c.SetGrid()
-    c14_c.DrawFrame(0, 0, 200, 1, ";pT (GeV);#eta Partition")
+    c14_c.DrawFrame(0, 0, 200, 9, ";pT (GeV);#eta Partition")
     hist_sim_track_pt_eta.Scale(1/(hist_sim_track_pt_eta.Integral()))
     hist_sim_track_pt_eta.Draw("same COLZ")
     latex.DrawLatex(0.9, 0.91,plot_text1)
@@ -3715,7 +3715,7 @@ def analysis(root_dat, hits, bx, bx_list, cross_part, verbose, pu, num_or):
     c15_a = ROOT.TCanvas('', '', 800, 650)
     c15_a.SetLeftMargin(0.12)
     c15_a.SetGrid()
-    c15_a.DrawFrame(0, 0, 9, 1.05, ";#eta Partition;Nr. of Offline Signal Segments per Stack per BX")
+    c15_a.DrawFrame(0, 0, 9, 0.4, ";#eta Partition;Nr. of Offline Signal Segments per Stack per BX")
     num_offline_signal_seg_per_chamber_per_event_eta.SetStats(False)
     num_offline_signal_seg_per_chamber_per_event_eta.Scale(1/(36.0*n_total_events))
     num_offline_signal_seg_per_chamber_per_event_eta.Draw("same HE")
@@ -3733,7 +3733,7 @@ def analysis(root_dat, hits, bx, bx_list, cross_part, verbose, pu, num_or):
     c15_b = ROOT.TCanvas('', '', 800, 650)
     c15_b.SetLeftMargin(0.12)
     c15_b.SetGrid()
-    c15_b.DrawFrame(0, 0, 9, 1.05, ";#eta Partition;Nr. of Offline Background Segments per Stack per BX")
+    c15_b.DrawFrame(0, 0, 9, 0.4, ";#eta Partition;Nr. of Offline Background Segments per Stack per BX")
     num_offline_bkg_seg_per_chamber_per_event_eta.SetStats(False)
     num_offline_bkg_seg_per_chamber_per_event_eta.Scale(1/(36.0*n_total_events))
     num_offline_bkg_seg_per_chamber_per_event_eta.Draw("same HE")
