@@ -24,6 +24,14 @@ def analysis(root_dat, hits, bx, bx_list, cross_part, verbose, pu, num_or):
     file_out = open("output_log_%s_bx%s_crosspart_%s_or%d.txt"%(hits, bx, cross_part, num_or), "w")
     file_out_summary = open("output_log_%s_bx%s_crosspart_%s_or%d_summary.txt"%(hits, bx, cross_part, num_or), "w")
 
+    # Distributions of sim tracks and BXs
+    hist_sim_track_pt = ROOT.TH1D("hist_sim_track_pt","Sim Track pT",50,0,200)
+    hist_sim_track_eta = ROOT.TH1D("hist_sim_track_eta","Sim Track eta",8,0.5,8.5)
+    hist_sim_track_pt_eta = ROOT.TH2D("hist_sim_track_pt_eta","Sim Track pT and eta",50,0,200,8,0.5,8.5)
+    hist_digi_hit_bx = ROOT.TH1D("digi_hit_bx","BX of Digi Hits",11,-5.5,5.5)
+    hist_seg_signal_hit_bx = ROOT.TH1D("seg_signal_hit_bx","BX of Signal Online Segments",11,-5.5,5.5)
+    hist_seg_bkg_hit_bx = ROOT.TH1D("seg_bkg_hit_bx","BX of Background Online Segments",11,-5.5,5.5)
+
     # Nr. of segments per chamber per event
     num_seg_per_chamber = ROOT.TH1D("num_seg_per_chamber","Fraction of Events vs Number of Segments per Chamber",17,-0.5,16.5)
     num_seg_per_chamber_offline = ROOT.TH1D("num_seg_per_chamber_offline","Fraction of Events vs Number of Segments per Chamber",17,-0.5,16.5)
@@ -31,6 +39,7 @@ def analysis(root_dat, hits, bx, bx_list, cross_part, verbose, pu, num_or):
     # Nr. of background segments per chamber per event
     num_bkg_seg_per_chamber = ROOT.TH1D("num_bkg_seg_per_chamber","Fraction of Events vs Number of Segments per Chamber",17,-0.5,16.5)
     num_bkg_seg_per_chamber_per_event_eta = ROOT.TH1F("num_bkg_seg_per_chamber_per_event_eta", "num_bkg_seg_per_chamber_per_event_eta",8,0.5,8.5)
+    num_offline_bkg_seg_per_chamber_per_event_eta = ROOT.TH1F("num_offline_bkg_seg_per_chamber_per_event_eta", "num_offline_bkg_seg_per_chamber_per_event_eta",8,0.5,8.5)
     num_bkg_seg_per_chamber_per_event_bending = ROOT.TH1F("num_bkg_seg_per_chamber_per_event_bending", "num_bkg_seg_per_chamber_per_event_bending",80,-4,4)
     num_bkg_seg_per_chamber_per_event_bending1 = ROOT.TH1F("num_bkg_seg_per_chamber_per_event_bending1", "num_bkg_seg_per_chamber_per_event_bending1",80,-4,4) 
     num_bkg_seg_per_chamber_per_event_bending2 = ROOT.TH1F("num_bkg_seg_per_chamber_per_event_bending2", "num_bkg_seg_per_chamber_per_event_bending2",80,-4,4) 
@@ -87,6 +96,7 @@ def analysis(root_dat, hits, bx, bx_list, cross_part, verbose, pu, num_or):
     # Nr. of signal segments per chamber per event
     num_signal_seg_per_chamber = ROOT.TH1D("num_signal_seg_per_chamber","Fraction of Events vs Number of Segments per Chamber",17,-0.5,16.5)
     num_signal_seg_per_chamber_per_event_eta = ROOT.TH1F("num_signal_seg_per_chamber_per_event_eta", "num_signal_seg_per_chamber_per_event_eta",8,0.5,8.5)
+    num_offline_signal_seg_per_chamber_per_event_eta = ROOT.TH1F("num_offline_signal_seg_per_chamber_per_event_eta", "num_offline_signal_seg_per_chamber_per_event_eta",8,0.5,8.5)
     num_signal_seg_per_chamber_per_event_bending = ROOT.TH1F("num_signal_seg_per_chamber_per_event_bending", "num_signal_seg_per_chamber_per_event_bending",40,-2,2)
     num_signal_seg_per_chamber_per_event_bending1 = ROOT.TH1F("num_signal_seg_per_chamber_per_event_bending1", "num_signal_seg_per_chamber_per_event_bending1",40,-2,2) 
     num_signal_seg_per_chamber_per_event_bending2 = ROOT.TH1F("num_signal_seg_per_chamber_per_event_bending2", "num_signal_seg_per_chamber_per_event_bending2",40,-2,2) 
@@ -265,6 +275,8 @@ def analysis(root_dat, hits, bx, bx_list, cross_part, verbose, pu, num_or):
     n_st_purity_passed = 0
     n_bkg_seg_per_chamber_per_event = 0
     n_signal_seg_per_chamber_per_event = 0
+    n_offline_bkg_seg_per_chamber_per_event = 0
+    n_offline_signal_seg_per_chamber_per_event = 0
     online_seg_sim_track_matched_pt = []
     online_seg_sim_track_matched_bending_angle = []
 
@@ -389,6 +401,9 @@ def analysis(root_dat, hits, bx, bx_list, cross_part, verbose, pu, num_or):
                 if l > 0:
                     nlayers += 1
             track_nlayers.append(nlayers)
+            hist_sim_track_pt.Fill(track_sim_pt[i])
+            hist_sim_track_eta.Fill(max(eta_partition_list_sorted,key=eta_partition_list_sorted.count))
+            hist_sim_track_pt_eta.Fill(track_sim_pt[i], max(eta_partition_list_sorted,key=eta_partition_list_sorted.count))
         
         # Find the bending angle for rechit
         for i in range(0, n_offline_seg):
@@ -429,6 +444,9 @@ def analysis(root_dat, hits, bx, bx_list, cross_part, verbose, pu, num_or):
                 if l > 0:
                     nlayers += 1
             seg_nlayers.append(nlayers)
+
+        for bx in digihit_bx:
+            hist_digi_hit_bx.Fill(bx)
 
         # initialize the dat_list that will be used as input of emulator
         # 36 * 8 * 2 * [6, 2]
@@ -952,6 +970,7 @@ def analysis(root_dat, hits, bx, bx_list, cross_part, verbose, pu, num_or):
                 online_bending_angle = seg.bend_ang
                 online_id = seg.id
                 online_lc = seg.lc
+                online_bx = seg.bx
                 st_purity_total_eta.Fill(online_eta_partition+1)
                 st_purity_total_bending.Fill(online_bending_angle)
                 st_purity_total_id.Fill(online_id)
@@ -1132,12 +1151,37 @@ def analysis(root_dat, hits, bx, bx_list, cross_part, verbose, pu, num_or):
 
                     n_bkg_seg += 1
                     n_bkg_seg_per_chamber_per_event += 1
+                    hist_seg_bkg_hit_bx.Fill(online_bx)
                 else:
                     num_signal_seg_per_chamber_per_event_eta.Fill(online_eta_partition+1)
                     n_signal_seg += 1
                     n_signal_seg_per_chamber_per_event += 1
+                    hist_seg_signal_hit_bx.Fill(online_bx)
             num_bkg_seg_per_chamber.Fill(n_bkg_seg)
             num_signal_seg_per_chamber.Fill(n_signal_seg)
+
+        # Checking Matching of Offline Segments with Sim Tracks
+        for i in range(0, n_offline_seg):
+            offline_chamber = seg_chamber_nr[i]
+            offline_eta_partition = seg_eta_partition[i]
+            offline_bending_angle = seg_bending_angle[i]
+            offline_substrip = seg_substrip[i]
+            match_found = 0
+            for i in range(0, n_me0_track):
+                st_chamber = track_chamber_nr[i]
+                st_eta_partition = track_eta_partition[i]
+                st_bending_angle = track_bending_angle[i]
+                st_substrip = track_substrip[i]
+                if (offline_chamber == st_chamber) and abs(offline_eta_partition - st_eta_partition)<=1:
+                    if abs(offline_substrip - st_substrip) <= 5: # match criteria for strip
+                        match_found = 1
+                        break
+                if match_found == 0:
+                    n_offline_bkg_seg_per_chamber_per_event += 1
+                    num_offline_bkg_seg_per_chamber_per_event_eta.Fill(online_eta_partition+1)
+                else:
+                    n_offline_signal_seg_per_chamber_per_event += 1
+                    num_offline_signal_seg_per_chamber_per_event_eta.Fill(online_eta_partition+1)
 
         if verbose:
             file_out_summary.write("  Online Segments: \n")
@@ -1225,6 +1269,27 @@ def analysis(root_dat, hits, bx, bx_list, cross_part, verbose, pu, num_or):
     rate_with_ff_signal_seg_per_chamber_per_event = (n_signal_seg_per_chamber_per_event*1000*0.7710) / (25.0)
     print ("Rate of signal segments per chamber per event (with fill factor of 0.7710) = %.4f MHz\n"%rate_with_ff_signal_seg_per_chamber_per_event)
     file_out.write("Rate of signal segments per chamber per event (with fill factor of 0.7710) = %.4f MHz\n\n"%rate_with_ff_signal_seg_per_chamber_per_event)
+
+    n_offline_bkg_seg_per_chamber_per_event /= (36.0*n_total_events)
+    print ("Number of background offline segments per chamber per event = %.4f\n"%n_offline_bkg_seg_per_chamber_per_event)
+    file_out.write("Number of background offline segments per chamber per event = %.4f\n\n"%n_offline_bkg_seg_per_chamber_per_event)
+    rate_offline_bkg_seg_per_chamber_per_event = (n_offline_bkg_seg_per_chamber_per_event*1000) / (25.0)
+    print ("Rate of offline background segments per chamber per event = %.4f MHz\n"%rate_offline_bkg_seg_per_chamber_per_event)
+    file_out.write("Rate of offline background segments per chamber per event = %.4f MHz\n\n"%rate_offline_bkg_seg_per_chamber_per_event)
+    rate_offline_with_ff_bkg_seg_per_chamber_per_event = (n_offline_bkg_seg_per_chamber_per_event*1000*0.7710) / (25.0)
+    print ("Rate of offline background segments per chamber per event (with fill factor of 0.7710) = %.4f MHz\n"%rate_offline_with_ff_bkg_seg_per_chamber_per_event)
+    file_out.write("Rate of offline background segments per chamber per event (with fill factor of 0.7710) = %.4f MHz\n\n"%rate_offline_with_ff_bkg_seg_per_chamber_per_event)
+
+    n_offline_signal_seg_per_chamber_per_event /= (36.0*n_total_events)
+    print ("Number of offline signal segments per chamber per event = %.4f\n"%n_offline_signal_seg_per_chamber_per_event)
+    file_out.write("Number of offline signal segments per chamber per event = %.4f\n\n"%n_offline_signal_seg_per_chamber_per_event)
+    rate_offline_signal_seg_per_chamber_per_event = (n_offline_signal_seg_per_chamber_per_event*1000) / (25.0)
+    print ("Rate of offline signal segments per chamber per event = %.4f MHz\n"%rate_offline_signal_seg_per_chamber_per_event)
+    file_out.write("Rate of offline signal segments per chamber per event = %.4f MHz\n\n"%rate_offline_signal_seg_per_chamber_per_event)
+    rate_offline_with_ff_signal_seg_per_chamber_per_event = (n_offline_signal_seg_per_chamber_per_event*1000*0.7710) / (25.0)
+    print ("Rate of offline signal segments per chamber per event (with fill factor of 0.7710) = %.4f MHz\n"%rate_offline_with_ff_signal_seg_per_chamber_per_event)
+    file_out.write("Rate of offline signal segments per chamber per event (with fill factor of 0.7710) = %.4f MHz\n\n"%rate_offline_with_ff_signal_seg_per_chamber_per_event)
+
 
     plot_file = ROOT.TFile("output_plots_%s_bx%s_crosspart_%s_or%d.root"%(hits, bx, cross_part, num_or), "recreate")
     plot_file.cd()
@@ -3580,6 +3645,108 @@ def analysis(root_dat, hits, bx, bx_list, cross_part, verbose, pu, num_or):
         latex.DrawLatex(0.46, 0.91,plot_text2)
         cg.Print("sim_track_pt_vs_bending_angle_%s_bx%s_crosspart_%s_or%d.pdf"%(hits, bx, cross_part, num_or))
         st_pt_bending_total.Write()
+
+    c14_a = ROOT.TCanvas('', '', 800, 650)
+    c14_a.SetLeftMargin(0.12)
+    c14_a.SetGrid()
+    c14_a.DrawFrame(0, 0, 200, 1, ";pT (GeV);Fraction of Sim Tracks")
+    hist_sim_track_pt.Scale(1/(hist_sim_track_pt.Integral()))
+    hist_sim_track_pt.Draw("same")
+    latex.DrawLatex(0.9, 0.91,plot_text1)
+    latex.DrawLatex(0.46, 0.91,plot_text2)
+    c14_a.Print("hist_sim_track_pt_%s_bx%s_crosspart_%s_or%d.pdf"%(hits, bx, cross_part, num_or))
+    hist_sim_track_pt.Write()
+
+    c14_b = ROOT.TCanvas('', '', 800, 650)
+    c14_b.SetLeftMargin(0.12)
+    c14_b.SetGrid()
+    c14_b.DrawFrame(0, 0, 9, 1, ";#eta Partition;Fraction of Sim Tracks")
+    hist_sim_track_eta.Scale(1/(hist_sim_track_eta.Integral()))
+    hist_sim_track_eta.Draw("same")
+    latex.DrawLatex(0.9, 0.91,plot_text1)
+    latex.DrawLatex(0.46, 0.91,plot_text2)
+    c14_b.Print("hist_sim_track_eta_%s_bx%s_crosspart_%s_or%d.pdf"%(hits, bx, cross_part, num_or))
+    hist_sim_track_eta.Write()
+
+    c14_c = ROOT.TCanvas('', '', 800, 650)
+    c14_c.SetLeftMargin(0.12)
+    c14_c.SetGrid()
+    c14_c.DrawFrame(0, 0, 200, 1, ";pT (GeV);#eta Partition")
+    hist_sim_track_pt_eta.Scale(1/(hist_sim_track_pt_eta.Integral()))
+    hist_sim_track_pt_eta.Draw("same COLZ")
+    latex.DrawLatex(0.9, 0.91,plot_text1)
+    latex.DrawLatex(0.46, 0.91,plot_text2)
+    c14_c.Print("hist_sim_track_pt_eta_%s_bx%s_crosspart_%s_or%d.pdf"%(hits, bx, cross_part, num_or))
+    hist_sim_track_pt_eta.Write()
+
+    c14_d = ROOT.TCanvas('', '', 800, 650)
+    c14_d.SetLeftMargin(0.12)
+    c14_d.SetGrid()
+    c14_d.DrawFrame(-5.5, 0, 5.5, 1, ";BX;Fraction of Digi Hits")
+    hist_digi_hit_bx.Scale(1/(hist_digi_hit_bx.Integral()))
+    hist_digi_hit_bx.Draw("same")
+    latex.DrawLatex(0.9, 0.91,plot_text1)
+    latex.DrawLatex(0.46, 0.91,plot_text2)
+    c14_d.Print("hist_digi_hit_bx_%s_bx%s_crosspart_%s_or%d.pdf"%(hits, bx, cross_part, num_or))
+    hist_digi_hit_bx.Write()
+
+    c14_e = ROOT.TCanvas('', '', 800, 650)
+    c14_e.SetLeftMargin(0.12)
+    c14_e.SetGrid()
+    c14_e.DrawFrame(-5.5, 0, 5.5, 1, ";BX;Fraction of Signal Segments")
+    hist_seg_signal_hit_bx.Scale(1/(hist_seg_signal_hit_bx.Integral()))
+    hist_seg_signal_hit_bx.Draw("same")
+    latex.DrawLatex(0.9, 0.91,plot_text1)
+    latex.DrawLatex(0.46, 0.91,plot_text2)
+    c14_e.Print("hist_seg_signal_hit_bx_%s_bx%s_crosspart_%s_or%d.pdf"%(hits, bx, cross_part, num_or))
+    hist_seg_signal_hit_bx.Write()
+
+    c14_f = ROOT.TCanvas('', '', 800, 650)
+    c14_f.SetLeftMargin(0.12)
+    c14_f.SetGrid()
+    c14_f.DrawFrame(-5.5, 0, 5.5, 1, ";BX;Fraction of Background Segments")
+    hist_seg_bkg_hit_bx.Scale(1/(hist_seg_bkg_hit_bx.Integral()))
+    hist_seg_bkg_hit_bx.Draw("same")
+    latex.DrawLatex(0.9, 0.91,plot_text1)
+    latex.DrawLatex(0.46, 0.91,plot_text2)
+    c14_f.Print("hist_seg_bkg_hit_bx_%s_bx%s_crosspart_%s_or%d.pdf"%(hits, bx, cross_part, num_or))
+    hist_seg_bkg_hit_bx.Write()
+
+    c15_a = ROOT.TCanvas('', '', 800, 650)
+    c15_a.SetLeftMargin(0.12)
+    c15_a.SetGrid()
+    c15_a.DrawFrame(0, 0, 9, 1.05, ";#eta Partition;Nr. of Offline Signal Segments per Stack per BX")
+    num_offline_signal_seg_per_chamber_per_event_eta.SetStats(False)
+    num_offline_signal_seg_per_chamber_per_event_eta.Scale(1/(36.0*n_total_events))
+    num_offline_signal_seg_per_chamber_per_event_eta.Draw("same HE")
+    num_offline_signal_seg_per_chamber_per_event_eta.SetMarkerStyle(8)
+    num_offline_signal_seg_per_chamber_per_event_eta.SetMarkerSize(1)
+    num_offline_signal_seg_per_chamber_per_event_eta.SetMarkerColor(1)
+    num_offline_signal_seg_per_chamber_per_event_eta.SetLineWidth(1)
+    num_offline_signal_seg_per_chamber_per_event_eta.SetLineColor(1)
+    ROOT.gPad.Update()
+    latex.DrawLatex(0.9, 0.91,plot_text1)
+    latex.DrawLatex(0.46, 0.91,plot_text2)
+    c15_a.Print("num_offline_signal_seg_per_chamber_per_event_eta_%s_bx%s_crosspart_%s_or%d.pdf"%(hits, bx, cross_part, num_or))
+    num_offline_signal_seg_per_chamber_per_event_eta.Write()
+
+    c15_b = ROOT.TCanvas('', '', 800, 650)
+    c15_b.SetLeftMargin(0.12)
+    c15_b.SetGrid()
+    c15_b.DrawFrame(0, 0, 9, 1.05, ";#eta Partition;Nr. of Offline Background Segments per Stack per BX")
+    num_offline_bkg_seg_per_chamber_per_event_eta.SetStats(False)
+    num_offline_bkg_seg_per_chamber_per_event_eta.Scale(1/(36.0*n_total_events))
+    num_offline_bkg_seg_per_chamber_per_event_eta.Draw("same HE")
+    num_offline_bkg_seg_per_chamber_per_event_eta.SetMarkerStyle(8)
+    num_offline_bkg_seg_per_chamber_per_event_eta.SetMarkerSize(1)
+    num_offline_bkg_seg_per_chamber_per_event_eta.SetMarkerColor(1)
+    num_offline_bkg_seg_per_chamber_per_event_eta.SetLineWidth(1)
+    num_offline_bkg_seg_per_chamber_per_event_eta.SetLineColor(1)
+    ROOT.gPad.Update()
+    latex.DrawLatex(0.9, 0.91,plot_text1)
+    latex.DrawLatex(0.46, 0.91,plot_text2)
+    c15_b.Print("num_offline_bkg_seg_per_chamber_per_event_eta_%s_bx%s_crosspart_%s_or%d.pdf"%(hits, bx, cross_part, num_or))
+    num_offline_bkg_seg_per_chamber_per_event_eta.Write()
 
     '''
     c_max_cluster_size_p = ROOT.TCanvas('', '', 800, 650)
