@@ -101,7 +101,7 @@ begin
   --------------------------------------------------------------------------------
 
   kawazome_gen : if (SORTER = "KAWAZOME") generate
-    signal data_sorted : std_logic_vector (data_i'range);
+    signal data_sorted : std_logic_vector (minimum(DATA_BITS*INPUTS, DATA_BITS*OUTPUTS)-1 downto 0);
   begin
     bitonic_sort_inst : entity work.Bitonic_Sorter
       generic map (
@@ -112,7 +112,8 @@ begin
         INFO_BITS   => META_BITS,
         REGSTAGES   => PIPELINE_STAGE_AFTER,
         REG_OUTPUTS => ADD_OUTPUT_REGISTERS,
-        REG_MERGES  => false
+        REG_MERGES  => false,
+        OUTPUTS     => OUTPUTS
         )
       port map (
         CLK    => clock,

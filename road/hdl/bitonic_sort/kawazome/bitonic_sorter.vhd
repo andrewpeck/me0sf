@@ -48,7 +48,8 @@ entity bitonic_sorter is
     COMP_LOW    : integer := 32;
     INFO_BITS   : integer := 4;
     REG_OUTPUTS : boolean := false;
-    REG_MERGES  : boolean := false
+    REG_MERGES  : boolean := false;
+    OUTPUTS     : integer := WORDS
     );
   port (
     clk    : in  std_logic := '0';
@@ -60,7 +61,7 @@ entity bitonic_sorter is
     i_info : in  std_logic_vector(INFO_BITS-1 downto 0) := (others => '0');
     o_sort : out std_logic;
     o_up   : out std_logic;
-    o_data : out std_logic_vector(WORDS*WORD_BITS-1 downto 0);
+    o_data : out std_logic_vector(minimum(WORDS, OUTPUTS)*WORD_BITS-1 downto 0);
     o_info : out std_logic_vector(INFO_BITS-1 downto 0)
     );
 end bitonic_sorter;
@@ -84,7 +85,7 @@ begin
     constant UP_POS : integer := I_INFO'high+1;
     signal s_info   : std_logic_vector(I_INFO'high+1 downto 0);
     signal q_info   : std_logic_vector(I_INFO'high+1 downto 0);
-    signal q_data   : std_logic_vector(WORDS*WORD_BITS-1 downto 0);
+    signal q_data   : std_logic_vector(minimum(WORDS, 2*OUTPUTS)*WORD_BITS-1 downto 0);
     signal q_sort   : std_logic;
   begin
 
@@ -93,7 +94,7 @@ begin
 
     FIRST : entity work.bitonic_sorter
       generic map (
-        STAGE+1, REGSTAGES, WORDS/2, WORD_BITS, COMP_HIGH, COMP_LOW, s_info'length, REG_OUTPUTS)
+        STAGE+1, REGSTAGES, WORDS/2, WORD_BITS, COMP_HIGH, COMP_LOW, s_info'length, REG_OUTPUTS, false, OUTPUTS)
       port map (
         clk    => clk,
         rst    => rst,
@@ -105,12 +106,12 @@ begin
         o_sort => q_sort,
         o_up   => open,
         o_info => q_info,
-        o_data => q_data(WORD_BITS*(WORDS/2)-1 downto WORD_BITS*0)
+        o_data => q_data(WORD_BITS*minimum(WORDS/2, OUTPUTS)-1 downto WORD_BITS*0)
         );
 
     SECOND : entity work.bitonic_sorter
       generic map (
-        STAGE+1, REGSTAGES, WORDS/2, WORD_BITS, COMP_HIGH, COMP_LOW, s_info'length, REG_OUTPUTS, REG_MERGES)
+        STAGE+1, REGSTAGES, WORDS/2, WORD_BITS, COMP_HIGH, COMP_LOW, s_info'length, REG_OUTPUTS, REG_MERGES, OUTPUTS)
       port map (
         clk    => clk,
         rst    => rst,
@@ -122,12 +123,12 @@ begin
         o_sort => open,
         o_up   => open,
         o_info => open,
-        o_data => q_data(WORD_BITS*(WORDS)-1 downto WORD_BITS*(WORDS/2))
+        o_data => q_data(WORD_BITS*minimum(WORDS, 2*OUTPUTS)-1 downto WORD_BITS*minimum(WORDS/2, OUTPUTS))
         );
 
     MERGE : entity work.Bitonic_Merge
       generic map (
-        STAGE+1, REGSTAGES, WORDS, WORD_BITS, COMP_HIGH, COMP_LOW, INFO_BITS, REG_MERGES)
+        STAGE+1, REGSTAGES, minimum(WORDS, 2*OUTPUTS), WORD_BITS, COMP_HIGH, COMP_LOW, INFO_BITS, REG_MERGES, OUTPUTS)
       port map (
         clk    => clk,
         rst    => rst,

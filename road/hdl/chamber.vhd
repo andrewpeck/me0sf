@@ -526,42 +526,42 @@ begin
   --
   --------------------------------------------------------------------------------
 
-  partition_sorter : for I in 0 to NUM_FINDERS-1 generate
-  begin
-    segment_selector_inst : entity work.segment_selector
-      generic map (
-        MODE        => "BITONIC",
-        NUM_OUTPUTS => NUM_SEGMENTS,
-        NUM_INPUTS  => NUM_SEGS_PER_PRT,
-        SORTB       => segment_t'w,
-        IGNOREB     => PARTITION_BITS   -- can ignore prt since this is intra-partition
-        )
-      port map (
-        clock  => clock,
-        dav_i  => all_segs_dav_deghosted(I),
-        dav_o  => one_prt_sorted_dav(I),
-        segs_i => all_segs_x_deghosted((I+1)*NUM_SEGS_PER_PRT-1 downto I*NUM_SEGS_PER_PRT),
-        segs_o => one_prt_sorted_segs((I+1)*NUM_SEGMENTS-1 downto I*NUM_SEGMENTS)
-        );
-  end generate;
+--  partition_sorter : for I in 0 to NUM_FINDERS-1 generate
+--  begin
+--    segment_selector_inst : entity work.segment_selector
+--      generic map (
+--        MODE        => "BITONIC",
+--        NUM_OUTPUTS => NUM_SEGMENTS,
+--        NUM_INPUTS  => NUM_SEGS_PER_PRT,
+--        SORTB       => segment_t'w,
+--        IGNOREB     => PARTITION_BITS   -- can ignore prt since this is intra-partition
+--        )
+--      port map (
+--        clock  => clock,
+--        dav_i  => all_segs_dav_deghosted(I),
+--        dav_o  => one_prt_sorted_dav(I),
+--        segs_i => all_segs_x_deghosted((I+1)*NUM_SEGS_PER_PRT-1 downto I*NUM_SEGS_PER_PRT),
+--        segs_o => one_prt_sorted_segs((I+1)*NUM_SEGMENTS-1 downto I*NUM_SEGMENTS)
+--        );
+--  end generate;
 
-  dipartition_sorter : for I in 0 to NUM_FINDERS_DIV2-1 generate
-  begin
-    segment_selector_inst : entity work.segment_selector
-      generic map (
-        MODE        => "BITONIC",
-        NUM_INPUTS  => NUM_SEGMENTS*2,
-        NUM_OUTPUTS => NUM_SEGMENTS,
-        SORTB       => segment_t'w
-        )
-      port map (
-        clock  => clock,
-        dav_i  => one_prt_sorted_dav(I*2),
-        dav_o  => two_prt_sorted_dav(I),
-        segs_i => one_prt_sorted_segs((I+1)*2*NUM_SEGMENTS-1 downto I*2*NUM_SEGMENTS),
-        segs_o => two_prt_sorted_segs((I+1)*NUM_SEGMENTS-1 downto I*NUM_SEGMENTS)
-        );
-  end generate;
+--  dipartition_sorter : for I in 0 to NUM_FINDERS_DIV2-1 generate
+--  begin
+--    segment_selector_inst : entity work.segment_selector
+--      generic map (
+--        MODE        => "BITONIC",
+--        NUM_INPUTS  => NUM_SEGMENTS*2,
+--        NUM_OUTPUTS => NUM_SEGMENTS,
+--        SORTB       => segment_t'w
+--        )
+--      port map (
+--        clock  => clock,
+--        dav_i  => one_prt_sorted_dav(I*2),
+--        dav_o  => two_prt_sorted_dav(I),
+--        segs_i => one_prt_sorted_segs((I+1)*2*NUM_SEGMENTS-1 downto I*2*NUM_SEGMENTS),
+--        segs_o => two_prt_sorted_segs((I+1)*NUM_SEGMENTS-1 downto I*NUM_SEGMENTS)
+--        );
+--  end generate;
 
   --------------------------------------------------------------------------------
   -- Final candidate sorting
@@ -569,18 +569,36 @@ begin
   -- sort from down to NUM_SEGMENTS
   --------------------------------------------------------------------------------
 
+--  segment_selector_final : entity work.segment_selector
+--    generic map (
+--      MODE        => "BITONIC",
+--      NUM_OUTPUTS => NUM_SEGMENTS,
+--      NUM_INPUTS  => two_prt_sorted_segs'length,
+--      SORTB       => segment_t'w,
+--      IGNOREB     => 8+PARTITION_BITS
+--      )
+--    port map (
+--      clock  => clock,
+--      dav_i  => two_prt_sorted_dav(0),
+--      dav_o  => final_segs_dav,
+--      segs_i => two_prt_sorted_segs,
+--      segs_o => final_segs
+--      );
+
+
   segment_selector_final : entity work.segment_selector
     generic map (
       MODE        => "BITONIC",
       NUM_OUTPUTS => NUM_SEGMENTS,
-      NUM_INPUTS  => two_prt_sorted_segs'length,
-      SORTB       => segment_t'w
+      NUM_INPUTS  => all_segs_x_deghosted'length,
+      SORTB       => segment_t'w,
+      IGNOREB     => 8+PARTITION_BITS
       )
     port map (
       clock  => clock,
-      dav_i  => two_prt_sorted_dav(0),
+      dav_i  => all_segs_dav_deghosted(0),
       dav_o  => final_segs_dav,
-      segs_i => two_prt_sorted_segs,
+      segs_i => all_segs_x_deghosted,
       segs_o => final_segs
       );
 
