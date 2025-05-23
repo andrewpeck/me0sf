@@ -18,6 +18,10 @@ from chamber_beh import process_chamber
 from read_ntuple import *
 from subfunc import *
 
+import multiprocessing.pool
+from itertools import repeat, starmap
+
+from time import time
 
 def analysis(root_dat, hits, bx, bx_list, cross_part, verbose, pu, num_or):
     # Output text file
@@ -402,8 +406,8 @@ def analysis(root_dat, hits, bx, bx_list, cross_part, verbose, pu, num_or):
                     nlayers += 1
             track_nlayers.append(nlayers)
             hist_sim_track_pt.Fill(track_sim_pt[i])
-            hist_sim_track_eta.Fill(max(eta_partition_list_sorted,key=eta_partition_list_sorted.count))
-            hist_sim_track_pt_eta.Fill(track_sim_pt[i], max(eta_partition_list_sorted,key=eta_partition_list_sorted.count))
+            hist_sim_track_eta.Fill(max(eta_partition_list_sorted,key=eta_partition_list_sorted.count)+1)
+            hist_sim_track_pt_eta.Fill(track_sim_pt[i], max(eta_partition_list_sorted,key=eta_partition_list_sorted.count)+1)
         
         # Find the bending angle for rechit
         for i in range(0, n_offline_seg):
@@ -1178,10 +1182,10 @@ def analysis(root_dat, hits, bx, bx_list, cross_part, verbose, pu, num_or):
                         break
             if match_found == 0:
                 n_offline_bkg_seg_per_chamber_per_event += 1
-                num_offline_bkg_seg_per_chamber_per_event_eta.Fill(online_eta_partition+1)
+                num_offline_bkg_seg_per_chamber_per_event_eta.Fill(offline_eta_partition+1)
             else:
                 n_offline_signal_seg_per_chamber_per_event += 1
-                num_offline_signal_seg_per_chamber_per_event_eta.Fill(online_eta_partition+1)
+                num_offline_signal_seg_per_chamber_per_event_eta.Fill(offline_eta_partition+1)
 
         if verbose:
             file_out_summary.write("  Online Segments: \n")
@@ -3651,7 +3655,7 @@ def analysis(root_dat, hits, bx, bx_list, cross_part, verbose, pu, num_or):
     c14_a.SetGrid()
     c14_a.DrawFrame(0, 0, 200, 0.1, ";pT (GeV);Fraction of Sim Tracks")
     hist_sim_track_pt.Scale(1/(hist_sim_track_pt.Integral()))
-    hist_sim_track_pt.Draw("same")
+    hist_sim_track_pt.Draw("same HE")
     latex.DrawLatex(0.9, 0.91,plot_text1)
     latex.DrawLatex(0.46, 0.91,plot_text2)
     c14_a.Print("hist_sim_track_pt_%s_bx%s_crosspart_%s_or%d.pdf"%(hits, bx, cross_part, num_or))
@@ -3662,7 +3666,7 @@ def analysis(root_dat, hits, bx, bx_list, cross_part, verbose, pu, num_or):
     c14_b.SetGrid()
     c14_b.DrawFrame(0, 0, 9, 0.3, ";#eta Partition;Fraction of Sim Tracks")
     hist_sim_track_eta.Scale(1/(hist_sim_track_eta.Integral()))
-    hist_sim_track_eta.Draw("same")
+    hist_sim_track_eta.Draw("same HE")
     latex.DrawLatex(0.9, 0.91,plot_text1)
     latex.DrawLatex(0.46, 0.91,plot_text2)
     c14_b.Print("hist_sim_track_eta_%s_bx%s_crosspart_%s_or%d.pdf"%(hits, bx, cross_part, num_or))
@@ -3684,7 +3688,7 @@ def analysis(root_dat, hits, bx, bx_list, cross_part, verbose, pu, num_or):
     c14_d.SetGrid()
     c14_d.DrawFrame(-5.5, 0, 5.5, 1, ";BX;Fraction of Digi Hits")
     hist_digi_hit_bx.Scale(1/(hist_digi_hit_bx.Integral()))
-    hist_digi_hit_bx.Draw("same")
+    hist_digi_hit_bx.Draw("same HE")
     latex.DrawLatex(0.9, 0.91,plot_text1)
     latex.DrawLatex(0.46, 0.91,plot_text2)
     c14_d.Print("hist_digi_hit_bx_%s_bx%s_crosspart_%s_or%d.pdf"%(hits, bx, cross_part, num_or))
@@ -3695,7 +3699,7 @@ def analysis(root_dat, hits, bx, bx_list, cross_part, verbose, pu, num_or):
     c14_e.SetGrid()
     c14_e.DrawFrame(-5.5, 0, 5.5, 1, ";BX;Fraction of Signal Segments")
     hist_seg_signal_hit_bx.Scale(1/(hist_seg_signal_hit_bx.Integral()))
-    hist_seg_signal_hit_bx.Draw("same")
+    hist_seg_signal_hit_bx.Draw("same HE")
     latex.DrawLatex(0.9, 0.91,plot_text1)
     latex.DrawLatex(0.46, 0.91,plot_text2)
     c14_e.Print("hist_seg_signal_hit_bx_%s_bx%s_crosspart_%s_or%d.pdf"%(hits, bx, cross_part, num_or))
@@ -3706,7 +3710,7 @@ def analysis(root_dat, hits, bx, bx_list, cross_part, verbose, pu, num_or):
     c14_f.SetGrid()
     c14_f.DrawFrame(-5.5, 0, 5.5, 1, ";BX;Fraction of Background Segments")
     hist_seg_bkg_hit_bx.Scale(1/(hist_seg_bkg_hit_bx.Integral()))
-    hist_seg_bkg_hit_bx.Draw("same")
+    hist_seg_bkg_hit_bx.Draw("same HE")
     latex.DrawLatex(0.9, 0.91,plot_text1)
     latex.DrawLatex(0.46, 0.91,plot_text2)
     c14_f.Print("hist_seg_bkg_hit_bx_%s_bx%s_crosspart_%s_or%d.pdf"%(hits, bx, cross_part, num_or))
