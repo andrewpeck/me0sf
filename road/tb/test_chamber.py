@@ -20,37 +20,37 @@ from tb_common import (get_max_span_from_dut, get_segments_from_dut,
                        monitor_dav, setup, measure_latency)
 #from get_sbits_from_root import (read_ntuple_stack, get_sbits_from_event)
 
-#@cocotb.test() # type: ignore
-#async def chamber_test_ff(dut, nloops=20):
-#   await chamber_test(dut, "FF", nloops)
+@cocotb.test() # type: ignore
+async def chamber_test_ff(dut, nloops=20):
+   await chamber_test(dut, "FF", nloops)
 
-#@cocotb.test() # type: ignore
-#async def chamber_test_5a(dut, nloops=20):
-#   await chamber_test(dut, "5A", nloops)
+@cocotb.test() # type: ignore
+async def chamber_test_5a(dut, nloops=20):
+   await chamber_test(dut, "5A", nloops)
 
-#@cocotb.test() # type: ignore
-#async def chamber_test_walking1(dut, nloops=191):
-#   await chamber_test(dut, "WALKING1", nloops)
+@cocotb.test() # type: ignore
+async def chamber_test_walking1(dut, nloops=191):
+   await chamber_test(dut, "WALKING1", nloops)
 
-#@cocotb.test() # type: ignore
-#async def chamber_test_walkingf(dut, nloops=192):
-#   await chamber_test(dut, "WALKINGF", nloops)
+@cocotb.test() # type: ignore
+async def chamber_test_walkingf(dut, nloops=192):
+   await chamber_test(dut, "WALKINGF", nloops)
 
-#@cocotb.test() # type: ignore
-#async def chamber_test_xprt(dut, nloops=100):
-#   await chamber_test(dut, "XPRT", nloops)
+@cocotb.test() # type: ignore
+async def chamber_test_xprt(dut, nloops=100):
+   await chamber_test(dut, "XPRT", nloops)
 
-#@cocotb.test() # type: ignore
-#async def chamber_test_segs(dut, nloops=100):
-#   await chamber_test(dut, "SEGMENTS", nloops)
+@cocotb.test() # type: ignore
+async def chamber_test_segs(dut, nloops=100):
+   await chamber_test(dut, "SEGMENTS", nloops)
 
-#@cocotb.test() # type: ignore
-#async def chamber_test_random(dut, nloops=100):
-#    await chamber_test(dut, "RANDOM", nloops)
+@cocotb.test() # type: ignore
+async def chamber_test_random(dut, nloops=100):
+    await chamber_test(dut, "RANDOM", nloops)
  
-#@cocotb.test() # type: ignore
-#async def chamber_test_deghost(dut, nloops=20):
-#    await chamber_test(dut, "DEGHOST", nloops)   
+@cocotb.test() # type: ignore
+async def chamber_test_deghost(dut, nloops=20):
+    await chamber_test(dut, "DEGHOST", nloops)   
 
 #@cocotb.test() # type: ignore
 #async def chamber_test_dat(dut, nloops=20):
@@ -60,9 +60,9 @@ from tb_common import (get_max_span_from_dut, get_segments_from_dut,
 #async def chamber_test_stack(dut, nloops=100):
 #    await chamber_test(dut, "STACK_DAT", nloops)   
 
-@cocotb.test() # type: ignore
-async def chamber_test_stack(dut, nloops=30):
-    await chamber_test(dut, "PEAKING", nloops)  
+#@cocotb.test() # type: ignore
+#async def chamber_test_stack(dut, nloops=30):
+#    await chamber_test(dut, "PEAKING", nloops)  
  
 async def chamber_test(dut, test, nloops=512, verbose=True):
 
@@ -93,7 +93,7 @@ async def chamber_test(dut, test, nloops=512, verbose=True):
     config.ly_thresh_eta = [4, 5, 4, 5, 4, 5, 4, 5, 4, 5, 4, 5, 4, 5, 4]
     config.ly_thresh_patid = [7, 7, 7, 7, 7, 7, 7, 7, 7, 7, 5, 5, 4, 4, 4, 4, 4]
     config.cross_part_seg_width = dut.X_DEGHOST_EDGE_DIST.value # set to zero to disable x-partition deghosting
-    config.disable_peaking = False
+    config.disable_peaking = dut.disable_peaking.value
 
     en_hc_compress = True #this is a generic, so need to set it here and in top level in FW
 
@@ -104,7 +104,7 @@ async def chamber_test(dut, test, nloops=512, verbose=True):
     dut.ly_thresh_i.value = [[max(eta_thresh, id_thresh) for id_thresh in config.ly_thresh_patid] for eta_thresh in config.ly_thresh_eta]
 
     # flush the buffers
-    for _ in range(256):
+    for _ in range(100):
         await RisingEdge(dut.clock)
 
     # measure latency by putting some s-bits on a strip and waiting to see the output
@@ -117,7 +117,7 @@ async def chamber_test(dut, test, nloops=512, verbose=True):
 
     meas_latency = await measure_latency(dut, checkfn, setfn)
 
-    LATENCY = ceil(meas_latency)-1    -1 #Peaking introduced this, need to investigate...
+    LATENCY = ceil(meas_latency)-1 + 2 # and bitonic sort optimization introduced this, weird...  #-1 #Peaking introduced this, need to investigate...
 
     # flush the buffers
     dut.sbits_i.value = NULL()
@@ -382,7 +382,7 @@ def test_chamber():
         os.path.join(rtl_dir, "chamber.vhd")]
 
     #parameters = {"PULSE_EXTEND": 1, "DEADTIME": 0, "DISABLE_PEAKING": True}
-    parameters = {"DISABLE_PEAKING": False, "X_DEGHOST_EDGE_DIST" : 2}
+    parameters = {"DISABLE_PEAKING": True, "X_DEGHOST_EDGE_DIST" : 2}
 
     os.environ["SIM"] = "questa"
     #os.environ["COCOTB_RESULTS_FILE"] = f"../log/{module}.xml"

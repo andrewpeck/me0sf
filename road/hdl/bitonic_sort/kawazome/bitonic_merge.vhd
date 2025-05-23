@@ -91,6 +91,7 @@ begin
     signal q_info : std_logic_vector(INFO_BITS-1 downto 0);
     signal q_sort : std_logic;
     signal q_up   : std_logic;
+    signal q_data_cutoff : std_logic_vector((WORDS/2)*WORD_BITS-1 downto 0);
   begin
 
     --------------------------------------------------------------------------------
@@ -119,17 +120,20 @@ begin
     begin
       if (rst = '1') then
         q_data <= (others => '0');
+        q_data_cutoff <= (others => '0');
         q_info <= (others => '0');
         q_sort <= '1';
         q_up   <= '1';
       elsif (rising_edge(clk) or (STAGE mod REGSTAGES /= 0)) then
         if (clr = '1') then
           q_data <= (others => '0');
+          q_data_cutoff <= (others => '0');
           q_info <= (others => '0');
           q_sort <= '1';
           q_up   <= '1';
         else
           q_data <= s_data;
+          q_data_cutoff <= s_data(WORDS*WORD_BITS-1 downto WORDS/2*WORD_BITS) when i_up = '1' else s_data(WORDS/2*WORD_BITS-1 downto 0);
           q_info <= i_info;
           q_sort <= i_sort;
           q_up   <= i_up;
@@ -191,7 +195,7 @@ begin
         i_sort => q_sort,
         i_up   => q_up,
         i_info => q_info,
-        i_data => q_data(WORD_BITS*(WORDS/2)-1 downto WORD_BITS*0),
+        i_data => q_data_cutoff,
         o_sort => o_sort,
         o_up   => o_up,
         o_info => o_info,

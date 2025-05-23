@@ -37,7 +37,7 @@ entity chamber is
     DISABLE_PEAKING : boolean := true;  -- true to disable peaking logic; useful for simulation until the tb is updated
     X_PRT_EN        : boolean := true;   -- true to enable x-prt segment finding
     EN_NON_POINTING : boolean := false;  -- true to enable x-prt segment finding on non-pointing muons
-    NUM_SEGMENTS    : integer := 4;      -- number of output segments
+    NUM_SEGMENTS    : integer := 16;      -- number of output segments
     S0_WIDTH        : natural := 16;     -- chunk each partition into groups this size and choose only 1 segment from each group
     S1_REUSE        : natural := 4;      -- reuse sorters
     REG_OUTPUTS     : boolean := false;  -- true to  register outputs on the 40MHz clock
@@ -592,7 +592,7 @@ begin
       NUM_OUTPUTS => NUM_SEGMENTS,
       NUM_INPUTS  => all_segs_x_deghosted'length,
       SORTB       => segment_t'w,
-      IGNOREB     => 8+PARTITION_BITS
+      IGNOREB     => 0 --8+PARTITION_BITS
       )
     port map (
       clock  => clock,
