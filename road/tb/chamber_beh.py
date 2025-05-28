@@ -184,11 +184,14 @@ def process_chamber(chamber_data : List[List[int]], config : Config, chamber_bx_
     #
     # (errno = ENOENT)
 
-    if "SIM" in os.environ and os.environ["SIM"] == "questa":
-        segments = starmap(process_partition, datazip)
-    else:
-        with multiprocessing.pool.Pool() as pool:
-            segments = pool.starmap(process_partition, datazip)
+    ##### note: multiprocessing pool can not be used inside of another pool #####
+    # if "SIM" in os.environ and os.environ["SIM"] == "questa":
+    #     segments = starmap(process_partition, datazip)
+    # else:
+    #     with multiprocessing.pool.Pool() as pool:
+    #         segments = pool.starmap(process_partition, datazip)
+    #############################################################################
+    segments = [process_partition(*x) for x in datazip]
 
     segments = list(segments)
 

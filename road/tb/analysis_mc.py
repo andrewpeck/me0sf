@@ -23,9 +23,10 @@ from itertools import repeat, starmap
 
 from time import time
 
-def process_chamber_multiProc(dat_w_segs, roi, config, chamber_id):
+# Function to process a chamber in parallel
+def process_chamber_multiProc(dat_w_segs, config, chamber_id, chamber_bx_data):
     data = [dat[0] for dat in dat_w_segs]
-    seglist = process_chamber(data, roi, config)
+    seglist = process_chamber(data, config, chamber_bx_data)
     return (chamber_id, seglist)
 
 def analysis(root_dat, hits, bx, bx_list, cross_part, verbose, pu, num_or):
@@ -583,7 +584,7 @@ def analysis(root_dat, hits, bx, bx_list, cross_part, verbose, pu, num_or):
         # Find segments per chamber
         online_segment_chamber = {}
 
-        datazip = zip(datlist, repeat(config), range(36))
+        datazip = zip(datlist, repeat(config), range(36), bx_data)
         with multiprocessing.pool.Pool() as pool:
             segment_chamber = pool.starmap(process_chamber_multiProc, datazip)
 
