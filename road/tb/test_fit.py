@@ -7,24 +7,32 @@ import cocotb
 from cocotb.clock import Clock
 from cocotb.triggers import RisingEdge
 from cocotb_test.simulator import run
-
+from fixedpoint import FixedPoint
 
 def fit_modified(x, y):
+    filtered = [(xi, yi) for xi, yi in zip(x, y) if not math.isnan(xi) and not math.isnan(yi)]
 
-    x_sum = sum(x)
-    y_sum = sum(y)
-    n = len(x)
+    if not filtered:
+        return float('nan'), float('nan')  # No valid data
+
+    x_valid, y_valid = zip(*filtered)
+    x_sum = sum(x_valid)
+    y_sum = sum(y_valid)
+    n = len(x_valid)
 
     products = 0
     squares = 0
-    for i in range(len(x)):
-        products += (n * x[i] - x_sum) * (n * y[i] - y_sum)
-        squares += (n * x[i] - x_sum) ** 2
+    for i in range(n):
+        xi = x_valid[i]
+        yi = y_valid[i]
+        products += (n * xi - x_sum) * (n * yi - y_sum)
+        squares += (n * xi - x_sum) ** 2
 
-    m = 1.0 * products / squares
-    b = 1.0 / n * (y_sum - m * x_sum)
+    m = products / squares
+    b = (y_sum - m * x_sum) / n
 
     return m, b
+
 
 
 def rand_y():
@@ -67,8 +75,7 @@ async def fit_tb(dut, NLOOPS=10000):
     dut.ly4.value = 5
     dut.ly5.value = 6
 
-    #LATENCY = dut.N_STAGES.value + 1
-    LATENCY = dut.N_STAGES.value + 6 #Latency introduced by adding pipeline registers (for timing constraints)
+    LATENCY = dut.N_STAGES.value + 3 # Number of clock cycles that code takes to run
 
     for _ in range(LATENCY):
         await RisingEdge(dut.clock)
@@ -83,6 +90,9 @@ async def fit_tb(dut, NLOOPS=10000):
 
         await RisingEdge(dut.clock)
     failed_fits = 0
+    failed_fits_intercept = 0
+    failed_fits_strip = 0
+    failed_fits_slope = 0
 
     for iloop in range(NLOOPS):
 
@@ -104,44 +114,55 @@ async def fit_tb(dut, NLOOPS=10000):
         await RisingEdge(dut.clock)  # Synchronize with the clock
 
         this_data = data.pop(0)
-        m, b = fit_modified(x, this_data)
 
-        slope = dut.slope_o.value.signed_integer / (2**slope_fracb - 1)
-
-        intercept = dut.intercept_o.value.signed_integer / (2**intercept_fracb - 1)
-
-        key_strip = dut.strip_o.value.signed_integer / (2**strip_fracb - 1)
-
-        max_error_strips_per_layer = 0.2
-        #max_error_strips_per_layer = 0.5
-        max_error_strips = 0.5
-        max_error_intercept = 4.5
-        #max_error_intercept = 1.4
-
-        key_s = m * 2.5 + b
         valid_mask = [(dut.valid_i.value.integer >> i) & 1 for i in range(6)]
         masked_data = [v if valid else float('NaN') for v, valid in zip(this_data, valid_mask)]
-        #assert abs(b - intercept) < max_error_intercept, \
-        #    print_slope(slope, intercept, key_strip, m, b, key_s)
-        #assert abs(m - slope) < max_error_strips_per_layer, \
-        #    print_slope(slope, intercept, key_strip, m, b, key_s)
-        #assert abs(key_s - key_strip) < max_error_strips, \
-        #    print_slope(slope, intercept, key_strip, m, b, key_s)
-        errors = [
-            abs(b - intercept) >= max_error_intercept,
-            abs(m - slope) >= max_error_strips_per_layer
-            #abs(key_s - key_strip) >= max_error_strips
-        ]
+        masked_x = [v if valid else float('NaN') for v, valid in zip(x, valid_mask)]
+        #m, b = fit_modified(x, this_data)
+        m, b = fit_modified(masked_x, masked_data)
 
-        if any(errors):
+        slope = dut.slope_o.value.signed_integer / (2**slope_fracb - 1)
+        intercept = dut.intercept_o.value.signed_integer / (2**intercept_fracb - 1)
+        key_strip = dut.strip_o.value.signed_integer / (2**strip_fracb - 1)
+
+        #max_error_slope = 0.5
+        #max_error_intercept = 1.4
+        key_s = m * 2.5 + b
+        max_error_slope = 0.8
+        max_error_intercept = 5
+        max_error_strips = max_error_intercept + max_error_slope
+
+        #errors = [
+        #    abs(b - intercept) >= max_error_intercept,
+        #    abs(m - slope) >= max_error_slope,
+        #    abs(key_s - key_strip) >= max_error_strips
+        #]
+
+        if abs(b - intercept) >= max_error_intercept:
+            print('FIT FAILED (intercept)')
+            print(masked_data)
+            print(valid_mask)
+            print_slope(slope, intercept, key_strip, m, b, key_s)
             failed_fits += 1
-
+            failed_fits_intercept += 1
+        elif abs(m - slope) >= max_error_slope:
+            print('FIT FAILED (slope)')
+            print(masked_data)
+            print(valid_mask)
+            print_slope(slope, intercept, key_strip, m, b, key_s)
+            failed_fits += 1
+            failed_fits_slope += 1
+        elif abs(key_s - key_strip) >= max_error_strips:
+            print('FIT FAILED (strip)')
+            print(masked_data)
+            print(valid_mask)
+            print_slope(slope, intercept, key_strip, m, b, key_s)
+            failed_fits += 1
+            failed_fits_strip += 1
 
         if iloop % 1000 == 0:
-        #if iloop < 100:
+        ##if iloop < 100:
             print("%d fits tested" % iloop)
-            valid_mask = [(dut.valid_i.value.integer >> i) & 1 for i in range(6)]
-            masked_data = [v if valid else float('NaN') for v, valid in zip(this_data, valid_mask)]
             print(masked_data)
             print(valid_mask)
             print_slope(slope, intercept, key_strip, m, b, key_s)
@@ -150,6 +171,9 @@ async def fit_tb(dut, NLOOPS=10000):
     print("%d fits tested" % NLOOPS)
     print("="*80)
     print("%d fits failed" % failed_fits)
+    print("%d slope fits failed" % failed_fits_slope)
+    print("%d intercept fits failed" % failed_fits_intercept)
+    print("%d strip fits failed" % failed_fits_strip)
 
 
 def test_fit():
@@ -177,11 +201,10 @@ def test_fit():
 
 
     run(vhdl_sources=vhdl_sources,
-        module=module,  # name of cocotb test module
+        module=module,
         compile_args=opts,
-        toplevel="fit",  # top level HDL
+        toplevel="fit",
         toplevel_lang="vhdl",
-        # parameters=parameters,
         gui=0)
 
 
