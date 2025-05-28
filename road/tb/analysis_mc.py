@@ -4229,6 +4229,8 @@ if __name__ == "__main__":
     parser.add_argument("-o", "--num_or", action="store", dest="num_or", default = "2", help="number of strips that are OR-ed together")
     args = parser.parse_args()
 
+    start_time = time()
+
     # read in the data
     if args.nevents == "all":
         root_dat = read_ntuple(args.file_path)
@@ -4248,7 +4250,7 @@ if __name__ == "__main__":
         sys.exit()
     bx_list = []
     if args.bx == "all":
-        bx_list = list(range(-9999,10000))
+        bx_list = np.array(range(-9999,10000))
     else:
         n_bx = int(args.bx)
         if n_bx <= 0:
@@ -4261,6 +4263,9 @@ if __name__ == "__main__":
             bx_list.append(0)
         else:
             bx_list = list(range(-(math.floor(n_bx/2)), math.floor(n_bx/2)+1))
+        bx_list = np.array(bx_list)
 
     #analysis(root_dat, args.hits, args.bx, bx_list, args.cross_part, args.verbose, args.pu, int(args.num_or))
     analysis(root_dat, args.hits, args.bx, bx_list, "partial", args.verbose, args.pu, int(args.num_or))
+    end_time = time()
+    print("Total Time taken: %s"%(end_time-start_time))
