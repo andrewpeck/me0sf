@@ -23,6 +23,11 @@ from itertools import repeat, starmap
 
 from time import time
 
+def process_chamber_multiProc(dat_w_segs, roi, config, chamber_id):
+    data = [dat[0] for dat in dat_w_segs]
+    seglist = process_chamber(data, roi, config)
+    return (chamber_id, seglist)
+
 def analysis(root_dat, hits, bx, bx_list, cross_part, verbose, pu, num_or):
     # Output text file
     file_out = open("output_log_%s_bx%s_crosspart_%s_or%d.txt"%(hits, bx, cross_part, num_or), "w")
@@ -291,6 +296,31 @@ def analysis(root_dat, hits, bx, bx_list, cross_part, verbose, pu, num_or):
     #mse_collections = [] # collect all mse for analysis of the distribution (only need to run once)
     seg_bx_collections = []
 
+    config = Config()
+    config.num_outputs = 16
+    #config.deghost_pre = False
+    #config.deghost_post = False
+    #config.cross_part_seg_width = 4
+    #config.clearance_width = 2
+    num_or_to_span = {2:37, 4:19, 8:11, 16:7}
+    config.max_span = num_or_to_span[num_or]
+    config.num_or = num_or
+
+    if pu == "140":
+        config.ly_thresh_patid : list[int] = [7, 7, 7, 7, 7, 7, 7, 7, 7, 7, 5, 5, 4, 4, 4, 4, 4]
+        if config.x_prt_en:
+            config.ly_thresh_eta : list[int] = [4, 5, 4, 5, 4, 5, 4, 5, 4, 5, 4, 5, 4, 5, 4]
+        else:
+            config.ly_thresh_eta : list[int] = [4, 4, 4, 4, 4, 4, 4, 4]
+    elif pu == "200":
+        config.ly_thresh_patid : list[int] = [7, 7, 7, 7, 7, 7, 7, 7, 7, 7, 5, 5, 4, 4, 4, 4, 4]
+        #config.ly_thresh_patid : list[int] = [7, 7, 7, 7, 7, 7, 7, 7, 7, 7, 5, 5, 5, 5, 5, 5, 4]
+        if config.x_prt_en:
+            config.ly_thresh_eta : list[int] = [4, 5, 4, 5, 4, 5, 4, 5, 4, 5, 4, 5, 4, 5, 5]
+        else:
+            config.ly_thresh_eta : list[int] = [4, 4, 4, 4, 4, 4, 4, 5]
+
+
     for (ievent, event) in enumerate(root_dat):
         frac_done = (ievent+1)/n_total_events
         if (frac_done - prev_frac_done) >= 0.05:
@@ -363,6 +393,7 @@ def analysis(root_dat, hits, bx, bx_list, cross_part, verbose, pu, num_or):
                     if len(track_hit_index[i]) == muon_hits:
                         me0_tracks.append(i)
         n_me0_track = len(me0_tracks)
+        me0_tracks = np.array(me0_tracks)
 
         # Find the bending angle for sim tracks that are valid
         for i in me0_tracks:
@@ -377,7 +408,7 @@ def analysis(root_dat, hits, bx, bx_list, cross_part, verbose, pu, num_or):
             bot_layer_sbit = 0
             bot_layer = 9999
             eta_partition_list = []
-            nlayers_hit = [0,0,0,0,0,0]
+            nlayers_hit = np.zeros(6)
             for index in track_hit_index[i]:
                 sbit = simhit_sbit[index]
                 layer = simhit_layer[index]
@@ -408,7 +439,14 @@ def analysis(root_dat, hits, bx, bx_list, cross_part, verbose, pu, num_or):
             hist_sim_track_pt.Fill(track_sim_pt[i])
             hist_sim_track_eta.Fill(max(eta_partition_list_sorted,key=eta_partition_list_sorted.count)+1)
             hist_sim_track_pt_eta.Fill(track_sim_pt[i], max(eta_partition_list_sorted,key=eta_partition_list_sorted.count)+1)
-        
+        track_chamber_nr = np.array(track_chamber_nr)
+        track_bending_angle = np.array(track_bending_angle)
+        track_substrip = np.array(track_substrip)
+        track_pt = np.array(track_pt)
+        track_eta_partition = np.array(track_eta_partition)
+        track_nhits = np.array(track_nhits)
+        track_nlayers = np.array(track_nlayers)
+
         # Find the bending angle for rechit
         for i in range(0, n_offline_seg):
             if seg_region[i] == 1:
@@ -448,6 +486,12 @@ def analysis(root_dat, hits, bx, bx_list, cross_part, verbose, pu, num_or):
                 if l > 0:
                     nlayers += 1
             seg_nlayers.append(nlayers)
+        seg_chamber_nr = np.array(seg_chamber_nr)
+        seg_bending_angle = np.array(seg_bending_angle)
+        seg_substrip = np.array(seg_substrip)
+        seg_eta_partition = np.array(seg_eta_partition)
+        seg_nrechits = np.array(seg_nrechits)
+        seg_nlayers = np.array(seg_nlayers)
 
         for bx_i in digihit_bx:
             hist_digi_hit_bx.Fill(bx_i)
@@ -476,7 +520,7 @@ def analysis(root_dat, hits, bx, bx_list, cross_part, verbose, pu, num_or):
         # todo : 
         #bx_data = np.full((36, 8, 6, 192), -9999)
         bx_data = [[[[ -9999 for _ in range(192)] for _ in range(6)] for _ in range(8)] for _ in range(36)]
-
+        
         # loop every hit inside an event
         if hits == "rec":
             for hit in range(len(rechit_region)):
@@ -538,6 +582,12 @@ def analysis(root_dat, hits, bx, bx_list, cross_part, verbose, pu, num_or):
         
         # Find segments per chamber
         online_segment_chamber = {}
+
+        datazip = zip(datlist, repeat(config), range(36))
+        with multiprocessing.pool.Pool() as pool:
+            segment_chamber = pool.starmap(process_chamber_multiProc, datazip)
+
+        '''
         for (chamber_nr, dat_w_segs) in enumerate(datlist):
             online_segment_chamber[chamber_nr] = []
             #print ("  Chamber %d"%chamber_nr)
@@ -554,34 +604,15 @@ def analysis(root_dat, hits, bx, bx_list, cross_part, verbose, pu, num_or):
             if not non_zero_data:
                 continue
             chamber_bx_data = bx_data[chamber_nr][:][:][:]
-
-            config = Config()
-            config.num_outputs = 16
-            #config.deghost_pre = False
-            #config.deghost_post = False
-            #config.cross_part_seg_width = 4
-            #config.clearance_width = 2
-            num_or_to_span = {2:37, 4:19, 8:11, 16:7}
-            config.max_span = num_or_to_span[num_or]
-            config.num_or = num_or
-
-            if pu == "140":
-                config.ly_thresh_patid : list[int] = [7, 7, 7, 7, 7, 7, 7, 7, 7, 7, 5, 5, 4, 4, 4, 4, 4]
-                if config.x_prt_en:
-                    config.ly_thresh_eta : list[int] = [4, 5, 4, 5, 4, 5, 4, 5, 4, 5, 4, 5, 4, 5, 4]
-                else:
-                    config.ly_thresh_eta : list[int] = [4, 4, 4, 4, 4, 4, 4, 4]
-            elif pu == "200":
-                config.ly_thresh_patid : list[int] = [7, 7, 7, 7, 7, 7, 7, 7, 7, 7, 5, 5, 4, 4, 4, 4, 4]
-                #config.ly_thresh_patid : list[int] = [7, 7, 7, 7, 7, 7, 7, 7, 7, 7, 5, 5, 5, 5, 5, 5, 4]
-                if config.x_prt_en:
-                    config.ly_thresh_eta : list[int] = [4, 5, 4, 5, 4, 5, 4, 5, 4, 5, 4, 5, 4, 5, 5]
-                else:
-                    config.ly_thresh_eta : list[int] = [4, 4, 4, 4, 4, 4, 4, 5]
-
-            seglist = process_chamber(data, config, chamber_bx_data)
+        '''
+        for ch in range(36):
+            chamber_nr = segment_chamber[ch][0]
+            online_segment_chamber[chamber_nr] = []
+            
+            #seglist = process_chamber(data, config, chamber_bx_data)
             seglist_final = []
-            for seg in seglist:
+            #for seg in seglist:
+            for seg in segment_chamber[ch][1]:
                 seg.fit(config.max_span)
                 if seg.mse is not None and seg.mse >= mse_th:
                     seg.id = 0
@@ -607,7 +638,7 @@ def analysis(root_dat, hits, bx, bx_list, cross_part, verbose, pu, num_or):
                     file_out.write("  Online Segment in Chamber (0-17 for region -1, 18-35 for region 1) %d:\n "%chamber_nr)
                     file_out.write("    Eta Partition = %d, Center Strip = %.4f, Bending angle = %.4f, ID = %d, Hit count = %d, Layer count = %d, Quality = %d\n"%(seg.partition, seg.substrip+seg.strip, seg.bend_ang, seg.id, seg.hc, seg.lc, seg.quality))
                     file_out.write("\n")
-            online_segment_chamber[chamber_nr] = seglist_final
+            online_segment_chamber[chamber_nr] = np.array(seglist_final, dtype=Segment)
 
             for i in range(0, n_offline_seg):
                 if seg_chamber_nr[i] != chamber_nr:
