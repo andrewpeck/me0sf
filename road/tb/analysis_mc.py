@@ -1227,7 +1227,6 @@ def analysis(root_dat, hits, bx, bx_list, cross_part, verbose, pu, num_or):
                 file_out_summary.write("    Chamber %d: "%chamber)
                 eta_partition_list = []
                 pattern_id_list = []
-                pt_list = []
                 for seg in online_segment_chamber[chamber]:
                     eta_partition_list.append(seg.partition)
                     pattern_id_list.append(seg.id)
@@ -1253,6 +1252,7 @@ def analysis(root_dat, hits, bx, bx_list, cross_part, verbose, pu, num_or):
                     continue
                 file_out_summary.write("    Chamber %d: "%chamber)
                 eta_partition_list = []
+                pt_list = []
                 for i in range(0, n_me0_track):
                     if chamber != track_chamber_nr[i]:
                         continue
