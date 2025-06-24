@@ -314,7 +314,7 @@ def analysis(root_dat, hits, bx, bx_list, cross_part, verbose, pu, num_or):
     num_or_to_span = {2:37, 4:19, 8:11, 16:7}
     config.max_span = num_or_to_span[num_or]
     config.num_or = num_or
-    config.disable_peaking = False
+    config.disable_peaking = True
 
     if pu == "140":
         config.ly_thresh_patid : list[int] = [7, 7, 7, 7, 7, 7, 7, 7, 7, 7, 5, 5, 4, 4, 4, 4, 4]
@@ -335,8 +335,8 @@ def analysis(root_dat, hits, bx, bx_list, cross_part, verbose, pu, num_or):
 
     for (ievent, event) in enumerate(root_dat):
 
-        if ievent != 3:
-            continue
+        #if ievent != 3:
+        #    continue
 
         frac_done = (ievent+1)/n_total_events
         if (frac_done - prev_frac_done) >= 0.05:
