@@ -15,7 +15,7 @@ def parse_data(data, strip, max_span):
 
 def extract_data_window(ly_dat, strip, max_span):
     """extracts data window around given strip"""
-    return [parse_data(data, strip, max_span) for data in ly_dat]
+    return np.array([parse_data(data, strip, max_span) for data in ly_dat])
 
 def parse_bx_data(bx_data, strip, max_span):
     if strip < max_span // 2 + 1:
@@ -33,7 +33,7 @@ def parse_bx_data(bx_data, strip, max_span):
 
 def extract_bx_data_window(ly_dat, strip, max_span):
     """extracts data window around given strip"""
-    return [parse_bx_data(data, strip, max_span) for data in ly_dat]
+    return np.array([parse_bx_data(data, strip, max_span) for data in ly_dat])
 
 def pat_mux(partition_data, partition, config : Config, partition_bx_data):
     """
@@ -63,6 +63,19 @@ def pat_mux(partition_data, partition, config : Config, partition_bx_data):
 
     # If a pattern unit has a worse segment than the previous bx, output the old segment (at its peak quality)
     out_list = [old_segs[i] if old_segs[i].lc > new_segs[i].lc else Segment(0, 0) for i in range(config.width)]
+
+
+    #     # If a pattern unit has a worse segment than the previous bx, output the old segment (at its peak quality)
+    # out_list = []
+    # for i in range(config.width):
+    #     if old_segs[i].lc > new_segs[i].lc:
+    #         out_list.append(old_segs[i])
+    #         new_segs[i].reset() # deadtime of 1 BX if seg is read out
+    #     else:
+    #         out_list.append(Segment(0, 0))
+
+    # # Update the peaking manager
+    # config.peaking_manager.segs[partition] = new_segs
 
     # Update the peaking manager
     config.peaking_manager.segs[partition] = new_segs

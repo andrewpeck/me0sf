@@ -3,6 +3,7 @@ from itertools import islice
 from math import ceil, floor
 from typing import List
 import math
+import numpy as np
 
 LAYER_MASK = None
 
@@ -263,13 +264,14 @@ PATLIST_LUT = {
     1: pat_r8}
 
 def count_ones(x):
-    """takes in an integer and counts how many ones are in that integer's binary form"""
-    cnt = 0
-    while (x > 0):
-        if (x&1)==1:
-            cnt += 1
-        x = x>>1
-    return cnt
+    return np.bitwise_count(x)
+    # """takes in an integer and counts how many ones are in that integer's binary form"""
+    # cnt = 0
+    # while (x > 0):
+    #     if (x&1)==1:
+    #         cnt += 1
+    #     x = x>>1
+    # return cnt
 
 def max_cluster_size(x):
     """calculate maximum cluster size in that integer's binary form"""

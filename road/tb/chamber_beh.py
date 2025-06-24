@@ -57,7 +57,7 @@ from subfunc import *
 
 #     return segs_o
 
-def cross_partition_cancellation(segments : List[List[Segment]],
+def cross_partition_cancellation(segments,
                                  cross_part_seg_width : int) -> List[List[Segment]]:
     # Make a copy of the segments so each step is effectively done in parallel (as FW does it)
     segs_real_killed = [prt for prt in deepcopy(segments)]
@@ -129,7 +129,7 @@ def deghosting_clearance(segments : List[List[Segment]],
                         segs_out[prt_i][seg_i].reset()
     return segs_out
 
-def process_chamber(chamber_data : List[List[int]], config : Config, chamber_bx_data):
+def process_chamber(chamber_data, config : Config, chamber_bx_data):
 
     # gather segments from each partition
     # this will return a 8 x N list of segments
@@ -193,7 +193,7 @@ def process_chamber(chamber_data : List[List[int]], config : Config, chamber_bx_
     #
     # (errno = ENOENT)
 
-    if "SIM" in os.environ and os.environ["SIM"] == "questa":
+    if "SIM" in os.environ and os.environ["SIM"] == "questa" or True:
         segments = starmap(process_partition, datazip)
     else:
         with multiprocessing.pool.Pool() as pool:
@@ -234,7 +234,9 @@ def process_chamber(chamber_data : List[List[int]], config : Config, chamber_bx_
     segments = functools.reduce(operator.iconcat, segments, []) # equivalent to segments[0] + segments[1] + segments[2] + etc
     segments = sorted(segments, reverse=True)[:config.num_outputs]
 
-    return segments
+    # print(segments)
+
+    return (segments, config)
 
 
 def test_chamber_beh():
