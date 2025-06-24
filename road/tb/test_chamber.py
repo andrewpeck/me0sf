@@ -117,7 +117,7 @@ async def chamber_test(dut, test, nloops=512, verbose=True):
 
     meas_latency = await measure_latency(dut, checkfn, setfn)
 
-    LATENCY = ceil(meas_latency)-1 + 2 # and bitonic sort optimization introduced this, weird...  #-1 #Peaking introduced this, need to investigate...
+    LATENCY = ceil(meas_latency)-2-1 + 2 #another -2 from checking chunking changes # and bitonic sort optimization introduced this, weird...  #-1 #Peaking introduced this, need to investigate...
 
     # flush the buffers
     dut.sbits_i.value = NULL()
@@ -257,7 +257,10 @@ async def chamber_test(dut, test, nloops=512, verbose=True):
                 #chamber_data = [[120527522816, 34493956200, 17179873280, 290816, 234881252, 30064771072], [67108864, 537395212, 2147487778, 25769803776, 103079739392, 266240], [12289, 34361573376, 92274688, 2684354688, 51759810560, 271581184], [256, 68920830080, 1073741824, 117473280, 553648128, 120259088640], [1711292416, 268468864, 15032389632, 129390215168, 17179869184, 103079215104], [2149580800, 1075839104, 38117867584, 3892314112, 1006637088, 163577856], [1073750017, 268566528, 3087007744, 234897408, 1835008, 4324329474], [6553600, 126648320, 16891912, 1610612736, 12885168128, 103146323996]]
                 #chamber_data = [[15535702016, 805306368, 57998835840, 9663676416, 68853760016, 0], [57344, 393472, 98635776, 234881280, 536870912, 112742899712], [2149580832, 5398069248, 12398364672, 1811939328, 6190809088, 3758096384], [151126044, 3221225612, 2, 4294967822, 68719476800, 8589934592], [335544320, 3670036, 69236352, 2147485760, 3145728, 0], [1077940224, 117440512, 34360656900, 6442452992, 34762915856, 2149580800], [2156333056, 7405568, 25166344, 134234112, 805306368, 120309415968], [552600576, 26230800, 786944, 4152, 68719477120, 2621440]]
                 zeros = [0]*6
-                chamber_data = [zeros, zeros, zeros, [41484288, 1310720, 393440, 917536, 16973968, 17182064696], [34359738370, 16, 393228, 2097600, 50399232, 939982976], zeros, zeros, zeros] 
+                #chamber_data = [zeros, zeros, zeros, [41484288, 1310720, 393440, 917536, 16973968, 17182064696], [34359738370, 16, 393228, 2097600, 50399232, 939982976], zeros, zeros, zeros] 
+
+                # Testing hit count bug between SW vs FW
+                chamber_data = [[3, 1, 1, 1, 1, 1], [1, 1, 1, 1, 1, 1], zeros, zeros, zeros, zeros, zeros, zeros]
                 
             elif test=="STACK_DAT":
                 if (loop == 0):
