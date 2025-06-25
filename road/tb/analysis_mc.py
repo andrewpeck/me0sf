@@ -484,9 +484,7 @@ def analysis(root_dat, hits, bx, bx_list, cross_part, verbose, pu, num_or):
         track_nlayers = np.array(track_nlayers)
 
         # Find the bending angle for rechit
-        for i in range(-1, n_offline_seg):
-            if i < 0:
-                i = 0
+        for i in range(0, n_offline_seg):
             if seg_region[i] == 1:
                 seg_chamber_nr.append(18 + seg_chamber[i])
             else:
