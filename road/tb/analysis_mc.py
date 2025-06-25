@@ -31,11 +31,9 @@ def process_chamber_multiProc(dat_w_segs, config, chamber_id, chamber_bx_data):
     # seglist = process_chamber(dat_w_segs[0][0], config, chamber_bx_data)
     return (chamber_id, seglist, new_config)
 
+# Function to group hit info into tuples in parallel
 def process_root_data_multiProc(digihit_region, digihit_chamber, digihit_eta_partition, digihit_layer, digihit_sbit, digihit_bx):
-    core_arr = []
-    for i in range(len(digihit_region)):
-        core_arr.append((digihit_region[i], digihit_chamber[i], digihit_eta_partition[i], digihit_layer[i], digihit_sbit[i], digihit_bx[i]))
-    return core_arr
+    return [(digihit_region[i], digihit_chamber[i], digihit_eta_partition[i], digihit_layer[i], digihit_sbit[i], digihit_bx[i]) for i in range(len(digihit_region))]
 
 def analysis(root_dat, hits, bx, bx_list, cross_part, verbose, pu, num_or):
     # Output text file
@@ -380,6 +378,7 @@ def analysis(root_dat, hits, bx, bx_list, cross_part, verbose, pu, num_or):
         digihit_sbit = np.floor(event["me0_digi_hit_strip_i"] / num_or)
         digihit_bx = event["me0_digi_hit_bx_i"]
 
+        # group digi hit info into tuples for better data localization, multithreading to speed it up
         my_digis = []
         with multiprocessing.pool.Pool() as pool:
             cores = multiprocessing.cpu_count()
@@ -394,10 +393,6 @@ def analysis(root_dat, hits, bx, bx_list, cross_part, verbose, pu, num_or):
             my_digis += pool.starmap(process_root_data_multiProc, zip(core_digihit_region, core_digihit_chamber, core_digihit_eta_partition, core_digihit_layer, core_digihit_sbit, core_digihit_bx))
         
         my_digis = sum(my_digis, [])
-
-        # my_digis = []
-        # for i in range(len(digihit_region)):
-        #     my_digis.append((digihit_region[i], digihit_chamber[i], digihit_eta_partition[i], digihit_layer[i], digihit_sbit[i], digihit_bx[i]))
 
         # read rechit info
         rechit_region = event["me0_rec_hit_region_i"]
