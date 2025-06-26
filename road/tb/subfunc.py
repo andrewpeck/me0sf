@@ -28,7 +28,7 @@ class Config:
     ghost_width : int = 1
     x_prt_en : bool = True
     en_non_pointing : bool = False
-    cross_part_seg_width : int = 2
+    cross_part_seg_width : int = 4
     clearance_width: int = 0 # use 2 if you want to try this
     num_outputs : int = 4
     check_ids : bool = False

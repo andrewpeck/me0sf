@@ -43,82 +43,118 @@ def deghosting_clearance(segments : List[List[Segment]],
                         segs_out[prt_i][seg_i].reset()
     return segs_out
 
-def cross_partition_cancellation(segments : List[List[Segment]],
-                                 cross_part_seg_width : int) -> List[List[Segment]]:
 
-    segs_out = deepcopy(segments)
-    for i in range(1,15,2):
-        
-        for (l,seg) in enumerate(segments[i]):
-            if seg.id == 0:
+
+
+
+def cross_partition_cancellation(segments, cross_part_seg_width : int) -> List[List[Segment]]:
+    # Make a copy of the segments so each step is effectively done in parallel (as FW does it)
+    segs_real_killed = [prt for prt in deepcopy(segments)]
+    # Step 1: Kill real segments with a better nearby virtual segment
+    for i in range(1,15,2):        
+        for (v_seg_i, v_seg) in enumerate(segments[i]):
+            if v_seg.lc == 0:
                 continue
-            #print ("Seg 0: ", l, seg, seg.strip)
-            strip = seg.strip
-            #quality = seg.quality
-            seg1_max_quality = -9999
-            seg2_max_quality = -9999
-            seg1_max_quality_index = -9999
-            seg2_max_quality_index = -9999
 
-            for (j,seg1) in enumerate(segments[i-1]):
-                if seg1.id == 0:
-                    continue
-                #print ("  Seg 1: ", j, seg1, seg1.strip)
-                if abs(strip - seg1.strip) <= cross_part_seg_width:
-                    if seg1.quality > seg1_max_quality:
-                        if seg1_max_quality_index != -9999:
-                            segs_out[i-1][seg1_max_quality_index].reset()
-                            #segments[i-1][seg1_max_quality_index].reset()
-                        seg1_max_quality_index = j
-                        seg1_max_quality = seg1.quality
+            for (seg_above_i, seg_above) in enumerate(segments[i-1]):
+                if seg_above.lc != 0 and abs(v_seg.strip - seg_above.strip) <= cross_part_seg_width and ((v_seg.lc<<5) + v_seg.id > (seg_above.lc<<5) + seg_above.id):
+                    segs_real_killed[i-1][seg_above_i].reset()
+            for (seg_below_i, seg_below) in enumerate(segments[i+1]):
+                if seg_below.lc != 0 and abs(v_seg.strip - seg_below.strip) <= cross_part_seg_width and ((v_seg.lc<<5) + v_seg.id > (seg_below.lc<<5) + seg_below.id):
+                    segs_real_killed[i+1][seg_below_i].reset()
+    # Make a copy, to update segments for Step 2
+    segs_o = [prt for prt in deepcopy(segs_real_killed)]
+    # Step 2: Kill virtual segments that still have a nearby real segment (i.e. virtual segments with a better nearby real segment)
+    for i in range(1, 15, 2):
+        for (v_seg_i, v_seg) in enumerate(segs_real_killed[i]):
+            if v_seg.lc == 0:
+                continue
 
-            for (k,seg2) in enumerate(segments[i+1]):
-                if seg2.id == 0:
-                    continue
-                #print ("  Seg 2: ", k, seg2, seg2.strip)
-                if abs(strip - seg2.strip) <= cross_part_seg_width:
-                    if seg2.quality > seg2_max_quality:
-                        if seg2_max_quality_index != -9999:
-                            segs_out[i+1][seg2_max_quality_index].reset()
-                            #segments[i+1][seg2_max_quality_index].reset()
-                        seg2_max_quality_index = k
-                        seg2_max_quality = seg2.quality
+            for (seg_above_i, seg_above) in enumerate(segs_real_killed[i-1]):
+                if seg_above.lc != 0 and abs(v_seg.strip - seg_above.strip) <= cross_part_seg_width:
+                    segs_o[i][v_seg_i].reset()
+            for (seg_below_i, seg_below) in enumerate(segs_real_killed[i+1]):
+                if seg_below.lc != 0 and abs(v_seg.strip - seg_below.strip) <= cross_part_seg_width:
+                    segs_o[i][v_seg_i].reset()
 
-            if seg.quality >= seg1_max_quality and seg.quality >= seg2_max_quality:
-                if seg1_max_quality_index != -9999:
-                    segs_out[i-1][seg1_max_quality_index].reset()
-                    #segments[i-1][seg1_max_quality_index].reset()
-                if seg2_max_quality_index != -9999:
-                    segs_out[i+1][seg2_max_quality_index].reset()
-                    #segments[i+1][seg2_max_quality_index].reset()
-            else:
-                if seg2_max_quality >= seg1_max_quality:
-                    segs_out[i][l].reset()
-                    #segments[i][l].reset()
-                    if seg1_max_quality_index != -9999:
-                        segs_out[i-1][seg1_max_quality_index].reset()
-                        #segments[i-1][seg1_max_quality_index].reset()
-                else:
-                    segments[i][l].reset()
-                    if seg2_max_quality_index != -9999:
-                        segs_out[i+1][seg2_max_quality_index].reset()
-                        #segments[i+1][seg2_max_quality_index].reset()
-            '''
-            if seg1_max_quality_index != -9999 and seg2_max_quality_index != -9999:
-                segs_out[i-1][seg1_max_quality_index].reset()
-                segs_out[i+1][seg2_max_quality_index].reset()
-                #segments[i-1][seg1_max_quality_index].reset()
-                #segments[i+1][seg2_max_quality_index].reset()
-            elif seg1_max_quality_index != -9999:
-                segs_out[i][l].reset()
-                #segments[i][l].reset()
-            elif seg2_max_quality_index != -9999:
-                segs_out[i][l].reset()
-                #segments[i][l].reset()
-            '''
+    return segs_o
 
-    #return segments
-    return segs_out
+#def cross_partition_cancellation(segments,
+#                                 cross_part_seg_width : int) -> List[List[Segment]]:
+#
+#    segs_out = deepcopy(segments)
+#    for i in range(1,15,2):
+#        
+#        for (l,seg) in enumerate(segments[i]):
+#            if seg.id == 0:
+#                continue
+#            #print ("Seg 0: ", l, seg, seg.strip)
+#            strip = seg.strip
+#            #quality = seg.quality
+#            seg1_max_quality = -9999
+#            seg2_max_quality = -9999
+#            seg1_max_quality_index = -9999
+#            seg2_max_quality_index = -9999
+#
+#            for (j,seg1) in enumerate(segments[i-1]):
+#                if seg1.id == 0:
+#                    continue
+#                #print ("  Seg 1: ", j, seg1, seg1.strip)
+#                if abs(strip - seg1.strip) <= cross_part_seg_width:
+#                    if seg1.quality > seg1_max_quality:
+#                        if seg1_max_quality_index != -9999:
+#                            segs_out[i-1][seg1_max_quality_index].reset()
+#                            #segments[i-1][seg1_max_quality_index].reset()
+#                        seg1_max_quality_index = j
+#                        seg1_max_quality = seg1.quality
+#
+#            for (k,seg2) in enumerate(segments[i+1]):
+#                if seg2.id == 0:
+#                    continue
+#                #print ("  Seg 2: ", k, seg2, seg2.strip)
+#                if abs(strip - seg2.strip) <= cross_part_seg_width:
+#                    if seg2.quality > seg2_max_quality:
+#                        if seg2_max_quality_index != -9999:
+#                            segs_out[i+1][seg2_max_quality_index].reset()
+#                            #segments[i+1][seg2_max_quality_index].reset()
+#                        seg2_max_quality_index = k
+#                        seg2_max_quality = seg2.quality
+#
+#            if seg.quality >= seg1_max_quality and seg.quality >= seg2_max_quality:
+#                if seg1_max_quality_index != -9999:
+#                    segs_out[i-1][seg1_max_quality_index].reset()
+#                    #segments[i-1][seg1_max_quality_index].reset()
+#                if seg2_max_quality_index != -9999:
+#                    segs_out[i+1][seg2_max_quality_index].reset()
+#                    #segments[i+1][seg2_max_quality_index].reset()
+#            else:
+#                if seg2_max_quality >= seg1_max_quality:
+#                    segs_out[i][l].reset()
+#                    #segments[i][l].reset()
+#                    if seg1_max_quality_index != -9999:
+#                        segs_out[i-1][seg1_max_quality_index].reset()
+#                        #segments[i-1][seg1_max_quality_index].reset()
+#                else:
+#                    segments[i][l].reset()
+#                    if seg2_max_quality_index != -9999:
+#                        segs_out[i+1][seg2_max_quality_index].reset()
+#                        #segments[i+1][seg2_max_quality_index].reset()
+#            '''
+#            if seg1_max_quality_index != -9999 and seg2_max_quality_index != -9999:
+#                segs_out[i-1][seg1_max_quality_index].reset()
+#                segs_out[i+1][seg2_max_quality_index].reset()
+#                #segments[i-1][seg1_max_quality_index].reset()
+#                #segments[i+1][seg2_max_quality_index].reset()
+#            elif seg1_max_quality_index != -9999:
+#                segs_out[i][l].reset()
+#                #segments[i][l].reset()
+#            elif seg2_max_quality_index != -9999:
+#                segs_out[i][l].reset()
+#                #segments[i][l].reset()
+#            '''
+#
+#    #return segments
+#    return segs_out
 
 def process_chamber(chamber_data : List[List[int]], config : Config, chamber_bx_data):
 
