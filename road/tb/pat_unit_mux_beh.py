@@ -44,13 +44,15 @@ def pat_mux(partition_data, partition, config : Config, partition_bx_data):
     # todo : after extracting window the span is 37 or smaller
     fn = lambda strip : pat_unit(data = extract_data_window(partition_data, strip, config.max_span),
                                  bx_data = extract_bx_data_window(partition_bx_data, strip, config.max_span),
+                                 config = config,
                                  ly_thresh_patid = config.ly_thresh_patid,
                                  ly_thresh_eta = config.ly_thresh_eta,
                                  strip = strip,
                                  partition = partition, 
                                  input_max_span = config.max_span,
                                  skip_centroids = config.skip_centroids,
-                                 num_or = config.num_or)
+                                 num_or = config.num_or,
+                                 enable_vectoring = config.enable_vectoring)
 
     new_segs = [fn(x) for x in range(config.width)]
 

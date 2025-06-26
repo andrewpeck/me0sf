@@ -117,6 +117,7 @@ def calculate_hits(data):
 
 def pat_unit(data,
              bx_data,
+             config : Config,
              strip : int = 0,
              ly_thresh_patid : list[int] = [7, 7, 7, 7, 7, 7, 7, 7, 7, 7, 5, 5, 4, 4, 4, 4, 4],
              ly_thresh_eta : list[int] = [4, 5, 4, 5, 4, 5, 4, 5, 4, 5, 4, 5, 4, 5, 4],
@@ -211,6 +212,15 @@ def pat_unit(data,
         bit_count_arr = np.bitwise_count(np.vstack((masked_data[:,0], masked_data[:,5])).T)
     else:
         bit_count_arr = np.bitwise_count(masked_data)
+
+    if config.enable_vectoring:
+        config.vector_manager.vectors[partition,strip,0] = config.vector_manager.vectors[partition,strip,1]
+        config.vector_manager.vectors[partition,strip,1] = config.vector_manager.vectors[partition,strip,2]
+        config.vector_manager.vectors[partition,strip,2] = masked_data > 0 # 17x6 array; each row is a pattern, indicating whether layer X was hit
+
+        #TODO: combine ^^ 2 of those lines in a function in vector_manager
+        #TODO: create function in vector_manager to OR together the 3 vectors for a given partition, strip; call it here, and use that for LCs
+        #TODO: only return segment if LC for central BX is highest. break ties somehow? (maybe with HC)
 
     hcs = np.clip(np.sum(bit_count_arr, axis=1), a_min = 0, a_max=7)
 

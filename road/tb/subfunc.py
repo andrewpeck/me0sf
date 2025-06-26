@@ -13,10 +13,18 @@ class Peaking_Manager:
 
     def reset(self):
         self.segs = [[Segment(0,0) for _ in range(192)] for _ in range(15)]
+
+class Vector_Manager:
+    def __init__(self):
+        self.vectors = np.zeros((15,192,3,17,6)) # partition, strip, bx, pid, ly
+
+    def __init__(self):
+        self.vectors = [[[[0]*6 for _ in range(17)] for _ in range(192)] for _ in range(15)]
  
 class Config:
     def __init__(self):
         self.peaking_manager = Peaking_Manager()
+        self.vector_manager = Vector_Manager()
 
     skip_centroids : bool = False
     ly_thresh_patid : list[int] = [7, 7, 7, 7, 7, 7, 7, 7, 7, 7, 5, 5, 4, 4, 4, 4, 4]
@@ -35,6 +43,7 @@ class Config:
     edge_distance : int = 2
     num_or : int = 2
     disable_peaking : bool = True
+    enable_vectoring : bool = False
 
 
 class hi_lo_t:
