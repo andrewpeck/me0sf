@@ -2,6 +2,7 @@
 from subfunc import *
 from pat_unit_beh import pat_unit
 from constants import *
+import numpy as np
 
 def parse_data(data, strip, max_span):
     """takes in data, a strip index, and a MAX_SPAN to get the data a pat_unit on that strip would see"""

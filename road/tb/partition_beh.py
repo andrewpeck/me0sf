@@ -67,7 +67,7 @@ def cancel_edges(segments : List[Segment],
 
     def is_at_edge(x):
         if group_width > 0:
-            return x % group_width < edge_distance or (x % group_width) >= (group_width-edge_distance)
+            return x % group_width < edge_distance or (x % group_width) >= (group_width-edge_distance-1)
         else:
             return True
 

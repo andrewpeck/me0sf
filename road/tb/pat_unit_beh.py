@@ -222,10 +222,9 @@ def pat_unit(data,
         #TODO: create function in vector_manager to OR together the 3 vectors for a given partition, strip; call it here, and use that for LCs
         #TODO: only return segment if LC for central BX is highest. break ties somehow? (maybe with HC)
 
-    hcs = np.clip(np.sum(bit_count_arr, axis=1), a_min = 0, a_max=7)
+    hcs = np.sum(np.clip(bit_count_arr, a_min = None, a_max = 7), axis=1)
 
     lcs = np.count_nonzero(masked_data, axis=1).astype(np.uint64)
-
     
     combined_segs = np.bitwise_or(np.bitwise_or(np.left_shift(lcs, np.uint8(11)), np.left_shift(hcs, np.uint(5))), pids)
     best_pid = (np.sort(combined_segs))[-1] & 2**5-1
