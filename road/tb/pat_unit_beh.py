@@ -236,7 +236,7 @@ def pat_unit(data,
 
         # (4) process centroids
     if skip_centroids:
-        #TODO: update this
+        #TODO: update this to work with speedup changes
         centroids = [[0 for _ in range(6)] for _ in range(len(masked_data))]
         bxs = [-9999 for _ in range(len(masked_data))]
     else:
