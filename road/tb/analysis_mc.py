@@ -333,9 +333,6 @@ def analysis(root_dat, hits, bx, bx_list, cross_part, verbose, pu, num_or):
 
     for (ievent, event) in enumerate(root_dat):
 
-        if ievent != 3:
-            continue
-
         frac_done = (ievent+1)/n_total_events
         if (frac_done - prev_frac_done) >= 0.05:
             print ("%.2f"%(frac_done*100) + "% Events Done")
@@ -569,6 +566,7 @@ def analysis(root_dat, hits, bx, bx_list, cross_part, verbose, pu, num_or):
             
             # loop every hit inside an event
             if hits == "rec":
+                #TODO: Make speedups work for rechits as well
                 for hit in range(len(rechit_region)):
                     if rechit_region[hit] == 1:
                         chamb_idx = 18 + rechit_chamber[hit]
@@ -631,18 +629,12 @@ def analysis(root_dat, hits, bx, bx_list, cross_part, verbose, pu, num_or):
 
             datazip = zip(datlist, config_chams, range(36), bx_data)
 
-            from printly_dat import printly_dat
-
-            # if (ievent == 3):
-            #     print("Offset = " + str(bx_offset))
-            #     printly_dat(datlist[25,5,0], MAX_SPAN=192)
-
             start_time = time()
             with multiprocessing.pool.Pool() as pool:
                 segment_chamber = pool.starmap(process_chamber_multiProc, datazip)
 
-            if bx_offset == 1:
-                early_segs = segment_chamber
+            #if bx_offset == 1:
+            #    early_segs = segment_chamber
 
             config_chams = [new_config[2] for new_config in segment_chamber]
 
