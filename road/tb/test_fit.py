@@ -7,14 +7,11 @@ import cocotb
 from cocotb.clock import Clock
 from cocotb.triggers import RisingEdge
 from cocotb_test.simulator import run
-from fixedpoint import FixedPoint
+#from fixedpoint import FixedPoint
+import apytypes as apy
 
 def fit_modified(x, y):
     filtered = [(xi, yi) for xi, yi in zip(x, y) if not math.isnan(xi) and not math.isnan(yi)]
-
-    if not filtered:
-        return float('nan'), float('nan')  # No valid data
-
     x_valid, y_valid = zip(*filtered)
     x_sum = sum(x_valid)
     y_sum = sum(y_valid)
@@ -29,10 +26,13 @@ def fit_modified(x, y):
         squares += (n * xi - x_sum) ** 2
 
     m = products / squares
+    #m_fixed = FixedPoint(m, signed=True, m=4, n=4, str_base=10, rounding='nearest')
+    m_fixed = apy.fx(m, int_bits=4, frac_bits=4)
     b = (y_sum - m * x_sum) / n
+    #b_fixed = FixedPoint(b, signed=True, m=6, n=7, str_base=10, rounding='nearest')
+    b_fixed = apy.fx(b, int_bits=6, frac_bits=7)
 
-    return m, b
-
+    return m_fixed, b_fixed
 
 
 def rand_y():
@@ -75,7 +75,7 @@ async def fit_tb(dut, NLOOPS=10000):
     dut.ly4.value = 5
     dut.ly5.value = 6
 
-    LATENCY = dut.N_STAGES.value + 3 # Number of clock cycles that code takes to run
+    LATENCY = dut.N_STAGES.value # Number of clock cycles that code takes to run (14)
 
     for _ in range(LATENCY):
         await RisingEdge(dut.clock)
@@ -93,6 +93,7 @@ async def fit_tb(dut, NLOOPS=10000):
     failed_fits_intercept = 0
     failed_fits_strip = 0
     failed_fits_slope = 0
+    not_failed_fits = 0
 
     for iloop in range(NLOOPS):
 
@@ -110,7 +111,7 @@ async def fit_tb(dut, NLOOPS=10000):
 
         data.append(y)
 
-        m, b = fit_modified(x, y)
+        #m, b = fit_modified(x, y)
         await RisingEdge(dut.clock)  # Synchronize with the clock
 
         this_data = data.pop(0)
@@ -128,8 +129,8 @@ async def fit_tb(dut, NLOOPS=10000):
         #max_error_slope = 0.5
         #max_error_intercept = 1.4
         key_s = m * 2.5 + b
-        max_error_slope = 0.8
-        max_error_intercept = 5
+        max_error_slope = 0.65
+        max_error_intercept = 2.0
         max_error_strips = max_error_intercept + max_error_slope
 
         #errors = [
@@ -159,9 +160,13 @@ async def fit_tb(dut, NLOOPS=10000):
             print_slope(slope, intercept, key_strip, m, b, key_s)
             failed_fits += 1
             failed_fits_strip += 1
+        elif b > 20:
+            #print('FIT DID NOT FAIL')
+            #print_slope(slope, intercept, key_strip, m, b, key_s)
+            not_failed_fits +=1
 
         if iloop % 1000 == 0:
-        ##if iloop < 100:
+        #if iloop < 100:
             print("%d fits tested" % iloop)
             print(masked_data)
             print(valid_mask)
@@ -174,6 +179,7 @@ async def fit_tb(dut, NLOOPS=10000):
     print("%d slope fits failed" % failed_fits_slope)
     print("%d intercept fits failed" % failed_fits_intercept)
     print("%d strip fits failed" % failed_fits_strip)
+    #print("%d fits did not fail with high intercept" % not_failed_fits)
 
 
 def test_fit():
@@ -184,7 +190,6 @@ def test_fit():
     
     vhdl_sources = [os.path.join(rtl_dir, "reciprocal.vhd"),
                     os.path.join(rtl_dir, "pipelined_mult.vhd"),
-                    os.path.join(rtl_dir, "pipelined_mult_check.vhd"),
                     os.path.join(rtl_dir, "fit.vhd")]
 
 

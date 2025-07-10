@@ -19,7 +19,7 @@ entity fit is
 
     N_LAYERS : natural := 6;
 
-    N_STAGES : natural := 11;
+    N_STAGES : natural := 13;
 
     STRIP_BITS : natural := 6;
     -- slope
@@ -31,7 +31,7 @@ entity fit is
     -- this is the intercept at the 0th layer, different than the pattern-centered strip
     -- (for debugging)
     B_INT_BITS  : natural := 6;
-    B_FRAC_BITS : natural := 6;
+    B_FRAC_BITS : natural := 7;
 
     -- strip
     -- this is the strip, centered in the 2.5 layer (center of the chamber)
@@ -70,10 +70,10 @@ architecture behavioral of fit is
   -- delays
   --------------------------------------------------------------------------------
 
-  type valid_array_t is array (integer range 0 to 3) of std_logic_vector(N_LAYERS-1 downto 0);
+  type valid_array_t is array (integer range 0 to 4) of std_logic_vector(N_LAYERS-1 downto 0);
   signal valid : valid_array_t := (others => (others => '1'));
 
-  type cnt_array_t is array (integer range 0 to 9) of integer range 0 to 6;
+  type cnt_array_t is array (integer range 0 to 10) of integer range 0 to 6;
   signal cnt : cnt_array_t := (others => 6);
 
   type x_sum_array_t is array (integer range 1 to 7) of integer range 0 to 15;  
@@ -95,20 +95,20 @@ architecture behavioral of fit is
   -- s2
   --------------------------------------------------------------------------------
 
-  type x_diff_array_t is array (integer range 0 to 5) of integer range -15 to 15;
+  type x_diff_array_t is array (integer range 0 to N_LAYERS-1) of integer range -15 to 15;
   signal x_diff : x_diff_array_t := (others => 0);
 
-  type y_diff_array_t is array (integer range 0 to 5) of integer range -127 to 127;
+  type y_diff_array_t is array (integer range 0 to N_LAYERS-1) of integer range -127 to 127;
   signal y_diff : y_diff_array_t := (others => 0);
 
   --------------------------------------------------------------------------------
   -- s3
   --------------------------------------------------------------------------------
 
-  type square_array_t is array (integer range 0 to 5) of integer range -2047 to 2047;
+  type square_array_t is array (integer range 0 to N_LAYERS-1) of integer range -2047 to 2047;
   signal square : square_array_t  := (others => 0);
 
-  type product_array_t is array (integer range 0 to 5) of integer range -8191 to 8191;
+  type product_array_t is array (integer range 0 to N_LAYERS-1) of integer range -8191 to 8191;
   signal product : product_array_t := (others => 0);
 
   --------------------------------------------------------------------------------
@@ -130,22 +130,17 @@ architecture behavioral of fit is
   signal slope_signed : signed (28 downto 0) := (others => '0');
   signal slope_sfixed : sfixed (15 downto -13) := (others => '0');
 
-  signal slope, slope_s9, slope_s10, slope_s11, slope_s12, slope_s13, slope_s14, slope_s15: sfixed (3 downto -4) := (others => '0');
+  signal slope, slope_s10, slope_s11, slope_s12, slope_s13: sfixed (3 downto -6) := (others => '0');
 
   signal slope_s12_x5 : sfixed (6 downto -2);
-  signal slope_s11_mult : sfixed (7 downto -8);
+  signal slope_s11_mult : sfixed (7 downto -12);
+  signal slope_s13_2p5 : sfixed (6 downto -8);
 
-  signal slope_s12_2p5, slope_s13_2p5, slope_s14_2p5, slope_s15_2p5 : sfixed (5 downto -2);
+  signal slope_mult : sfixed(9 downto -6) := (others => '0');
+  signal slope_times_x : sfixed(7 downto -7) := (others => '0');
 
-  --signal slope_mult : sfixed(8 downto -4) := (others => '0');
-  signal slope_mult : sfixed(9 downto -4) := (others => '0');
-  signal slope_times_x : sfixed(7 downto -5) := (others => '0');
-
-  signal y_minus_mb : sfixed(8 downto -5) := (others => '0');
-  signal y_minus_mb_s11 : sfixed(8 downto -5) := (others => '0');
-
-  signal intercept_mult : sfixed(10 downto -15);
-  signal intercept, intercept_dl1, intercept_dl2, intercept_dl3 : sfixed(5 downto -7) := (others => '0');
+  signal intercept_mult : sfixed(10 downto -21);
+  signal intercept : sfixed(6 downto -8) := (others => '0');
 
   --------------------------------------------------------------------------------
   -- functions
@@ -250,6 +245,7 @@ begin
       cnt(7) <= cnt(6);
       cnt(8) <= cnt(7);
       cnt(9) <= cnt(8);
+      cnt(10) <= cnt(9);
 
       x_sum_dly : for I in 2 to 7 loop
         x_sum(I) <= x_sum(I-1);
@@ -282,22 +278,22 @@ begin
       -------------------------------------------------------------------------
 
       -- Σ (n*xi - Σx)*(n*yi - Σy)
-      product_sum_1 <= sum6(product(0), product(1), product(2), product(3), product(4), product(5), valid(3));
+      product_sum_1 <= sum6(product(0), product(1), product(2), product(3), product(4), product(5), valid(4));
       product_sum <= product_sum_1;
 
       -- Σ (n*xi - Σx)^2
-      square_sum <= sum6(square(0), square(1), square(2), square(3), square(4), square(5), valid(3));
+      square_sum <= sum6(square(0), square(1), square(2), square(3), square(4), square(5), valid(4));
       square_sum_reciprocal <= reciprocal (square_sum ,-square_sum_reciprocal'low);
 
       ---------------------------------------------------------------------------
-      -- Stages 6-8: Pipelined Multiplier (takes 3 clock cycles), product_sum * square_sum_reciprocal, 
+      -- Stages 6-8: Pipelined Multiplier (takes 2 clock cycles), product_sum * square_sum_reciprocal, 
       ---------------------------------------------------------------------------
 
       -------------------------------------------------------------------------
       -- Stage 9
       -------------------------------------------------------------------------
 
-      x_sum_fixed<= to_sfixed(x_sum(7), 5);
+      x_sum_fixed<= to_sfixed(x_sum(6), 5);
       slope_mult <= slope * x_sum_fixed;
 
       -------------------------------------------------------------------------
@@ -305,7 +301,7 @@ begin
       -------------------------------------------------------------------------
 
       slope_times_x <= resize(slope_mult, slope_times_x); 
-      intercept_mult <= reciprocal6(cnt(9), 10) * (to_sfixed(y_sum(10), 7) - slope_times_x); 
+      intercept_mult <= reciprocal6(cnt(9), 14) * (to_sfixed(y_sum(9), 7) - slope_times_x);
       slope_s10 <= slope;
 
       -------------------------------------------------------------------------
@@ -320,15 +316,15 @@ begin
 
       slope_s13_2p5 <= resize(slope_s12_x5/2.0, slope_s13_2p5); 
       slope_s13 <= slope_s12;
-      intercept <= intercept_mult(5 downto -7);
+      intercept <= intercept_mult(6 downto -8);
 
       -------------------------------------------------------------------------
       -- Stage 14: Output
       -------------------------------------------------------------------------
 
       strip_o     <= resize(slope_s13_2p5 + intercept, strip_o);
-      intercept_o <= resize(intercept, intercept_o);        
-      slope_o     <= resize(slope_s13, slope_o);                                       
+      intercept_o <= resize(intercept, intercept_o);
+      slope_o     <= resize(slope_s13, slope_o);
 
     end if;
   end process;

@@ -20,11 +20,10 @@ architecture rtl of mult_sgn_12x12 is
   signal r_ma       : signed(WIDTH_A-1 downto 0);
   signal r_mb       : signed(WIDTH_B-1 downto 0);
   signal r_m_stage1 : signed(WIDTH_A + WIDTH_B - 1 downto 0);  -- Stage 1 pipeline register
-  signal r_m_stage2 : signed(WIDTH_A + WIDTH_B - 1 downto 0);  -- Stage 2 pipeline register
 
 begin
 
-  output  <= r_m_stage2;  -- Output after the final pipeline stage
+  output  <= r_m_stage1;  -- Output after the final pipeline stage
 
   p_mult : process(clock)
   begin
@@ -36,8 +35,6 @@ begin
       -- Stage 2: Multiply and register result
       r_m_stage1 <= r_ma * r_mb;
       
-      -- Stage 3: Register final result for output
-      r_m_stage2 <= r_m_stage1;
     end if;
   end process p_mult;
 
