@@ -26,8 +26,7 @@ from time import time
 
 # Function to process a chamber in parallel
 def process_chamber_multiProc(dat_w_segs, config, chamber_id, chamber_bx_data):
-    data = dat_w_segs[:,0]
-    seglist, new_config = process_chamber(data, config, chamber_bx_data)
+    seglist, new_config = process_chamber(dat_w_segs, config, chamber_bx_data)
     # seglist = process_chamber(dat_w_segs[0][0], config, chamber_bx_data)
     return (chamber_id, seglist, new_config)
 
@@ -312,7 +311,7 @@ def analysis(root_dat, hits, bx, bx_list, cross_part, verbose, pu, num_or):
     num_or_to_span = {2:37, 4:19, 8:11, 16:7}
     config.max_span = num_or_to_span[num_or]
     config.num_or = num_or
-    config.disable_peaking = True
+    config.start_peaking_manager()
 
     if pu == "140":
         config.ly_thresh_patid : list[int] = [7, 7, 7, 7, 7, 7, 7, 7, 7, 7, 5, 5, 4, 4, 4, 4, 4]
@@ -330,8 +329,21 @@ def analysis(root_dat, hits, bx, bx_list, cross_part, verbose, pu, num_or):
 
     config_chams = [deepcopy(config) for _ in range(36)]
 
+    # Determines how many and which BX offsets to look at
+    bx_offset_windows = list(range(-4, 3))# if config.peaking_enabled else [0]
+    bx_offset_0_index = bx_offset_windows.index(0) if config.peaking_enabled else bx_offset_windows.index(0)
+
+    # Counters for time resolution
+    n_segs_matched_by_bx = [0]*len(bx_offset_windows)
+    n_segs_total_by_bx = [0]*len(bx_offset_windows)
+    n_simtracks_total = 0
 
     for (ievent, event) in enumerate(root_dat):
+
+        # Restart peaking manager, to clear all segments
+        if config.peaking_enabled:
+            for conf in config_chams:
+                conf.start_peaking_manager()
 
         frac_done = (ievent+1)/n_total_events
         if (frac_done - prev_frac_done) >= 0.05:
@@ -536,7 +548,7 @@ def analysis(root_dat, hits, bx, bx_list, cross_part, verbose, pu, num_or):
 
         # virtual partitions included
         #datlist = np.array([[[[0 for i in range(6)], [(0, 0)]] for j in range(15)] for k in range(36)], dtype = object)
-        datlist = np.array([[[[0 for i in range(6)], [(0, 0)]] for j in range(8)] for k in range(36)], dtype = object)
+        # datlist = np.array([[[[0 for i in range(6)], [(0, 0)]] for j in range(8)] for k in range(36)], dtype = object)
 
         # mapping from part_idx to real array index we want to insert is different
         # id  virtual real virtual
@@ -552,12 +564,13 @@ def analysis(root_dat, hits, bx, bx_list, cross_part, verbose, pu, num_or):
         print("TIMESTAMP 2: " + str(time() - start_time))
         start_time = time()
 
-        bx_offset_windows = [0] if config.disable_peaking else range(-1, 3)
+        online_segs_cham = np.ndarray(shape=(36,len(bx_offset_windows)), dtype=Segment)
 
         # Pass a moving window, to allow for ghosts in time
-        for bx_offset in bx_offset_windows:
+        for bx_i, bx_offset in enumerate(bx_offset_windows):
             offset_bx_list = bx_list + bx_offset
-            datlist = np.array([[[[0 for i in range(6)], [(0, 0)]] for j in range(8)] for k in range(36)], dtype = object)
+            datlist = np.zeros((36,8,6), dtype=object) # 36x8x6 = chamber, partition, layer; Must be Python int, since objects need to be 192 bits wide
+            slope_intercept_list = np.zeros((36,8,2), dtype=np.float64) # 36x8x2 = chamber, partition, (slope, intercept)
 
             # initialize the bx_data, bx data will be inserted based on different input
             # todo : 
@@ -580,7 +593,7 @@ def analysis(root_dat, hits, bx, bx_list, cross_part, verbose, pu, num_or):
                     bx_data[chamb_idx][part_idx][layer_idx][sbit_idx] = rechit_bx[hit]
 
                     # insert the hit
-                    datlist[chamb_idx, part_idx, 0][layer_idx] = (datlist[chamb_idx, part_idx, 0][layer_idx]) | (1 << sbit_idx)
+                    datlist[chamb_idx, part_idx, layer_idx] = datlist[chamb_idx, part_idx, layer_idx] | (1 << sbit_idx)
 
                     #datlist[chamb_idx, part_idx*2, 0][layer_idx] = (datlist[chamb_idx, part_idx*2, 0][layer_idx]) | (1 << sbit_idx)
                     #if cross_part == "full":
@@ -608,7 +621,7 @@ def analysis(root_dat, hits, bx, bx_list, cross_part, verbose, pu, num_or):
                         #print(digihit_bx[hit])
                     
                     # insert the hit
-                    datlist[cham, eta, 0][ly] = (datlist[cham, eta, 0][ly]) | (1 << int(dig_sbit))
+                    datlist[cham, eta, ly] = datlist[cham, eta, ly] | (1 << int(dig_sbit))
 
                     #datlist[chamb_idx, part_idx*2, 0][layer_idx] = (datlist[chamb_idx, part_idx*2, 0][layer_idx]) | (1 << sbit_idx)
                     #if cross_part == "full":
@@ -625,6 +638,15 @@ def analysis(root_dat, hits, bx, bx_list, cross_part, verbose, pu, num_or):
             # Find segments per chamber
             online_segment_chamber = {}
 
+            # from printly_dat import printly_dat
+
+            # for i in [33, 34, 35]:
+            #     if np.count_nonzero(datlist[i]) > 0:
+            #         print(f"Chamber {i}:\n")
+            #         for j in range(8):
+            #             print(f"Partition {j}:\n")
+            #             printly_dat(datlist[i,j], MAX_SPAN=192)
+
             print("TIMESTAMP 3: " + str(time() - start_time))
 
             datazip = zip(datlist, config_chams, range(36), bx_data)
@@ -633,16 +655,13 @@ def analysis(root_dat, hits, bx, bx_list, cross_part, verbose, pu, num_or):
             with multiprocessing.pool.Pool() as pool:
                 segment_chamber = pool.starmap(process_chamber_multiProc, datazip)
 
-            #if bx_offset == 1:
-            #    early_segs = segment_chamber
-
-            config_chams = [new_config[2] for new_config in segment_chamber]
+            # Extract segments per chamber per bx, and update Config object
+            for cham in segment_chamber:
+                cham_nr, segs_out, new_config = cham
+                online_segs_cham[cham_nr, bx_i] = segs_out
+                config_chams[cham_nr] = new_config
 
         print("Time to process chambers: " + str(time() - start_time))
-
-        # for icham, cham in enumerate(segment_chamber):
-        #     for seg in early_segs[icham][1]:
-        #         segment_chamber[icham][1].append(seg)
 
         '''
         for (chamber_nr, dat_w_segs) in enumerate(datlist):
@@ -662,41 +681,49 @@ def analysis(root_dat, hits, bx, bx_list, cross_part, verbose, pu, num_or):
                 continue
             chamber_bx_data = bx_data[chamber_nr][:][:][:]
         '''
-        for ch in range(36):
-            chamber_nr = segment_chamber[ch][0]
-            online_segment_chamber[chamber_nr] = []
-            
-            #seglist = process_chamber(data, config, chamber_bx_data)
-            seglist_final = []
-            #for seg in seglist:
-            for seg in segment_chamber[ch][1]:
-                seg.fit(config_chams[ch].max_span)
-                if seg.mse is not None and seg.mse >= mse_th:
-                    seg.id = 0
-                if pu == "200":
-                    if abs(seg.bend_ang) > 1: 
-                        seg.id = 0
-                    #if seg.partition >= 9: 
-                    #    if abs(seg.bend_ang) > 0.5: 
-                    #        seg.id = 0
-                if seg.id == 0:
-                    continue
-                #mse_collections.append(seg.mse)
-                #print(seg.mse)
-                seg_bx_collections.append(seg.bx)
-                #print(seg.bx)
-                if seg.partition % 2 != 0:
-                    seg.partition = (seg.partition // 2) + 1
-                else:
-                    seg.partition = (seg.partition // 2)
-                #print (seg)
-                seglist_final.append(seg)
-                if verbose:
-                    file_out.write("  Online Segment in Chamber (0-17 for region -1, 18-35 for region 1) %d:\n "%chamber_nr)
-                    file_out.write("    Eta Partition = %d, Center Strip = %.4f, Bending angle = %.4f, ID = %d, Hit count = %d, Layer count = %d, Quality = %d\n"%(seg.partition, seg.substrip+seg.strip, seg.bend_ang, seg.id, seg.hc, seg.lc, seg.quality))
-                    file_out.write("\n")
-            online_segment_chamber[chamber_nr] = np.array(seglist_final, dtype=Segment)
 
+        seglist_final = [[0]*len(bx_offset_windows) for _ in range(36)]
+
+        for chamber_nr, cham in enumerate(online_segs_cham):
+            for bx_offset_i, segs in enumerate(cham):
+
+                bx_cham_seglist_final = []
+
+                for seg in segs:
+                    # Fit, then final cuts
+                    seg.fit(config_chams[chamber_nr].max_span)
+                    if seg.mse is not None and seg.mse >= mse_th:
+                        seg.id = 0
+                    if pu == "200":
+                        if abs(seg.bend_ang) > 1: 
+                            seg.id = 0
+                        #if seg.partition >= 9: 
+                        #    if abs(seg.bend_ang) > 0.5: 
+                        #        seg.id = 0
+                    if seg.id == 0:
+                        continue
+                    #mse_collections.append(seg.mse)
+                    #print(seg.mse)
+                    seg_bx_collections.append(seg.bx)
+                    #print(seg.bx)
+
+                    # Assign segments in virtual partitions to real partitions
+                    if seg.partition % 2 != 0:
+                        seg.partition = (seg.partition // 2) + 1
+                    else:
+                        seg.partition = (seg.partition // 2)
+
+                    bx_cham_seglist_final.append(seg)
+
+                    # Print online segments
+                    if verbose:
+                        file_out.write("  Online Segment in Chamber (0-17 for region -1, 18-35 for region 1) %d, BX = %d:\n "%(chamber_nr, bx_offset))
+                        file_out.write("    Eta Partition = %d, Center Strip = %.4f, Bending angle = %.4f, ID = %d, Hit count = %d, Layer count = %d, Quality = %d\n"%(seg.partition, seg.substrip+seg.strip, seg.bend_ang, seg.id, seg.hc, seg.lc, seg.quality))
+                        file_out.write("\n")
+                
+                seglist_final[chamber_nr][bx_offset_i] = np.array(bx_cham_seglist_final, dtype=Segment)
+
+            # Print offline segs
             for i in range(0, n_offline_seg):
                 if seg_chamber_nr[i] != chamber_nr:
                     continue
@@ -713,19 +740,30 @@ def analysis(root_dat, hits, bx, bx_list, cross_part, verbose, pu, num_or):
             #       file_out.write("     Eta Partition = %d, Center Strip = %.4f, Bending angle = %.4f, Hit count = %d, Layer_count = %d, pT = %.4f\n"%(track_eta_partition[i], track_substrip[i], track_bending_angle[i], track_nhits[i], track_nlayers[i], track_pt[i]))
             #       file_out.write("\n")
 
-        for chamber_nr in online_segment_chamber:
-            num_seg_per_chamber.Fill(len(online_segment_chamber[chamber_nr]))
+        # Fill histogram for # of online segs per chamber
+        for i, segs_cham in enumerate(seglist_final):
+            num_seg_per_chamber.Fill(len(segs_cham[bx_offset_0_index]))
 
-        for r in [-1,1]:
-            for c in range(0,18):
-                n_seg_chamber = 0
-                for i in range(0, n_offline_seg):
-                    if r==seg_region[i] and c==seg_chamber[i]:
-                        n_seg_chamber += 1
-                num_seg_per_chamber_offline.Fill(n_seg_chamber)
+        # Finds the number of segments in each chamber in each bx. Sums over all chambers to find the total # of segments in each bx, and adds it to the running count.
+        n_segs_total_by_bx += np.sum(np.array([[len(segs_bx)for segs_bx in segs_cham] for segs_cham in seglist_final]), axis=0)
+
+        # Add simtracks to running tally
+        n_simtracks_total += n_me0_track
+
+        # Fill histogram for # of offline segs per chamber
+        for c in range(0,18):
+            n_seg_chamber = 0
+            for i in range(0, n_offline_seg):
+                if seg_region[i] in [-1,1] and c==seg_chamber[i]:
+                    n_seg_chamber += 1
+            num_seg_per_chamber_offline.Fill(n_seg_chamber)
 
         #print ("  Offline - Online Segment Matching: ")
         unmatched_offline_index = []
+
+        # List to track matched online segments. Online segments can only match to one offline segment.
+        online_segs_matched = []
+
         # Checking efficiency w.r.t offline segments
         for i in range(0, n_offline_seg):
             offline_chamber = seg_chamber_nr[i]
@@ -740,16 +778,19 @@ def analysis(root_dat, hits, bx, bx_list, cross_part, verbose, pu, num_or):
                 offline_effi_total_id.Fill(id)
             n_offline_effi_total += 1
 
-            seg_match = 0
-            seg_matched_index = []
-            if (len(online_segment_chamber[offline_chamber]) == 0):
+            seg_match = False
 
-                unmatched_offline_index.append(i)
-                continue
+            # if (len(seglist_final[offline_chamber][bx_offset_0_index]) == 0):
+            #     unmatched_offline_index.append(i)
+            #     continue
 
-            for (j,seg) in enumerate(online_segment_chamber[offline_chamber]):
-                if j in seg_matched_index:
+            # First, try to match in correct BX
+            for (j,seg) in enumerate(seglist_final[offline_chamber][bx_offset_0_index]):
+
+                # If this online segment has already matched to another offline segment, skip it
+                if seg in online_segs_matched:
                     continue
+
                 online_eta_partition = seg.partition
                 online_substrip = seg.substrip+seg.strip
                 online_bending_angle = seg.bend_ang
@@ -757,28 +798,69 @@ def analysis(root_dat, hits, bx, bx_list, cross_part, verbose, pu, num_or):
                 online_hc = seg.hc
                 online_lc = seg.lc
                 online_quality = seg.quality
-                if abs(online_eta_partition - offline_eta_partition)<=1:
-                #if online_eta_partition == offline_eta_partition:
-                    #if online_bending_angle == 0:
-                    #    bending_angle_err = abs(offline_bending_angle)
-                    #else:
-                    #    bending_angle_err = abs((offline_bending_angle - online_bending_angle)/online_bending_angle)
-                    if abs(online_substrip - offline_substrip) <= 5: # match criteria for strip
-                        #if bending_angle_err < 0.4 or abs(online_bending_angle - offline_bending_angle) <= 0.6: # match criteria for bending angle
-                        offline_effi_passed_bending.Fill(offline_bending_angle)
-                        offline_effi_passed_eta.Fill(offline_eta_partition)
-                        offline_effi_passed_id.Fill(online_id)
-                        n_offline_effi_passed += 1
-                        offline_effi_mres.Fill(offline_bending_angle - online_bending_angle)
-                        offline_effi_sres.Fill(offline_substrip - online_substrip)
-                        seg_match = 1
-                        seg_matched_index.append(j)
-                        #if verbose:
-                            #file_out.write("    Offline segment: Chamber = %d: , Eta Partition = %d, Center Strip = %.4f, Bending angle = %.4f, Hit count = %d, Layer_count = %d\n"%(offline_chamber, offline_eta_partition, offline_substrip, offline_bending_angle, offline_nrechits, offline_nlayers))
-                            #file_out.write("    Online segment: Chamber = %d: , Eta Partition = %d, Center Strip = %.4f, Bending angle = %.4f, ID = %d, Hit count = %d, Layer count = %d, Quality = %d\n"%(st_chamber, online_eta_partition, online_substrip, online_bending_angle, online_id, online_hc, online_lc, online_quality))
-                            #file_out.write("\n")
+
+                if abs(online_eta_partition - offline_eta_partition)<=1 and abs(online_substrip - offline_substrip) <= 5: # Match criteria for partition and strip
+
+                    # bending_angle_err = abs(offline_bending_angle) if (online_bending_angle == 0) else abs((offline_bending_angle - online_bending_angle)/online_bending_angle)
+
+                    # Update matched list, to prevent a single online segment from matching with multiple offline segments
+                    seg_match = True
+                    online_segs_matched.append(seg)
+                    #if verbose:
+                        #file_out.write("    Offline segment: Chamber = %d: , Eta Partition = %d, Center Strip = %.4f, Bending angle = %.4f, Hit count = %d, Layer_count = %d\n"%(offline_chamber, offline_eta_partition, offline_substrip, offline_bending_angle, offline_nrechits, offline_nlayers))
+                        #file_out.write("    Online segment: Chamber = %d: , Eta Partition = %d, Center Strip = %.4f, Bending angle = %.4f, ID = %d, Hit count = %d, Layer count = %d, Quality = %d\n"%(st_chamber, online_eta_partition, online_substrip, online_bending_angle, online_id, online_hc, online_lc, online_quality))
+                        #file_out.write("\n")
+                    break
+
+            # If no match in the correct BX, look in other BXs
+            if not seg_match:
+                for bx_i, bx_offset in enumerate(bx_offset_windows):
+
+                    # Skip BX=0, since it was already checked
+                    if bx_i == bx_offset_0_index:
+                        continue
+
+                    for (j,seg) in enumerate(seglist_final[offline_chamber][bx_i]):
+
+                        # If this online segment has already matched to another offline segment, skip it
+                        if seg in online_segs_matched:
+                            continue
+
+                        online_eta_partition = seg.partition
+                        online_substrip = seg.substrip+seg.strip
+                        online_bending_angle = seg.bend_ang
+                        online_id = seg.id
+                        online_hc = seg.hc
+                        online_lc = seg.lc
+                        online_quality = seg.quality
+
+                        if abs(online_eta_partition - offline_eta_partition)<=1 and abs(online_substrip - offline_substrip) <= 5: # Match criteria for partition and strip
+
+                            # bending_angle_err = abs(offline_bending_angle) if (online_bending_angle == 0) else abs((offline_bending_angle - online_bending_angle)/online_bending_angle)
+
+                            # Update matched matrix, to prevent a single online segment from matching with multiple offline segments
+                            seg_match = True
+                            online_segs_matched.append(seg)
+                            #if verbose:
+                                #file_out.write("    Offline segment: Chamber = %d: , Eta Partition = %d, Center Strip = %.4f, Bending angle = %.4f, Hit count = %d, Layer_count = %d\n"%(offline_chamber, offline_eta_partition, offline_substrip, offline_bending_angle, offline_nrechits, offline_nlayers))
+                                #file_out.write("    Online segment: Chamber = %d: , Eta Partition = %d, Center Strip = %.4f, Bending angle = %.4f, ID = %d, Hit count = %d, Layer count = %d, Quality = %d\n"%(st_chamber, online_eta_partition, online_substrip, online_bending_angle, online_id, online_hc, online_lc, online_quality))
+                                #file_out.write("\n")
+                            break
+
+                    # If a track was matched in one BX, skip the rest to avoid multiple online segments matching to one simtrack
+                    if seg_match:
                         break
-            if seg_match == 0:
+
+            if seg_match:
+                n_offline_effi_passed += 1
+
+                # Match found, fill histograms
+                offline_effi_passed_bending.Fill(offline_bending_angle)
+                offline_effi_passed_eta.Fill(offline_eta_partition)
+                offline_effi_passed_id.Fill(online_id)
+                offline_effi_mres.Fill(offline_bending_angle - online_bending_angle)
+                offline_effi_sres.Fill(offline_substrip - online_substrip)                
+            else:
                 unmatched_offline_index.append(i)
             
         #if verbose:
@@ -790,6 +872,10 @@ def analysis(root_dat, hits, bx, bx_list, cross_part, verbose, pu, num_or):
         if verbose:
             file_out.write("  SimTrack - Online Segment Matching: \n")
         unmatched_st_index = []
+
+        # Matrix to track matched online segments. Online segments can only match to one simtrack.
+        online_tracks_matched = []
+
         # Checking efficiency w.r.t sim tracks
         for i in range(0, n_me0_track):
             st_chamber = track_chamber_nr[i]
@@ -826,15 +912,15 @@ def analysis(root_dat, hits, bx, bx_list, cross_part, verbose, pu, num_or):
 
             n_st_effi_total += 1
 
-            track_match = 0
-            track_matched_index = []
-            if (len(online_segment_chamber[st_chamber]) == 0):
-                unmatched_st_index.append(i)
-                continue
+            track_match = False
 
-            for (j,seg) in enumerate(online_segment_chamber[st_chamber]):
-                if j in track_matched_index:
+            # First, try to match in correct BX
+            for (j,seg) in enumerate(seglist_final[st_chamber][bx_offset_0_index]):
+
+                # If this online segment has already matched to another simtrack, skip it
+                if seg in online_tracks_matched:
                     continue
+
                 online_eta_partition = seg.partition
                 online_substrip = seg.substrip+seg.strip
                 online_bending_angle = seg.bend_ang
@@ -842,208 +928,132 @@ def analysis(root_dat, hits, bx, bx_list, cross_part, verbose, pu, num_or):
                 online_hc = seg.hc
                 online_lc = seg.lc
                 online_quality = seg.quality
-                if abs(online_eta_partition - st_eta_partition)<=1:
-                #if online_eta_partition == st_eta_partition:
-                    #if online_bending_angle == 0:
-                    #    bending_angle_err = abs(st_bending_angle)
-                    #else:
-                    #    bending_angle_err = abs((st_bending_angle - online_bending_angle)/online_bending_angle)
-                    if abs(online_substrip - st_substrip) <= 5: # match criteria for strip
-                        #if bending_angle_err < 0.4 or abs(online_bending_angle - st_bending_angle) <= 0.6: # match criteria for bending angle
-                        st_effi_passed_bending.Fill(st_bending_angle)
-                        st_effi_passed_pt.Fill(st_pt)
-                        if st_eta_partition <= 3:
-                            st_effi_eta_low_passed_pt.Fill(st_pt)
-                        else:
-                            st_effi_eta_high_passed_pt.Fill(st_pt)
-                        st_effi_passed_pt_eta.Fill(st_pt, st_eta_partition+1)
-                        st_effi_passed_eta.Fill(st_eta_partition+1)
-                        st_effi_passed_id.Fill(online_id)
 
-                        online_seg_sim_track_matched_pt.append(st_pt)
-                        online_seg_sim_track_matched_bending_angle.append(online_bending_angle)
+                if abs(online_eta_partition - st_eta_partition)<=1 and abs(online_substrip - st_substrip) <= 5: # Match criteria for partition and strip
 
-                        '''
-                        st_effi_passed_max_cluster_size.Fill(seg.max_cluster_size)
-                        st_effi_passed_max_noise.Fill(seg.max_noise)
-                        st_effi_passed_nlayers_withcsg3.Fill(seg.nlayers_withcsg3)
-                        st_effi_passed_nlayers_withcsg5.Fill(seg.nlayers_withcsg5)
-                        st_effi_passed_nlayers_withcsg10.Fill(seg.nlayers_withcsg10)
-                        st_effi_passed_nlayers_withcsg15.Fill(seg.nlayers_withcsg15)
-                        st_effi_passed_nlayers_withnoiseg3.Fill(seg.nlayers_withnoiseg3)
-                        st_effi_passed_nlayers_withnoiseg5.Fill(seg.nlayers_withnoiseg5)
-                        st_effi_passed_nlayers_withnoiseg10.Fill(seg.nlayers_withnoiseg10)
-                        st_effi_passed_nlayers_withnoiseg15.Fill(seg.nlayers_withnoiseg15)
-                        '''
+                    # bending_angle_err = abs(offline_bending_angle) if (online_bending_angle == 0) else abs((offline_bending_angle - online_bending_angle)/online_bending_angle)
+                    #if bending_angle_err < 0.4 or abs(online_bending_angle - st_bending_angle) <= 0.6: # match criteria for bending angle
 
-                        if online_id == 1:
-                            st_effi_passed_pt1.Fill(st_pt)
-                        elif online_id == 2:
-                            st_effi_passed_pt2.Fill(st_pt)
-                        elif online_id == 3:
-                            st_effi_passed_pt3.Fill(st_pt)
-                        elif online_id == 4:
-                            st_effi_passed_pt4.Fill(st_pt)
-                        elif online_id == 5:
-                            st_effi_passed_pt5.Fill(st_pt)
-                        elif online_id == 6:
-                            st_effi_passed_pt6.Fill(st_pt)
-                        elif online_id == 7:
-                            st_effi_passed_pt7.Fill(st_pt)
-                        elif online_id == 8:
-                            st_effi_passed_pt8.Fill(st_pt)
-                        elif online_id == 9:
-                            st_effi_passed_pt9.Fill(st_pt)
-                        elif online_id == 10:
-                            st_effi_passed_pt10.Fill(st_pt)
-                        elif online_id == 11:
-                            st_effi_passed_pt11.Fill(st_pt)
-                        elif online_id == 12:
-                            st_effi_passed_pt12.Fill(st_pt)
-                        elif online_id == 13:
-                            st_effi_passed_pt13.Fill(st_pt)
-                        elif online_id == 14:
-                            st_effi_passed_pt14.Fill(st_pt)
-                        elif online_id == 15:
-                            st_effi_passed_pt15.Fill(st_pt)
-                        elif online_id == 16:
-                            st_effi_passed_pt16.Fill(st_pt)
-                        elif online_id == 17:
-                            st_effi_passed_pt17.Fill(st_pt)
+                    track_match = True
+                    online_tracks_matched.append(seg)
+                    n_segs_matched_by_bx[bx_offset_0_index] += 1
+                    if verbose:
+                        file_out.write("    Sim Track: Chamber = %d: , Eta Partition = %d, Center Strip = %.4f, Bending angle = %.4f, Hit count = %d, Layer_count = %d, pT = %.4f\n"%(st_chamber, st_eta_partition, st_substrip, st_bending_angle, st_nrechits, st_nlayers, st_pt))
+                        file_out.write("    Online segment: Chamber = %d: , Eta Partition = %d, Center Strip = %.4f, Bending angle = %.4f, ID = %d, Hit count = %d, Layer count = %d, Quality = %d, BX = %d\n"%(st_chamber, online_eta_partition, online_substrip, online_bending_angle, online_id, online_hc, online_lc, online_quality, 0))
+                        file_out.write("\n")
+                    break
 
-                        num_signal_seg_per_chamber_per_event_bending.Fill(online_bending_angle)
-                        if online_id == 1:
-                            num_signal_seg_per_chamber_per_event_bending1.Fill(online_bending_angle)
-                        elif online_id == 2:
-                            num_signal_seg_per_chamber_per_event_bending2.Fill(online_bending_angle)
-                        elif online_id == 3:
-                            num_signal_seg_per_chamber_per_event_bending3.Fill(online_bending_angle)
-                        elif online_id == 4:
-                            num_signal_seg_per_chamber_per_event_bending4.Fill(online_bending_angle)
-                        elif online_id == 5:
-                            num_signal_seg_per_chamber_per_event_bending5.Fill(online_bending_angle)
-                        elif online_id == 6:
-                            num_signal_seg_per_chamber_per_event_bending6.Fill(online_bending_angle)
-                        elif online_id == 7:
-                            num_signal_seg_per_chamber_per_event_bending7.Fill(online_bending_angle)
-                        elif online_id == 8:
-                            num_signal_seg_per_chamber_per_event_bending8.Fill(online_bending_angle)
-                        elif online_id == 9:
-                            num_signal_seg_per_chamber_per_event_bending9.Fill(online_bending_angle)
-                        elif online_id == 10:
-                            num_signal_seg_per_chamber_per_event_bending10.Fill(online_bending_angle)
-                        elif online_id == 11:
-                            num_signal_seg_per_chamber_per_event_bending11.Fill(online_bending_angle)
-                        elif online_id == 12:
-                            num_signal_seg_per_chamber_per_event_bending12.Fill(online_bending_angle)
-                        elif online_id == 13:
-                            num_signal_seg_per_chamber_per_event_bending13.Fill(online_bending_angle)
-                        elif online_id == 14:
-                            num_signal_seg_per_chamber_per_event_bending14.Fill(online_bending_angle)
-                        elif online_id == 15:
-                            num_signal_seg_per_chamber_per_event_bending15.Fill(online_bending_angle)
-                        elif online_id == 16:
-                            num_signal_seg_per_chamber_per_event_bending16.Fill(online_bending_angle)
-                        elif online_id == 17:
-                            num_signal_seg_per_chamber_per_event_bending17.Fill(online_bending_angle)
-                        if (online_eta_partition+1) == 1:
-                            num_signal_seg_per_chamber_per_event_bending_eta1.Fill(online_bending_angle)
-                        elif (online_eta_partition+1) == 2:
-                            num_signal_seg_per_chamber_per_event_bending_eta2.Fill(online_bending_angle)
-                        elif (online_eta_partition+1) == 3:
-                            num_signal_seg_per_chamber_per_event_bending_eta3.Fill(online_bending_angle)
-                        elif (online_eta_partition+1) == 4:
-                            num_signal_seg_per_chamber_per_event_bending_eta4.Fill(online_bending_angle)
-                        elif (online_eta_partition+1) == 5:
-                            num_signal_seg_per_chamber_per_event_bending_eta5.Fill(online_bending_angle)
-                        elif (online_eta_partition+1) == 6:
-                            num_signal_seg_per_chamber_per_event_bending_eta6.Fill(online_bending_angle)
-                        elif (online_eta_partition+1) == 7:
-                            num_signal_seg_per_chamber_per_event_bending_eta7.Fill(online_bending_angle)
-                        elif (online_eta_partition+1) == 8:
-                            num_signal_seg_per_chamber_per_event_bending_eta8.Fill(online_bending_angle)
+            # Then, try to match in other BXs
+            if not track_match:
+                for bx_i, bx_offset in enumerate(bx_offset_windows):
 
-                        num_signal_seg_per_chamber_per_event_nlayers.Fill(online_lc)
-                        if online_id == 1:
-                            num_signal_seg_per_chamber_per_event_nlayers1.Fill(online_lc)
-                        elif online_id == 2:
-                            num_signal_seg_per_chamber_per_event_nlayers2.Fill(online_lc)
-                        elif online_id == 3:
-                            num_signal_seg_per_chamber_per_event_nlayers3.Fill(online_lc)
-                        elif online_id == 4:
-                            num_signal_seg_per_chamber_per_event_nlayers4.Fill(online_lc)
-                        elif online_id == 5:
-                            num_signal_seg_per_chamber_per_event_nlayers5.Fill(online_lc)
-                        elif online_id == 6:
-                            num_signal_seg_per_chamber_per_event_nlayers6.Fill(online_lc)
-                        elif online_id == 7:
-                            num_signal_seg_per_chamber_per_event_nlayers7.Fill(online_lc)
-                        elif online_id == 8:
-                            num_signal_seg_per_chamber_per_event_nlayers8.Fill(online_lc)
-                        elif online_id == 9:
-                            num_signal_seg_per_chamber_per_event_nlayers9.Fill(online_lc)
-                        elif online_id == 10:
-                            num_signal_seg_per_chamber_per_event_nlayers10.Fill(online_lc)
-                        elif online_id == 11:
-                            num_signal_seg_per_chamber_per_event_nlayers11.Fill(online_lc)
-                        elif online_id == 12:
-                            num_signal_seg_per_chamber_per_event_nlayers12.Fill(online_lc)
-                        elif online_id == 13:
-                            num_signal_seg_per_chamber_per_event_nlayers13.Fill(online_lc)
-                        elif online_id == 14:
-                            num_signal_seg_per_chamber_per_event_nlayers14.Fill(online_lc)
-                        elif online_id == 15:
-                            num_signal_seg_per_chamber_per_event_nlayers15.Fill(online_lc)
-                        elif online_id == 16:
-                            num_signal_seg_per_chamber_per_event_nlayers16.Fill(online_lc)
-                        elif online_id == 17:
-                            num_signal_seg_per_chamber_per_event_nlayers17.Fill(online_lc)
-                        if (online_eta_partition+1) == 1:
-                            num_signal_seg_per_chamber_per_event_nlayers_eta1.Fill(online_lc)
-                        elif (online_eta_partition+1) == 2:
-                            num_signal_seg_per_chamber_per_event_nlayers_eta2.Fill(online_lc)
-                        elif (online_eta_partition+1) == 3:
-                            num_signal_seg_per_chamber_per_event_nlayers_eta3.Fill(online_lc)
-                        elif (online_eta_partition+1) == 4:
-                            num_signal_seg_per_chamber_per_event_nlayers_eta4.Fill(online_lc)
-                        elif (online_eta_partition+1) == 5:
-                            num_signal_seg_per_chamber_per_event_nlayers_eta5.Fill(online_lc)
-                        elif (online_eta_partition+1) == 6:
-                            num_signal_seg_per_chamber_per_event_nlayers_eta6.Fill(online_lc)
-                        elif (online_eta_partition+1) == 7:
-                            num_signal_seg_per_chamber_per_event_nlayers_eta7.Fill(online_lc)
-                        elif (online_eta_partition+1) == 8:
-                            num_signal_seg_per_chamber_per_event_nlayers_eta8.Fill(online_lc)
+                    # Skip BX=0, since it was already checked
+                    if bx_i == bx_offset_0_index:
+                        continue
 
-                        num_signal_seg_per_chamber_per_event_bending_pt.Fill(online_bending_angle, st_pt)
-                        if (online_eta_partition+1) == 1:
-                            num_signal_seg_per_chamber_per_event_bending_pt_eta1.Fill(online_bending_angle, st_pt)
-                        elif (online_eta_partition+1) == 2:
-                            num_signal_seg_per_chamber_per_event_bending_pt_eta2.Fill(online_bending_angle, st_pt)
-                        elif (online_eta_partition+1) == 3:
-                            num_signal_seg_per_chamber_per_event_bending_pt_eta3.Fill(online_bending_angle, st_pt)
-                        elif (online_eta_partition+1) == 4:
-                            num_signal_seg_per_chamber_per_event_bending_pt_eta4.Fill(online_bending_angle, st_pt)
-                        elif (online_eta_partition+1) == 5:
-                            num_signal_seg_per_chamber_per_event_bending_pt_eta5.Fill(online_bending_angle, st_pt)
-                        elif (online_eta_partition+1) == 6:
-                            num_signal_seg_per_chamber_per_event_bending_pt_eta6.Fill(online_bending_angle, st_pt)
-                        elif (online_eta_partition+1) == 7:
-                            num_signal_seg_per_chamber_per_event_bending_pt_eta7.Fill(online_bending_angle, st_pt)
-                        elif (online_eta_partition+1) == 8:
-                            num_signal_seg_per_chamber_per_event_bending_pt_eta8.Fill(online_bending_angle, st_pt)
+                    for (j,seg) in enumerate(seglist_final[st_chamber][bx_i]):
 
-                        n_st_effi_passed += 1
-                        st_effi_mres.Fill(st_bending_angle - online_bending_angle)
-                        st_effi_sres.Fill(st_substrip - online_substrip)
-                        track_match = 1
-                        track_matched_index.append(j)
-                        if verbose:
-                            file_out.write("    Sim Track: Chamber = %d: , Eta Partition = %d, Center Strip = %.4f, Bending angle = %.4f, Hit count = %d, Layer_count = %d, pT = %.4f\n"%(st_chamber, st_eta_partition, st_substrip, st_bending_angle, st_nrechits, st_nlayers, st_pt))
-                            file_out.write("    Online segment: Chamber = %d: , Eta Partition = %d, Center Strip = %.4f, Bending angle = %.4f, ID = %d, Hit count = %d, Layer count = %d, Quality = %d\n"%(st_chamber, online_eta_partition, online_substrip, online_bending_angle, online_id, online_hc, online_lc, online_quality))
-                            file_out.write("\n")
+                        # If this online segment has already matched to another simtrack, skip it
+                        if seg in online_tracks_matched:
+                            continue
+
+                        online_eta_partition = seg.partition
+                        online_substrip = seg.substrip+seg.strip
+                        online_bending_angle = seg.bend_ang
+                        online_id = seg.id
+                        online_hc = seg.hc
+                        online_lc = seg.lc
+                        online_quality = seg.quality
+
+                        if abs(online_eta_partition - st_eta_partition)<=1 and abs(online_substrip - st_substrip) <= 5: # Match criteria for partition and strip
+
+                            # bending_angle_err = abs(offline_bending_angle) if (online_bending_angle == 0) else abs((offline_bending_angle - online_bending_angle)/online_bending_angle)
+                            #if bending_angle_err < 0.4 or abs(online_bending_angle - st_bending_angle) <= 0.6: # match criteria for bending angle
+
+                            track_match = True
+                            online_tracks_matched.append(seg)
+                            n_segs_matched_by_bx[bx_i] += 1
+
+                            if verbose:
+                                file_out.write("    Sim Track: Chamber = %d: , Eta Partition = %d, Center Strip = %.4f, Bending angle = %.4f, Hit count = %d, Layer_count = %d, pT = %.4f\n"%(st_chamber, st_eta_partition, st_substrip, st_bending_angle, st_nrechits, st_nlayers, st_pt))
+                                file_out.write("    Online segment: Chamber = %d: , Eta Partition = %d, Center Strip = %.4f, Bending angle = %.4f, ID = %d, Hit count = %d, Layer count = %d, Quality = %d, BX = %d\n"%(st_chamber, online_eta_partition, online_substrip, online_bending_angle, online_id, online_hc, online_lc, online_quality, bx_offset))
+                                file_out.write("\n")
+                            break
+                    
+                    # If a track was matched in one BX, skip the rest to avoid multiple online segments matching to one simtrack
+                    if track_match:
                         break
-            if track_match == 0:
+
+            if track_match:
+                st_effi_passed_bending.Fill(st_bending_angle)
+                st_effi_passed_pt.Fill(st_pt)
+                if st_eta_partition <= 3:
+                    st_effi_eta_low_passed_pt.Fill(st_pt)
+                else:
+                    st_effi_eta_high_passed_pt.Fill(st_pt)
+                st_effi_passed_pt_eta.Fill(st_pt, st_eta_partition+1)
+                st_effi_passed_eta.Fill(st_eta_partition+1)
+                st_effi_passed_id.Fill(online_id)
+
+                online_seg_sim_track_matched_pt.append(st_pt)
+                online_seg_sim_track_matched_bending_angle.append(online_bending_angle)
+
+                '''
+                st_effi_passed_max_cluster_size.Fill(seg.max_cluster_size)
+                st_effi_passed_max_noise.Fill(seg.max_noise)
+                st_effi_passed_nlayers_withcsg3.Fill(seg.nlayers_withcsg3)
+                st_effi_passed_nlayers_withcsg5.Fill(seg.nlayers_withcsg5)
+                st_effi_passed_nlayers_withcsg10.Fill(seg.nlayers_withcsg10)
+                st_effi_passed_nlayers_withcsg15.Fill(seg.nlayers_withcsg15)
+                st_effi_passed_nlayers_withnoiseg3.Fill(seg.nlayers_withnoiseg3)
+                st_effi_passed_nlayers_withnoiseg5.Fill(seg.nlayers_withnoiseg5)
+                st_effi_passed_nlayers_withnoiseg10.Fill(seg.nlayers_withnoiseg10)
+                st_effi_passed_nlayers_withnoiseg15.Fill(seg.nlayers_withnoiseg15)
+                '''
+                st_effi_passed_list = [st_effi_passed_pt1, st_effi_passed_pt2, st_effi_passed_pt3, st_effi_passed_pt4, st_effi_passed_pt5, st_effi_passed_pt6,
+                                        st_effi_passed_pt7, st_effi_passed_pt8, st_effi_passed_pt9, st_effi_passed_pt10, st_effi_passed_pt11, st_effi_passed_pt12,
+                                        st_effi_passed_pt13, st_effi_passed_pt14, st_effi_passed_pt15, st_effi_passed_pt16, st_effi_passed_pt17]
+                st_effi_passed_list[online_id-1].Fill(st_pt)
+
+                num_signal_seg_per_chamber_per_event_bending.Fill(online_bending_angle)
+                
+                num_signal_seg_per_chamber_per_event_bending_list = [num_signal_seg_per_chamber_per_event_bending1, num_signal_seg_per_chamber_per_event_bending2, num_signal_seg_per_chamber_per_event_bending3, num_signal_seg_per_chamber_per_event_bending4, num_signal_seg_per_chamber_per_event_bending5, num_signal_seg_per_chamber_per_event_bending6,
+                                                                    num_signal_seg_per_chamber_per_event_bending7, num_signal_seg_per_chamber_per_event_bending8, num_signal_seg_per_chamber_per_event_bending9, num_signal_seg_per_chamber_per_event_bending10, num_signal_seg_per_chamber_per_event_bending11, num_signal_seg_per_chamber_per_event_bending12,
+                                                                    num_signal_seg_per_chamber_per_event_bending13, num_signal_seg_per_chamber_per_event_bending14, num_signal_seg_per_chamber_per_event_bending15, num_signal_seg_per_chamber_per_event_bending16, num_signal_seg_per_chamber_per_event_bending17]
+                num_signal_seg_per_chamber_per_event_bending_list[online_id-1].Fill(online_bending_angle)
+
+                num_signal_seg_per_chamber_per_event_bending_eta_list = [num_signal_seg_per_chamber_per_event_bending_eta1, num_signal_seg_per_chamber_per_event_bending_eta2,
+                                                                            num_signal_seg_per_chamber_per_event_bending_eta3, num_signal_seg_per_chamber_per_event_bending_eta4,
+                                                                            num_signal_seg_per_chamber_per_event_bending_eta5, num_signal_seg_per_chamber_per_event_bending_eta6,
+                                                                            num_signal_seg_per_chamber_per_event_bending_eta7, num_signal_seg_per_chamber_per_event_bending_eta8]                        
+                num_signal_seg_per_chamber_per_event_bending_eta_list[online_eta_partition+1-1].Fill(online_bending_angle)
+
+                num_signal_seg_per_chamber_per_event_nlayers.Fill(online_lc)
+
+                num_signal_seg_per_chamber_per_event_nlayers_list = [num_signal_seg_per_chamber_per_event_nlayers1, num_signal_seg_per_chamber_per_event_nlayers2, num_signal_seg_per_chamber_per_event_nlayers3,
+                                                                        num_signal_seg_per_chamber_per_event_nlayers4, num_signal_seg_per_chamber_per_event_nlayers5, num_signal_seg_per_chamber_per_event_nlayers6,
+                                                                        num_signal_seg_per_chamber_per_event_nlayers7, num_signal_seg_per_chamber_per_event_nlayers8, num_signal_seg_per_chamber_per_event_nlayers9,
+                                                                        num_signal_seg_per_chamber_per_event_nlayers10, num_signal_seg_per_chamber_per_event_nlayers11, num_signal_seg_per_chamber_per_event_nlayers12,
+                                                                        num_signal_seg_per_chamber_per_event_nlayers13, num_signal_seg_per_chamber_per_event_nlayers14, num_signal_seg_per_chamber_per_event_nlayers15,
+                                                                        num_signal_seg_per_chamber_per_event_nlayers16, num_signal_seg_per_chamber_per_event_nlayers17]
+                num_signal_seg_per_chamber_per_event_nlayers_list[online_id-1].Fill(online_lc)
+
+                num_signal_seg_per_chamber_per_event_nlayers_eta_list = [num_signal_seg_per_chamber_per_event_nlayers_eta1, num_signal_seg_per_chamber_per_event_nlayers_eta2, num_signal_seg_per_chamber_per_event_nlayers_eta3,
+                                                                            num_signal_seg_per_chamber_per_event_nlayers_eta4, num_signal_seg_per_chamber_per_event_nlayers_eta5, num_signal_seg_per_chamber_per_event_nlayers_eta6,
+                                                                            num_signal_seg_per_chamber_per_event_nlayers_eta7, num_signal_seg_per_chamber_per_event_nlayers_eta8]
+                num_signal_seg_per_chamber_per_event_nlayers_eta_list[online_eta_partition+1-1].Fill(online_lc)
+
+                num_signal_seg_per_chamber_per_event_bending_pt.Fill(online_bending_angle, st_pt)
+
+                num_signal_seg_per_chamber_per_event_bending_pt_eta_list = [num_signal_seg_per_chamber_per_event_bending_pt_eta1, num_signal_seg_per_chamber_per_event_bending_pt_eta2, num_signal_seg_per_chamber_per_event_bending_pt_eta3,
+                                                                        num_signal_seg_per_chamber_per_event_bending_pt_eta4, num_signal_seg_per_chamber_per_event_bending_pt_eta5, num_signal_seg_per_chamber_per_event_bending_pt_eta6,
+                                                                        num_signal_seg_per_chamber_per_event_bending_pt_eta7, num_signal_seg_per_chamber_per_event_bending_pt_eta8]
+                num_signal_seg_per_chamber_per_event_bending_pt_eta_list[online_eta_partition+1-1].Fill(online_bending_angle, st_pt)
+
+                n_st_effi_passed += 1
+                st_effi_mres.Fill(st_bending_angle - online_bending_angle)
+                st_effi_sres.Fill(st_substrip - online_substrip)
+            else:
                 unmatched_st_index.append(i)
             
         if verbose:
@@ -1052,11 +1062,16 @@ def analysis(root_dat, hits, bx, bx_list, cross_part, verbose, pu, num_or):
                 file_out.write("    Chamber = %d: , Eta Partition = %d, Center Strip = %.4f, Bending angle = %.4f, Hit count = %d, Layer_count = %d, pT = %.4f\n"%(track_chamber_nr[i], track_eta_partition[i], track_substrip[i], track_bending_angle[i], track_nhits[i], track_nlayers[i], track_pt[i]))
             file_out.write("\n\n")
 
+        # Only allow each simtrack to match to one online segment
+        matched_matrix = [False]*n_me0_track
+
         # Checking Purity w.r.t sim tracks and offline segments
-        for chamber in online_segment_chamber: 
+        for chamber in range(len(seglist_final)): 
             n_bkg_seg = 0
             n_signal_seg = 0
-            for seg in online_segment_chamber[chamber]:
+
+            # Only use central BX for purity and rates
+            for seg in seglist_final[chamber][bx_offset_0_index]:
                 online_eta_partition = seg.partition
                 online_substrip = seg.substrip+seg.strip
                 online_bending_angle = seg.bend_ang
@@ -1105,6 +1120,10 @@ def analysis(root_dat, hits, bx, bx_list, cross_part, verbose, pu, num_or):
 
                 match_found = 0
                 for i in range(0, n_me0_track):
+
+                    if matched_matrix[i]:
+                        continue
+
                     st_chamber = track_chamber_nr[i]
                     st_eta_partition = track_eta_partition[i]
                     st_bending_angle = track_bending_angle[i]
@@ -1132,6 +1151,7 @@ def analysis(root_dat, hits, bx, bx_list, cross_part, verbose, pu, num_or):
                             st_purity_passed_nlayers_withnoiseg10.Fill(seg.nlayers_withnoiseg10)
                             st_purity_passed_nlayers_withnoiseg15.Fill(seg.nlayers_withnoiseg15)
                             '''
+                            matched_matrix[i] = True
                             n_st_purity_passed += 1
                             match_found = 1
                             break
@@ -1278,12 +1298,12 @@ def analysis(root_dat, hits, bx, bx_list, cross_part, verbose, pu, num_or):
         if verbose:
             file_out_summary.write("  Online Segments: \n")
             for chamber in range(0, 36):
-                if len(online_segment_chamber[chamber]) == 0:
+                if len(seglist_final[chamber][bx_offset_0_index]) == 0:
                     continue
                 file_out_summary.write("    Chamber %d: "%chamber)
                 eta_partition_list = []
                 pattern_id_list = []
-                for seg in online_segment_chamber[chamber]:
+                for seg in seglist_final[chamber][bx_offset_0_index]:
                     eta_partition_list.append(seg.partition)
                     pattern_id_list.append(seg.id)
                 eta_partition_pattern_id_zip = zip(eta_partition_list, pattern_id_list)
@@ -1381,6 +1401,19 @@ def analysis(root_dat, hits, bx, bx_list, cross_part, verbose, pu, num_or):
     rate_offline_with_ff_signal_seg_per_chamber_per_event = (n_offline_signal_seg_per_chamber_per_event*1000*0.7710) / (25.0)
     print ("Rate of offline signal segments per chamber per event (with fill factor of 0.7710) = %.4f MHz\n"%rate_offline_with_ff_signal_seg_per_chamber_per_event)
     file_out.write("Rate of offline signal segments per chamber per event (with fill factor of 0.7710) = %.4f MHz\n\n"%rate_offline_with_ff_signal_seg_per_chamber_per_event)
+
+
+    for i, num_segs in enumerate(n_segs_matched_by_bx):
+        print(f"Number of matched online segs in BX = {bx_offset_windows[i]}: {n_segs_matched_by_bx}")
+    print("\n")
+
+    for bx, num_segs in enumerate(n_segs_total_by_bx):
+        print(f"Number of total online segs in BX = {bx_offset_windows[bx]}:" + str(num_segs) + "\n")
+
+    temp_abcd = n_signal_seg_per_chamber_per_event * (36.0*n_total_events)
+    print("Total number of matched online segs: %d\n"%temp_abcd)
+
+    print(f"Total number of simtracks: {n_simtracks_total}")
 
     sys.exit()
 

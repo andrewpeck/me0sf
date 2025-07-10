@@ -213,7 +213,7 @@ def pat_unit(data,
     else:
         bit_count_arr = np.bitwise_count(masked_data)
 
-    if config.enable_vectoring:
+    if config.vectoring_enabled:
         config.vector_manager.vectors[partition,strip,0] = config.vector_manager.vectors[partition,strip,1]
         config.vector_manager.vectors[partition,strip,1] = config.vector_manager.vectors[partition,strip,2]
         config.vector_manager.vectors[partition,strip,2] = masked_data > 0 # 17x6 array; each row is a pattern, indicating whether layer X was hit
@@ -349,8 +349,6 @@ def pat_unit(data,
 
     #print("id is: " + str(best.id))
     #print("threshold is: " + str(ly_thresh[best.id]))
-    
-    best.partition=partition
 
     # debug output
     if verbose:

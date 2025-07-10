@@ -9,10 +9,8 @@ LAYER_MASK = None
 
 class Peaking_Manager:
     def __init__(self):
-        self.segs = [[Segment(0,0) for _ in range(192)] for _ in range(15)]       
-
-    def reset(self):
         self.segs = [[Segment(0,0) for _ in range(192)] for _ in range(15)]
+        self.trigger = [[False for _ in range(192)] for _ in range(15)]
 
 class Vector_Manager:
     def __init__(self):
@@ -22,9 +20,14 @@ class Vector_Manager:
         self.vectors = [[[[0]*6 for _ in range(17)] for _ in range(192)] for _ in range(15)]
  
 class Config:
-    def __init__(self):
+
+    def start_peaking_manager(self):
         self.peaking_manager = Peaking_Manager()
+        self.peaking_enabled = True
+
+    def start_vectoring_manager(self):
         self.vector_manager = Vector_Manager()
+        self.vectoring_enabled = True
 
     skip_centroids : bool = False
     ly_thresh_patid : list[int] = [7, 7, 7, 7, 7, 7, 7, 7, 7, 7, 5, 5, 4, 4, 4, 4, 4]
@@ -42,8 +45,8 @@ class Config:
     check_ids : bool = False
     edge_distance : int = 2
     num_or : int = 2
-    disable_peaking : bool = True
-    enable_vectoring : bool = False
+    peaking_enabled : bool = False
+    vectoring_enabled : bool = False
 
 
 class hi_lo_t:

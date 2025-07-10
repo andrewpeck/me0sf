@@ -52,12 +52,11 @@ def pat_mux(partition_data, partition, config : Config, partition_bx_data):
                                  partition = partition, 
                                  input_max_span = config.max_span,
                                  skip_centroids = config.skip_centroids,
-                                 num_or = config.num_or,
-                                 enable_vectoring = config.enable_vectoring)
+                                 num_or = config.num_or)
 
     new_segs = [fn(x) for x in range(config.width)]
 
-    if config.disable_peaking:
+    if not config.peaking_enabled:
         return new_segs
     
     # Peaking logic
@@ -65,8 +64,24 @@ def pat_mux(partition_data, partition, config : Config, partition_bx_data):
     old_segs = config.peaking_manager.segs[partition]
 
     # If a pattern unit has a worse segment than the previous bx, output the old segment (at its peak quality)
-    out_list = [old_segs[i] if old_segs[i].lc > new_segs[i].lc else Segment(0, 0) for i in range(config.width)]
+    # out_list = [old_segs[i] if old_segs[i].lc > new_segs[i].lc else Segment(0, 0) for i in range(config.width)]
+    # out_list = [old_segs[i] if new_segs[i].lc == 0 else Segment(0, 0) for i in range(config.width)]
+    # out_list = [new_segs[i] if old_segs[i].lc == 0 and new_segs[i].lc > 0 else Segment(0, 0) for i in range(config.width)]
 
+    out_list = [Segment(0,0) for _ in range(config.width)]
+
+    # For each pattern unit
+    for i in range(config.width):
+        # If we triggered, output something
+        if config.peaking_manager.trigger[partition][i]:
+            # If we still have something, output that
+            if new_segs[i].lc > 0:
+                out_list[i] = new_segs[i]
+            # Otherwise, output at least something (what we saw when we trigger, even if it would be out of time)
+            else:
+                out_list[i] = old_segs[i]
+
+    config.peaking_manager.trigger[partition] = [True if old_segs[i].lc == 0 and new_segs[i].lc > 0 else False for i in range(config.width)]
 
     #     # If a pattern unit has a worse segment than the previous bx, output the old segment (at its peak quality)
     # out_list = []
