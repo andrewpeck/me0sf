@@ -61,42 +61,24 @@ def pat_mux(partition_data, partition, config : Config, partition_bx_data):
     
     # Peaking logic
     
-    old_segs = config.peaking_manager.segs[partition]
-
-    # If a pattern unit has a worse segment than the previous bx, output the old segment (at its peak quality)
-    # out_list = [old_segs[i] if old_segs[i].lc > new_segs[i].lc else Segment(0, 0) for i in range(config.width)]
-    # out_list = [old_segs[i] if new_segs[i].lc == 0 else Segment(0, 0) for i in range(config.width)]
-    # out_list = [new_segs[i] if old_segs[i].lc == 0 and new_segs[i].lc > 0 else Segment(0, 0) for i in range(config.width)]
+    segs_oldest = config.peaking_manager.segs[0][partition]
+    segs_old = config.peaking_manager.segs[1][partition]
 
     out_list = [Segment(0,0) for _ in range(config.width)]
 
-    # For each pattern unit
-    for i in range(config.width):
-        # If we triggered, output something
-        if config.peaking_manager.trigger[partition][i]:
-            # If we still have something, output that
-            if new_segs[i].lc > 0:
-                out_list[i] = new_segs[i]
-            # Otherwise, output at least something (what we saw when we trigger, even if it would be out of time)
-            else:
-                out_list[i] = old_segs[i]
-
-    config.peaking_manager.trigger[partition] = [True if old_segs[i].lc == 0 and new_segs[i].lc > 0 else False for i in range(config.width)]
-
-    #     # If a pattern unit has a worse segment than the previous bx, output the old segment (at its peak quality)
-    # out_list = []
+    # Big increase metric
     # for i in range(config.width):
-    #     if old_segs[i].lc > new_segs[i].lc:
-    #         out_list.append(old_segs[i])
-    #         new_segs[i].reset() # deadtime of 1 BX if seg is read out
-    #     else:
-    #         out_list.append(Segment(0, 0))
+    #     if segs_oldest[i].lc == 0 and segs_old[i].lc > 0:
+    #         out_list[i] = new_segs[i] if new_segs[i].lc > 0 else segs_old[i]
 
-    # # Update the peaking manager
-    # config.peaking_manager.segs[partition] = new_segs
+    # Big decrease metric
+    for i in range(config.width):
+        if segs_old[i].lc > 0 and new_segs[i].lc == 0:
+            out_list[i] = segs_oldest[i] if segs_oldest[i].lc > 0 else segs_old[i]
 
     # Update the peaking manager
-    config.peaking_manager.segs[partition] = new_segs
+    config.peaking_manager.segs[0][partition] = config.peaking_manager.segs[1][partition]
+    config.peaking_manager.segs[1][partition] = new_segs
     
     return out_list
 

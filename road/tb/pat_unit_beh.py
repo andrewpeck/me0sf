@@ -213,18 +213,21 @@ def pat_unit(data,
     else:
         bit_count_arr = np.bitwise_count(masked_data)
 
+    hcs = np.sum(np.clip(bit_count_arr, a_min = None, a_max = 7), axis=1)
+
+    lcs = np.count_nonzero(masked_data, axis=1).astype(np.uint64)
+
     if config.vectoring_enabled:
-        config.vector_manager.vectors[partition,strip,0] = config.vector_manager.vectors[partition,strip,1]
-        config.vector_manager.vectors[partition,strip,1] = config.vector_manager.vectors[partition,strip,2]
-        config.vector_manager.vectors[partition,strip,2] = masked_data > 0 # 17x6 array; each row is a pattern, indicating whether layer X was hit
+        new_vectors = masked_data > 0
+
+        config.vector_manager.shift_regs(new_vectors, lcs)
+
+        # OR the 3 vectors together, for each PID
+        or_matrix = config.vector_manager.or_vectors(partition, strip)
 
         #TODO: combine ^^ 2 of those lines in a function in vector_manager
         #TODO: create function in vector_manager to OR together the 3 vectors for a given partition, strip; call it here, and use that for LCs
         #TODO: only return segment if LC for central BX is highest. break ties somehow? (maybe with HC)
-
-    hcs = np.sum(np.clip(bit_count_arr, a_min = None, a_max = 7), axis=1)
-
-    lcs = np.count_nonzero(masked_data, axis=1).astype(np.uint64)
     
     combined_segs = np.bitwise_or(np.bitwise_or(np.left_shift(lcs, np.uint8(11)), np.left_shift(hcs, np.uint(5))), pids)
     best_pid = (np.sort(combined_segs))[-1] & 2**5-1

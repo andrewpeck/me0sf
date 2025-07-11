@@ -9,15 +9,20 @@ LAYER_MASK = None
 
 class Peaking_Manager:
     def __init__(self):
-        self.segs = [[Segment(0,0) for _ in range(192)] for _ in range(15)]
+        self.segs = [[[Segment(0,0) for _ in range(192)] for _ in range(15)] for _ in range(2)]
         self.trigger = [[False for _ in range(192)] for _ in range(15)]
 
 class Vector_Manager:
     def __init__(self):
         self.vectors = np.zeros((15,192,3,17,6)) # partition, strip, bx, pid, ly
+        self.lcs = np.zeros((15,192,3,17)) # partition, strip, bx, pid
 
-    def __init__(self):
-        self.vectors = [[[[0]*6 for _ in range(17)] for _ in range(192)] for _ in range(15)]
+    def shift_regs(self, new_vectors, new_lcs):
+        self.vectors[:,:] = self.vectors[:,:,1:].append(new_vectors)
+        self.lcs[:,:] = self.lcs[:,:,1:].append(new_lcs)
+
+    def or_vectors(self, partition, strip):
+        return np.bitwise_or(np.bitwise_or(self.vectors[partition,strip,0, self.vectors[partition,strip,1]]), self.vectors[partition,strip,2])
  
 class Config:
 
