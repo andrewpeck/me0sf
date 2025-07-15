@@ -213,18 +213,30 @@ def pat_unit(data,
     else:
         bit_count_arr = np.bitwise_count(masked_data)
 
-    hcs = np.sum(np.clip(bit_count_arr, a_min = None, a_max = 7), axis=1)
+    hcs = np.sum(np.clip(bit_count_arr, a_min = None, a_max = 7), axis=1, dtype=np.uint16)
 
-    lcs = np.count_nonzero(masked_data, axis=1).astype(np.uint64)
+    lcs = np.count_nonzero(masked_data, axis=1).astype(np.uint32)
 
     if config.vectoring_enabled:
         new_vectors = masked_data > 0
 
-        config.vector_manager.shift_regs(new_vectors, lcs)
+        config.vector_manager.shift_regs(new_vectors, lcs, partition, strip)
 
         # OR the 3 vectors together, for each PID
-        or_matrix = config.vector_manager.or_vectors(partition, strip)
+        # ord_vectors = config.vector_manager.or_vectors(partition, strip)
 
+        # lcs = np.count_nonzero(ord_vectors, axis=1).astype(np.uint64)
+
+        # if np.count_nonzero(config.vector_manager.lcs[partition,strip,1]) > 0:
+        #     print(config.vector_manager.lcs[partition,strip])
+
+        # lcs = config.vector_manager.lcs[partition, strip, 1]
+
+        # Case of 2, 2, 2 and 3, 3: How to resolve? The current implementation will miss the 2,2,2 case ~=0.6% of cases
+        # for i in range(len(lcs)):
+        #     if not ((config.vector_manager.lcs[partition, strip, 1, i] >= config.vector_manager.lcs[partition, strip, 0, i]) and (config.vector_manager.lcs[partition, strip, 1, i] >= config.vector_manager.lcs[partition, strip, 2, i])):
+        #         lcs[i] = 0
+        
         #TODO: combine ^^ 2 of those lines in a function in vector_manager
         #TODO: create function in vector_manager to OR together the 3 vectors for a given partition, strip; call it here, and use that for LCs
         #TODO: only return segment if LC for central BX is highest. break ties somehow? (maybe with HC)

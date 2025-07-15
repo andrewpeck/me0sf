@@ -64,21 +64,47 @@ def pat_mux(partition_data, partition, config : Config, partition_bx_data):
     segs_oldest = config.peaking_manager.segs[0][partition]
     segs_old = config.peaking_manager.segs[1][partition]
 
-    out_list = [Segment(0,0) for _ in range(config.width)]
+    # out_list = [Segment(0,0) for _ in range(config.width)]
+    out_list = []
 
     # Big increase metric
     # for i in range(config.width):
-    #     if segs_oldest[i].lc == 0 and segs_old[i].lc > 0:
-    #         out_list[i] = new_segs[i] if new_segs[i].lc > 0 else segs_old[i]
+    #     if segs_oldest[i] is None and segs_old[i] is not None:
+    #         out_list.append(new_segs[i] if new_segs[i].lc > 0 else segs_old[i])
+
+    # Big increase metric
+    for i in range(config.width):
+        if config.peaking_manager.trigger[partition,i] == True:
+            out_list.append(segs_old[i])
+            config.peaking_manager.trigger[partition,i] = False
+
+        if segs_oldest[i] is None and segs_old[i] is not None:
+            if new_segs[i].lc == 0:
+                out_list.append(segs_old[i])
+            else:
+                config.peaking_manager.trigger[partition,i] = True
 
     # Big decrease metric
-    for i in range(config.width):
-        if segs_old[i].lc > 0 and new_segs[i].lc == 0:
-            out_list[i] = segs_oldest[i] if segs_oldest[i].lc > 0 else segs_old[i]
+    # for i in range(config.width):
+    #     if segs_old[i] is not None and new_segs[i].lc == 0:
+    #         out_list.append(segs_oldest[i] if segs_oldest[i] is not None else segs_old[i])
+    #     else:
+    #         out_list.append(Segment(0,0,0,i,partition))
+
+    # Smart metric
+    # Needs to address 3,3 (Sequence: 0, 6, 6, 0) case
+    # Currently outputs both -> ~3% increase in background (increase is from both background and signal)
+    # If this is addressed, might just be identical to big increase/decrease metrics. No need to kill the right 6 in (6,6,6)
+    # for i in range(config.width):
+    #     if segs_old[i] is not None and new_segs[i].lc == 0:
+    #         out_list.append(segs_old[i])
+    #     elif segs_oldest[i] is not None and segs_old[i] is not None and new_segs[i].lc > 0:
+    #         out_list.append(segs_old[i])
+    #         new_segs[i].lc = 0
 
     # Update the peaking manager
     config.peaking_manager.segs[0][partition] = config.peaking_manager.segs[1][partition]
-    config.peaking_manager.segs[1][partition] = new_segs
+    config.peaking_manager.segs[1][partition] = [x if x.lc > 0 else None for x in new_segs]
     
     return out_list
 

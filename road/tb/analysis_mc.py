@@ -312,6 +312,7 @@ def analysis(root_dat, hits, bx, bx_list, cross_part, verbose, pu, num_or):
     config.max_span = num_or_to_span[num_or]
     config.num_or = num_or
     config.start_peaking_manager()
+    # config.start_vectoring_manager()
 
     if pu == "140":
         config.ly_thresh_patid : list[int] = [7, 7, 7, 7, 7, 7, 7, 7, 7, 7, 5, 5, 4, 4, 4, 4, 4]
@@ -331,9 +332,9 @@ def analysis(root_dat, hits, bx, bx_list, cross_part, verbose, pu, num_or):
 
     # Determines how many and which BX offsets to look at
     # bx_offset_windows = list(range(-4, 3))# if config.peaking_enabled else [0]
-    bx_offset_windows = list(range(-1, 4))
+    bx_offset_windows = list(range(-2, 4))
     # bx_offset_0_index = bx_offset_windows.index(0) if config.peaking_enabled else bx_offset_windows.index(0)
-    bx_offset_0_index = bx_offset_windows.index(2)
+    bx_offset_0_index = bx_offset_windows.index(1)
 
     # Counters for time resolution
     n_segs_matched_by_bx = [0]*len(bx_offset_windows)
@@ -346,6 +347,10 @@ def analysis(root_dat, hits, bx, bx_list, cross_part, verbose, pu, num_or):
         if config.peaking_enabled:
             for conf in config_chams:
                 conf.start_peaking_manager()
+
+        if config.vectoring_enabled:
+            for conf in config_chams:
+                conf.start_vectoring_manager()
 
         frac_done = (ievent+1)/n_total_events
         if (frac_done - prev_frac_done) >= 0.05:
@@ -642,12 +647,12 @@ def analysis(root_dat, hits, bx, bx_list, cross_part, verbose, pu, num_or):
 
             # from printly_dat import printly_dat
 
-            # for i in [33, 34, 35]:
-            #     if np.count_nonzero(datlist[i]) > 0:
-            #         print(f"Chamber {i}:\n")
-            #         for j in range(8):
-            #             print(f"Partition {j}:\n")
-            #             printly_dat(datlist[i,j], MAX_SPAN=192)
+            # for i in [27]:
+            #     # if np.count_nonzero(datlist[i]) > 0:
+            #     print(f"Chamber {i}:\n")
+            #     for j in range(1):
+            #         print(f"Partition {j}:\n")
+            #         printly_dat(datlist[i,j], MAX_SPAN=192)
 
             print("TIMESTAMP 3: " + str(time() - start_time))
 
@@ -662,6 +667,10 @@ def analysis(root_dat, hits, bx, bx_list, cross_part, verbose, pu, num_or):
                 cham_nr, segs_out, new_config = cham
                 online_segs_cham[cham_nr, bx_i] = segs_out
                 config_chams[cham_nr] = new_config
+
+                # for seg in segs_out:
+                #     if seg.lc > 0:
+                #         print(new_config.vector_manager.lcs[seg.partition, seg.strip, :, seg.id-1])
 
         print("Time to process chambers: " + str(time() - start_time))
 

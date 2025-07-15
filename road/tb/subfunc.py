@@ -9,20 +9,20 @@ LAYER_MASK = None
 
 class Peaking_Manager:
     def __init__(self):
-        self.segs = [[[Segment(0,0) for _ in range(192)] for _ in range(15)] for _ in range(2)]
-        self.trigger = [[False for _ in range(192)] for _ in range(15)]
+        self.segs = [[[None for _ in range(192)] for _ in range(15)] for _ in range(2)]
+        self.trigger = np.zeros((15,192), dtype=bool) # partition, strip
 
 class Vector_Manager:
     def __init__(self):
-        self.vectors = np.zeros((15,192,3,17,6)) # partition, strip, bx, pid, ly
-        self.lcs = np.zeros((15,192,3,17)) # partition, strip, bx, pid
+        self.vectors = np.zeros((15,192,3,17,6), dtype=np.uint32) # partition, strip, bx, pid, ly
+        self.lcs = np.zeros((15,192,3,17), dtype=np.uint8) # partition, strip, bx, pid
 
-    def shift_regs(self, new_vectors, new_lcs):
-        self.vectors[:,:] = self.vectors[:,:,1:].append(new_vectors)
-        self.lcs[:,:] = self.lcs[:,:,1:].append(new_lcs)
+    def shift_regs(self, new_vectors, new_lcs, partition, strip):
+        self.vectors[partition, strip] = np.concatenate((self.vectors[partition,strip,1:], new_vectors[np.newaxis, :]))
+        self.lcs[partition, strip] = np.concatenate((self.lcs[partition,strip,1:], new_lcs[np.newaxis, :]))
 
     def or_vectors(self, partition, strip):
-        return np.bitwise_or(np.bitwise_or(self.vectors[partition,strip,0, self.vectors[partition,strip,1]]), self.vectors[partition,strip,2])
+        return np.bitwise_or(np.bitwise_or(self.vectors[partition,strip,0], self.vectors[partition,strip,1]), self.vectors[partition,strip,2])
  
 class Config:
 
@@ -369,6 +369,8 @@ def get_centroids(max_width : int):
     return centroids
 
 def llse_fit(x, y):
+    if len(x) == 0 or len(x) == 1:
+        return 0, 0, 0
     x_sum = sum(x)
     y_sum = sum(y)
     n = len(x)
@@ -377,6 +379,11 @@ def llse_fit(x, y):
     for i in range(len(x)):
         products += (n * x[i] - x_sum) * (n * y[i] - y_sum)
         squares += (n * x[i] - x_sum) ** 2
+
+    if squares == 0:
+        print(x)
+        print(y)
+
     m = 1.0 * products / squares
     b = 1.0 / n * (y_sum - m * x_sum)
     
