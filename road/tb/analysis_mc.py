@@ -647,10 +647,10 @@ def analysis(root_dat, hits, bx, bx_list, cross_part, verbose, pu, num_or):
 
             # from printly_dat import printly_dat
 
-            # for i in [27]:
+            # for i in [9]:
             #     # if np.count_nonzero(datlist[i]) > 0:
             #     print(f"Chamber {i}:\n")
-            #     for j in range(1):
+            #     for j in [3]:
             #         print(f"Partition {j}:\n")
             #         printly_dat(datlist[i,j], MAX_SPAN=192)
 
@@ -772,8 +772,8 @@ def analysis(root_dat, hits, bx, bx_list, cross_part, verbose, pu, num_or):
         #print ("  Offline - Online Segment Matching: ")
         unmatched_offline_index = []
 
-        # List to track matched online segments. Online segments can only match to one offline segment.
-        online_segs_matched = []
+        # Matrix to track matched online segments. Online segments can only match to one offline segment.
+        online_segs_matched = [[] for _ in range(36)]
 
         # Checking efficiency w.r.t offline segments
         for i in range(0, n_offline_seg):
@@ -799,7 +799,7 @@ def analysis(root_dat, hits, bx, bx_list, cross_part, verbose, pu, num_or):
             for (j,seg) in enumerate(seglist_final[offline_chamber][bx_offset_0_index]):
 
                 # If this online segment has already matched to another offline segment, skip it
-                if seg in online_segs_matched:
+                if seg in online_segs_matched[offline_chamber]:
                     continue
 
                 online_eta_partition = seg.partition
@@ -816,7 +816,7 @@ def analysis(root_dat, hits, bx, bx_list, cross_part, verbose, pu, num_or):
 
                     # Update matched list, to prevent a single online segment from matching with multiple offline segments
                     seg_match = True
-                    online_segs_matched.append(seg)
+                    online_segs_matched[offline_chamber].append(seg)
                     #if verbose:
                         #file_out.write("    Offline segment: Chamber = %d: , Eta Partition = %d, Center Strip = %.4f, Bending angle = %.4f, Hit count = %d, Layer_count = %d\n"%(offline_chamber, offline_eta_partition, offline_substrip, offline_bending_angle, offline_nrechits, offline_nlayers))
                         #file_out.write("    Online segment: Chamber = %d: , Eta Partition = %d, Center Strip = %.4f, Bending angle = %.4f, ID = %d, Hit count = %d, Layer count = %d, Quality = %d\n"%(st_chamber, online_eta_partition, online_substrip, online_bending_angle, online_id, online_hc, online_lc, online_quality))
@@ -834,7 +834,7 @@ def analysis(root_dat, hits, bx, bx_list, cross_part, verbose, pu, num_or):
                     for (j,seg) in enumerate(seglist_final[offline_chamber][bx_i]):
 
                         # If this online segment has already matched to another offline segment, skip it
-                        if seg in online_segs_matched:
+                        if seg in online_segs_matched[offline_chamber]:
                             continue
 
                         online_eta_partition = seg.partition
@@ -851,7 +851,7 @@ def analysis(root_dat, hits, bx, bx_list, cross_part, verbose, pu, num_or):
 
                             # Update matched matrix, to prevent a single online segment from matching with multiple offline segments
                             seg_match = True
-                            online_segs_matched.append(seg)
+                            online_segs_matched[offline_chamber].append(seg)
                             #if verbose:
                                 #file_out.write("    Offline segment: Chamber = %d: , Eta Partition = %d, Center Strip = %.4f, Bending angle = %.4f, Hit count = %d, Layer_count = %d\n"%(offline_chamber, offline_eta_partition, offline_substrip, offline_bending_angle, offline_nrechits, offline_nlayers))
                                 #file_out.write("    Online segment: Chamber = %d: , Eta Partition = %d, Center Strip = %.4f, Bending angle = %.4f, ID = %d, Hit count = %d, Layer count = %d, Quality = %d\n"%(st_chamber, online_eta_partition, online_substrip, online_bending_angle, online_id, online_hc, online_lc, online_quality))
@@ -885,7 +885,7 @@ def analysis(root_dat, hits, bx, bx_list, cross_part, verbose, pu, num_or):
         unmatched_st_index = []
 
         # Matrix to track matched online segments. Online segments can only match to one simtrack.
-        online_tracks_matched = []
+        online_tracks_matched = [[] for _ in range(36)]
 
         # Checking efficiency w.r.t sim tracks
         for i in range(0, n_me0_track):
@@ -929,7 +929,7 @@ def analysis(root_dat, hits, bx, bx_list, cross_part, verbose, pu, num_or):
             for (j,seg) in enumerate(seglist_final[st_chamber][bx_offset_0_index]):
 
                 # If this online segment has already matched to another simtrack, skip it
-                if seg in online_tracks_matched:
+                if seg in online_tracks_matched[st_chamber]:
                     continue
 
                 online_eta_partition = seg.partition
@@ -946,7 +946,7 @@ def analysis(root_dat, hits, bx, bx_list, cross_part, verbose, pu, num_or):
                     #if bending_angle_err < 0.4 or abs(online_bending_angle - st_bending_angle) <= 0.6: # match criteria for bending angle
 
                     track_match = True
-                    online_tracks_matched.append(seg)
+                    online_tracks_matched[st_chamber].append(seg)
                     n_segs_matched_by_bx[bx_offset_0_index] += 1
                     if verbose:
                         file_out.write("    Sim Track: Chamber = %d: , Eta Partition = %d, Center Strip = %.4f, Bending angle = %.4f, Hit count = %d, Layer_count = %d, pT = %.4f\n"%(st_chamber, st_eta_partition, st_substrip, st_bending_angle, st_nrechits, st_nlayers, st_pt))
@@ -965,7 +965,7 @@ def analysis(root_dat, hits, bx, bx_list, cross_part, verbose, pu, num_or):
                     for (j,seg) in enumerate(seglist_final[st_chamber][bx_i]):
 
                         # If this online segment has already matched to another simtrack, skip it
-                        if seg in online_tracks_matched:
+                        if seg in online_tracks_matched[st_chamber]:
                             continue
 
                         online_eta_partition = seg.partition
@@ -982,7 +982,7 @@ def analysis(root_dat, hits, bx, bx_list, cross_part, verbose, pu, num_or):
                             #if bending_angle_err < 0.4 or abs(online_bending_angle - st_bending_angle) <= 0.6: # match criteria for bending angle
 
                             track_match = True
-                            online_tracks_matched.append(seg)
+                            online_tracks_matched[st_chamber].append(seg)
                             n_segs_matched_by_bx[bx_i] += 1
 
                             if verbose:

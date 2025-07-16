@@ -127,7 +127,8 @@ def process_partition(partition_data : List[int],
     #         if (seg.id > 0):
     #             print(seg)
 
-
+    if (config.deghost_post and config.deghost_pre):
+        raise Exception("Both post and pre deghosting enabled")
 
     if (config.deghost_pre):
         segments = cancel_edges(segments=segments,

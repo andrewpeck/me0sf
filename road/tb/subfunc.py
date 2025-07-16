@@ -40,7 +40,7 @@ class Config:
     max_span : int = 37
     width : int = 192
     deghost_pre : bool = True
-    deghost_post : bool = True
+    deghost_post : bool = False
     group_width : int = 8
     ghost_width : int = 1
     x_prt_en : bool = True

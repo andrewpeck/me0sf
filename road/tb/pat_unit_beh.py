@@ -381,8 +381,8 @@ def pat_unit(data,
                 print("\n", end="")
             print("\n", end="")
 
-        for seg in seg_list:
-            print(seg)
+        # for seg in seg_list:
+        #     print(seg)
 
 
     best.hc=0
