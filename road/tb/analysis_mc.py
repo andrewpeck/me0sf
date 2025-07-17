@@ -1080,6 +1080,7 @@ def analysis(root_dat, hits, bx, bx_list, cross_part, verbose, pu, num_or):
 
         # Only allow each simtrack to match to one online segment
         matched_matrix = [False]*n_me0_track
+        matched_matrix_sim_offline = [False]*n_offline_seg
 
         # Checking Purity w.r.t sim tracks and offline segments
         for chamber in range(len(seglist_final)): 
@@ -1290,6 +1291,9 @@ def analysis(root_dat, hits, bx, bx_list, cross_part, verbose, pu, num_or):
 
         # Checking Matching of Offline Segments with Sim Tracks
         for i in range(0, n_offline_seg):
+            if matched_matrix_sim_offline[i] == True:
+                continue
+
             offline_chamber = seg_chamber_nr[i]
             offline_eta_partition = seg_eta_partition[i]
             offline_bending_angle = seg_bending_angle[i]
@@ -1310,6 +1314,7 @@ def analysis(root_dat, hits, bx, bx_list, cross_part, verbose, pu, num_or):
             else:
                 n_offline_signal_seg_per_chamber_per_event += 1
                 num_offline_signal_seg_per_chamber_per_event_eta.Fill(offline_eta_partition+1)
+                matched_matrix_sim_offline[i] = True
 
         if verbose:
             file_out_summary.write("  Online Segments: \n")
