@@ -26,6 +26,8 @@ from time import time
 
 # Function to process a chamber in parallel
 def process_chamber_multiProc(dat_w_segs, config, chamber_id, chamber_bx_data):
+    # if chamber_id != 4:
+    #     return(chamber_id, [Segment(0,0,0) for _ in range(8)], config)
     seglist, new_config = process_chamber(dat_w_segs, config, chamber_bx_data)
     # seglist = process_chamber(dat_w_segs[0][0], config, chamber_bx_data)
     return (chamber_id, seglist, new_config)
@@ -343,6 +345,9 @@ def analysis(root_dat, hits, bx, bx_list, cross_part, verbose, pu, num_or):
 
     for (ievent, event) in enumerate(root_dat):
 
+        # if ievent != 3:
+        #     continue
+
         # Restart peaking manager, to clear all segments
         if config.peaking_enabled:
             for conf in config_chams:
@@ -647,7 +652,7 @@ def analysis(root_dat, hits, bx, bx_list, cross_part, verbose, pu, num_or):
 
             # from printly_dat import printly_dat
 
-            # for i in [9]:
+            # for i in [4]:
             #     # if np.count_nonzero(datlist[i]) > 0:
             #     print(f"Chamber {i}:\n")
             #     for j in [3]:
@@ -728,7 +733,7 @@ def analysis(root_dat, hits, bx, bx_list, cross_part, verbose, pu, num_or):
 
                     # Print online segments
                     if verbose:
-                        file_out.write("  Online Segment in Chamber (0-17 for region -1, 18-35 for region 1) %d, BX = %d:\n "%(chamber_nr, bx_offset))
+                        file_out.write("  Online Segment in Chamber (0-17 for region -1, 18-35 for region 1) %d, BX = %d:\n "%(chamber_nr, bx_offset_i))
                         file_out.write("    Eta Partition = %d, Center Strip = %.4f, Bending angle = %.4f, ID = %d, Hit count = %d, Layer count = %d, Quality = %d\n"%(seg.partition, seg.substrip+seg.strip, seg.bend_ang, seg.id, seg.hc, seg.lc, seg.quality))
                         file_out.write("\n")
                 

@@ -213,7 +213,8 @@ def pat_unit(data,
     else:
         bit_count_arr = np.bitwise_count(masked_data)
 
-    hcs = np.sum(np.clip(bit_count_arr, a_min = None, a_max = 7), axis=1, dtype=np.uint16)
+    # hcs = np.sum(np.clip(bit_count_arr, a_min = None, a_max = 7), axis=1, dtype=np.uint16)
+    hcs = np.zeros((17,), dtype=np.uint16)
 
     lcs = np.count_nonzero(masked_data, axis=1).astype(np.uint32)
 
