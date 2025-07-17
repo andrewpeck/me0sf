@@ -77,12 +77,17 @@ def pat_mux(partition_data, partition, config : Config, partition_bx_data):
         if config.peaking_manager.trigger[partition,i] == True:
             out_list.append(segs_old[i])
             config.peaking_manager.trigger[partition,i] = False
-
-        if segs_oldest[i] is None and segs_old[i] is not None:
+        elif segs_oldest[i] is None and segs_old[i] is not None:
             if new_segs[i].lc == 0:
                 out_list.append(segs_old[i])
             else:
                 config.peaking_manager.trigger[partition,i] = True
+                out_list.append(Segment(0,0,0))
+        else:
+            out_list.append(Segment(0,0,0))
+
+    # if partition == 6 and sum([seg.lc for seg in out_list]) > 0:
+    #     print(out_list)
 
     # Big decrease metric
     # for i in range(config.width):
