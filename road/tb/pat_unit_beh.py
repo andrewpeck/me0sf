@@ -32,7 +32,7 @@ def set_high_bits(lo_hi_pair):
     return 2**(hi-lo+1)-1 << lo
 
 def get_ly_mask(ly_pat : patdef_t,
-                max_span : int = 37) -> Mask:
+                max_span : int = 37):
 
     '''
     takes in a given layer pattern and returns a list of integer bit masks
@@ -45,15 +45,17 @@ def get_ly_mask(ly_pat : patdef_t,
 
     # use the high and low indices to determine where the high bits must go for
     # each layer
-    m_vec = [set_high_bits(x) for x in m_vals]
-    return Mask(m_vec, ly_pat.id)
+    m_vec = np.array([set_high_bits(x) for x in m_vals])
+    return m_vec
+    # return Mask(m_vec, ly_pat.id)
 
 def calculate_global_layer_mask(patlist, max_span):
     """create layer masks for patterns in patlist"""
     global LAYER_MASK
-    LAYER_MASK = [get_ly_mask(pat, max_span) for pat in patlist]
+    LAYER_MASK = np.array([get_ly_mask(pat, max_span) for pat in patlist])
+    # LAYER_MASK = [get_ly_mask(pat, max_span) for pat in patlist]
 
-def mask_layer_data (data : List[int], mask) -> List[int]:
+def mask_layer_data (data, mask):
     """
     AND together a list of layer masks with a list of layers
 
@@ -62,6 +64,7 @@ def mask_layer_data (data : List[int], mask) -> List[int]:
     mask is a 6 layer collection of masks
 
     """
+    # return np.bitwise_and(data, mask)
     return list(map(lambda ly_dat, ly_mask: ly_dat & ly_mask , data, mask))
 
 def calculate_centroids(single_pattern_masked_data : List[int], partition_bx_data) -> List[float]:
@@ -80,7 +83,7 @@ def calculate_centroids(single_pattern_masked_data : List[int], partition_bx_dat
     #print(np.mean(bxs))
     return centroids, np.mean(bxs)
 
-def calculate_hit_count(masked_data : List[int], light : bool = False) -> int:
+def calculate_hit_count(masked_data, light : bool = False) -> int:
     """takes in a []*6 list of pre-masked data and gives the number of hits
 
     this also includes "light" counting, which instead of actually counting up
@@ -96,9 +99,9 @@ def calculate_hit_count(masked_data : List[int], light : bool = False) -> int:
 
     if light:
         enabled_layers = [0,5]
-        return sum([min(7,count_ones(hits)) if ly in enabled_layers else 0 for (ly,hits) in enumerate(masked_data)])
+        return sum([min(7,np.bitwise_count(masked_data[ly])) for ly in enabled_layers])
     else:
-        return sum([count_ones(x) for x in masked_data])
+        return sum([np.bitwise_count(x) for x in masked_data])
 
 def calculate_layer_count(masked_data : List[int]) -> int:
     """takes in a []*6 list of pre-masked data and gives the layer count"""
@@ -114,6 +117,7 @@ def calculate_hits(data):
 
 def pat_unit(data,
              bx_data,
+             config : Config,
              strip : int = 0,
              ly_thresh_patid : list[int] = [7, 7, 7, 7, 7, 7, 7, 7, 7, 7, 5, 5, 4, 4, 4, 4, 4],
              ly_thresh_eta : list[int] = [4, 5, 4, 5, 4, 5, 4, 5, 4, 5, 4, 5, 4, 5, 4],
@@ -192,40 +196,116 @@ def pat_unit(data,
     # determine how many hits are in each layer
     # this yields a map object that can be iterated over to get,
     #    for each of the 17 patterns, the masked []*6 layer data
-    masked_data = [mask_layer_data(x.mask, data) for x in LAYER_MASK]
 
-    # (3) count # of hits
-    hcs = [calculate_hit_count(x, light_hit_count) for x in masked_data]
-    lcs = [calculate_layer_count(x) for x in masked_data]
-    pids = [x.id for x in LAYER_MASK]
+    ####################################################################################
 
-    # (4) process centroids
+
+    hcs = [0]*17
+    lcs = [0]*17
+    pids = [0]*17
+
+    pids = np.arange(1, 18, dtype=np.uint8)
+    data_tiled = np.tile(data, (17, 1))
+    masked_data = np.bitwise_and(np.flip(LAYER_MASK, axis=0), data_tiled)
+
+    if light_hit_count:
+        bit_count_arr = np.bitwise_count(np.vstack((masked_data[:,0], masked_data[:,5])).T)
+    else:
+        bit_count_arr = np.bitwise_count(masked_data)
+
+    # hcs = np.sum(np.clip(bit_count_arr, a_min = None, a_max = 7), axis=1, dtype=np.uint16)
+    hcs = np.zeros((17,), dtype=np.uint16)
+
+    lcs = np.count_nonzero(masked_data, axis=1).astype(np.uint32)
+
+    if config.vectoring_enabled:
+        new_vectors = masked_data > 0
+
+        config.vector_manager.shift_regs(new_vectors, lcs, partition, strip)
+
+        # OR the 3 vectors together, for each PID
+        # ord_vectors = config.vector_manager.or_vectors(partition, strip)
+
+        # lcs = np.count_nonzero(ord_vectors, axis=1).astype(np.uint64)
+
+        # if np.count_nonzero(config.vector_manager.lcs[partition,strip,1]) > 0:
+        #     print(config.vector_manager.lcs[partition,strip])
+
+        # lcs = config.vector_manager.lcs[partition, strip, 1]
+
+        # Case of 2, 2, 2 and 3, 3: How to resolve? The current implementation will miss the 2,2,2 case ~=0.6% of cases
+        # for i in range(len(lcs)):
+        #     if not ((config.vector_manager.lcs[partition, strip, 1, i] >= config.vector_manager.lcs[partition, strip, 0, i]) and (config.vector_manager.lcs[partition, strip, 1, i] >= config.vector_manager.lcs[partition, strip, 2, i])):
+        #         lcs[i] = 0
+        
+        #TODO: combine ^^ 2 of those lines in a function in vector_manager
+        #TODO: create function in vector_manager to OR together the 3 vectors for a given partition, strip; call it here, and use that for LCs
+        #TODO: only return segment if LC for central BX is highest. break ties somehow? (maybe with HC)
+    
+    combined_segs = np.bitwise_or(np.bitwise_or(np.left_shift(lcs, np.uint8(11)), np.left_shift(hcs, np.uint(5))), pids)
+    best_pid = (np.sort(combined_segs))[-1] & 2**5-1
+
+    #print(bxs)
+    # (5) process segments
+    # seg_list = [Segment(lc=lc,
+    #                     hc=hc,
+    #                     id=pid,
+    #                     partition=partition,
+    #                     strip=strip)
+    #             for (hc, lc, pid) in
+    #             zip(hcs, lcs, pids)]
+
+    # (6) choose the max of all patterns
+
+    #print(best.bx)
+
+        # (4) process centroids
     if skip_centroids:
+        #TODO: update this to work with speedup changes
         centroids = [[0 for _ in range(6)] for _ in range(len(masked_data))]
         bxs = [-9999 for _ in range(len(masked_data))]
     else:
-        centroids = []
-        bxs = []
-        for single_pattern_masked_data in masked_data:
-            cur_pattern_centroids, cur_pattern_bx = calculate_centroids(single_pattern_masked_data, bx_data)
-            #print(cur_pattern_bx)
-            centroids.append(cur_pattern_centroids)
-            bxs.append(cur_pattern_bx)
-    #print(bxs)
-    # (5) process segments
-    seg_list = [Segment(lc=lc,
-                        hc=hc,
-                        id=pid,
-                        partition=partition,
-                        strip=strip,
-                        centroid=centroid,
-                        bx=bx)
-                for (hc, lc, pid, centroid, bx) in
-                zip(hcs, lcs, pids, centroids, bxs)]
+        centroid, bx = calculate_centroids(masked_data[best_pid-1], bx_data)
 
-    # (6) choose the max of all patterns
-    best = max(seg_list) # type: ignore
-    #print(best.bx)
+    best = Segment(lc=lcs[best_pid-1], hc=hcs[best_pid-1], id=best_pid, partition=partition, strip=strip, centroid=centroid, bx=bx)
+
+
+    ####################################################################################
+    # masked_data = [mask_layer_data(x.mask, data) for x in LAYER_MASK]
+
+    # # (3) count # of hits
+    # hcs = [calculate_hit_count(x, light_hit_count) for x in masked_data]
+    # lcs = [calculate_layer_count(x) for x in masked_data]
+    # pids = [x.id for x in LAYER_MASK]
+
+    # # (4) process centroids
+    # if skip_centroids:
+    #     centroids = [[0 for _ in range(6)] for _ in range(len(masked_data))]
+    #     bxs = [-9999 for _ in range(len(masked_data))]
+    # else:
+    #     centroids = []
+    #     bxs = []
+    #     for single_pattern_masked_data in masked_data:
+    #         cur_pattern_centroids, cur_pattern_bx = calculate_centroids(single_pattern_masked_data, bx_data)
+    #         #print(cur_pattern_bx)
+    #         centroids.append(cur_pattern_centroids)
+    #         bxs.append(cur_pattern_bx)
+    # #print(bxs)
+    # # (5) process segments
+    # seg_list = [Segment(lc=lc,
+    #                     hc=hc,
+    #                     id=pid,
+    #                     partition=partition,
+    #                     strip=strip,
+    #                     centroid=centroid,
+    #                     bx=bx)
+    #             for (hc, lc, pid, centroid, bx) in
+    #             zip(hcs, lcs, pids, centroids, bxs)]
+
+    # # (6) choose the max of all patterns
+    # best = max(seg_list) # type: ignore
+
+    ####################################################################################
     
     # (7) apply a layer threshold
     ly_thresh_final = max(ly_thresh_patid[best.id-1], ly_thresh_eta[partition]) 
@@ -285,8 +365,6 @@ def pat_unit(data,
 
     #print("id is: " + str(best.id))
     #print("threshold is: " + str(ly_thresh[best.id]))
-    
-    best.partition=partition
 
     # debug output
     if verbose:
@@ -304,8 +382,8 @@ def pat_unit(data,
                 print("\n", end="")
             print("\n", end="")
 
-        for seg in seg_list:
-            print(seg)
+        # for seg in seg_list:
+        #     print(seg)
 
 
     best.hc=0

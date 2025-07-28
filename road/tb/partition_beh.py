@@ -67,7 +67,7 @@ def cancel_edges(segments : List[Segment],
 
     def is_at_edge(x):
         if group_width > 0:
-            return x % group_width < edge_distance or (x % group_width) >= (group_width-edge_distance)
+            return x % group_width <= edge_distance or (x % group_width) >= (group_width-edge_distance-1)
         else:
             return True
 
@@ -127,7 +127,8 @@ def process_partition(partition_data : List[int],
     #         if (seg.id > 0):
     #             print(seg)
 
-
+    if (config.deghost_post and config.deghost_pre):
+        raise Exception("Both post and pre deghosting enabled")
 
     if (config.deghost_pre):
         segments = cancel_edges(segments=segments,

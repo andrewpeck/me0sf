@@ -2,6 +2,7 @@
 from subfunc import *
 from pat_unit_beh import pat_unit
 from constants import *
+import numpy as np
 
 def parse_data(data, strip, max_span):
     """takes in data, a strip index, and a MAX_SPAN to get the data a pat_unit on that strip would see"""
@@ -15,7 +16,7 @@ def parse_data(data, strip, max_span):
 
 def extract_data_window(ly_dat, strip, max_span):
     """extracts data window around given strip"""
-    return [parse_data(data, strip, max_span) for data in ly_dat]
+    return np.array([parse_data(data, strip, max_span) for data in ly_dat])
 
 def parse_bx_data(bx_data, strip, max_span):
     if strip < max_span // 2 + 1:
@@ -33,7 +34,7 @@ def parse_bx_data(bx_data, strip, max_span):
 
 def extract_bx_data_window(ly_dat, strip, max_span):
     """extracts data window around given strip"""
-    return [parse_bx_data(data, strip, max_span) for data in ly_dat]
+    return np.array([parse_bx_data(data, strip, max_span) for data in ly_dat])
 
 def pat_mux(partition_data, partition, config : Config, partition_bx_data):
     """
@@ -44,6 +45,7 @@ def pat_mux(partition_data, partition, config : Config, partition_bx_data):
     # todo : after extracting window the span is 37 or smaller
     fn = lambda strip : pat_unit(data = extract_data_window(partition_data, strip, config.max_span),
                                  bx_data = extract_bx_data_window(partition_bx_data, strip, config.max_span),
+                                 config = config,
                                  ly_thresh_patid = config.ly_thresh_patid,
                                  ly_thresh_eta = config.ly_thresh_eta,
                                  strip = strip,
@@ -54,18 +56,60 @@ def pat_mux(partition_data, partition, config : Config, partition_bx_data):
 
     new_segs = [fn(x) for x in range(config.width)]
 
-    if config.disable_peaking:
+    if not config.peaking_enabled:
         return new_segs
     
     # Peaking logic
     
-    old_segs = config.peaking_manager.segs[partition]
+    segs_oldest = config.peaking_manager.segs[0][partition]
+    segs_old = config.peaking_manager.segs[1][partition]
 
-    # If a pattern unit has a worse segment than the previous bx, output the old segment (at its peak quality)
-    out_list = [old_segs[i] if old_segs[i].lc > new_segs[i].lc else Segment(0, 0) for i in range(config.width)]
+    # out_list = [Segment(0,0) for _ in range(config.width)]
+    out_list = []
+
+    # Big increase metric
+    # for i in range(config.width):
+    #     if segs_oldest[i] is None and segs_old[i] is not None:
+    #         out_list.append(new_segs[i] if new_segs[i].lc > 0 else segs_old[i])
+
+    # Big increase metric
+    for i in range(config.width):
+        if config.peaking_manager.trigger[partition,i] == True:
+            out_list.append(segs_old[i])
+            config.peaking_manager.trigger[partition,i] = False
+        elif segs_oldest[i] is None and segs_old[i] is not None:
+            if new_segs[i].lc == 0:
+                out_list.append(segs_old[i])
+            else:
+                config.peaking_manager.trigger[partition,i] = True
+                out_list.append(Segment(0,0,0))
+        else:
+            out_list.append(Segment(0,0,0))
+
+    # if partition == 6 and sum([seg.lc for seg in out_list]) > 0:
+    #     print(out_list)
+
+    # Big decrease metric
+    # for i in range(config.width):
+    #     if segs_old[i] is not None and new_segs[i].lc == 0:
+    #         out_list.append(segs_oldest[i] if segs_oldest[i] is not None else segs_old[i])
+    #     else:
+    #         out_list.append(Segment(0,0,0,i,partition))
+
+    # Smart metric
+    # Needs to address 3,3 (Sequence: 0, 6, 6, 0) case
+    # Currently outputs both -> ~3% increase in background (increase is from both background and signal)
+    # If this is addressed, might just be identical to big increase/decrease metrics. No need to kill the right 6 in (6,6,6)
+    # for i in range(config.width):
+    #     if segs_old[i] is not None and new_segs[i].lc == 0:
+    #         out_list.append(segs_old[i])
+    #     elif segs_oldest[i] is not None and segs_old[i] is not None and new_segs[i].lc > 0:
+    #         out_list.append(segs_old[i])
+    #         new_segs[i].lc = 0
 
     # Update the peaking manager
-    config.peaking_manager.segs[partition] = new_segs
+    config.peaking_manager.segs[0][partition] = config.peaking_manager.segs[1][partition]
+    config.peaking_manager.segs[1][partition] = [x if x.lc > 0 else None for x in new_segs]
     
     return out_list
 

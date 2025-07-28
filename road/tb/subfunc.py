@@ -3,19 +3,36 @@ from itertools import islice
 from math import ceil, floor
 from typing import List
 import math
+import numpy as np
 
 LAYER_MASK = None
 
 class Peaking_Manager:
     def __init__(self):
-        self.segs = [[Segment(0,0) for _ in range(192)] for _ in range(15)]       
+        self.segs = [[[None for _ in range(192)] for _ in range(15)] for _ in range(2)]
+        self.trigger = np.zeros((15,192), dtype=bool) # partition, strip
 
-    def reset(self):
-        self.segs = [[Segment(0,0) for _ in range(192)] for _ in range(15)]
+class Vector_Manager:
+    def __init__(self):
+        self.vectors = np.zeros((15,192,3,17,6), dtype=np.uint32) # partition, strip, bx, pid, ly
+        self.lcs = np.zeros((15,192,3,17), dtype=np.uint8) # partition, strip, bx, pid
+
+    def shift_regs(self, new_vectors, new_lcs, partition, strip):
+        self.vectors[partition, strip] = np.concatenate((self.vectors[partition,strip,1:], new_vectors[np.newaxis, :]))
+        self.lcs[partition, strip] = np.concatenate((self.lcs[partition,strip,1:], new_lcs[np.newaxis, :]))
+
+    def or_vectors(self, partition, strip):
+        return np.bitwise_or(np.bitwise_or(self.vectors[partition,strip,0], self.vectors[partition,strip,1]), self.vectors[partition,strip,2])
  
 class Config:
-    def __init__(self):
+
+    def start_peaking_manager(self):
         self.peaking_manager = Peaking_Manager()
+        self.peaking_enabled = True
+
+    def start_vectoring_manager(self):
+        self.vector_manager = Vector_Manager()
+        self.vectoring_enabled = True
 
     skip_centroids : bool = False
     ly_thresh_patid : list[int] = [7, 7, 7, 7, 7, 7, 7, 7, 7, 7, 5, 5, 4, 4, 4, 4, 4]
@@ -23,7 +40,7 @@ class Config:
     max_span : int = 37
     width : int = 192
     deghost_pre : bool = True
-    deghost_post : bool = True
+    deghost_post : bool = False
     group_width : int = 8
     ghost_width : int = 1
     x_prt_en : bool = True
@@ -33,7 +50,8 @@ class Config:
     check_ids : bool = False
     edge_distance : int = 2
     num_or : int = 2
-    disable_peaking : bool = True
+    peaking_enabled : bool = False
+    vectoring_enabled : bool = False
 
 
 class hi_lo_t:
@@ -263,13 +281,14 @@ PATLIST_LUT = {
     1: pat_r8}
 
 def count_ones(x):
-    """takes in an integer and counts how many ones are in that integer's binary form"""
-    cnt = 0
-    while (x > 0):
-        if (x&1)==1:
-            cnt += 1
-        x = x>>1
-    return cnt
+    return np.bitwise_count(x)
+    # """takes in an integer and counts how many ones are in that integer's binary form"""
+    # cnt = 0
+    # while (x > 0):
+    #     if (x&1)==1:
+    #         cnt += 1
+    #     x = x>>1
+    # return cnt
 
 def max_cluster_size(x):
     """calculate maximum cluster size in that integer's binary form"""
@@ -350,6 +369,8 @@ def get_centroids(max_width : int):
     return centroids
 
 def llse_fit(x, y):
+    if len(x) == 0 or len(x) == 1:
+        return 0, 0, 0
     x_sum = sum(x)
     y_sum = sum(y)
     n = len(x)
@@ -358,6 +379,11 @@ def llse_fit(x, y):
     for i in range(len(x)):
         products += (n * x[i] - x_sum) * (n * y[i] - y_sum)
         squares += (n * x[i] - x_sum) ** 2
+
+    if squares == 0:
+        print(x)
+        print(y)
+
     m = 1.0 * products / squares
     b = 1.0 / n * (y_sum - m * x_sum)
     
