@@ -43,6 +43,8 @@ def test_bram():
     module = os.path.splitext(os.path.basename(__file__))[0]
 
     vhdl_sources = [
+        os.path.join(rtl_dir, "pat_types.vhd"),
+        os.path.join(rtl_dir, "pat_pkg.vhd"),
         os.path.join(rtl_dir, "sbit_bram.vhd")]
 
     parameters = {}
