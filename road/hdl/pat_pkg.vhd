@@ -40,6 +40,8 @@ package pat_pkg is
   
   type ly_thresh_prt is array (integer range 0 to NUM_PATTERNS-1) of std_logic_vector(2 downto 0);
   type ly_thresh_chamber is array(integer range 0 to 15-1) of ly_thresh_prt;
+  
+  type chamber_w_virtual_t is array (integer range 0 to 14) of partition_t;
 
   --------------------------------------------------------------------------------
   -- Build Parameters
