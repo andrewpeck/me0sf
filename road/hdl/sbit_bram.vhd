@@ -23,8 +23,10 @@ use work.pat_types.all;
 use work.pat_pkg.all;
 --use work.patterns.all;
 
-library xpm;
-use xpm.vcomponents.xpm_memory_sdpram;
+--library xpm;
+--use xpm.vcomponents.xpm_memory_sdpram;
+
+use work.vcomponents.all;
 
 library ieee;
 use ieee.std_logic_1164.all;
@@ -127,7 +129,7 @@ process (clock160) begin
           if copy_addr_a = 0 then
             padded_sbits(i)(j) <= "000000000000000000" & sbits_i(i)(j) & "000000000000000000";
           else
-            padded_sbits(i)(j) <= padded_sbits(i)(j)(padded_sbits(i)(j)'length-1 downto 12) & "000000000000";
+            padded_sbits(i)(j) <= padded_sbits(i)(j)(padded_sbits(i)(j)'length-1-12 downto 0) & "000000000000";
           end if;
         end loop;
       end loop;

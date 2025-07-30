@@ -313,7 +313,8 @@ def analysis(root_dat, hits, bx, bx_list, cross_part, verbose, pu, num_or):
     num_or_to_span = {2:37, 4:19, 8:11, 16:7}
     config.max_span = num_or_to_span[num_or]
     config.num_or = num_or
-    config.start_peaking_manager()
+    config.group_width = 16
+    #config.start_peaking_manager()
     # config.start_vectoring_manager()
 
     if pu == "140":
