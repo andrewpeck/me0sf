@@ -38,7 +38,7 @@ async def bram_base(dut):
     strip_q = [0]*4
     prt_q = [0]*4
 
-    for i in range(3700, 10000):
+    for i in range(0, 10000):
         # Generate input sbits
         temp_val = i
         vals = [[i*j*k for j in range(6)] for k in range(15)]
