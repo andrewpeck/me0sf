@@ -1,28 +1,33 @@
 # Testbench for pat_unit.vhd
 import os
 import random
-from typing import List
 
 import cocotb
-import plotille
 from cocotb.triggers import RisingEdge
 from cocotb_test.simulator import run
 
 from constants import *
-from datagen import datagen
-from pat_unit_beh import pat_unit
 from subfunc import *
 from tb_common import *
 
 
+# @cocotb.test() # type: ignore
+# async def bram_rand(dut):
+#     await bram_base(dut, "RANDOM", 10000)
+
 @cocotb.test() # type: ignore
-async def bram_0(dut):
-    await bram_base(dut)
+async def bram_walking1(dut):
+    await bram_base(dut, "WALKING1", 17300)
 
-async def bram_base(dut):
-
+async def bram_base(dut, test, nloops):
+    # Check test validity
+    if test not in ("RANDOM", "WALKING1"):
+        raise Exception("Invalid test type")
+    
+    # Set random seed, arbitrary
     random.seed(1337)
 
+    # Start clocks
     c40 = Clock(dut.clock40, 72, "ns")
     c160 = Clock(dut.clock160, 18, "ns")
     c320 = Clock(dut.clock320, 9, "ns")
@@ -38,36 +43,48 @@ async def bram_base(dut):
     strip_q = [0]*4
     prt_q = [0]*4
 
-    for i in range(0, 10000):
+    for i in range(nloops):
         # Generate input sbits
-        temp_val = i
-        vals = [[i*j*k for j in range(6)] for k in range(15)]
+        if test == "RANDOM":
+            vals = [[i*j*k for j in range(6)] for k in range(15)]
+        elif test == "WALKING1":
+            in_ly = (i//192) % 6
+            in_prt = (i//(192*6)) % 15
+            vals = [[0 for j in range(6)] for k in range(15)]
+            vals[in_prt][in_ly] = 2**(i%192)
+
         dut.sbits_i.value = vals
         q += [vals for _ in range(8)]
-        
+
         # Check if output matches input (wait N BXs for latency)
-        for j in range(8):
-            strip = random.randint(0, 191)
-            prt = random.randint(0, 14)
-            #strip = (i*40) % 191
-            #strip = 0 if i < 10 else 80
-            #prt = 1 if i < 10 else 10
+        for _ in range(8):
+
+            # Determine which strip and partition to look at
+            if test == "RANDOM":
+                strip = random.randint(0, 191)
+                prt = random.randint(0, 14)
+            elif test == "WALKING1":
+                strip = max(i-13, 0) % 192
+                prt = max(i-13, 0)//(192*6)
+
+            # Add read addr to FIFO
             strip_q.append(strip)
             prt_q.append(prt)
-            #print(f"bram_out val: {dut.bram_o.value}")
+
+            # Apply to FW and step clock320
             dut.wanted_strip.value = strip
             dut.wanted_prt.value = prt
             await RisingEdge(dut.clock320)
-            
+
+            # Check that new out data matches corresponding input data
             strip = strip_q.pop(0)
             prt = prt_q.pop(0)
             print(f"Strip: {strip}, Partition: {prt}")
 
-            out_data = []
-            for ly in range(6):
-                out_data.append(dut.my_out.value[(ly*48):(ly*48+47)].binstr)
+            # Format data out from FW
+            out_data = [dut.my_out.value[(ly*48):(ly*48+47)].binstr for ly in range(6)]
 
-            print("In Data:")
+            # Format data in from FIFO
             a = q.pop(0)
             in_data_offset = a[prt]
             in_data_formatted = ["0"*18 + bin(x)[2:].zfill(192) + "0"*18 for x in in_data_offset] if isinstance(in_data_offset[0], int) else ['U'*(192+36) for _ in range(6)]
@@ -76,16 +93,17 @@ async def bram_base(dut):
             start_i = 48*word_from_strip + 12*copy_from_strip
             end_i = start_i + 48
             in_data_word = [x[192+36-end_i:192+36-start_i] for x in in_data_formatted]
-            print(in_data_word)
 
-            print("Out data:")
-            print(out_data)
+            # Display info for debugging
+            print(f"In Data:\n{in_data_word}")
+            print(f"Out data:\n{out_data}")
 
             print(f"A BX addr: {dut.bx_addr_a.value}")
             print(f"B BX addr: {dut.bx_addr_b.value}")
             print(f"Wanted BRAM from strip: {dut.wanted_bram_from_strip.value}")
             print(f"Wanted prt_reg: {dut.wanted_prt_reg.value}")
 
+            # Assert data in == data out
             try:
                 assert in_data_word == out_data
             except:
