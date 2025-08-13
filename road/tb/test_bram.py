@@ -19,9 +19,13 @@ from tb_common import *
 async def bram_walking1(dut):
     await bram_base(dut, "WALKING1", 17300)
 
+#@cocotb.test() # type: ignore
+#async def bram_manual(dut):
+#    await bram_base(dut, "MANUAL", 10)
+
 async def bram_base(dut, test, nloops):
     # Check test validity
-    if test not in ("RANDOM", "WALKING1"):
+    if test not in ("RANDOM", "WALKING1", "MANUAL"):
         raise Exception("Invalid test type")
     
     # Set random seed, arbitrary
@@ -52,20 +56,26 @@ async def bram_base(dut, test, nloops):
             in_prt = (i//(192*6)) % 15
             vals = [[0 for j in range(6)] for k in range(15)]
             vals[in_prt][in_ly] = 2**(i%192)
+        elif test == "MANUAL":
+            vals = [[2**190 + 2**189 for j in range(6)] for k in range(15)]
 
         dut.sbits_i.value = vals
         q += [vals for _ in range(8)]
 
         # Check if output matches input (wait N BXs for latency)
-        for _ in range(8):
+        for j in range(8):
 
             # Determine which strip and partition to look at
             if test == "RANDOM":
                 strip = random.randint(0, 191)
                 prt = random.randint(0, 14)
             elif test == "WALKING1":
-                strip = max(i-13, 0) % 192
-                prt = max(i-13, 0)//(192*6)
+                adjust_offset = 1 if j == 0 else 0
+                strip = max(i-1-adjust_offset, 0) % 192
+                prt = max(i-1-adjust_offset, 0)//(192*6) % 15
+            elif test == "MANUAL":
+                strip = 191
+                prt = 0
 
             # Add read addr to FIFO
             strip_q.append(strip)
