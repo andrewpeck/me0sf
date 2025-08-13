@@ -11,9 +11,13 @@ from subfunc import *
 from tb_common import *
 
 
-# @cocotb.test() # type: ignore
-# async def bram_rand(dut):
-#     await bram_base(dut, "RANDOM", 10000)
+@cocotb.test() # type: ignore
+async def bram_rand(dut):
+    await bram_base(dut, "RANDOM", 5000)
+
+@cocotb.test() # type: ignore
+async def bram_unique(dut):
+    await bram_base(dut, "UNIQUE", 5000)
 
 @cocotb.test() # type: ignore
 async def bram_walking1(dut):
@@ -25,8 +29,10 @@ async def bram_walking1(dut):
 
 async def bram_base(dut, test, nloops):
     # Check test validity
-    if test not in ("RANDOM", "WALKING1", "MANUAL"):
+    if test not in ("RANDOM", "UNIQUE", "WALKING1", "MANUAL"):
         raise Exception("Invalid test type")
+    
+    LATENCY = dut.LATENCY.value.integer
     
     # Set random seed, arbitrary
     random.seed(1337)
@@ -41,15 +47,17 @@ async def bram_base(dut, test, nloops):
 
     # Need to have all 0's for initialized values read in first BX
     # Offset of 3 @ 320MHz + 1 BX (=N latency setting)
-    q = [[['U' for _ in range(6)] for _ in range(15)] for _ in range(2)] + [[[0 for _ in range(6)] for _ in range(15)] for _ in range(11)]
+    q = [[['U' for _ in range(6)] for _ in range(15)] for _ in range(2)] + [[[0 for _ in range(6)] for _ in range(15)] for _ in range(8*LATENCY + 11)]
     # Strip and partition queues must be offset, as addresses are registered from strip but not from partition
     # Constant offset of 3 BX, comes from pipelining address computation + 1 from BRAM interal read + 1 from output signal assignment
-    strip_q = [0]*4
-    prt_q = [0]*4
+    strip_q = [0]*(8*LATENCY + 4)
+    prt_q = [0]*(8*LATENCY + 4)
 
     for i in range(nloops):
         # Generate input sbits
         if test == "RANDOM":
+            vals = [[random.randint(0, 2**192-1) for _ in range(6)] for _ in range(15)]
+        if test == "UNIQUE":
             vals = [[i*j*k for j in range(6)] for k in range(15)]
         elif test == "WALKING1":
             in_ly = (i//192) % 6
@@ -66,13 +74,13 @@ async def bram_base(dut, test, nloops):
         for j in range(8):
 
             # Determine which strip and partition to look at
-            if test == "RANDOM":
+            if test == "RANDOM" or test == "UNIQUE":
                 strip = random.randint(0, 191)
                 prt = random.randint(0, 14)
             elif test == "WALKING1":
                 adjust_offset = 1 if j == 0 else 0
-                strip = max(i-1-adjust_offset, 0) % 192
-                prt = max(i-1-adjust_offset, 0)//(192*6) % 15
+                strip = max(i-1-adjust_offset-LATENCY, 0) % 192
+                prt = max(i-1-adjust_offset-LATENCY, 0)//(192*6) % 15
             elif test == "MANUAL":
                 strip = 191
                 prt = 0
@@ -134,7 +142,7 @@ def test_bram():
 
     verilog_sources = [os.path.join(rtl_dir, "../../../xpm_memory.sv")]
 
-    parameters = {}
+    parameters = {"LATENCY" : 0}
 
     os.environ["SIM"] = "questa"
 
