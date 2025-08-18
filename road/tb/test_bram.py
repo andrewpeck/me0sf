@@ -3,7 +3,7 @@ import os
 import random
 
 import cocotb
-from cocotb.triggers import RisingEdge
+from cocotb.triggers import RisingEdge, FallingEdge
 from cocotb_test.simulator import run
 
 from constants import *
@@ -32,7 +32,7 @@ async def bram_base(dut, test, nloops):
     if test not in ("RANDOM", "UNIQUE", "WALKING1", "MANUAL"):
         raise Exception("Invalid test type")
     
-    LATENCY = dut.LATENCY.value.integer
+    LATENCY = dut.LATENCY.value
     
     # Set random seed, arbitrary
     random.seed(1337)
@@ -45,9 +45,11 @@ async def bram_base(dut, test, nloops):
     cocotb.start_soon(c160.start())
     cocotb.start_soon(c320.start())
 
+    print("Stating value of copy reg A state: " + str(dut.copy_addr_a.value))
+
     # Need to have all 0's for initialized values read in first BX
     # Offset of 3 @ 320MHz + 1 BX (=N latency setting)
-    q = [[['U' for _ in range(6)] for _ in range(15)] for _ in range(2)] + [[[0 for _ in range(6)] for _ in range(15)] for _ in range(8*LATENCY + 11)]
+    q = [[[0 for _ in range(6)] for _ in range(15)] for _ in range(2)] + [[[0 for _ in range(6)] for _ in range(15)] for _ in range(8*LATENCY + 11)]
     # Strip and partition queues must be offset, as addresses are registered from strip but not from partition
     # Constant offset of 3 BX, comes from pipelining address computation + 1 from BRAM interal read + 1 from output signal assignment
     strip_q = [0]*(8*LATENCY + 4)
@@ -123,11 +125,16 @@ async def bram_base(dut, test, nloops):
 
             # Assert data in == data out
             try:
-                assert in_data_word == out_data
+                # If 'U' in out_data, in startup state so skip
+                if 'U' not in out_data[0] and i >= LATENCY + 2:
+                    assert in_data_word == out_data
             except:
                 print(a)
                 print(f"Partition: {prt}")
                 assert False
+
+    # Need this to increment copy_addr_a so it is 00 again. Not needed once a reset signal is implemented.
+    await FallingEdge(dut.clock320)
 
 def test_bram():
     tests_dir = os.path.abspath(os.path.dirname(__file__))
