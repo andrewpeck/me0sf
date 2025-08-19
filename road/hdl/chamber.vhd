@@ -339,15 +339,15 @@ begin
 
     sbit_bram : entity work.sbit_bram
       generic map (
-        latency : integer := 0
+        LATENCY => 0
       )
       port map (
         clock320 => clock,
         clock40  => clock40,
         clock160 => clock160,
         sbits_i  => bram_in,
-        wanted_strip => others('0'),
-        wanted_prt => others('0'),
+        wanted_strip => (others => '0'),
+        wanted_prt => (others => '0'),
         my_out => bram_out
       );
 

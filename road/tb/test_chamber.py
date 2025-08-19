@@ -379,6 +379,8 @@ def test_chamber():
         os.path.join(rtl_dir, "pat_unit_mux.vhd"),
         os.path.join(rtl_dir, "deghost.vhd"),
         os.path.join(rtl_dir, "x_prt_deghost_qual.vhd"),
+        os.path.join(rtl_dir, "../../../xpm_VCOMP.vhd"),
+        os.path.join(rtl_dir, "sbit_bram.vhd"),
         os.path.join(rtl_dir, "partition.vhd"),
         os.path.join(rtl_dir, "pulse_extension.vhd"),
         os.path.join(rtl_dir, "chamber_pulse_extension.vhd"),
