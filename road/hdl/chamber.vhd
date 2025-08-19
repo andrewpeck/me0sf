@@ -58,6 +58,7 @@ entity chamber is
   port(
     clock             : in  std_logic;                     -- MUST BE 320MHZ
     clock40           : in  std_logic;                     -- MUST BE  40MHZ
+    clock160          : in std_logic;                      -- MUST BE 160 MHZ
 
     ly_thresh_i         : in  ly_thresh_chamber; -- Layer threshold, 0 to 6
 
@@ -211,6 +212,12 @@ architecture behavioral of chamber is
 --    return ly_thresh_strict;
 --  end;
 
+  --------------------------------------------------------------------------------
+  -- Sbit BRAM
+  --------------------------------------------------------------------------------
+  signal bram_in : chamber_w_virtual_t;
+  signal bram_out : sbit_window_t;
+
 begin
 
   assert X_PRT_EN = TRUE
@@ -301,6 +308,8 @@ begin
           partition_or(5) <= sbits_i(I/2)(5);
         end generate;
 
+        bram_in(I) <= partition_or;
+
         -- look for both x-partition segments toward the IP and away
         -- (for cosmic test stand)
         non_pointing : if (EN_NON_POINTING) generate
@@ -319,6 +328,24 @@ begin
         partition_or_reg <= partition_or;
       end if;
     end process;
+
+    --------------------------------------------------------------------------------
+    -- Sbit BRAM
+    --------------------------------------------------------------------------------
+
+    sbit_bram : entity work.sbit_bram
+      generic map (
+        latency : integer := 0
+      )
+      port map (
+        clock320 => clock,
+        clock40  => clock40,
+        clock160 => clock160,
+        sbits_i  => bram_in,
+        wanted_strip => others('0'),
+        wanted_prt => others('0'),
+        my_out => bram_out
+      );
 
     --------------------------------------------------------------------------------
     -- Per Partition Pattern Finders

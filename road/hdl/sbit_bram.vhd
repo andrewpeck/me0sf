@@ -21,11 +21,12 @@
 
 use work.pat_types.all;
 use work.pat_pkg.all;
---use work.patterns.all;
 
+--use this on machine with Vivado and XPM library available
 --library xpm;
 --use xpm.vcomponents.xpm_memory_sdpram;
 
+--use this on machine without Vivado available (needs XPM BRAM files included in HDL sources)
 use work.vcomponents.all;
 
 library ieee;
@@ -45,7 +46,7 @@ entity sbit_bram is
     sbits_i  : in  chamber_w_virtual_t;
     wanted_strip : in std_logic_vector (STRIP_BITS-1 downto 0);
     wanted_prt : in std_logic_vector (PARTITION_BITS-1 downto 0);
-    my_out   : out std_logic_vector (48*6-1 downto 0)
+    my_out   : out sbit_window_t
     );
 end sbit_bram;
 
@@ -69,8 +70,7 @@ signal wanted_bram_from_strip : std_logic_vector (1 downto 0) := "00";
 signal wanted_word_from_strip : std_logic_vector (1 downto 0) := "00";
 signal wanted_prt_reg, wanted_prt_reg2, wanted_prt_reg3 : std_logic_vector (PARTITION_BITS-1 downto 0) := "0000";
 
-type window_t is array (0 to 5) of std_logic_vector(47 downto 0); 
-type bram_o_chamber_t is array (0 to 14) of window_t;
+type bram_o_chamber_t is array (0 to 14) of sbit_window_t;
     
 signal bram_o : bram_o_chamber_t;
 
@@ -161,7 +161,7 @@ process (clock320) begin
       wanted_prt_reg <= wanted_prt_reg2;
       wanted_word_from_strip <= std_logic_vector(to_unsigned(to_integer(unsigned(wanted_strip)) / 48, wanted_word_from_strip'length));
       wanted_bram_from_strip <= std_logic_vector(to_unsigned((to_integer(unsigned(wanted_strip)) / 12) mod 4, wanted_bram_from_strip'length));
-      my_out <= bram_o(to_integer(unsigned(wanted_prt_reg)))(0) & bram_o(to_integer(unsigned(wanted_prt_reg)))(1) & bram_o(to_integer(unsigned(wanted_prt_reg)))(2) & bram_o(to_integer(unsigned(wanted_prt_reg)))(3) & bram_o(to_integer(unsigned(wanted_prt_reg)))(4) & bram_o(to_integer(unsigned(wanted_prt_reg)))(5);
+      my_out <= bram_o(to_integer(unsigned(wanted_prt_reg)));
    end if;
 end process;
 

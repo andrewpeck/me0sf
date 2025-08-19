@@ -102,7 +102,7 @@ async def bram_base(dut, test, nloops):
             print(f"Strip: {strip}, Partition: {prt}")
 
             # Format data out from FW
-            out_data = [dut.my_out.value[(ly*48):(ly*48+47)].binstr for ly in range(6)]
+            out_data = [ly.value.binstr for ly in dut.my_out]
 
             # Format data in from FIFO
             a = q.pop(0)
