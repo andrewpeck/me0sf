@@ -646,6 +646,8 @@ begin
     end if;
   end process;
 
+  final_segs <= seg_shift_reg(SEG_SHIFT_DELAY);
+
   --------------------------------------------------------------------------------
   -- Fitting
   --------------------------------------------------------------------------------
@@ -665,7 +667,7 @@ begin
   begin
     if (rising_edge(outclk)) then
       dav_o             <= final_segs_dav;
-      segments_o        <= seg_shift_reg(SEG_SHIFT_DELAY);
+      segments_o        <= final_segs;
     end if;
   end process;
   
