@@ -45,6 +45,7 @@ entity chamber is
     --DEADTIME        : natural := 3;      -- deadtime in bx
     EN_HC_COMPRESS : boolean := true;   -- true to enable compression of hit count function (REQUIRED: minimum ly_thresh value is 4)
     X_DEGHOST_EDGE_DIST : natural := 2;  -- radius for cross partition deghosting
+    SEG_SHIFT_DELAY : natural := 0;      -- number of 320MHz clocks to delay segments, used to align with sbits from BRAM
     
     LY0_SPAN : natural := get_max_span(patdef_array);
     LY1_SPAN : natural := get_max_span(patdef_array);
@@ -217,6 +218,9 @@ architecture behavioral of chamber is
   --------------------------------------------------------------------------------
   signal bram_in : chamber_w_virtual_t;
   signal bram_out : sbit_window_t;
+  
+  type segments_shift_reg_t is array (SEG_SHIFT_DELAY downto 0) of segment_list_t(NUM_SEGMENTS-1 downto 0);
+  signal seg_shift_reg : segments_shift_reg_t;
 
 begin
 
@@ -626,8 +630,21 @@ begin
       dav_i  => all_segs_dav_deghosted(0),
       dav_o  => final_segs_dav,
       segs_i => all_segs_x_deghosted,
-      segs_o => final_segs
+      segs_o => segs_shift_reg(0)
       );
+
+  --------------------------------------------------------------------------------
+  -- Read sbits from BRAM
+  --------------------------------------------------------------------------------
+  process (clock) is
+  begin
+    if rising_edge(clock) then
+      for I in 1 to SEG_SHIFT_DELAY generate
+      begin
+        seg_shift_reg(I) <= seg_shift_reg(I-1);
+      end generate;
+    end if;
+  end process;
 
   --------------------------------------------------------------------------------
   -- Fitting
@@ -648,7 +665,7 @@ begin
   begin
     if (rising_edge(outclk)) then
       dav_o             <= final_segs_dav;
-      segments_o        <= final_segs;
+      segments_o        <= seg_shift_reg(SEG_SHIFT_DELAY);
     end if;
   end process;
   
