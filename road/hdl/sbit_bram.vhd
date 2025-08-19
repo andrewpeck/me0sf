@@ -37,7 +37,7 @@ use ieee.math_real.all;
 
 entity sbit_bram is
   generic (
-    latency : integer := 0
+    LATENCY : integer --MUST BE [0, 14], INCLUSIVE
   );
   port (
     clock320 : in  std_logic;
@@ -62,7 +62,7 @@ type padded_data_t is array (0 to 14) of padded_prt_t;
 signal padded_sbits : padded_data_t := (others => (others => (others => '0')));
 
 signal bx_addr_a : unsigned (3 downto 0) := to_unsigned(0, 4);
-signal bx_addr_b : unsigned (3 downto 0) := to_unsigned(15-latency, 4);
+signal bx_addr_b : unsigned (3 downto 0) := to_unsigned(15-LATENCY, 4);
 signal copy_addr_a : unsigned (1 downto 0) := to_unsigned(0, 2);
 signal full_addr_a : std_logic_vector (5 downto 0);
 signal full_addr_b : std_logic_vector (7 downto 0) := (others => '0');
@@ -75,7 +75,11 @@ type bram_o_chamber_t is array (0 to 14) of sbit_window_t;
 signal bram_o : bram_o_chamber_t;
 
 begin
-  
+
+  assert LATENCY >= 0 and LATENCY <= 14
+    report "Latency generic for sbit BRAM must be in [0, 14], inclusive."
+    severity failure;
+    
   partition_bram_gen : for prt_I in 0 to 15-1 generate
     layer_bram_gen : for ly_I in 0 to 6-1 generate
     begin

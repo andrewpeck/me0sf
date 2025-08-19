@@ -25,9 +25,9 @@ async def bram_walking1(dut):
 
 #@cocotb.test() # type: ignore
 #async def bram_manual(dut):
-#    await bram_base(dut, "MANUAL", 10)
+#    await bram_base(dut, "MANUAL", 20)
 
-async def bram_base(dut, test, nloops):
+async def bram_base(dut, test, nloops, verbose=False):
     # Check test validity
     if test not in ("RANDOM", "UNIQUE", "WALKING1", "MANUAL"):
         raise Exception("Invalid test type")
@@ -45,15 +45,16 @@ async def bram_base(dut, test, nloops):
     cocotb.start_soon(c160.start())
     cocotb.start_soon(c320.start())
 
-    print("Stating value of copy reg A state: " + str(dut.copy_addr_a.value))
+    if verbose:
+        print("Starting value of copy reg A state: " + str(dut.copy_addr_a.value))
 
     # Need to have all 0's for initialized values read in first BX
     # Offset of 3 @ 320MHz + 1 BX (=N latency setting)
     q = [[[0 for _ in range(6)] for _ in range(15)] for _ in range(2)] + [[[0 for _ in range(6)] for _ in range(15)] for _ in range(8*LATENCY + 11)]
     # Strip and partition queues must be offset, as addresses are registered from strip but not from partition
     # Constant offset of 3 BX, comes from pipelining address computation + 1 from BRAM interal read + 1 from output signal assignment
-    strip_q = [0]*(8*LATENCY + 4)
-    prt_q = [0]*(8*LATENCY + 4)
+    strip_q = [0]*4
+    prt_q = [0]*4
 
     for i in range(nloops):
         # Generate input sbits
@@ -67,7 +68,7 @@ async def bram_base(dut, test, nloops):
             vals = [[0 for j in range(6)] for k in range(15)]
             vals[in_prt][in_ly] = 2**(i%192)
         elif test == "MANUAL":
-            vals = [[2**190 + 2**189 for j in range(6)] for k in range(15)]
+            vals = [[i*k for j in range(6)] for k in range(15)]
 
         dut.sbits_i.value = vals
         q += [vals for _ in range(8)]
@@ -84,8 +85,8 @@ async def bram_base(dut, test, nloops):
                 strip = max(i-1-adjust_offset-LATENCY, 0) % 192
                 prt = max(i-1-adjust_offset-LATENCY, 0)//(192*6) % 15
             elif test == "MANUAL":
-                strip = 191
-                prt = 0
+                strip = 0
+                prt = 1
 
             # Add read addr to FIFO
             strip_q.append(strip)
@@ -99,7 +100,8 @@ async def bram_base(dut, test, nloops):
             # Check that new out data matches corresponding input data
             strip = strip_q.pop(0)
             prt = prt_q.pop(0)
-            print(f"Strip: {strip}, Partition: {prt}")
+            if verbose:
+                print(f"Strip: {strip}, Partition: {prt}")
 
             # Format data out from FW
             out_data = [ly.value.binstr for ly in dut.my_out]
@@ -115,18 +117,19 @@ async def bram_base(dut, test, nloops):
             in_data_word = [x[192+36-end_i:192+36-start_i] for x in in_data_formatted]
 
             # Display info for debugging
-            print(f"In Data:\n{in_data_word}")
-            print(f"Out data:\n{out_data}")
-
-            print(f"A BX addr: {dut.bx_addr_a.value}")
-            print(f"B BX addr: {dut.bx_addr_b.value}")
-            print(f"Wanted BRAM from strip: {dut.wanted_bram_from_strip.value}")
-            print(f"Wanted prt_reg: {dut.wanted_prt_reg.value}")
+            if verbose:
+                print(f"In Data:\n{in_data_word}")
+                print(f"Out data:\n{out_data}")
+    
+                print(f"A BX addr: {dut.bx_addr_a.value}")
+                print(f"B BX addr: {dut.bx_addr_b.value}")
+                print(f"Wanted BRAM from strip: {dut.wanted_bram_from_strip.value}")
+                print(f"Wanted prt_reg: {dut.wanted_prt_reg.value}")
 
             # Assert data in == data out
             try:
                 # If 'U' in out_data, in startup state so skip
-                if 'U' not in out_data[0] and i >= LATENCY + 2:
+                if i >= LATENCY + 2:
                     assert in_data_word == out_data
             except:
                 print(a)
