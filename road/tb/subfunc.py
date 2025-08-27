@@ -220,6 +220,63 @@ def create_pat_ly(lower : float, upper : float):
 
     return layer_list
 
+def shift_center(ly, max_span=37):
+    """
+
+    Patterns are defined as a +hi and -lo around a center point of a pattern.
+
+    e.g. for a pattern 37 strips wide, there is a central strip,
+    and 18 strips to the left and right of it.
+
+    This patterns shifts from a +hi and -lo around the central strip, to an offset +hi and -lo.
+
+    e.g. for (hi, lo) = (1, -1) and a window of 37, this will return (17,19)
+
+    """
+    center = math.floor(max_span/2)
+    hi = ly.hi + center
+    lo = ly.lo + center
+    return (lo, hi)
+
+def set_high_bits(lo_hi_pair):
+    """Given a high bit and low bit, this function will return a bitmask with all the bits in
+    between the high and low set to 1"""
+    hi = lo_hi_pair[1]
+    lo = lo_hi_pair[0]
+    return 2**(hi-lo+1)-1 << lo
+
+def get_ly_mask(ly_pat : patdef_t,
+                span_by_ly : List[int]):
+
+    '''
+    takes in a given layer pattern and returns a list of integer bit masks
+    for each layer
+    '''
+
+    #for each layer, shift the provided hi and lo values for each layer from
+    #pattern definition by center
+    m_vals = [shift_center(ly, span) for ly, span in zip(ly_pat.layers, span_by_ly)]
+
+    # use the high and low indices to determine where the high bits must go for
+    # each layer
+    m_vec = np.array([set_high_bits(x) for x in m_vals])
+    return m_vec
+    # return Mask(m_vec, ly_pat.id)
+
+def get_span_by_ly(patlist):
+    max_spans = [0 for _ in range(6)]
+    for pat in patlist:
+        for ly_i, ly in enumerate(pat.layers):
+            max_spans[ly_i] = max(max_spans[ly_i], ly.hi) 
+    return [sp*2 + 1 for sp in max_spans]
+
+def calculate_global_layer_mask(patlist, max_span):
+    """create layer masks for patterns in patlist"""
+    global LAYER_MASK
+    span_by_ly = get_span_by_ly(patlist)
+    LAYER_MASK = np.array([get_ly_mask(pat, span_by_ly) for pat in patlist]) 
+    # LAYER_MASK = [get_ly_mask(pat, max_span) for pat in patlist]
+
 # discard anything below or equal to 8
 # for PATLIST initialization process
 # true patlist; only used for testing pat_unit.vhd emulator
