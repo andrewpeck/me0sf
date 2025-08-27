@@ -246,7 +246,7 @@ def set_high_bits(lo_hi_pair):
     return 2**(hi-lo+1)-1 << lo
 
 def get_ly_mask(ly_pat : patdef_t,
-                span_by_ly : List[int]):
+                ly_spans : List[int]):
 
     '''
     takes in a given layer pattern and returns a list of integer bit masks
@@ -255,7 +255,7 @@ def get_ly_mask(ly_pat : patdef_t,
 
     #for each layer, shift the provided hi and lo values for each layer from
     #pattern definition by center
-    m_vals = [shift_center(ly, span) for ly, span in zip(ly_pat.layers, span_by_ly)]
+    m_vals = [shift_center(ly, span) for ly, span in zip(ly_pat.layers, ly_spans)]
 
     # use the high and low indices to determine where the high bits must go for
     # each layer
@@ -264,18 +264,19 @@ def get_ly_mask(ly_pat : patdef_t,
     # return Mask(m_vec, ly_pat.id)
 
 def get_span_by_ly(patlist):
+    global LY_SPANS
     max_spans = [0 for _ in range(6)]
     for pat in patlist:
         for ly_i, ly in enumerate(pat.layers):
-            max_spans[ly_i] = max(max_spans[ly_i], ly.hi) 
-    return [sp*2 + 1 for sp in max_spans]
+            max_spans[ly_i] = max(max_spans[ly_i], ly.hi)
 
-def calculate_global_layer_mask(patlist, max_span):
+    LY_SPANS = tuple([sp*2 + 1 for sp in max_spans])
+
+def calculate_global_layer_mask(patlist):
     """create layer masks for patterns in patlist"""
-    global LAYER_MASK
-    span_by_ly = get_span_by_ly(patlist)
-    LAYER_MASK = np.array([get_ly_mask(pat, span_by_ly) for pat in patlist]) 
-    # LAYER_MASK = [get_ly_mask(pat, max_span) for pat in patlist]
+    global LAYER_MASK, LY_SPANS
+
+    LAYER_MASK = np.array([get_ly_mask(pat, LY_SPANS) for pat in patlist], dtype=np.uint64)
 
 # discard anything below or equal to 8
 # for PATLIST initialization process

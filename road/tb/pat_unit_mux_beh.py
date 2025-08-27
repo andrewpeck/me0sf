@@ -14,9 +14,10 @@ def parse_data(data, strip, max_span):
         parsed_data = (data >> shift) & (2**max_span - 1)
     return parsed_data
 
-def extract_data_window(ly_dat, strip, max_span):
+def extract_data_window(ly_dat, strip):
     """extracts data window around given strip"""
-    return np.array([parse_data(data, strip, max_span) for data in ly_dat])
+    global LY_SPANS
+    return np.array([parse_data(data, strip, ly_span) for data, ly_span in zip(ly_dat, LY_SPANS)])
 
 def parse_bx_data(bx_data, strip, max_span):
     if strip < max_span // 2 + 1:
@@ -43,7 +44,7 @@ def pat_mux(partition_data, partition, config : Config, partition_bx_data):
     segments the pat_unit_mux.vhd would find
     """
     # todo : after extracting window the span is 37 or smaller
-    fn = lambda strip : pat_unit(data = extract_data_window(partition_data, strip, config.max_span),
+    fn = lambda strip : pat_unit(data = extract_data_window(partition_data, strip),
                                  bx_data = extract_bx_data_window(partition_bx_data, strip, config.max_span),
                                  config = config,
                                  ly_thresh_patid = config.ly_thresh_patid,
