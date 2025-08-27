@@ -162,24 +162,25 @@ def pat_unit(data,
         pat_l8 = patdef_t(2, create_pat_ly(5.4 / factor, 7.0 / factor))
         pat_r8 = mirror_patdef(pat_l8, pat_l8.id - 1)
 
+
         dynamic_patlist = (
-            pat_straight,
-            pat_l,
-            pat_r,
-            pat_l2,
-            pat_r2,
-            pat_l3,
-            pat_r3,
-            pat_l4,
-            pat_r4,
-            pat_l5,
-            pat_r5,
-            pat_l6,
-            pat_r6,
-            pat_l7,
+            pat_r8,
+            pat_l8, 
             pat_r7,
-            pat_l8,
-            pat_r8)
+            pat_l7,
+            pat_r6,
+            pat_l6,
+            pat_r5,
+            pat_l5,
+            pat_r4,
+            pat_l4,
+            pat_r3,
+            pat_l3,
+            pat_r2,
+            pat_l2,
+            pat_r,
+            pat_l,
+            pat_straight)
 
         # first make the PATLIST appropriate
         calculate_global_layer_mask(dynamic_patlist, input_max_span)
