@@ -12,6 +12,7 @@ import cocotb
 import plotille
 from cocotb.triggers import RisingEdge
 from cocotb_test.simulator import run
+from cocotb.clock import Clock
 
 from chamber_beh import process_chamber
 from datagen import datagen
@@ -74,6 +75,10 @@ async def chamber_test(dut, test, nloops=512, verbose=True):
     # setup the dut and extract constants from it
 
     setup(dut)
+    clock160 = Clock(dut.clock160, 24, "ns")
+    clock40 = Clock(dut.clock40, 96, "ns") 
+    cocotb.start_soon(clock160.start())
+    cocotb.start_soon(clock40.start())
 
     cocotb.start_soon(monitor_dav(dut))
 
@@ -104,7 +109,7 @@ async def chamber_test(dut, test, nloops=512, verbose=True):
     dut.ly_thresh_i.value = [[max(eta_thresh, id_thresh) for id_thresh in config.ly_thresh_patid] for eta_thresh in config.ly_thresh_eta]
 
     # flush the buffers
-    for _ in range(100):
+    for _ in range(50):
         await RisingEdge(dut.clock)
 
     # measure latency by putting some s-bits on a strip and waiting to see the output
@@ -302,7 +307,7 @@ async def chamber_test(dut, test, nloops=512, verbose=True):
             popped_data = queue.pop(0)
 
             temp_zeros = [[[0]*192]*6]*8
-            sw_segments = process_chamber(chamber_data=popped_data,
+            sw_segments, new_config = process_chamber(chamber_data=popped_data,
                                           config=config, chamber_bx_data=temp_zeros)
 
             fw_segments = get_segments_from_dut(dut)
@@ -386,6 +391,8 @@ def test_chamber():
         os.path.join(rtl_dir, "chamber_pulse_extension.vhd"),
         os.path.join(rtl_dir, "chamber.vhd")]
 
+    verilog_sources = [os.path.join(rtl_dir, "../../../xpm_memory.sv")]
+
     #parameters = {"PULSE_EXTEND": 1, "DEADTIME": 0, "DISABLE_PEAKING": True}
     parameters = {"DISABLE_PEAKING": True, "X_DEGHOST_EDGE_DIST" : 2}
 
@@ -393,10 +400,12 @@ def test_chamber():
     #os.environ["COCOTB_RESULTS_FILE"] = f"../log/{module}.xml"
     
     run(vhdl_sources=vhdl_sources,
+        verilog_sources=verilog_sources,
         module=module,  # name of cocotb test module
-        compile_args=["-2008"],
+        vhdl_compile_args=["-2008"],
         toplevel="chamber",  # top level HDL
         toplevel_lang="vhdl",
+        #sim_args=["-t", "ps", "-suppress", "14408", "-do", "set NumericStdNoWarnings 1;"],
         sim_args=["-suppress", "14408", "-do", "set NumericStdNoWarnings 1;"],
         parameters=parameters,
         gui=0)

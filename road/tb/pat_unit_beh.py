@@ -32,7 +32,7 @@ def set_high_bits(lo_hi_pair):
     return 2**(hi-lo+1)-1 << lo
 
 def get_ly_mask(ly_pat : patdef_t,
-                max_span : int = 37):
+                span_by_ly : List[int]):
 
     '''
     takes in a given layer pattern and returns a list of integer bit masks
@@ -41,7 +41,7 @@ def get_ly_mask(ly_pat : patdef_t,
 
     #for each layer, shift the provided hi and lo values for each layer from
     #pattern definition by center
-    m_vals = [shift_center(ly, max_span) for ly in ly_pat.layers]
+    m_vals = [shift_center(ly, span) for ly, span in zip(ly_pat.layers, span_by_ly)]
 
     # use the high and low indices to determine where the high bits must go for
     # each layer
@@ -49,10 +49,18 @@ def get_ly_mask(ly_pat : patdef_t,
     return m_vec
     # return Mask(m_vec, ly_pat.id)
 
+def get_span_by_ly(patlist):
+    max_spans = [0 for _ in range(6)]
+    for pat in patlist:
+        for ly_i, ly in enumerate(pat.layers):
+            max_spans[ly_i] = max(max_spans[ly_i], ly.hi) 
+    return [sp*2 + 1 for sp in max_spans]
+
 def calculate_global_layer_mask(patlist, max_span):
     """create layer masks for patterns in patlist"""
     global LAYER_MASK
-    LAYER_MASK = np.array([get_ly_mask(pat, max_span) for pat in patlist])
+    span_by_ly = get_span_by_ly(patlist)
+    LAYER_MASK = np.array([get_ly_mask(pat, span_by_ly) for pat in patlist]) 
     # LAYER_MASK = [get_ly_mask(pat, max_span) for pat in patlist]
 
 def mask_layer_data (data, mask):
@@ -206,13 +214,21 @@ def pat_unit(data,
 
     pids = np.arange(1, 18, dtype=np.uint8)
     data_tiled = np.tile(data, (17, 1))
-    masked_data = np.bitwise_and(np.flip(LAYER_MASK, axis=0), data_tiled)
+
+  #  spans = (37, 23, 9, 9, 23, 37)
+  #  for pat in LAYER_MASK:
+  #      for ly_i, ly in enumerate(pat):
+  #         bin_str = format(ly, f"0{spans[ly_i]}b")
+  #         print(' '*( ( (37 - len(bin_str)) // 2) ) + bin_str)
+
+    masked_data = np.bitwise_and(LAYER_MASK, data_tiled)
 
     if light_hit_count:
         bit_count_arr = np.bitwise_count(np.vstack((masked_data[:,0], masked_data[:,5])).T)
     else:
         bit_count_arr = np.bitwise_count(masked_data)
 
+    # HC IS DISABLED FOR NOW
     # hcs = np.sum(np.clip(bit_count_arr, a_min = None, a_max = 7), axis=1, dtype=np.uint16)
     hcs = np.zeros((17,), dtype=np.uint16)
 
@@ -259,11 +275,10 @@ def pat_unit(data,
 
     #print(best.bx)
 
-        # (4) process centroids
+    # (4) process centroids
     if skip_centroids:
-        #TODO: update this to work with speedup changes
-        centroids = [[0 for _ in range(6)] for _ in range(len(masked_data))]
-        bxs = [-9999 for _ in range(len(masked_data))]
+        centroid = [0 for _ in range(6)]
+        bx = -9999
     else:
         centroid, bx = calculate_centroids(masked_data[best_pid-1], bx_data)
 

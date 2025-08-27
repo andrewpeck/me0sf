@@ -68,16 +68,15 @@ async def pat_unit_mux_test(dut, NLOOPS=500, test="WALKING1"):
     config = Config()
     config.skip_centroids = True
     config.max_span=get_max_span_from_dut(dut)
-    #config.ly_thresh=6
     config.width=dut.WIDTH.value
-    dut.ly_thresh.value = config.ly_thresh
+    dut.ly_thresh.value = [thresh-4 for thresh in config.ly_thresh_patid] if dut.EN_HC_COMPRESS else config.ly_thresh_patid # Since HC compression happens at a higher level in FW, need to take care of it here
 
     #--------------------------------------------------------------------------------
     # Measure Latency
     #--------------------------------------------------------------------------------
 
     checkfn = lambda : dut.segments_o[0].lc.value.is_resolvable and \
-        dut.segments_o[0].lc.value.integer >= config.ly_thresh[dut.segments_o[0].id.value.integer]
+        dut.segments_o[0].lc.value.integer >= config.ly_thresh_patid[dut.segments_o[0].id.value.integer-1] - 3*dut.EN_HC_COMPRESS.value
 
     def setfn(dut, x):
         dut.ly0.value = x
@@ -161,7 +160,8 @@ async def pat_unit_mux_test(dut, NLOOPS=500, test="WALKING1"):
             old_data = queue.pop(0)
             sw_segments = pat_mux(partition_data=old_data,
                                   partition=0,
-                                  config=config)
+                                  config=config, 
+                                  partition_bx_data=[[0]*192]*6)
 
             fw_segments = get_segments_from_dut(dut)
 
