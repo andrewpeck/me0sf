@@ -50,27 +50,26 @@ async def pat_unit_mux_test(dut, NLOOPS=500, test="WALKING1"):
     "Test the pat_unix_mux.vhd module"
 
     #--------------------------------------------------------------------------------
+    # Configuration
+    #--------------------------------------------------------------------------------
+
+    config = Config()
+    config.initialize_patlist(get_patlist_from_dut(dut))
+    config.skip_centroids = True
+    config.width=dut.WIDTH.value
+    dut.ly_thresh.value = [thresh-4 for thresh in config.ly_thresh_patid] if dut.EN_HC_COMPRESS else config.ly_thresh_patid # Since HC compression happens at a higher level in FW, need to take care of it here
+
+    #--------------------------------------------------------------------------------
     # Setup and Flush the Pipeline
     #--------------------------------------------------------------------------------
     
-    ly_spans = 
-    setup(dut, ly_spans)
+    setup(dut)
     cocotb.start_soon(monitor_dav(dut))
 
     set_dut_inputs(dut, [0 for _ in range(6)])
 
     for _ in range(64):
         await RisingEdge(dut.clock)
-
-    #--------------------------------------------------------------------------------
-    # Configuration
-    #--------------------------------------------------------------------------------
-
-    config = Config()
-    config.skip_centroids = True
-    config.max_span=get_max_span_from_dut(dut)
-    config.width=dut.WIDTH.value
-    dut.ly_thresh.value = [thresh-4 for thresh in config.ly_thresh_patid] if dut.EN_HC_COMPRESS else config.ly_thresh_patid # Since HC compression happens at a higher level in FW, need to take care of it here
 
     #--------------------------------------------------------------------------------
     # Measure Latency

@@ -73,7 +73,6 @@ def pat_unit(data,
              ly_thresh_patid : list[int] = [7, 7, 7, 7, 7, 7, 7, 7, 7, 7, 5, 5, 4, 4, 4, 4, 4],
              ly_thresh_eta : list[int] = [4, 5, 4, 5, 4, 5, 4, 5, 4, 5, 4, 5, 4, 5, 4],
              partition : int = -1,
-             input_max_span : int = 37,
              num_or : int = 2,
              light_hit_count : bool = True,
              verbose : bool = False,
@@ -82,9 +81,7 @@ def pat_unit(data,
     # construct the dynamic_patlist (we do not use default PATLIST anymore)
     # for robustness concern, other codes might use PATLIST, so we kept the default PATLIST in subfunc
     # however, this could cause inconsistent issue, becareful! OR find a way to modify PATLIST
-    global LAYER_MASK
-    
-    if LAYER_MASK is None: 
+    if config.patlist is None: 
         factor = num_or / 2
 
         pat_straight = patdef_t(17, create_pat_ly(-0.4 / factor, 0.4 / factor))
@@ -105,7 +102,6 @@ def pat_unit(data,
         pat_l8 = patdef_t(2, create_pat_ly(5.4 / factor, 7.0 / factor))
         pat_r8 = mirror_patdef(pat_l8, pat_l8.id - 1)
 
-
         dynamic_patlist = (
             pat_r8,
             pat_l8, 
@@ -125,9 +121,7 @@ def pat_unit(data,
             pat_l,
             pat_straight)
 
-        # first make the PATLIST appropriate
-        LAYER_MASK = calculate_global_layer_mask(dynamic_patlist)
-        
+        config.initialize_patlist(dynamic_patlist)
 
     """
     takes in sample data for each layer and returns best segment
@@ -166,7 +160,7 @@ def pat_unit(data,
   #         print(' '*( ( (37 - len(bin_str)) // 2) ) + bin_str)
 
 
-    masked_data = np.bitwise_and(LAYER_MASK, data_tiled)
+    masked_data = np.bitwise_and(config.ly_mask, data_tiled)
 
     if light_hit_count:
         bit_count_arr = np.bitwise_count(np.vstack((masked_data[:,0], masked_data[:,5])).T)

@@ -7,9 +7,7 @@ from constants import *
 from subfunc import *
 
 
-def setup(dut, ly_spans):
-
-    calculate_global_layer_mask(get_patlist_from_dut(dut))
+def setup(dut):
 
     # set layer count threshold
     #dut.ly_thresh_i.value = [7, 7, 7, 7, 7, 7, 7, 7, 7, 7, 5, 5, 4, 4, 4, 4, 4]
