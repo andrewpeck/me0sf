@@ -52,8 +52,9 @@ async def pat_unit_mux_test(dut, NLOOPS=500, test="WALKING1"):
     #--------------------------------------------------------------------------------
     # Setup and Flush the Pipeline
     #--------------------------------------------------------------------------------
-
-    setup(dut)
+    
+    ly_spans = 
+    setup(dut, ly_spans)
     cocotb.start_soon(monitor_dav(dut))
 
     set_dut_inputs(dut, [0 for _ in range(6)])

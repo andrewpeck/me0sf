@@ -108,7 +108,7 @@ async def pat_unit_test(dut, test="SEGMENTS"):
             cut_amount = (len(bin_ly_data) - span) // 2
             data_o.append(int(bin_ly_data[cut_amount:len(bin_ly_data)-cut_amount], 2))
 
-        return data_o
+        return np.array(data_o, dtype=np.uint64)
 
     if test=="SEGMENTS": 
         get_data = lambda : datagen(LY_CNT, N_NOISE, max_span=MAX_SPAN)

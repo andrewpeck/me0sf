@@ -126,7 +126,7 @@ def pat_unit(data,
             pat_straight)
 
         # first make the PATLIST appropriate
-        calculate_global_layer_mask(dynamic_patlist, input_max_span)
+        LAYER_MASK = calculate_global_layer_mask(dynamic_patlist)
         
 
     """
@@ -164,6 +164,7 @@ def pat_unit(data,
   #      for ly_i, ly in enumerate(pat):
   #         bin_str = format(ly, f"0{spans[ly_i]}b")
   #         print(' '*( ( (37 - len(bin_str)) // 2) ) + bin_str)
+
 
     masked_data = np.bitwise_and(LAYER_MASK, data_tiled)
 

@@ -38,6 +38,7 @@ class Config:
     ly_thresh_patid : list[int] = [7, 7, 7, 7, 7, 7, 7, 7, 7, 7, 5, 5, 4, 4, 4, 4, 4]
     ly_thresh_eta : list[int] = [4, 5, 4, 5, 4, 5, 4, 5, 4, 5, 4, 5, 4, 5, 4]
     max_span : int = 37
+    ly_spans : List[int] = [0 for _ in range(6)]
     width : int = 192
     deghost_pre : bool = True
     deghost_post : bool = False
@@ -263,20 +264,21 @@ def get_ly_mask(ly_pat : patdef_t,
     return m_vec
     # return Mask(m_vec, ly_pat.id)
 
-def get_span_by_ly(patlist):
-    global LY_SPANS
+def calculate_ly_spans(patlist, config):
     max_spans = [0 for _ in range(6)]
     for pat in patlist:
         for ly_i, ly in enumerate(pat.layers):
             max_spans[ly_i] = max(max_spans[ly_i], ly.hi)
 
-    LY_SPANS = tuple([sp*2 + 1 for sp in max_spans])
+    config.ly_spans = tuple([sp*2 + 1 for sp in max_spans])
 
-def calculate_global_layer_mask(patlist):
+def calculate_global_layer_mask(patlist, config):
     """create layer masks for patterns in patlist"""
-    global LAYER_MASK, LY_SPANS
+    global LAYER_MASK
+    ly_spans = get_span_by_ly(patlist, config)
 
-    LAYER_MASK = np.array([get_ly_mask(pat, LY_SPANS) for pat in patlist], dtype=np.uint64)
+    LAYER_MASK = np.array([get_ly_mask(pat, ly_spans) for pat in patlist], dtype=np.uint64)
+    return LAYER_MASK
 
 # discard anything below or equal to 8
 # for PATLIST initialization process

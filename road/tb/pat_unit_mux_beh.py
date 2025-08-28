@@ -14,10 +14,14 @@ def parse_data(data, strip, max_span):
         parsed_data = (data >> shift) & (2**max_span - 1)
     return parsed_data
 
-def extract_data_window(ly_dat, strip):
+def extract_data_window(prt_dat, strip):
     """extracts data window around given strip"""
     global LY_SPANS
-    return np.array([parse_data(data, strip, ly_span) for data, ly_span in zip(ly_dat, LY_SPANS)])
+
+    max_span = max(LY_SPANS)
+    if max_spans > 64:
+        raise Exception("Not supported for span > 64, must modify numpy data type")
+    return np.array([parse_data(data, strip, ly_span) for data, ly_span in zip(prt_dat, LY_SPANS)], dtype=np.uint64)
 
 def parse_bx_data(bx_data, strip, max_span):
     if strip < max_span // 2 + 1:

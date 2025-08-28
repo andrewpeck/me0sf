@@ -7,7 +7,7 @@ from constants import *
 from subfunc import *
 
 
-def setup(dut, max_span=37):
+def setup(dut, ly_spans):
 
     calculate_global_layer_mask(get_patlist_from_dut(dut))
 
@@ -151,9 +151,9 @@ def get_max_span_from_dut(dut):
 
 
 def set_dut_inputs(dut, data):
-    dut.ly0.value = data[0]
-    dut.ly1.value = data[1]
-    dut.ly2.value = data[2]
-    dut.ly3.value = data[3]
-    dut.ly4.value = data[4]
-    dut.ly5.value = data[5]
+    dut.ly0.value = int(data[0])
+    dut.ly1.value = int(data[1])
+    dut.ly2.value = int(data[2])
+    dut.ly3.value = int(data[3])
+    dut.ly4.value = int(data[4])
+    dut.ly5.value = int(data[5])
