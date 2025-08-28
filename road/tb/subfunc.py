@@ -47,7 +47,7 @@ class Config:
 
         self.ly_spans = tuple([sp*2 + 1 for sp in max_spans])
 
-    def shift_center(ly, ly_span):
+    def shift_center(self, ly, ly_span):
         """Patterns are defined as a +hi and -lo around a center point of a pattern. e.g. for a pattern 37 strips wide, there is a central strip,
         and 18 strips to the left and right of it. This patterns shifts from a +hi and -lo around the central strip, to an offset +hi and -lo.
         e.g. for (hi, lo) = (1, -1) and a window of 37, this will return (17,19)"""
@@ -57,7 +57,7 @@ class Config:
         lo = ly.lo + center
         return (lo, hi)
     
-    def set_high_bits(lo_hi_pair):
+    def set_high_bits(self, lo_hi_pair):
         """Given a high bit and low bit, this function will return a bitmask with all the bits in between the high and low set to 1"""
         hi = lo_hi_pair[1]
         lo = lo_hi_pair[0]

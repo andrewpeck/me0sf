@@ -57,7 +57,9 @@ async def pat_unit_mux_test(dut, NLOOPS=500, test="WALKING1"):
     config.initialize_patlist(get_patlist_from_dut(dut))
     config.skip_centroids = True
     config.width=dut.WIDTH.value
-    dut.ly_thresh.value = [thresh-4 for thresh in config.ly_thresh_patid] if dut.EN_HC_COMPRESS else config.ly_thresh_patid # Since HC compression happens at a higher level in FW, need to take care of it here
+
+    en_hc_compress = True if dut.EN_HC_COMPRESS == 1 else False
+    dut.ly_thresh.value = [thresh-4 for thresh in config.ly_thresh_patid] if en_hc_compress else config.ly_thresh_patid # Since HC compression happens at a higher level in FW, need to take care of it here
 
     #--------------------------------------------------------------------------------
     # Setup and Flush the Pipeline
@@ -165,6 +167,13 @@ async def pat_unit_mux_test(dut, NLOOPS=500, test="WALKING1"):
 
             fw_segments = get_segments_from_dut(dut)
 
+            #Add 3 to the FW segments' layer count, to account for LC compression
+            if (en_hc_compress):
+                for fw_segment in fw_segments:
+                    if (fw_segment.lc > 0):
+                        fw_segment.lc += 3
+                        fw_segment.update_quality()
+    
             if i > LATENCY+2:
                 for j in range(config.width):
                     if fw_segments[j].id > 0:
