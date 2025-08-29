@@ -110,8 +110,7 @@ def process_partition(partition_data : List[int],
     '''
 
     segments = pat_mux(partition_data, partition=partition, config=config, partition_bx_data=partition_bx_data)
-
-        
+            
     # if (partition == 1):
     #     print("I am partition "+str(partition)+". Printing segments before deghosting...")
     #     for seg in segments:
@@ -136,6 +135,7 @@ def process_partition(partition_data : List[int],
                                 group_width=config.group_width,
                                 ghost_width=config.ghost_width)
 
+    
     # divide partition into pieces and take best segment from each piece
     chunked = chunk(segments, config.group_width)
 

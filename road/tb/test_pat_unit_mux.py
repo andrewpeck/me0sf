@@ -58,7 +58,8 @@ async def pat_unit_mux_test(dut, NLOOPS=500, test="WALKING1"):
     config.skip_centroids = True
     config.width=dut.WIDTH.value
 
-    en_hc_compress = True if dut.EN_HC_COMPRESS == 1 else False
+    en_hc_compress = True if dut.EN_HC_COMPRESS.value == 1 else False
+
     dut.ly_thresh.value = [thresh-4 for thresh in config.ly_thresh_patid] if en_hc_compress else config.ly_thresh_patid # Since HC compression happens at a higher level in FW, need to take care of it here
 
     #--------------------------------------------------------------------------------
