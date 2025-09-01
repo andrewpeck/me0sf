@@ -109,7 +109,7 @@ async def chamber_test(dut, test, nloops=512, verbose=True):
     dut.ly_thresh_i.value = [[max(eta_thresh, id_thresh) for id_thresh in config.ly_thresh_patid] for eta_thresh in config.ly_thresh_eta]
 
     # flush the buffers
-    for _ in range(50):
+    for _ in range(60):
         await RisingEdge(dut.clock)
 
     # measure latency by putting some s-bits on a strip and waiting to see the output
@@ -336,8 +336,7 @@ async def chamber_test(dut, test, nloops=512, verbose=True):
                 if True:#loop > LATENCY+2:
                     if sw_segments[i] != fw_segments[i]:
                         print(popped_data)
-                        err = "ERR"
-                        print(f" {err} seg {i}:")
+                        print("ERR seg {i}:")
                         print("   > sw: " + str(sw_segments[i]))
                         print("   > fw: " + str(fw_segments[i]))
 
