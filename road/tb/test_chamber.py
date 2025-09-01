@@ -63,7 +63,9 @@ async def chamber_test_deghost(dut, nloops=20):
 
 #@cocotb.test() # type: ignore
 #async def chamber_test_stack(dut, nloops=30):
-#    await chamber_test(dut, "PEAKING", nloops)  
+#    await chamber_test(dut, "PEAKING", nloops)
+
+LATENCY = None 
  
 async def chamber_test(dut, test, nloops=512, verbose=True):
 
@@ -109,7 +111,7 @@ async def chamber_test(dut, test, nloops=512, verbose=True):
     dut.ly_thresh_i.value = [[max(eta_thresh, id_thresh) for id_thresh in config.ly_thresh_patid] for eta_thresh in config.ly_thresh_eta]
 
     # flush the buffers
-    for _ in range(60):
+    for _ in range(8):
         await RisingEdge(dut.clock)
 
     # measure latency by putting some s-bits on a strip and waiting to see the output
@@ -122,7 +124,9 @@ async def chamber_test(dut, test, nloops=512, verbose=True):
 
     meas_latency = await measure_latency(dut, checkfn, setfn)
 
-    LATENCY = ceil(meas_latency)-2-1 + 2 #another -2 from checking chunking changes # and bitonic sort optimization introduced this, weird...  #-1 #Peaking introduced this, need to investigate...
+    global LATENCY
+    if LATENCY is None:
+        LATENCY = ceil(meas_latency)-2-1 + 2 #another -2 from checking chunking changes # and bitonic sort optimization introduced this, weird...  #-1 #Peaking introduced this, need to investigate...
 
     # flush the buffers
     dut.sbits_i.value = NULL()
