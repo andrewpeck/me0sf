@@ -17,32 +17,32 @@ async def bram_rand(dut):
 
 @cocotb.test() # type: ignore
 async def bram_unique(dut):
-    await bram_base(dut, "UNIQUE", 5000)
+   await bram_base(dut, "UNIQUE", 5000)
 
 @cocotb.test() # type: ignore
 async def bram_walking1(dut):
     await bram_base(dut, "WALKING1", 17300)
 
-#@cocotb.test() # type: ignore
-#async def bram_manual(dut):
-#    await bram_base(dut, "MANUAL", 20)
+@cocotb.test() # type: ignore
+async def bram_manual(dut):
+    await bram_base(dut, "MANUAL", 20)
 
 async def bram_base(dut, test, nloops, verbose=False):
     # Check test validity
     if test not in ("RANDOM", "UNIQUE", "WALKING1", "MANUAL"):
         raise Exception("Invalid test type")
     
-    LATENCY = dut.LATENCY.value
+    LATENCY320 = dut.LATENCY320.value
     
     # Set random seed, arbitrary
     random.seed(1337)
 
     # Start clocks
-    c40 = Clock(dut.clock40, 72, "ns")
-    c160 = Clock(dut.clock160, 18, "ns")
+    #c40 = Clock(dut.clock40, 72, "ns")
+    #c160 = Clock(dut.clock160, 18, "ns")
     c320 = Clock(dut.clock320, 9, "ns")
-    cocotb.start_soon(c40.start())
-    cocotb.start_soon(c160.start())
+    #cocotb.start_soon(c40.start())
+    #cocotb.start_soon(c160.start())
     cocotb.start_soon(c320.start())
 
     if verbose:
@@ -50,12 +50,14 @@ async def bram_base(dut, test, nloops, verbose=False):
 
     # Need to have all 0's for initialized values read in first BX
     # Offset of 3 @ 320MHz + 1 BX (=N latency setting)
-    q = [[[0 for _ in range(6)] for _ in range(15)] for _ in range(2)] + [[[0 for _ in range(6)] for _ in range(15)] for _ in range(8*LATENCY + 11)]
+    q = [[[0 for _ in range(6)] for _ in range(15)] for _ in range(LATENCY320 + 10)]
     # Strip and partition queues must be offset, as addresses are registered from strip but not from partition
     # Constant offset of 3 BX, comes from pipelining address computation + 1 from BRAM interal read + 1 from output signal assignment
-    strip_q = [0]*4
-    prt_q = [0]*4
+    strip_q = [0]*3
+    prt_q = [0]*3
 
+    await RisingEdge(dut.clock320)
+ 
     for i in range(nloops):
         # Generate input sbits
         if test == "RANDOM":
@@ -82,10 +84,10 @@ async def bram_base(dut, test, nloops, verbose=False):
                 prt = random.randint(0, 14)
             elif test == "WALKING1":
                 adjust_offset = 1 if j == 0 else 0
-                strip = max(i-1-adjust_offset-LATENCY, 0) % 192
-                prt = max(i-1-adjust_offset-LATENCY, 0)//(192*6) % 15
+                strip = max(i-1-adjust_offset-(LATENCY320//8), 0) % 192
+                prt = max(i-1-adjust_offset-(LATENCY320//8), 0)//(192*6) % 15
             elif test == "MANUAL":
-                strip = 0
+                strip = i % 192
                 prt = 1
 
             # Add read addr to FIFO
@@ -129,7 +131,7 @@ async def bram_base(dut, test, nloops, verbose=False):
             # Assert data in == data out
             try:
                 # If 'U' in out_data, in startup state so skip
-                if i >= LATENCY + 2:
+                if i >= (LATENCY320 // 8) + 2:
                     assert in_data_word == out_data
             except:
                 print(a)
@@ -152,7 +154,7 @@ def test_bram():
 
     verilog_sources = [os.path.join(rtl_dir, "../../../xpm_memory.sv")]
 
-    parameters = {"LATENCY" : 0}
+    parameters = {"LATENCY320" : 0, "SBIT_PHASE" : 0}
 
     os.environ["SIM"] = "questa"
 

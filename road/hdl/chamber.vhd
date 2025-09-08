@@ -339,19 +339,20 @@ begin
     -- Sbit BRAM
     --------------------------------------------------------------------------------
 
---    sbit_bram_inst : entity work.sbit_bram
---      generic map (
---        LATENCY => 0
---      )
---      port map (
---        clock320 => clock,
---        clock40  => clock40,
---        clock160 => clock160,
---        sbits_i  => bram_in,
---        wanted_strip => (others => '0'),
---        wanted_prt => (others => '0'),
---        my_out => bram_out
---      );
+    sbit_bram_inst : entity work.sbit_bram
+      generic map (
+        LATENCY => 0,
+        BX_ADDR_PHASE => 0
+      )
+      port map (
+        clock320 => clock,
+        clock40  => clock40,
+        clock160 => clock160,
+        sbits_i  => bram_in,
+        wanted_strip => (others => '0'),
+        wanted_prt => (others => '0'),
+        my_out => bram_out
+      );
 
     --------------------------------------------------------------------------------
     -- Per Partition Pattern Finders

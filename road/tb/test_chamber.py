@@ -307,6 +307,14 @@ async def chamber_test(dut, test, nloops=512, verbose=True):
         # pop old data on dav_o
         if dut.dav_o_phase.value == 0:
 
+            bram_p = False
+            for ly in dut.bram_out:
+                if ly.value.is_resolvable and ly.value.integer != 0:
+                    bram_p = True
+
+            if bram_p:
+                print(f"BRAM OUT VAL: {dut.bram_out.value}")
+
             # gather emulator output
             popped_data = queue.pop(0)
 
@@ -408,8 +416,8 @@ def test_chamber():
         vhdl_compile_args=["-2008"],
         toplevel="chamber",  # top level HDL
         toplevel_lang="vhdl",
-        #sim_args=["-t", "ps", "-suppress", "14408", "-do", "set NumericStdNoWarnings 1;"],
-        sim_args=["-suppress", "14408", "-do", "set NumericStdNoWarnings 1;"],
+        sim_args=["-t", "ps", "-suppress", "14408", "-do", "set NumericStdNoWarnings 1;"],
+        #sim_args=["-suppress", "14408", "-do", "set NumericStdNoWarnings 1;"],
         parameters=parameters,
         gui=0)
 
