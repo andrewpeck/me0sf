@@ -45,7 +45,6 @@ entity chamber is
     --DEADTIME        : natural := 3;      -- deadtime in bx
     EN_HC_COMPRESS : boolean := true;   -- true to enable compression of hit count function (REQUIRED: minimum ly_thresh value is 4)
     X_DEGHOST_EDGE_DIST : natural := 2;  -- radius for cross partition deghosting
-    SEG_SHIFT_DELAY : natural := 0;      -- number of 320MHz clocks to delay segments, used to align with sbits from BRAM
     
     LY0_SPAN : natural := get_max_span(patdef_array);
     LY1_SPAN : natural := get_max_span(patdef_array);
@@ -59,7 +58,6 @@ entity chamber is
   port(
     clock             : in  std_logic;                     -- MUST BE 320MHZ
     clock40           : in  std_logic;                     -- MUST BE  40MHZ
-    clock160          : in std_logic;                      -- MUST BE 160 MHZ
 
     ly_thresh_i         : in  ly_thresh_chamber; -- Layer threshold, 0 to 6
 
@@ -218,11 +216,7 @@ architecture behavioral of chamber is
   --------------------------------------------------------------------------------
   signal bram_in : chamber_w_virtual_t;
   signal bram_out : sbit_window_t;
-  
-  type segments_shift_reg_t is array (SEG_SHIFT_DELAY downto 0) of segment_list_t(NUM_SEGMENTS-1 downto 0);
-  signal seg_shift_reg : segments_shift_reg_t;
 
-  signal seg_dav_shift_reg : std_logic_vector (SEG_SHIFT_DELAY downto 0);
 
 begin
 
@@ -346,8 +340,6 @@ begin
       )
       port map (
         clock320 => clock,
-        clock40  => clock40,
-        clock160 => clock160,
         sbits_i  => bram_in,
         wanted_strip => (others => '0'),
         wanted_prt => (others => '0'),
@@ -631,30 +623,14 @@ begin
     port map (
       clock  => clock,
       dav_i  => all_segs_dav_deghosted(0),
-      dav_o  => seg_dav_shift_reg(0),
+      dav_o  => final_segs_dav,
       segs_i => all_segs_x_deghosted,
-      segs_o => seg_shift_reg(0)
+      segs_o => final_segs
       );
 
   --------------------------------------------------------------------------------
   -- Read sbits from BRAM
   --------------------------------------------------------------------------------
-
-  -- Shift register for delay > 0
-  generate_shift : if SEG_SHIFT_DELAY > 0 generate
-    process (clock)
-    begin
-      if rising_edge(clock) then
-        for I in 1 to SEG_SHIFT_DELAY loop
-          seg_shift_reg(I) <= seg_shift_reg(I-1);
-          seg_dav_shift_reg(i) <= seg_dav_shift_reg(I-1);
-        end loop;
-      end if;
-    end process;
-  end generate generate_shift;  
-
-  final_segs <= seg_shift_reg(SEG_SHIFT_DELAY);
-  final_segs_dav <= seg_dav_shift_reg(SEG_SHIFT_DELAY);
 
   --------------------------------------------------------------------------------
   -- Fitting
@@ -678,31 +654,5 @@ begin
       segments_o        <= final_segs;
     end if;
   end process;
-  
--- temporary testing process, delete later. prints all extended sbits if any sbit (not extended) is hit
---  process (clock) is
---  variable found_data : boolean;
---  begin
---  found_data := false;
-    
---    if (rising_edge(clock)) then
---        for prt in 0 to 7 loop
---          for lyr in 0 to 5 loop
---            if (not(unsigned(sbits_i(prt)(lyr)) = 0)) then
---              found_data := true;
---            end if;
---          end loop;
---          if (found_data) then
---            report "SBITS EXTEND for Partition "& to_string(prt) severity note;
---            for lyr in 0 to 5 loop
---              report to_hstring(sbits_extend(prt)(lyr)) severity note;
---            end loop;
---            found_data := false;
---          end if;
---        end loop;
-        
---    end if;
---  end process;
-
 
 end behavioral;
