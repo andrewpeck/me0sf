@@ -84,11 +84,15 @@ signal bram_o : bram_o_chamber_t;
 
 begin
 
-  --assert LATENCY320 >= 0 and (LATENCY320 + SBIT_PHASE) <= 114
-  -- report "Latency320 for sbit BRAM must be in [0, 119], inclusive."
-  -- severity failure;
+  -- Domain checks
+  assert LATENCY320 >= 0 and LATENCY320 <= 114
+   report "Latency320 for sbit BRAM must be in [0, 114], inclusive."
+   severity failure;
   assert SBIT_PHASE >= 0 and SBIT_PHASE <= 7
     report "SBIT_PHASE must be in [0, 7], inclusive."
+    severity failure;
+  assert SBIT_PHASE /= 7 or LATENCY320 /= 114
+    report "SBIT_PHASE cannot be 7 if LATENCY320 = 114."
     severity failure;
     
   partition_bram_gen : for prt_I in 0 to 15-1 generate
