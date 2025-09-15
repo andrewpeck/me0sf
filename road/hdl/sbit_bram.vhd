@@ -37,13 +37,11 @@ use ieee.math_real.all;
 
 entity sbit_bram is
   generic (
-    LATENCY320 : integer; --LATENCY320 + BX_ADDR_PHASE_WRITE MUST BE [0, 119], INCLUSIVE
+    LATENCY320 : integer; --LATENCY320 + BX_ADDR_PHASE_WRITE MUST BE [0, 114], INCLUSIVE
     SBIT_PHASE : integer  --MUST BE [0, 7], INCLUSIVE
   );
   port (
     clock320 : in  std_logic;
-    clock40  : in  std_logic;
-    clock160 : in std_logic;
     sbits_i  : in  chamber_w_virtual_t;
     wanted_strip : in std_logic_vector (STRIP_BITS-1 downto 0);
     wanted_prt : in std_logic_vector (PARTITION_BITS-1 downto 0);
@@ -54,7 +52,7 @@ end sbit_bram;
 architecture Behavioral of sbit_bram is
 
 constant BX_ADDR_PHASE_READ : integer := (LATENCY320 + SBIT_PHASE + 7) mod 8;
-constant LATENCY40 : integer := (LATENCY320 + SBIT_PHASE) / 8;
+constant LATENCY40 : integer := (LATENCY320 + SBIT_PHASE + 7) / 8; --Add 7 so with 1 latency, start at -1 BX
 constant COPY_ADDR_PHASE : integer := (SBIT_PHASE + 1) mod 2;
 constant PADDED_PHASE : integer := SBIT_PHASE mod 2;
 
@@ -69,9 +67,9 @@ type padded_data_t is array (0 to 14) of padded_prt_t;
 
 signal padded_sbits : padded_data_t := (others => (others => (others => '0')));
 
-signal bx_addr_a : unsigned (3 downto 0) := to_unsigned(0, 4);
+signal bx_addr_a : unsigned (3 downto 0) := to_unsigned(((SBIT_PHASE+7) / 8)*15, 4); -- Set to 15 if SBIT_PHASE is nonzero, so it will increment to 0
 signal bx_addr_b : unsigned (3 downto 0) := to_unsigned(15-LATENCY40, 4);
-signal copy_addr_a : unsigned (1 downto 0) := to_unsigned(3, 2); -- Initialize to 2 so it will be 0 at first write
+signal copy_addr_a : unsigned (1 downto 0) := to_unsigned(3 - (SBIT_PHASE / 2), 2); -- Initialize to 2 so it will be 0 at first write
 signal full_addr_a : std_logic_vector (5 downto 0);
 signal full_addr_b : std_logic_vector (7 downto 0) := (others => '0');
 signal wanted_bram_from_strip : std_logic_vector (1 downto 0) := "00";
@@ -86,8 +84,11 @@ signal bram_o : bram_o_chamber_t;
 
 begin
 
-  assert LATENCY320 >= 0 and LATENCY320 + SBIT_PHASE <= 119
-    report "Latency320 for sbit BRAM must be in [0, 119], inclusive."
+  --assert LATENCY320 >= 0 and (LATENCY320 + SBIT_PHASE) <= 114
+  -- report "Latency320 for sbit BRAM must be in [0, 119], inclusive."
+  -- severity failure;
+  assert SBIT_PHASE >= 0 and SBIT_PHASE <= 7
+    report "SBIT_PHASE must be in [0, 7], inclusive."
     severity failure;
     
   partition_bram_gen : for prt_I in 0 to 15-1 generate

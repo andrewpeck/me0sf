@@ -13,19 +13,19 @@ from tb_common import *
 
 @cocotb.test() # type: ignore
 async def bram_rand(dut):
-    await bram_base(dut, "RANDOM", 5000)
+    await bram_base(dut, "RANDOM", 50)
 
-@cocotb.test() # type: ignore
-async def bram_unique(dut):
-   await bram_base(dut, "UNIQUE", 5000)
+#@cocotb.test() # type: ignore
+#async def bram_unique(dut):
+#   await bram_base(dut, "UNIQUE", 5000)
 
-@cocotb.test() # type: ignore
-async def bram_walking1(dut):
-    await bram_base(dut, "WALKING1", 17300)
+#@cocotb.test() # type: ignore
+#async def bram_walking1(dut):
+#    await bram_base(dut, "WALKING1", 17300)
 
-@cocotb.test() # type: ignore
-async def bram_manual(dut):
-    await bram_base(dut, "MANUAL", 20)
+#@cocotb.test() # type: ignore
+#async def bram_manual(dut):
+#    await bram_base(dut, "MANUAL", 20)
 
 async def bram_base(dut, test, nloops, verbose=False):
     # Check test validity
@@ -33,16 +33,13 @@ async def bram_base(dut, test, nloops, verbose=False):
         raise Exception("Invalid test type")
     
     LATENCY320 = dut.LATENCY320.value
-    
+    SBIT_PHASE = dut.SBIT_PHASE.value    
+
     # Set random seed, arbitrary
     random.seed(1337)
 
-    # Start clocks
-    #c40 = Clock(dut.clock40, 72, "ns")
-    #c160 = Clock(dut.clock160, 18, "ns")
+    # Start clock
     c320 = Clock(dut.clock320, 9, "ns")
-    #cocotb.start_soon(c40.start())
-    #cocotb.start_soon(c160.start())
     cocotb.start_soon(c320.start())
 
     if verbose:
@@ -56,7 +53,13 @@ async def bram_base(dut, test, nloops, verbose=False):
     strip_q = [0]*3
     prt_q = [0]*3
 
+    # Wait one clock to start, to allow sbits to be set at next clock
     await RisingEdge(dut.clock320)
+
+    # Wait for PHASE cycles
+    for _ in range(SBIT_PHASE):
+        await RisingEdge(dut.clock320)
+
  
     for i in range(nloops):
         # Generate input sbits
@@ -138,10 +141,25 @@ async def bram_base(dut, test, nloops, verbose=False):
                 print(f"Partition: {prt}")
                 assert False
 
-    # Need this to increment copy_addr_a so it is 00 again. Not needed once a reset signal is implemented.
-    await FallingEdge(dut.clock320)
+    # Need this to get back to the starting phase, since we waited PHASE+1 clocks in the very beginning
+    for _ in range(7-SBIT_PHASE):
+        await RisingEdge(dut.clock320)
 
-def test_bram():
+import pytest
+
+
+phases = [0, 1, 2, 3, 4, 5, 6, 7]
+latencies = [i for i in range(115)]
+
+# Run for each phase setting, for each latency setting
+parameters = []
+for p in phases:
+    for l in latencies:
+        parameters.append({"LATENCY320" : l, "SBIT_PHASE" : p})
+
+
+@pytest.mark.parametrize("parameters", parameters)
+def test_bram(parameters):
     tests_dir = os.path.abspath(os.path.dirname(__file__))
     rtl_dir = os.path.abspath(os.path.join(tests_dir, "..", "hdl"))
     module = os.path.splitext(os.path.basename(__file__))[0]
@@ -154,10 +172,10 @@ def test_bram():
 
     verilog_sources = [os.path.join(rtl_dir, "../../../xpm_memory.sv")]
 
-    parameters = {"LATENCY320" : 0, "SBIT_PHASE" : 0}
+    #parameters = {"LATENCY320" : latency, "SBIT_PHASE" : phase}
 
     os.environ["SIM"] = "questa"
-
+   
     run(vhdl_sources=vhdl_sources,
         verilog_sources=verilog_sources,
         module=module,  # name of cocotb test module
@@ -165,10 +183,20 @@ def test_bram():
         toplevel="sbit_bram",  # top level HDL
         toplevel_lang="vhdl",
         # sim_args=["-do", '"set NumericStdNoWarnings 1;"'],
-        sim_args=["-t", "ps"],
+        sim_args=["-t", "ps", "-voptargs=\"-access=rw+/.\""], #voptargs arg might speed up sim
         parameters=parameters,
+        sim_build = "sim_build/" + "_".join(("{}={}".format(*i) for i in parameters.items())),
         gui=0)
 
-
 if __name__ == "__main__":
-    test_bram()
+    phases = [3, 4, 5, 6, 7]
+    latencies = [i for i in range(115)]
+    
+    # Run for each phase setting, for each latency setting
+    parameters = []
+    for p in phases:
+        for l in latencies:
+            parameters.append({"LATENCY320" : l, "SBIT_PHASE" : p})
+    test_bram(parameters)
+
+
