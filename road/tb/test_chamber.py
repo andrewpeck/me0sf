@@ -77,10 +77,6 @@ async def chamber_test(dut, test, nloops=512, verbose=True):
     # setup the dut and extract constants from it
 
     setup(dut)
-    clock160 = Clock(dut.clock160, 24, "ns")
-    clock40 = Clock(dut.clock40, 96, "ns") 
-    cocotb.start_soon(clock160.start())
-    cocotb.start_soon(clock40.start())
 
     cocotb.start_soon(monitor_dav(dut))
 
@@ -306,14 +302,6 @@ async def chamber_test(dut, test, nloops=512, verbose=True):
 
         # pop old data on dav_o
         if dut.dav_o_phase.value == 0:
-
-            bram_p = False
-            for ly in dut.bram_out:
-                if ly.value.is_resolvable and ly.value.integer != 0:
-                    bram_p = True
-
-            if bram_p:
-                print(f"BRAM OUT VAL: {dut.bram_out.value}")
 
             # gather emulator output
             popped_data = queue.pop(0)
