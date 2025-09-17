@@ -308,8 +308,6 @@ begin
           partition_or(5) <= sbits_i(I/2)(5);
         end generate;
 
-        bram_in(I) <= partition_or;
-
         -- look for both x-partition segments toward the IP and away
         -- (for cosmic test stand)
         non_pointing : if (EN_NON_POINTING) generate
@@ -318,6 +316,9 @@ begin
         end generate;
 
       end generate;
+
+      -- Pass sbits to BRAM
+      bram_in(I) <= partition_or;
 
     end generate;
 
@@ -333,18 +334,18 @@ begin
     -- Sbit BRAM
     --------------------------------------------------------------------------------
 
-    sbit_bram_inst : entity work.sbit_bram
-      generic map (
-        LATENCY => 0,
-        BX_ADDR_PHASE => 0
-      )
-      port map (
-        clock320 => clock,
-        sbits_i  => bram_in,
-        wanted_strip => (others => '0'),
-        wanted_prt => (others => '0'),
-        my_out => bram_out
-      );
+--    sbit_bram_inst : entity work.sbit_bram
+--      generic map (
+--        LATENCY320 => 0,
+--        SBIT_PHASE => 0
+--      )
+--      port map (
+--        clock320 => clock,
+--        sbits_i  => bram_in,
+--        wanted_strip => (others => '0'),
+--        wanted_prt => (others => '0'),
+--        my_out => bram_out
+--      );
 
     --------------------------------------------------------------------------------
     -- Per Partition Pattern Finders
