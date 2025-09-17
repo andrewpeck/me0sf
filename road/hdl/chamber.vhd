@@ -329,8 +329,6 @@ begin
           partition_or(5) <= sbits_i(I/2)(5);
         end generate;
 
-        bram_in(I) <= partition_or;
-
         -- look for both x-partition segments toward the IP and away
         -- (for cosmic test stand)
         non_pointing : if (EN_NON_POINTING) generate
@@ -339,6 +337,9 @@ begin
         end generate;
 
       end generate;
+
+      -- Pass sbits to BRAM
+      bram_in(I) <= partition_or;
 
     end generate;
 

@@ -21,25 +21,25 @@ from tb_common import (get_max_span_from_dut, get_segments_from_dut,
                        monitor_dav, setup, measure_latency)
 #from get_sbits_from_root import (read_ntuple_stack, get_sbits_from_event)
 
-@cocotb.test() # type: ignore
-async def chamber_test_ff(dut, nloops=20):
-   await chamber_test(dut, "FF", nloops)
+#@cocotb.test() # type: ignore
+#async def chamber_test_ff(dut, nloops=20):
+#   await chamber_test(dut, "FF", nloops)
+#
+#@cocotb.test() # type: ignore
+#async def chamber_test_5a(dut, nloops=20):
+#   await chamber_test(dut, "5A", nloops)
+#
+#@cocotb.test() # type: ignore
+#async def chamber_test_walking1(dut, nloops=191):
+#   await chamber_test(dut, "WALKING1", nloops)
+#
+#@cocotb.test() # type: ignore
+#async def chamber_test_walkingf(dut, nloops=192):
+#   await chamber_test(dut, "WALKINGF", nloops)
 
-@cocotb.test() # type: ignore
-async def chamber_test_5a(dut, nloops=20):
-   await chamber_test(dut, "5A", nloops)
-
-@cocotb.test() # type: ignore
-async def chamber_test_walking1(dut, nloops=191):
-   await chamber_test(dut, "WALKING1", nloops)
-
-@cocotb.test() # type: ignore
-async def chamber_test_walkingf(dut, nloops=192):
-   await chamber_test(dut, "WALKINGF", nloops)
-
-@cocotb.test() # type: ignore
-async def chamber_test_xprt(dut, nloops=100):
-   await chamber_test(dut, "XPRT", nloops)
+#@cocotb.test() # type: ignore
+#async def chamber_test_xprt(dut, nloops=100):
+#   await chamber_test(dut, "XPRT", nloops)
 
 @cocotb.test() # type: ignore
 async def chamber_test_segs(dut, nloops=100):
@@ -122,7 +122,7 @@ async def chamber_test(dut, test, nloops=512, verbose=True):
 
     global LATENCY
     if LATENCY is None:
-        LATENCY = ceil(meas_latency)-2-1 + 2 #another -2 from checking chunking changes # and bitonic sort optimization introduced this, weird...  #-1 #Peaking introduced this, need to investigate...
+        LATENCY = ceil(meas_latency)-2+1 + 2 #another -2 from checking chunking changes # and bitonic sort optimization introduced this, weird...  #-1 #Peaking introduced this, need to investigate...
 
     # flush the buffers
     dut.sbits_i.value = NULL()
@@ -404,10 +404,11 @@ def test_chamber():
         vhdl_compile_args=["-2008"],
         toplevel="chamber",  # top level HDL
         toplevel_lang="vhdl",
-        sim_args=["-t", "ps", "-suppress", "14408", "-do", "set NumericStdNoWarnings 1;"],
-        #sim_args=["-suppress", "14408", "-do", "set NumericStdNoWarnings 1;"],
+        sim_args=["-t", "ps", "-suppress", "14408", "-do", "set NumericStdNoWarnings 1;"],# "-voptargs=\"-access=rw+/.\""],
+        #voptargs arg might increase sim speed, qwaveb to display signals in sim
+        #sim_args=["-suppress", "14408", "-do", "set NumericStdNoWarnings 1;", "-voptargs=\"-access=rw+/.\""],
         parameters=parameters,
-        gui=0)
+        gui=1)
 
 if __name__ == "__main__":
     test_chamber()

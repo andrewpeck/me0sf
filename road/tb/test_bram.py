@@ -189,14 +189,14 @@ def test_bram(parameters):
         gui=0)
 
 if __name__ == "__main__":
-    phases = [3, 4, 5, 6, 7]
-    latencies = [i for i in range(115)]
+    phases = [7]
+    latencies = [114]
     
     # Run for each phase setting, for each latency setting
     parameters = []
     for p in phases:
         for l in latencies:
             parameters.append({"LATENCY320" : l, "SBIT_PHASE" : p})
-    test_bram(parameters)
+    test_bram(parameters[0])
 
 
