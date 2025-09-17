@@ -75,9 +75,24 @@ architecture behavioral of pat_unit is
   signal best_slv : std_logic_vector (pat_unit_pre_t'w-1 downto 0);
   signal best     : pat_unit_pre_t;
   signal cand_slv : bus_array (0 to NUM_PATTERNS-1) (pat_unit_pre_t'w-1 downto 0);
+--  signal cand_slv_expanded : std_logic_vector (NUM_PATTERNS*pat_unit_pre_t'w + 15*pat_unit_pre_t'w - 1 downto 0) := (others => '0');
+--  signal cand_slv_reduced : std_logic_vector (NUM_PATTERNS*(LC_BITS-1 + PID_BITS) + 105 - 1 downto 0);
+  
+--  function flatten_array(A : bus_array) return std_logic_vector is
+--  constant pupt_w : integer := A(0)'length;
+--  variable result : std_logic_vector(A'length * pupt_w - 1 downto 0);
+--begin
+--  for i in A'range loop
+--    result(pupt_w*(i+1)-1 downto pupt_w*i) := A(i);
+--  end loop;
+--  return result;
+--end function;
+
 
 begin
 
+  --cand_slv_expanded <= flatten_array(cand_slv) & (15*pat_unit_pre_t'w-1 downto 0  => '0');
+  
   check_pattern_operators(true);
 
   assert (LY0_SPAN mod 2 = 1) report "Layer Span Must be Odd (span=" & integer'image(LY0_SPAN) & ")" severity error;
@@ -186,7 +201,7 @@ begin
       REG_STAGES  => 2,
       DAT_BITS    => best_slv'length,
       QLT_BITS    => best_slv'length,
-      IGNORE_BITS => 0,                 -- 1 to ignore the bend of the pattern id, 2 and 3 are the same, 4, 5 are the same, etc
+      IGNORE_BITS => PID_BITS,                 -- 1 to ignore the bend of the pattern id, 2 and 3 are the same, 4, 5 are the same, etc
       ADR_BITS_o  => integer(ceil(log2(real(NUM_PATTERNS))))
       )
     port map (
@@ -197,6 +212,27 @@ begin
       dat_o => best_slv,
       adr_o => open
       );
+      
+--   bitonic_sort_inst : entity work.bitonic_sort
+--      generic map (
+--        INPUTS               => 32,
+--        OUTPUTS              => 1,
+--        DATA_BITS            => pat_unit_pre_t'w,
+--        KEY_BITS             => pat_unit_pre_t'w,
+--        IGNORE_BITS          => PID_BITS,
+--        META_BITS            => 1,
+--        PIPELINE_STAGE_AFTER => 2,
+--        ADD_INPUT_REGISTERS  => true,
+--        ADD_OUTPUT_REGISTERS => true
+--        )
+--      port map (
+--        clock     => clock,
+--        reset     => '0',
+--        data_i    => cand_slv_expanded,
+--        data_o    => best_slv,
+--        meta_i(0) => pats_dav,
+--        meta_o(0) => priority_dav
+--        );
 
   -- record -> slv for priority encoder
   cand_to_slv : for I in 0 to NUM_PATTERNS-1 generate
