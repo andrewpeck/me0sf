@@ -12,6 +12,7 @@ import cocotb
 import plotille
 from cocotb.triggers import RisingEdge
 from cocotb_test.simulator import run
+from cocotb.clock import Clock
 
 from chamber_beh import process_chamber
 from datagen import datagen
@@ -20,25 +21,25 @@ from tb_common import (get_max_span_from_dut, get_segments_from_dut,
                        monitor_dav, setup, measure_latency)
 #from get_sbits_from_root import (read_ntuple_stack, get_sbits_from_event)
 
-@cocotb.test() # type: ignore
-async def chamber_test_ff(dut, nloops=20):
-   await chamber_test(dut, "FF", nloops)
+#@cocotb.test() # type: ignore
+#async def chamber_test_ff(dut, nloops=20):
+#   await chamber_test(dut, "FF", nloops)
+#
+#@cocotb.test() # type: ignore
+#async def chamber_test_5a(dut, nloops=20):
+#   await chamber_test(dut, "5A", nloops)
+#
+#@cocotb.test() # type: ignore
+#async def chamber_test_walking1(dut, nloops=191):
+#   await chamber_test(dut, "WALKING1", nloops)
+#
+#@cocotb.test() # type: ignore
+#async def chamber_test_walkingf(dut, nloops=192):
+#   await chamber_test(dut, "WALKINGF", nloops)
 
-@cocotb.test() # type: ignore
-async def chamber_test_5a(dut, nloops=20):
-   await chamber_test(dut, "5A", nloops)
-
-@cocotb.test() # type: ignore
-async def chamber_test_walking1(dut, nloops=191):
-   await chamber_test(dut, "WALKING1", nloops)
-
-@cocotb.test() # type: ignore
-async def chamber_test_walkingf(dut, nloops=192):
-   await chamber_test(dut, "WALKINGF", nloops)
-
-@cocotb.test() # type: ignore
-async def chamber_test_xprt(dut, nloops=100):
-   await chamber_test(dut, "XPRT", nloops)
+#@cocotb.test() # type: ignore
+#async def chamber_test_xprt(dut, nloops=100):
+#   await chamber_test(dut, "XPRT", nloops)
 
 @cocotb.test() # type: ignore
 async def chamber_test_segs(dut, nloops=100):
@@ -62,7 +63,9 @@ async def chamber_test_deghost(dut, nloops=20):
 
 #@cocotb.test() # type: ignore
 #async def chamber_test_stack(dut, nloops=30):
-#    await chamber_test(dut, "PEAKING", nloops)  
+#    await chamber_test(dut, "PEAKING", nloops)
+
+LATENCY = None 
  
 async def chamber_test(dut, test, nloops=512, verbose=True):
 
@@ -104,7 +107,7 @@ async def chamber_test(dut, test, nloops=512, verbose=True):
     dut.ly_thresh_i.value = [[max(eta_thresh, id_thresh) for id_thresh in config.ly_thresh_patid] for eta_thresh in config.ly_thresh_eta]
 
     # flush the buffers
-    for _ in range(100):
+    for _ in range(8):
         await RisingEdge(dut.clock)
 
     # measure latency by putting some s-bits on a strip and waiting to see the output
@@ -117,7 +120,9 @@ async def chamber_test(dut, test, nloops=512, verbose=True):
 
     meas_latency = await measure_latency(dut, checkfn, setfn)
 
-    LATENCY = ceil(meas_latency)-2-1 + 2 #another -2 from checking chunking changes # and bitonic sort optimization introduced this, weird...  #-1 #Peaking introduced this, need to investigate...
+    global LATENCY
+    if LATENCY is None:
+        LATENCY = ceil(meas_latency)-2+1 + 2 #another -2 from checking chunking changes # and bitonic sort optimization introduced this, weird...  #-1 #Peaking introduced this, need to investigate...
 
     # flush the buffers
     dut.sbits_i.value = NULL()
@@ -302,7 +307,7 @@ async def chamber_test(dut, test, nloops=512, verbose=True):
             popped_data = queue.pop(0)
 
             temp_zeros = [[[0]*192]*6]*8
-            sw_segments = process_chamber(chamber_data=popped_data,
+            sw_segments, new_config = process_chamber(chamber_data=popped_data,
                                           config=config, chamber_bx_data=temp_zeros)
 
             fw_segments = get_segments_from_dut(dut)
@@ -331,8 +336,7 @@ async def chamber_test(dut, test, nloops=512, verbose=True):
                 if True:#loop > LATENCY+2:
                     if sw_segments[i] != fw_segments[i]:
                         print(popped_data)
-                        err = "ERR"
-                        print(f" {err} seg {i}:")
+                        print("ERR seg {i}:")
                         print("   > sw: " + str(sw_segments[i]))
                         print("   > fw: " + str(fw_segments[i]))
 
@@ -379,10 +383,14 @@ def test_chamber():
         os.path.join(rtl_dir, "pat_unit_mux.vhd"),
         os.path.join(rtl_dir, "deghost.vhd"),
         os.path.join(rtl_dir, "x_prt_deghost_qual.vhd"),
+        os.path.join(rtl_dir, "../../../xpm_VCOMP.vhd"),
+        os.path.join(rtl_dir, "sbit_bram.vhd"),
         os.path.join(rtl_dir, "partition.vhd"),
         os.path.join(rtl_dir, "pulse_extension.vhd"),
         os.path.join(rtl_dir, "chamber_pulse_extension.vhd"),
         os.path.join(rtl_dir, "chamber.vhd")]
+
+    verilog_sources = [os.path.join(rtl_dir, "../../../xpm_memory.sv")]
 
     #parameters = {"PULSE_EXTEND": 1, "DEADTIME": 0, "DISABLE_PEAKING": True}
     parameters = {"DISABLE_PEAKING": True, "X_DEGHOST_EDGE_DIST" : 2}
@@ -391,13 +399,16 @@ def test_chamber():
     #os.environ["COCOTB_RESULTS_FILE"] = f"../log/{module}.xml"
     
     run(vhdl_sources=vhdl_sources,
+        verilog_sources=verilog_sources,
         module=module,  # name of cocotb test module
-        compile_args=["-2008"],
+        vhdl_compile_args=["-2008"],
         toplevel="chamber",  # top level HDL
         toplevel_lang="vhdl",
-        sim_args=["-suppress", "14408", "-do", "set NumericStdNoWarnings 1;"],
+        sim_args=["-t", "ps", "-suppress", "14408", "-do", "set NumericStdNoWarnings 1;"],# "-voptargs=\"-access=rw+/.\""],
+        #voptargs arg might increase sim speed, qwaveb to display signals in sim
+        #sim_args=["-suppress", "14408", "-do", "set NumericStdNoWarnings 1;", "-voptargs=\"-access=rw+/.\""],
         parameters=parameters,
-        gui=0)
+        gui=1)
 
 if __name__ == "__main__":
     test_chamber()

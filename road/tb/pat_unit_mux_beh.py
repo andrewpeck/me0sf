@@ -14,9 +14,11 @@ def parse_data(data, strip, max_span):
         parsed_data = (data >> shift) & (2**max_span - 1)
     return parsed_data
 
-def extract_data_window(ly_dat, strip, max_span):
+def extract_data_window(prt_dat, strip, ly_spans):
     """extracts data window around given strip"""
-    return np.array([parse_data(data, strip, max_span) for data in ly_dat])
+    if max(ly_spans) > 64:
+        raise Exception("Not supported for span > 64, must modify numpy data type")
+    return np.array([parse_data(data, strip, ly_span) for data, ly_span in zip(prt_dat, ly_spans)], dtype=np.uint64)
 
 def parse_bx_data(bx_data, strip, max_span):
     if strip < max_span // 2 + 1:
@@ -43,14 +45,13 @@ def pat_mux(partition_data, partition, config : Config, partition_bx_data):
     segments the pat_unit_mux.vhd would find
     """
     # todo : after extracting window the span is 37 or smaller
-    fn = lambda strip : pat_unit(data = extract_data_window(partition_data, strip, config.max_span),
-                                 bx_data = extract_bx_data_window(partition_bx_data, strip, config.max_span),
+    fn = lambda strip : pat_unit(data = extract_data_window(partition_data, strip, config.ly_spans),
+                                 bx_data = extract_bx_data_window(partition_bx_data, strip, max(config.ly_spans)), # TODO: Make variable ly spans work for bx data
                                  config = config,
                                  ly_thresh_patid = config.ly_thresh_patid,
                                  ly_thresh_eta = config.ly_thresh_eta,
                                  strip = strip,
                                  partition = partition, 
-                                 input_max_span = config.max_span,
                                  skip_centroids = config.skip_centroids,
                                  num_or = config.num_or)
 

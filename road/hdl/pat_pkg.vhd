@@ -43,6 +43,8 @@ package pat_pkg is
   
   type chamber_w_virtual_t is array (integer range 0 to 14) of partition_t;
 
+  type sbit_window_t is array(integer range 0 to 5) of std_logic_vector(48-1 downto 0);
+
   --------------------------------------------------------------------------------
   -- Build Parameters
   --------------------------------------------------------------------------------

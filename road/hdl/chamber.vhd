@@ -147,6 +147,7 @@ architecture behavioral of chamber is
   signal two_prt_sorted_segs : segment_list_t (NUM_FINDERS_DIV2 * NUM_SEGMENTS - 1 downto 0)   := (others => null_pattern);  -- sort down to number of output segments for each 2 partitions
   signal one_prt_sorted_segs : segment_list_t (NUM_FINDERS_DIV2*2 * NUM_SEGMENTS - 1 downto 0) := (others => null_pattern);  -- sort down to the number of output segments for each partition
   signal final_segs          : segment_list_t (NUM_SEGMENTS - 1 downto 0)                      := (others => null_pattern);
+  signal final_segs_phase    : unsigned (2 downto 0)                                           := (others => '0');
 
   --------------------------------------------------------------------------------
   -- Pretriggers
@@ -210,6 +211,33 @@ architecture behavioral of chamber is
 --    end loop;
 --    return ly_thresh_strict;
 --  end;
+
+  --------------------------------------------------------------------------------
+  -- Sbit BRAM
+  --------------------------------------------------------------------------------
+  signal bram_in : chamber_w_virtual_t;
+  signal bram_out : sbit_window_t;
+  signal bram_seg_select_phase : unsigned (2 downto 0) := 0; -- TODO: initialize to correct starting phase, should be f(SBIT_PHASE, BRAM_DELAY)
+  signal bram_seg_select_prt : unsigned (PARTITION_BITS-1 downto 0);
+  signal bram_seg_select_strip : unsigned (STRIP_BITS-1 downto 0);
+  signal bram-seg_select_pid : unsigned (PID_BITS-1 downto 0);
+
+  type ly_offsets_t is array (5 downto 0) of std_logic_vector(5 downto 0); -- Min lo value is -18, so need 6 bits to hold this
+  signal ly_offsets : ly_offsets_t;
+
+  function get_offsets_from_pats (pid : unsigned) return is ly_offsets_t is
+    variable ly_offsets : ly_offsets_t;
+  begin
+    ly_offsets(0) => to_signed(patdef_array(NUM_PATTERNS-1 - pid).ly0.lo, 6);
+    ly_offsets(1) => to_signed(patdef_array(NUM_PATTERNS-1 - pid).ly1.lo, 6);
+    ly_offsets(2) => to_signed(patdef_array(NUM_PATTERNS-1 - pid).ly2.lo, 6);
+    ly_offsets(3) => to_signed(patdef_array(NUM_PATTERNS-1 - pid).ly3.lo, 6);
+    ly_offsets(4) => to_signed(patdef_array(NUM_PATTERNS-1 - pid).ly4.lo, 6);
+    ly_offsets(5) => to_signed(patdef_array(NUM_PATTERNS-1 - pid).ly5.lo, 6);
+
+    return ly_offsets;
+  end function;
+
 
 begin
 
@@ -310,6 +338,9 @@ begin
 
       end generate;
 
+      -- Pass sbits to BRAM
+      bram_in(I) <= partition_or;
+
     end generate;
 
     process (clock) is
@@ -319,6 +350,23 @@ begin
         partition_or_reg <= partition_or;
       end if;
     end process;
+
+    --------------------------------------------------------------------------------
+    -- Sbit BRAM
+    --------------------------------------------------------------------------------
+
+    sbit_bram_inst : entity work.sbit_bram
+      generic map (
+        LATENCY => 0,
+        BX_ADDR_PHASE => 0
+      )
+      port map (
+        clock320 => clock,
+        sbits_i  => bram_in,
+        wanted_strip => bram_seg_select_strip,
+        wanted_prt => bram_seg_select_prt,
+        my_out => bram_out
+      );
 
     --------------------------------------------------------------------------------
     -- Per Partition Pattern Finders
@@ -603,6 +651,43 @@ begin
       );
 
   --------------------------------------------------------------------------------
+  -- Segment time multiplexer to read from BRAM one at a time
+  --------------------------------------------------------------------------------
+  process (clock) is
+  begin
+    bram_seg_select_phase => bram_seg_select_phase + 1;
+    bram_seg_select_prt => final_segs(bram_seg_select_phase).partition;
+    bram_seg_select_strip => final_segs(bram_seg_select_phase).strip;
+    bram_seg_select_pid => final_segs(bram_seg_select_phase).pid;
+  end process;
+
+  --------------------------------------------------------------------------------
+  -- Extract sbits for centroid finders from BRAM window
+  --------------------------------------------------------------------------------
+
+  center_position <= (bram_seg_select_strip mod 12) + 18 -- Indexing from left, and by 0
+  ly_offsets <= get_offsets_from_pat(bram_seg_select_pid);
+
+  ly_sbit_select_g : for I in 0 to 5 generate
+  begin
+      signal LMB : unsigned (5 downto 0); --Can be 0 to 42, so 6 bits
+      LMB <= center_position + ly_offsets(I);
+      centroid_in(I) <= bram_out(I)(LMB downto LMB-5);
+  end generate;
+
+  --for each layer, add center_position to ly_offsets(ly). Take this, and next 5 bits (total of 6 bits)
+  --Rightshift by pid (hi-lo)
+
+  --6 do nothing 111111 -> 111111
+  --5 rightshift 1 11111X -> 011111
+  --4 rightshift 1, zero rightmost bit 1111XX -> 011110
+  --3 rightshift 2, zero rightmost bit 111XXX -> 001110
+  --2 rightshift 2, zero 2 rightmost bits 11XXXX -> 001100
+  --1 rightshift 3, zero 2 rightmost bits 1XXXXX -> 000100
+
+  --This leaves odd values with a 0 to the left, account for this later
+
+  --------------------------------------------------------------------------------
   -- Fitting
   --------------------------------------------------------------------------------
 
@@ -624,31 +709,5 @@ begin
       segments_o        <= final_segs;
     end if;
   end process;
-  
--- temporary testing process, delete later. prints all extended sbits if any sbit (not extended) is hit
---  process (clock) is
---  variable found_data : boolean;
---  begin
---  found_data := false;
-    
---    if (rising_edge(clock)) then
---        for prt in 0 to 7 loop
---          for lyr in 0 to 5 loop
---            if (not(unsigned(sbits_i(prt)(lyr)) = 0)) then
---              found_data := true;
---            end if;
---          end loop;
---          if (found_data) then
---            report "SBITS EXTEND for Partition "& to_string(prt) severity note;
---            for lyr in 0 to 5 loop
---              report to_hstring(sbits_extend(prt)(lyr)) severity note;
---            end loop;
---            found_data := false;
---          end if;
---        end loop;
-        
---    end if;
---  end process;
-
 
 end behavioral;

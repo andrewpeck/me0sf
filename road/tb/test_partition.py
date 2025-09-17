@@ -45,16 +45,17 @@ async def partition_test(dut, NLOOPS=1000, test="SEGMENTS"):
     # random.seed(56)
 
     config = Config()
+    config.initialize_patlist(get_patlist_from_dut(dut))
     config.width = 192
     config.skip_centroids = True
-    config.max_span = get_max_span_from_dut(dut)
     config.width = dut.pat_unit_mux_inst.WIDTH.value
     config.group_width = dut.S0_WIDTH.value
     config.deghost_pre = dut.DEGHOST_PRE.value
     config.deghost_post = dut.DEGHOST_POST.value
 
     # initial inputs
-    dut.ly_thresh.value = config.ly_thresh
+    en_hc_compress = True if dut.EN_HC_COMPRESS.value == 1 else False
+    dut.ly_thresh.value = [thresh-4 for thresh in config.ly_thresh_patid] if en_hc_compress else config.ly_thresh_patid # Since HC compression happens at a higher level in FW, need to take care of it here
     dut.partition_i.value = [0 for _ in range(6)]
 
     # flush the buffers
@@ -69,9 +70,9 @@ async def partition_test(dut, NLOOPS=1000, test="SEGMENTS"):
     #--------------------------------------------------------------------------------
     # Measure latency
     #--------------------------------------------------------------------------------
-
+    compress_adj = 3 if en_hc_compress else 0
     checkfn = lambda : dut.segments_o[0].lc.value.is_resolvable and \
-        dut.segments_o[0].lc.value.integer >= config.ly_thresh[dut.segments_o[0].id.value.integer]
+        dut.segments_o[0].lc.value.integer >= config.ly_thresh_patid[dut.segments_o[0].id.value.integer - 1] - compress_adj
 
     def setfn(dut, x):
         dut.partition_i.value = [x for _ in range(6)]
@@ -152,15 +153,23 @@ async def partition_test(dut, NLOOPS=1000, test="SEGMENTS"):
 
             sw_segments = process_partition(partition_data=popped_data,
                                             partition=dut.PARTITION_NUM.value,
-                                            config=config)
+                                            config=config,
+                                            partition_bx_data = [[0]*192]*6)
 
             fw_segments = get_segments_from_dut(dut)
+
+
+
 
             for j in range(max([len(fw_segments), len(sw_segments)])):
 
                 if fw_segments[j].id > 0:
                     strip_cnts.append(j)
                     id_cnts.append(fw_segments[j].id)
+
+                    if en_hc_compress:
+                        fw_segments[j].lc += 3
+                        fw_segments[j].update_quality()
 
                 if i > 3 and sw_segments[j] != fw_segments[j]:
                     print(f" loop {i} seg {j}:")

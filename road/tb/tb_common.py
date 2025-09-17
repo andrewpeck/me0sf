@@ -4,13 +4,10 @@ from cocotb.triggers import Edge, RisingEdge, Timer
 from cocotb_test.simulator import run
 
 from constants import *
-from pat_unit_beh import calculate_global_layer_mask
 from subfunc import *
 
 
-def setup(dut, max_span=37):
-
-    calculate_global_layer_mask(get_patlist_from_dut(dut), max_span)
+def setup(dut):
 
     # set layer count threshold
     #dut.ly_thresh_i.value = [7, 7, 7, 7, 7, 7, 7, 7, 7, 7, 5, 5, 4, 4, 4, 4, 4]
@@ -152,9 +149,9 @@ def get_max_span_from_dut(dut):
 
 
 def set_dut_inputs(dut, data):
-    dut.ly0.value = data[0]
-    dut.ly1.value = data[1]
-    dut.ly2.value = data[2]
-    dut.ly3.value = data[3]
-    dut.ly4.value = data[4]
-    dut.ly5.value = data[5]
+    dut.ly0.value = int(data[0])
+    dut.ly1.value = int(data[1])
+    dut.ly2.value = int(data[2])
+    dut.ly3.value = int(data[3])
+    dut.ly4.value = int(data[4])
+    dut.ly5.value = int(data[5])

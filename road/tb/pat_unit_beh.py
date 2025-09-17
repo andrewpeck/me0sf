@@ -6,55 +6,6 @@ from typing import List
 from constants import *
 from subfunc import *
 
-def shift_center(ly, max_span=37):
-    """
-
-    Patterns are defined as a +hi and -lo around a center point of a pattern.
-
-    e.g. for a pattern 37 strips wide, there is a central strip,
-    and 18 strips to the left and right of it.
-
-    This patterns shifts from a +hi and -lo around the central strip, to an offset +hi and -lo.
-
-    e.g. for (hi, lo) = (1, -1) and a window of 37, this will return (17,19)
-
-    """
-    center = math.floor(max_span/2)
-    hi = ly.hi + center
-    lo = ly.lo + center
-    return (lo, hi)
-
-def set_high_bits(lo_hi_pair):
-    """Given a high bit and low bit, this function will return a bitmask with all the bits in
-    between the high and low set to 1"""
-    hi = lo_hi_pair[1]
-    lo = lo_hi_pair[0]
-    return 2**(hi-lo+1)-1 << lo
-
-def get_ly_mask(ly_pat : patdef_t,
-                max_span : int = 37):
-
-    '''
-    takes in a given layer pattern and returns a list of integer bit masks
-    for each layer
-    '''
-
-    #for each layer, shift the provided hi and lo values for each layer from
-    #pattern definition by center
-    m_vals = [shift_center(ly, max_span) for ly in ly_pat.layers]
-
-    # use the high and low indices to determine where the high bits must go for
-    # each layer
-    m_vec = np.array([set_high_bits(x) for x in m_vals])
-    return m_vec
-    # return Mask(m_vec, ly_pat.id)
-
-def calculate_global_layer_mask(patlist, max_span):
-    """create layer masks for patterns in patlist"""
-    global LAYER_MASK
-    LAYER_MASK = np.array([get_ly_mask(pat, max_span) for pat in patlist])
-    # LAYER_MASK = [get_ly_mask(pat, max_span) for pat in patlist]
-
 def mask_layer_data (data, mask):
     """
     AND together a list of layer masks with a list of layers
@@ -122,7 +73,6 @@ def pat_unit(data,
              ly_thresh_patid : list[int] = [7, 7, 7, 7, 7, 7, 7, 7, 7, 7, 5, 5, 4, 4, 4, 4, 4],
              ly_thresh_eta : list[int] = [4, 5, 4, 5, 4, 5, 4, 5, 4, 5, 4, 5, 4, 5, 4],
              partition : int = -1,
-             input_max_span : int = 37,
              num_or : int = 2,
              light_hit_count : bool = True,
              verbose : bool = False,
@@ -131,9 +81,7 @@ def pat_unit(data,
     # construct the dynamic_patlist (we do not use default PATLIST anymore)
     # for robustness concern, other codes might use PATLIST, so we kept the default PATLIST in subfunc
     # however, this could cause inconsistent issue, becareful! OR find a way to modify PATLIST
-    global LAYER_MASK
-    
-    if LAYER_MASK is None: 
+    if config.patlist is None: 
         factor = num_or / 2
 
         pat_straight = patdef_t(17, create_pat_ly(-0.4 / factor, 0.4 / factor))
@@ -155,27 +103,25 @@ def pat_unit(data,
         pat_r8 = mirror_patdef(pat_l8, pat_l8.id - 1)
 
         dynamic_patlist = (
-            pat_straight,
-            pat_l,
-            pat_r,
-            pat_l2,
-            pat_r2,
-            pat_l3,
-            pat_r3,
-            pat_l4,
-            pat_r4,
-            pat_l5,
-            pat_r5,
-            pat_l6,
-            pat_r6,
-            pat_l7,
+            pat_r8,
+            pat_l8, 
             pat_r7,
-            pat_l8,
-            pat_r8)
+            pat_l7,
+            pat_r6,
+            pat_l6,
+            pat_r5,
+            pat_l5,
+            pat_r4,
+            pat_l4,
+            pat_r3,
+            pat_l3,
+            pat_r2,
+            pat_l2,
+            pat_r,
+            pat_l,
+            pat_straight)
 
-        # first make the PATLIST appropriate
-        calculate_global_layer_mask(dynamic_patlist, input_max_span)
-        
+        config.initialize_patlist(dynamic_patlist)
 
     """
     takes in sample data for each layer and returns best segment
@@ -206,13 +152,22 @@ def pat_unit(data,
 
     pids = np.arange(1, 18, dtype=np.uint8)
     data_tiled = np.tile(data, (17, 1))
-    masked_data = np.bitwise_and(np.flip(LAYER_MASK, axis=0), data_tiled)
+
+  #  spans = (37, 23, 9, 9, 23, 37)
+  #  for pat in LAYER_MASK:
+  #      for ly_i, ly in enumerate(pat):
+  #         bin_str = format(ly, f"0{spans[ly_i]}b")
+  #         print(' '*( ( (37 - len(bin_str)) // 2) ) + bin_str)
+
+
+    masked_data = np.bitwise_and(config.ly_mask, data_tiled)
 
     if light_hit_count:
         bit_count_arr = np.bitwise_count(np.vstack((masked_data[:,0], masked_data[:,5])).T)
     else:
         bit_count_arr = np.bitwise_count(masked_data)
 
+    # HC IS DISABLED FOR NOW
     # hcs = np.sum(np.clip(bit_count_arr, a_min = None, a_max = 7), axis=1, dtype=np.uint16)
     hcs = np.zeros((17,), dtype=np.uint16)
 
@@ -259,11 +214,10 @@ def pat_unit(data,
 
     #print(best.bx)
 
-        # (4) process centroids
+    # (4) process centroids
     if skip_centroids:
-        #TODO: update this to work with speedup changes
-        centroids = [[0 for _ in range(6)] for _ in range(len(masked_data))]
-        bxs = [-9999 for _ in range(len(masked_data))]
+        centroid = [0 for _ in range(6)]
+        bx = -9999
     else:
         centroid, bx = calculate_centroids(masked_data[best_pid-1], bx_data)
 

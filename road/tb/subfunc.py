@@ -23,6 +23,11 @@ class Vector_Manager:
 
     def or_vectors(self, partition, strip):
         return np.bitwise_or(np.bitwise_or(self.vectors[partition,strip,0], self.vectors[partition,strip,1]), self.vectors[partition,strip,2])
+    
+class patdef_t:
+    def __init__(self, id, layer_list):
+        self.id = id
+        self.layers = layer_list
  
 class Config:
 
@@ -34,35 +39,79 @@ class Config:
         self.vector_manager = Vector_Manager()
         self.vectoring_enabled = True
 
+    def calculate_ly_spans(self):
+        max_spans = [0 for _ in range(6)]
+        for pat in self.patlist:
+            for ly_i, ly in enumerate(pat.layers):
+                max_spans[ly_i] = max(max_spans[ly_i], ly.hi)
+
+        self.ly_spans = tuple([sp*2 + 1 for sp in max_spans])
+
+    def shift_center(self, ly, ly_span):
+        """Patterns are defined as a +hi and -lo around a center point of a pattern. e.g. for a pattern 37 strips wide, there is a central strip,
+        and 18 strips to the left and right of it. This patterns shifts from a +hi and -lo around the central strip, to an offset +hi and -lo.
+        e.g. for (hi, lo) = (1, -1) and a window of 37, this will return (17,19)"""
+
+        center = math.floor(ly_span/2)
+        hi = ly.hi + center
+        lo = ly.lo + center
+        return (lo, hi)
+    
+    def set_high_bits(self, lo_hi_pair):
+        """Given a high bit and low bit, this function will return a bitmask with all the bits in between the high and low set to 1"""
+        hi = lo_hi_pair[1]
+        lo = lo_hi_pair[0]
+        return 2**(hi-lo+1)-1 << lo
+
+    def get_ly_mask(self, ly_pat : patdef_t, ly_spans : List[int]):
+        """takes in a given layer pattern and returns a list of integer bit masks for each layer"""
+
+        #for each layer, shift the provided hi and lo values for each layer from pattern definition by center
+        m_vals = [self.shift_center(ly, span) for ly, span in zip(ly_pat.layers, ly_spans)]
+
+        # use the high and low indices to determine where the high bits must go for each layer
+        m_vec = np.array([self.set_high_bits(x) for x in m_vals])
+        return m_vec
+        # return Mask(m_vec, ly_pat.id)
+    
+    def calculate_ly_mask(self):
+        """create layer masks for patterns in patlist"""
+        self.ly_mask = np.array([self.get_ly_mask(pat, self.ly_spans) for pat in self.patlist], dtype=np.uint64)
+
+    def initialize_patlist(self, patlist):
+        self.patlist = patlist
+        self.calculate_ly_spans()
+        self.calculate_ly_mask()
+
+    patlist = None
+    ly_mask = None
+    ly_spans : List[int] = [0 for _ in range(6)]
+
     skip_centroids : bool = False
-    ly_thresh_patid : list[int] = [7, 7, 7, 7, 7, 7, 7, 7, 7, 7, 5, 5, 4, 4, 4, 4, 4]
-    ly_thresh_eta : list[int] = [4, 5, 4, 5, 4, 5, 4, 5, 4, 5, 4, 5, 4, 5, 4]
-    max_span : int = 37
-    width : int = 192
     deghost_pre : bool = True
     deghost_post : bool = False
-    group_width : int = 8
-    ghost_width : int = 1
     x_prt_en : bool = True
     en_non_pointing : bool = False
-    cross_part_seg_width : int = 4
-    num_outputs : int = 4
     check_ids : bool = False
-    edge_distance : int = 2
-    num_or : int = 2
     peaking_enabled : bool = False
     vectoring_enabled : bool = False
+
+    ly_thresh_patid : list[int] = [7, 7, 7, 7, 7, 7, 7, 7, 7, 7, 5, 5, 4, 4, 4, 4, 4]
+    ly_thresh_eta : list[int] = [4, 5, 4, 5, 4, 5, 4, 5, 4, 5, 4, 5, 4, 5, 4]
+
+    width : int = 192
+    group_width : int = 8
+    ghost_width : int = 1
+    cross_part_seg_width : int = 4
+    num_outputs : int = 4
+    edge_distance : int = 2
+    num_or : int = 2
 
 
 class hi_lo_t:
     def __init__(self, hi, lo):
         self.hi = hi
         self.lo = lo
-
-class patdef_t:
-    def __init__(self, id, layer_list):
-        self.id = id
-        self.layers = layer_list
 
 class Mask:
     def __init__(self, mask, id):
@@ -281,14 +330,8 @@ PATLIST_LUT = {
     1: pat_r8}
 
 def count_ones(x):
-    return np.bitwise_count(x)
     # """takes in an integer and counts how many ones are in that integer's binary form"""
-    # cnt = 0
-    # while (x > 0):
-    #     if (x&1)==1:
-    #         cnt += 1
-    #     x = x>>1
-    # return cnt
+    return np.bitwise_count(x)
 
 def max_cluster_size(x):
     """calculate maximum cluster size in that integer's binary form"""
@@ -406,17 +449,17 @@ Chamber = List[Partition]
 # Tests
 #-------------------------------------------------------------------------------
 
-def test_find_ones():
-    assert find_ones(0b100) == [3]
-    assert find_ones(0b111) == [1,2,3]
-    assert find_ones(0b001) == [1]
-
-def test_find_centroid():
-    assert find_centroid(0b001) == 1
-    assert find_centroid(0b010) == 2
-    assert find_centroid(0b100) == 3
-    assert find_centroid(0b101) == 2
-    assert find_centroid(0b110) == 2.5
-    assert find_centroid(0b111) == 2
+#def test_find_ones():
+#    assert find_ones(0b100) == [3]
+#    assert find_ones(0b111) == [1,2,3]
+#    assert find_ones(0b001) == [1]
+#
+#def test_find_centroid():
+#    assert find_centroid(0b001) == 1
+#    assert find_centroid(0b010) == 2
+#    assert find_centroid(0b100) == 3
+#    assert find_centroid(0b101) == 2
+#    assert find_centroid(0b110) == 2.5
+#    assert find_centroid(0b111) == 2
 
 

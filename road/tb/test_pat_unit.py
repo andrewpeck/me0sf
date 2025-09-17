@@ -27,16 +27,16 @@ async def monitor_dav(dut, latency):
             await RisingEdge(dut.clock)
         assert dut.dav_o.value == 1, f"Is the latency setting wrong? did not find dav w/ latency={latency}"
 
-#@cocotb.test() # type: ignore
-#async def pat_unit_test_segments(dut):
-#    await pat_unit_test(dut, test="SEGMENTS")
-#
-#@cocotb.test() # type: ignore
-#async def pat_unit_test_noise(dut):
-#    await pat_unit_test(dut, test="NOISE")
+@cocotb.test() # type: ignore
+async def pat_unit_test_segments(dut):
+    await pat_unit_test(dut, test="SEGMENTS")
 
 @cocotb.test() # type: ignore
 async def pat_unit_test_noise(dut):
+    await pat_unit_test(dut, test="NOISE")
+
+@cocotb.test() # type: ignore
+async def pat_unit_test_seg(dut):
     await pat_unit_test(dut, test="TEST_SEG")
 
 
@@ -55,11 +55,13 @@ async def pat_unit_test(dut, test="SEGMENTS"):
 
     set_dut_inputs(dut, [0 for _ in range(6)])
 
+    en_hc_compress = True if dut.EN_HC_COMPRESS.value == 1 else False
+
     # set layer count threshold
-    dut.ly_thresh.value = [7, 7, 7, 7, 7, 7, 7, 7, 7, 7, 5, 5, 4, 4, 4, 4, 4]
+    dut.ly_thresh.value = [i-4 for i in LY_THRESH] if en_hc_compress else LY_THRESH
 
-    en_hc_compress = True #this is a generic, so need to set it here and in top level in FW
 
+ 
     # set MAX_SPAN from firmware
     # should be a number approx 37
     MAX_SPAN = get_max_span_from_dut(dut)
@@ -74,7 +76,7 @@ async def pat_unit_test(dut, test="SEGMENTS"):
         dut.pat_o.lc.value.integer > 0
 
     def setfn(dut, x):
-        set_dut_inputs(dut, [x<<18 for _ in range(6)])
+        set_dut_inputs(dut, [x<<(getattr(dut, f"LY{i}_SPAN").value // 2) for i in range(6)])
 
     meas_latency = await measure_latency(dut, checkfn, setfn)
 
@@ -97,6 +99,17 @@ async def pat_unit_test(dut, test="SEGMENTS"):
 
     queue = []
 
+    def reshape_data(dut, data_i):
+        data_o = []
+        for ly_i, ly_data in enumerate(data_i):
+            span = getattr(dut, f"LY{ly_i}_SPAN").value
+            bin_ly_data = format(ly_data, "037b") 
+            # Spans are guaranteed to be odd, simplifying this
+            cut_amount = (len(bin_ly_data) - span) // 2
+            data_o.append(int(bin_ly_data[cut_amount:len(bin_ly_data)-cut_amount], 2))
+
+        return np.array(data_o, dtype=np.uint64)
+
     if test=="SEGMENTS": 
         get_data = lambda : datagen(LY_CNT, N_NOISE, max_span=MAX_SPAN)
     elif test=="NOISE":
@@ -115,13 +128,13 @@ async def pat_unit_test(dut, test="SEGMENTS"):
         def get_data() -> List[int]:
             hits = [0 for _ in range(6)]
             hits[0] = (2**37-1) & (2**19 | 2**20)
-            hits[3:] = [(2**37-1) & 2**17 for _ in range(4)]
+            hits[3:] = [(2**37-1) & 2**17 for _ in range(3)]
             return hits
     else:
         raise Exception(f"Unknown test {test}")
 
     for _ in range(LATENCY):
-        ly_data = get_data()
+        ly_data = reshape_data(dut, get_data())
         queue.append(ly_data)
         set_dut_inputs(dut, ly_data)
         await RisingEdge(dut.clock)
@@ -133,7 +146,7 @@ async def pat_unit_test(dut, test="SEGMENTS"):
         # (2) push it onto the queue
         # (3) set the DUT inputs to the new data
 
-        new_data = get_data()
+        new_data = reshape_data(dut, get_data())
 
         set_dut_inputs(dut, new_data)
         queue.append(new_data)
@@ -149,7 +162,8 @@ async def pat_unit_test(dut, test="SEGMENTS"):
                               partition=0,
                               skip_centroids=True,
                               light_hit_count=True,
-                              bx_data = []) #bxs needs an argument, make this accurate later if needed
+                              bx_data = [], #bxs needs an argument, make this accurate later if needed
+                              config = Config())
 
         fw_segment = get_segment_from_pat_unit(dut)
 
@@ -198,7 +212,7 @@ def test_pat_unit():
         compile_args=["-2008"],
         toplevel="pat_unit",  # top level HDL
         toplevel_lang="vhdl",
-        # sim_args=["-do", '"set NumericStdNoWarnings 1;"'],
+        #sim_args=["-do", '"set NumericStdNoWarnings 1;"'],
         parameters=parameters,
         gui=0)
 

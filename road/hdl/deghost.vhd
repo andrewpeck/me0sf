@@ -29,7 +29,7 @@ architecture behavioral of deghost is
   function at_edge (X : integer; W : integer; D : integer)
     return boolean is
   begin
-    return ((X mod W) < D or (X mod W) >= (W-D));
+    return ((X mod W) <= D or (X mod W) >= (W-D-1));
   end;
 
 begin
