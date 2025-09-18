@@ -23,11 +23,11 @@ use work.pat_types.all;
 use work.pat_pkg.all;
 
 --use this on machine with Vivado and XPM library available
---library xpm;
---use xpm.vcomponents.xpm_memory_sdpram;
+library xpm;
+use xpm.vcomponents.xpm_memory_sdpram;
 
 --use this on machine without Vivado available (needs XPM BRAM files included in HDL sources)
-use work.vcomponents.all;
+--use work.vcomponents.all;
 
 library ieee;
 use ieee.std_logic_1164.all;
@@ -37,8 +37,8 @@ use ieee.math_real.all;
 
 entity sbit_bram is
   generic (
-    LATENCY320 : integer; --LATENCY320 + BX_ADDR_PHASE_WRITE MUST BE [0, 114], INCLUSIVE
-    SBIT_PHASE : integer  --MUST BE [0, 7], INCLUSIVE
+    LATENCY320 : integer := 0; --LATENCY320 + BX_ADDR_PHASE_WRITE MUST BE [0, 114], INCLUSIVE
+    SBIT_PHASE : integer := 0  --MUST BE [0, 7], INCLUSIVE
   );
   port (
     clock320 : in  std_logic;

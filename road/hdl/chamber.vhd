@@ -30,7 +30,6 @@ use ieee.std_logic_1164.all;
 use ieee.std_logic_misc.all;
 use ieee.numeric_std.all;
 use ieee.math_real.all;
-use ieee.std_logic_misc.all;
 
 entity chamber is
   generic (
@@ -45,6 +44,8 @@ entity chamber is
     --DEADTIME        : natural := 3;      -- deadtime in bx
     EN_HC_COMPRESS : boolean := true;   -- true to enable compression of hit count function (REQUIRED: minimum ly_thresh value is 4)
     X_DEGHOST_EDGE_DIST : natural := 2;  -- radius for cross partition deghosting
+    SBIT_BRAM_PHASE : integer := 0;
+    BRAM_LATENCY : integer := 0;
     
     LY0_SPAN : natural := get_max_span(patdef_array);
     LY1_SPAN : natural := get_max_span(patdef_array);
@@ -217,23 +218,27 @@ architecture behavioral of chamber is
   --------------------------------------------------------------------------------
   signal bram_in : chamber_w_virtual_t;
   signal bram_out : sbit_window_t;
-  signal bram_seg_select_phase : unsigned (2 downto 0) := 0; -- TODO: initialize to correct starting phase, should be f(SBIT_PHASE, BRAM_DELAY)
-  signal bram_seg_select_prt : unsigned (PARTITION_BITS-1 downto 0);
-  signal bram_seg_select_strip : unsigned (STRIP_BITS-1 downto 0);
-  signal bram-seg_select_pid : unsigned (PID_BITS-1 downto 0);
+  signal bram_seg_select_phase : unsigned (2 downto 0) := (others => '0'); -- TODO: initialize to correct starting phase, should be f(SBIT_PHASE, BRAM_DELAY)
+  signal bram_seg_select_prt : std_logic_vector (PARTITION_BITS-1 downto 0);
+  signal bram_seg_select_strip : std_logic_vector (STRIP_BITS-1 downto 0);
+  signal bram_seg_select_pid : unsigned (PID_BITS-1 downto 0);
+  signal center_position : unsigned (5 downto 0);
 
-  type ly_offsets_t is array (5 downto 0) of std_logic_vector(5 downto 0); -- Min lo value is -18, so need 6 bits to hold this
+  type ly_offsets_t is array (5 downto 0) of signed(5 downto 0); -- Min lo value is -18, so need 6 bits to hold this
   signal ly_offsets : ly_offsets_t;
+  
+  type centroids_in_t is array (5 downto 0) of std_logic_vector(5 downto 0);
+  signal centroids_in : centroids_in_t;
 
-  function get_offsets_from_pats (pid : unsigned) return is ly_offsets_t is
+  function get_offsets_from_pats (pid : unsigned) return ly_offsets_t is
     variable ly_offsets : ly_offsets_t;
   begin
-    ly_offsets(0) => to_signed(patdef_array(NUM_PATTERNS-1 - pid).ly0.lo, 6);
-    ly_offsets(1) => to_signed(patdef_array(NUM_PATTERNS-1 - pid).ly1.lo, 6);
-    ly_offsets(2) => to_signed(patdef_array(NUM_PATTERNS-1 - pid).ly2.lo, 6);
-    ly_offsets(3) => to_signed(patdef_array(NUM_PATTERNS-1 - pid).ly3.lo, 6);
-    ly_offsets(4) => to_signed(patdef_array(NUM_PATTERNS-1 - pid).ly4.lo, 6);
-    ly_offsets(5) => to_signed(patdef_array(NUM_PATTERNS-1 - pid).ly5.lo, 6);
+    ly_offsets(0) := to_signed(patdef_array(NUM_PATTERNS-1 - to_integer(pid)).ly0.lo, 6);
+    ly_offsets(1) := to_signed(patdef_array(NUM_PATTERNS-1 - to_integer(pid)).ly1.lo, 6);
+    ly_offsets(2) := to_signed(patdef_array(NUM_PATTERNS-1 - to_integer(pid)).ly2.lo, 6);
+    ly_offsets(3) := to_signed(patdef_array(NUM_PATTERNS-1 - to_integer(pid)).ly3.lo, 6);
+    ly_offsets(4) := to_signed(patdef_array(NUM_PATTERNS-1 - to_integer(pid)).ly4.lo, 6);
+    ly_offsets(5) := to_signed(patdef_array(NUM_PATTERNS-1 - to_integer(pid)).ly5.lo, 6);
 
     return ly_offsets;
   end function;
@@ -352,23 +357,6 @@ begin
     end process;
 
     --------------------------------------------------------------------------------
-    -- Sbit BRAM
-    --------------------------------------------------------------------------------
-
-    sbit_bram_inst : entity work.sbit_bram
-      generic map (
-        LATENCY => 0,
-        BX_ADDR_PHASE => 0
-      )
-      port map (
-        clock320 => clock,
-        sbits_i  => bram_in,
-        wanted_strip => bram_seg_select_strip,
-        wanted_prt => bram_seg_select_prt,
-        my_out => bram_out
-      );
-
-    --------------------------------------------------------------------------------
     -- Per Partition Pattern Finders
     --------------------------------------------------------------------------------
     
@@ -434,15 +422,22 @@ begin
     
   end generate;
   
---  process (clock) begin
---    if (rising_edge(clock)) then
---      for I in all_segs'range loop
---        if (all_segs(I).id > 0) then
---          report "I am a chamber. There is a segment centered at strip "&integer'image(to_integer(unsigned(all_segs(I).strip)))&". It is in partition "&integer'image(to_integer(unsigned(all_segs(I).partition)));
---        end if;
---      end loop;
---    end if;
---  end process;
+  --------------------------------------------------------------------------------
+  -- Sbit BRAM
+  --------------------------------------------------------------------------------
+
+  sbit_bram_inst : entity work.sbit_bram
+    generic map (
+      LATENCY320 => BRAM_LATENCY,
+      SBIT_PHASE => SBIT_BRAM_PHASE
+    )
+    port map (
+      clock320 => clock,
+      sbits_i  => bram_in,
+      wanted_strip => bram_seg_select_strip,
+      wanted_prt => bram_seg_select_prt,
+      my_out => bram_out
+    );
 
   --------------------------------------------------------------------------------
   -- Pretrigger
@@ -553,7 +548,7 @@ begin
       segs_o => all_segs_x_deghosted
       );
       
-    end generate;
+  end generate;
 
   --------------------------------------------------------------------------------
   -- Partition Sorting
@@ -655,24 +650,27 @@ begin
   --------------------------------------------------------------------------------
   process (clock) is
   begin
-    bram_seg_select_phase => bram_seg_select_phase + 1;
-    bram_seg_select_prt => final_segs(bram_seg_select_phase).partition;
-    bram_seg_select_strip => final_segs(bram_seg_select_phase).strip;
-    bram_seg_select_pid => final_segs(bram_seg_select_phase).pid;
+    if (rising_edge(clock)) then
+      bram_seg_select_phase <= bram_seg_select_phase + 1;
+      bram_seg_select_prt <= std_logic_vector(final_segs(to_integer(bram_seg_select_phase)).partition);
+      bram_seg_select_strip <= std_logic_vector(final_segs(to_integer(bram_seg_select_phase)).strip);
+      bram_seg_select_pid <= final_segs(to_integer(bram_seg_select_phase)).id;
+    end if;
   end process;
 
   --------------------------------------------------------------------------------
   -- Extract sbits for centroid finders from BRAM window
   --------------------------------------------------------------------------------
 
-  center_position <= (bram_seg_select_strip mod 12) + 18 -- Indexing from left, and by 0
-  ly_offsets <= get_offsets_from_pat(bram_seg_select_pid);
+  center_position <= to_unsigned((to_integer(unsigned(bram_seg_select_strip)) mod 12) + 18, center_position'length); -- Indexing from left, and by 0
+  --TODO: see if it is correct to index from left, or need to index from right. Also see if BRAM output is flipped form expected.
+  ly_offsets <= get_offsets_from_pats(bram_seg_select_pid);
 
   ly_sbit_select_g : for I in 0 to 5 generate
-  begin
-      signal LMB : unsigned (5 downto 0); --Can be 0 to 42, so 6 bits
-      LMB <= center_position + ly_offsets(I);
-      centroid_in(I) <= bram_out(I)(LMB downto LMB-5);
+    signal LMB : integer range 0 to 42; --Can be 0 to 42, so 6 bits
+  begin  
+      LMB <= to_integer(signed(center_position) + ly_offsets(I));
+      centroids_in(I) <= bram_out(I)(LMB to LMB+5);
   end generate;
 
   --for each layer, add center_position to ly_offsets(ly). Take this, and next 5 bits (total of 6 bits)
