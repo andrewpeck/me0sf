@@ -233,7 +233,7 @@ architecture behavioral of chamber is
   function get_offsets_from_pats (pid : unsigned) return ly_offsets_t is
     variable ly_offsets : ly_offsets_t;
   begin
-    if pid >= 1 and pid <= 16 then
+    if pid >= 1 and pid <= 17 then
       ly_offsets(0) := to_signed(patdef_array(NUM_PATTERNS-1 - (to_integer(pid) - 1) ).ly0.lo, 6); --For now, PID=0 is NaN segment, so subtract 1 to index with it.
       ly_offsets(1) := to_signed(patdef_array(NUM_PATTERNS-1 - (to_integer(pid) - 1) ).ly1.lo, 6); --For now, PID=0 is NaN segment, so subtract 1 to index with it.
       ly_offsets(2) := to_signed(patdef_array(NUM_PATTERNS-1 - (to_integer(pid) - 1) ).ly2.lo, 6); --For now, PID=0 is NaN segment, so subtract 1 to index with it.

@@ -43,16 +43,38 @@ entity window_extract is
     wanted_strip_i : in std_logic_vector (STRIP_BITS-1 downto 0);
     wanted_PID_i   : in std_logic_vector (PID_BITS-1 downto 0);
     pat_sbits      : out pat_sbits_t;
-    center_position : out unsigned(5 downto 0)
+    center_position : out unsigned(5 downto 0);
+    ly_offsets : out ly_offsets_t
     );
 end window_extract;
 
 architecture Behavioral of window_extract is
     
 --signal center_position : unsigned (5 downto 0); --Can be [0, 47], so 6 bits
+-- signal ly_offsets : ly_offsets_t;
+
+function get_offsets_from_pats (pid : unsigned) return ly_offsets_t is
+    variable ly_offsets : ly_offsets_t;
+  begin
+    if pid >= 1 and pid <= 17 then
+      ly_offsets(0) := to_signed(patdef_array(NUM_PATTERNS-1 - (to_integer(pid) - 1) ).ly0.lo, 6); --For now, PID=0 is NaN segment, so subtract 1 to index with it.
+      ly_offsets(1) := to_signed(patdef_array(NUM_PATTERNS-1 - (to_integer(pid) - 1) ).ly1.lo, 6); --For now, PID=0 is NaN segment, so subtract 1 to index with it.
+      ly_offsets(2) := to_signed(patdef_array(NUM_PATTERNS-1 - (to_integer(pid) - 1) ).ly2.lo, 6); --For now, PID=0 is NaN segment, so subtract 1 to index with it.
+      ly_offsets(3) := to_signed(patdef_array(NUM_PATTERNS-1 - (to_integer(pid) - 1) ).ly3.lo, 6); --For now, PID=0 is NaN segment, so subtract 1 to index with it.
+      ly_offsets(4) := to_signed(patdef_array(NUM_PATTERNS-1 - (to_integer(pid) - 1) ).ly4.lo, 6); --For now, PID=0 is NaN segment, so subtract 1 to index with it.
+      ly_offsets(5) := to_signed(patdef_array(NUM_PATTERNS-1 - (to_integer(pid) - 1) ).ly5.lo, 6); --For now, PID=0 is NaN segment, so subtract 1 to index with it.
+    else
+      for I in 0 to 5 loop
+        ly_offsets(I) := to_signed(0, 6);
+      end loop;
+    end if;
+
+    return ly_offsets;
+  end function;
 
 begin
 
-  center_position <= to_unsigned((to_integer(unsigned(wanted_strip_i)) mod 12) + 18, center_position'length); -- Indexing from left, and by 0
+  center_position <= to_unsigned((to_integer(unsigned(wanted_strip_i)) mod 12) + 18, center_position'length); -- Indexing from right, and by 0
+  ly_offsets <= get_offsets_from_pats(wanted_PID_i);
 
 end Behavioral;

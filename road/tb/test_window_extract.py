@@ -24,6 +24,7 @@ async def extract_test(dut, test, nloops=512, verbose=True):
 
     sbits_q = [[0 for _ in range(6)]]
     strip_q = [0]
+    pid_q = [17]
 
     # loop over some number of test cases
     loop = 0
@@ -33,18 +34,22 @@ async def extract_test(dut, test, nloops=512, verbose=True):
 
         sbits_q.append([2**18 for _ in range(6)]) # Straight segment centered on strip 0
         strip_q.append(loop)
+        pid_q.append(17)
 
         if test=="CENTER":
 
             sbit_window = sbits_q.pop(0)
             strip = strip_q.pop(0)
+            pid = pid_q.pop(0)
             
             if verbose:
-                print(f"Input window: {sbit_window}")
-                print(f"Input strip: {strip}")
+                print(f"{sbit_window=}")
+                print(f"{strip=}")
+                print(f"{pid=}")
 
             dut.window_i.value = sbit_window
             dut.wanted_strip_i.value = strip
+            dut.wanted_PID_i.value = pid
         else:
             raise Exception("Test not found")
 
@@ -52,10 +57,12 @@ async def extract_test(dut, test, nloops=512, verbose=True):
 
         # pat_sbits = dut.pat_sbits.value
         center = dut.center_position.value.integer
+        ly_offsets = dut.ly_offsets.value
 
         if verbose:
             # print(f"Pat sbits: {pat_sbits}")
-            print(f"Center position: {center}")
+            print(f"{center=}")
+            print(f"{ly_offsets=}")
 
         if verbose:
             print(f"{loop=}")
