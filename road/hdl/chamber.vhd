@@ -36,7 +36,7 @@ entity chamber is
     DISABLE_PEAKING : boolean := true;  -- true to disable peaking logic; useful for simulation until the tb is updated
     X_PRT_EN        : boolean := true;   -- true to enable x-prt segment finding
     EN_NON_POINTING : boolean := false;  -- true to enable x-prt segment finding on non-pointing muons
-    NUM_SEGMENTS    : integer := 16;      -- number of output segments
+    NUM_SEGMENTS    : integer := 8;      -- number of output segments
     S0_WIDTH        : natural := 16;     -- chunk each partition into groups this size and choose only 1 segment from each group
     S1_REUSE        : natural := 4;      -- reuse sorters
     REG_OUTPUTS     : boolean := false;  -- true to  register outputs on the 40MHz clock
@@ -45,7 +45,7 @@ entity chamber is
     EN_HC_COMPRESS : boolean := true;   -- true to enable compression of hit count function (REQUIRED: minimum ly_thresh value is 4)
     X_DEGHOST_EDGE_DIST : natural := 2;  -- radius for cross partition deghosting
     SBIT_BRAM_PHASE : integer := 0;
-    BRAM_LATENCY : integer := 0;
+    BRAM_LATENCY : integer := 53;
     
     LY0_SPAN : natural := get_max_span(patdef_array);
     LY1_SPAN : natural := get_max_span(patdef_array);
@@ -147,7 +147,7 @@ architecture behavioral of chamber is
   signal all_segs_x_deghosted  : segment_list_t (NUM_FINDERS * NUM_SEGS_PER_PRT - 1 downto 0)    := (others => null_pattern);  -- all segments after x-partition deghosting
   signal two_prt_sorted_segs : segment_list_t (NUM_FINDERS_DIV2 * NUM_SEGMENTS - 1 downto 0)   := (others => null_pattern);  -- sort down to number of output segments for each 2 partitions
   signal one_prt_sorted_segs : segment_list_t (NUM_FINDERS_DIV2*2 * NUM_SEGMENTS - 1 downto 0) := (others => null_pattern);  -- sort down to the number of output segments for each partition
-  signal final_segs          : segment_list_t (NUM_SEGMENTS - 1 downto 0)                      := (others => null_pattern);
+  signal final_segs          : segment_list_t (NUM_SEGMENTS - 1 downto 0); 
   signal final_segs_phase    : unsigned (2 downto 0)                                           := (others => '0');
 
   --------------------------------------------------------------------------------
@@ -221,24 +221,30 @@ architecture behavioral of chamber is
   signal bram_seg_select_phase : unsigned (2 downto 0) := (others => '0'); -- TODO: initialize to correct starting phase, should be f(SBIT_PHASE, BRAM_DELAY)
   signal bram_seg_select_prt : std_logic_vector (PARTITION_BITS-1 downto 0);
   signal bram_seg_select_strip : std_logic_vector (STRIP_BITS-1 downto 0);
-  signal bram_seg_select_pid : unsigned (PID_BITS-1 downto 0);
+  signal bram_seg_select_pid : unsigned (PID_BITS-1 downto 0) := (others => '0'); -- Initialize to 0 so simulator doesn't crash
   signal center_position : unsigned (5 downto 0);
 
   type ly_offsets_t is array (5 downto 0) of signed(5 downto 0); -- Min lo value is -18, so need 6 bits to hold this
   signal ly_offsets : ly_offsets_t;
   
-  type centroids_in_t is array (5 downto 0) of std_logic_vector(5 downto 0);
+  type centroids_in_t is array (0 to 5) of std_logic_vector(0 to 5);
   signal centroids_in : centroids_in_t;
 
   function get_offsets_from_pats (pid : unsigned) return ly_offsets_t is
     variable ly_offsets : ly_offsets_t;
   begin
-    ly_offsets(0) := to_signed(patdef_array(NUM_PATTERNS-1 - to_integer(pid)).ly0.lo, 6);
-    ly_offsets(1) := to_signed(patdef_array(NUM_PATTERNS-1 - to_integer(pid)).ly1.lo, 6);
-    ly_offsets(2) := to_signed(patdef_array(NUM_PATTERNS-1 - to_integer(pid)).ly2.lo, 6);
-    ly_offsets(3) := to_signed(patdef_array(NUM_PATTERNS-1 - to_integer(pid)).ly3.lo, 6);
-    ly_offsets(4) := to_signed(patdef_array(NUM_PATTERNS-1 - to_integer(pid)).ly4.lo, 6);
-    ly_offsets(5) := to_signed(patdef_array(NUM_PATTERNS-1 - to_integer(pid)).ly5.lo, 6);
+    if pid >= 1 and pid <= 16 then
+      ly_offsets(0) := to_signed(patdef_array(NUM_PATTERNS-1 - (to_integer(pid) - 1) ).ly0.lo, 6); --For now, PID=0 is NaN segment, so subtract 1 to index with it.
+      ly_offsets(1) := to_signed(patdef_array(NUM_PATTERNS-1 - (to_integer(pid) - 1) ).ly1.lo, 6); --For now, PID=0 is NaN segment, so subtract 1 to index with it.
+      ly_offsets(2) := to_signed(patdef_array(NUM_PATTERNS-1 - (to_integer(pid) - 1) ).ly2.lo, 6); --For now, PID=0 is NaN segment, so subtract 1 to index with it.
+      ly_offsets(3) := to_signed(patdef_array(NUM_PATTERNS-1 - (to_integer(pid) - 1) ).ly3.lo, 6); --For now, PID=0 is NaN segment, so subtract 1 to index with it.
+      ly_offsets(4) := to_signed(patdef_array(NUM_PATTERNS-1 - (to_integer(pid) - 1) ).ly4.lo, 6); --For now, PID=0 is NaN segment, so subtract 1 to index with it.
+      ly_offsets(5) := to_signed(patdef_array(NUM_PATTERNS-1 - (to_integer(pid) - 1) ).ly5.lo, 6); --For now, PID=0 is NaN segment, so subtract 1 to index with it.
+    else
+      for I in 0 to 5 loop
+        ly_offsets(I) := to_signed(0, 6);
+      end loop;
+    end if;
 
     return ly_offsets;
   end function;
@@ -670,7 +676,7 @@ begin
     signal LMB : integer range 0 to 42; --Can be 0 to 42, so 6 bits
   begin  
       LMB <= to_integer(signed(center_position) + ly_offsets(I));
-      centroids_in(I) <= bram_out(I)(LMB to LMB+5);
+      centroids_in(I) <= bram_out(I)(LMB+5 downto LMB);
   end generate;
 
   --for each layer, add center_position to ly_offsets(ly). Take this, and next 5 bits (total of 6 bits)
