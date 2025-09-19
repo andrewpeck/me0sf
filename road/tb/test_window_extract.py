@@ -32,9 +32,10 @@ async def extract_test(dut, test, nloops=512, verbose=True):
         if verbose:
             print(f"{loop=}")
 
-        sbits_q.append([2**18 for _ in range(6)]) # Straight segment centered on strip 0
-        strip_q.append(loop)
-        pid_q.append(10)
+        #sbits_q.append([2**18 for _ in range(6)]) # Straight segment centered on strip 0
+        sbits_q.append([(1+2+4+8+16+32), (2**7+2**8+2**9+2**10), (2**14+2**15+2**16), 0, 0, 0])
+        strip_q.append(0)
+        pid_q.append(1)
 
         if test=="CENTER":
 

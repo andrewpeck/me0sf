@@ -49,7 +49,8 @@ end window_extract;
 
 architecture Behavioral of window_extract is
     
-signal center_position : unsigned (5 downto 0); --Can be [0, 47], so 6 bits
+--TODO: consider shifting this range from [18, 29] -> [0, 11], and reduce from 5->4 bits
+signal center_position : unsigned (4 downto 0) := to_unsigned(18, 5); --Can be [18, 29], so 5 bits
 signal ly_offsets : ly_offsets_t;
 
 function get_offsets_from_pats (pid_std : std_logic_vector) return ly_offsets_t is
@@ -80,10 +81,10 @@ begin
   ly_offsets <= get_offsets_from_pats(wanted_PID_i);
 
   ly_sbit_select_g : for I in 0 to 5 generate
-    signal LMB : integer range 0 to 42; --Can be 0 to 42, so 6 bits
-  begin  
-      LMB <= to_integer(signed(center_position) - ly_offsets(I));
-      pat_sbits(I) <= bram_out(I)(LMB downto LMB-5);
+    signal LMB : integer range 0 to 47 := 5; --Can be 5 to 47 (but initializing to 0 for some reason), so 6 bits
+  begin
+      LMB <= to_integer(center_position - unsigned(ly_offsets(I))); -- Can just interpret ly_offsets(I) as unsigned, since subtraction for unsiged vs. signed is identical. Can take result as unsigned, since it is guaranteed to be non-negative
+      pat_sbits(I) <= window_i(I)(LMB downto LMB-5) when LMB >= 5 else (others => '0');
   end generate;
 
 end Behavioral;
