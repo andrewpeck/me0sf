@@ -10,7 +10,7 @@ from tb_common import (generate_dav)
 def setup(dut):
     c = Clock(dut.clock, 12, "ns")
     cocotb.start_soon(c.start())
-    cocotb.start_soon(generate_dav(dut))
+   # cocotb.start_soon(generate_dav(dut))
 
 @cocotb.test() # type: ignore
 async def extract_test_center(dut, nloops=10):
@@ -22,36 +22,43 @@ async def extract_test(dut, test, nloops=512, verbose=True):
     for _ in range(16):
         await RisingEdge(dut.clock)
 
-    input_queue = []
+    sbits_q = [[0 for _ in range(6)]]
+    strip_q = [0]
 
     # loop over some number of test cases
     loop = 0
-    while loop < nloops:
+    for loop in range(nloops):
+        if verbose:
+            print(f"{loop=}")
 
-        input_queue.append([[2**18] for _ in range(6)]) # Straight segment centered on strip 0
+        sbits_q.append([2**18 for _ in range(6)]) # Straight segment centered on strip 0
+        strip_q.append(loop)
 
-        if test=="SEGMENTS":
+        if test=="CENTER":
 
-            sbit_window = input_queue.pop(0)
+            sbit_window = sbits_q.pop(0)
+            strip = strip_q.pop(0)
             
             if verbose:
                 print(f"Input window: {sbit_window}")
+                print(f"Input strip: {strip}")
 
             dut.window_i.value = sbit_window
+            dut.wanted_strip_i.value = strip
         else:
             raise Exception("Test not found")
 
-        loop += 1
+        await RisingEdge(dut.clock)
 
         # pat_sbits = dut.pat_sbits.value
-        center = dut.center_position.value
+        center = dut.center_position.value.integer
 
         if verbose:
-            print(f'{loop=}')
             # print(f"Pat sbits: {pat_sbits}")
             print(f"Center position: {center}")
 
-        await RisingEdge(dut.clock)
+        if verbose:
+            print(f"{loop=}")
 
 def test_extract():
 

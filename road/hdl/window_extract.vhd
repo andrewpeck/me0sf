@@ -37,22 +37,22 @@ use ieee.numeric_std.all;
 use ieee.math_real.all;
 
 entity window_extract is
-  generic ();
   port (
     clock          : in std_logic;
     window_i       : in  sbit_window_t;
     wanted_strip_i : in std_logic_vector (STRIP_BITS-1 downto 0);
     wanted_PID_i   : in std_logic_vector (PID_BITS-1 downto 0);
-    pat_sbits      : out pat_sbits_t
+    pat_sbits      : out pat_sbits_t;
+    center_position : out unsigned(5 downto 0)
     );
 end window_extract;
 
-architecture Behavioral of sbit_bram is
+architecture Behavioral of window_extract is
     
-signal center_position : unsigned (5 downto 0); --Can be [0, 47], so 6 bits
+--signal center_position : unsigned (5 downto 0); --Can be [0, 47], so 6 bits
 
 begin
 
-  center_position <= to_unsigned((to_integer(unsigned(bram_seg_select_strip)) mod 12) + 18, center_position'length); -- Indexing from left, and by 0
+  center_position <= to_unsigned((to_integer(unsigned(wanted_strip_i)) mod 12) + 18, center_position'length); -- Indexing from left, and by 0
 
 end Behavioral;
