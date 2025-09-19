@@ -47,6 +47,9 @@ package pat_pkg is
 
   type pat_sbits_t is array (integer range 0 to 5) of std_logic_vector (6-1 downto 0);
 
+  type ly_offsets_t is array (5 downto 0) of signed(5 downto 0); -- Min lo value is -18, so need 6 bits to hold this
+
+
   --------------------------------------------------------------------------------
   -- Build Parameters
   --------------------------------------------------------------------------------

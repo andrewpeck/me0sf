@@ -34,7 +34,7 @@ async def extract_test(dut, test, nloops=512, verbose=True):
 
         sbits_q.append([2**18 for _ in range(6)]) # Straight segment centered on strip 0
         strip_q.append(loop)
-        pid_q.append(17)
+        pid_q.append(10)
 
         if test=="CENTER":
 
@@ -57,7 +57,7 @@ async def extract_test(dut, test, nloops=512, verbose=True):
 
         # pat_sbits = dut.pat_sbits.value
         center = dut.center_position.value.integer
-        ly_offsets = dut.ly_offsets.value
+        ly_offsets = [v.signed_integer for v in dut.ly_offsets.value]
 
         if verbose:
             # print(f"Pat sbits: {pat_sbits}")
