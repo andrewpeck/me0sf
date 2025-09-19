@@ -45,6 +45,8 @@ package pat_pkg is
 
   type sbit_window_t is array(integer range 0 to 5) of std_logic_vector(48-1 downto 0);
 
+  type pat_sbits_t is array (integer range 0 to 5) of std_logic_vector (6-1 downto 0);
+
   --------------------------------------------------------------------------------
   -- Build Parameters
   --------------------------------------------------------------------------------
