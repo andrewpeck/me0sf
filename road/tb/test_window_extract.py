@@ -55,14 +55,17 @@ async def extract_test(dut, test, nloops=512, verbose=True):
 
         await RisingEdge(dut.clock)
 
+        # Read updated internal signals and output
+
         # pat_sbits = dut.pat_sbits.value
         center = dut.center_position.value.integer
         ly_offsets = [v.signed_integer for v in dut.ly_offsets.value]
+        pat_sbits = dut.pat_sbits.value
 
         if verbose:
-            # print(f"Pat sbits: {pat_sbits}")
             print(f"{center=}")
             print(f"{ly_offsets=}")
+            print(f"{pat_sbits=}")
 
         if verbose:
             print(f"{loop=}")

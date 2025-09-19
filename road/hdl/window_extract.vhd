@@ -4,7 +4,7 @@
 -- 
 -- Create Date: 07/18/2025 04:34:38 PM
 -- Design Name: 
--- Module Name: sbit_bram - Behavioral
+-- Module Name: window_extract - Behavioral
 -- Project Name: 
 -- Target Devices: 
 -- Tool Versions: 
@@ -43,16 +43,14 @@ entity window_extract is
     window_i       : in  sbit_window_t;
     wanted_strip_i : in std_logic_vector (STRIP_BITS-1 downto 0);
     wanted_PID_i   : in std_logic_vector (PID_BITS-1 downto 0);
-    pat_sbits      : out pat_sbits_t;
-    center_position : out unsigned(5 downto 0);
-    ly_offsets : out ly_offsets_t
+    pat_sbits      : out pat_sbits_t
     );
 end window_extract;
 
 architecture Behavioral of window_extract is
     
---signal center_position : unsigned (5 downto 0); --Can be [0, 47], so 6 bits
--- signal ly_offsets : ly_offsets_t;
+signal center_position : unsigned (5 downto 0); --Can be [0, 47], so 6 bits
+signal ly_offsets : ly_offsets_t;
 
 function get_offsets_from_pats (pid_std : std_logic_vector) return ly_offsets_t is
     variable pid : unsigned (PID_BITS-1 downto 0);
@@ -80,5 +78,12 @@ begin
 
   center_position <= to_unsigned((to_integer(unsigned(wanted_strip_i)) mod 12) + 18, center_position'length); -- Indexing from right, and by 0
   ly_offsets <= get_offsets_from_pats(wanted_PID_i);
+
+  ly_sbit_select_g : for I in 0 to 5 generate
+    signal LMB : integer range 0 to 42; --Can be 0 to 42, so 6 bits
+  begin  
+      LMB <= to_integer(signed(center_position) - ly_offsets(I));
+      pat_sbits(I) <= bram_out(I)(LMB downto LMB-5);
+  end generate;
 
 end Behavioral;
