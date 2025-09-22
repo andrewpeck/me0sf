@@ -1,4 +1,5 @@
 import os
+from functools import reduce
 
 import cocotb
 from cocotb.clock import Clock
@@ -17,6 +18,8 @@ async def extract_test_center(dut, nloops=10):
    await extract_test(dut, "CENTER", nloops) 
 
 async def extract_test(dut, test, nloops=512, verbose=True):
+    pat_hi_los = dut.patdef_array.value.reverse # List of hi_lo pairs for patterns, should index 16: straight pattern, but need to check TODO
+    
     setup(dut)
 
     for _ in range(16):
@@ -55,6 +58,18 @@ async def extract_test(dut, test, nloops=512, verbose=True):
             raise Exception("Test not found")
 
         await RisingEdge(dut.clock)
+
+        # Extract bits with SW to check for correctness
+        pat = pat_hi_los[pid-1] # Subtract 1 from PID since the values index by 1 for now
+        los_list = [pat.ly0.lo.signed_integer, pat.ly1.lo.signed_integer, pat.ly2.lo.signed_integer, pat.ly3.lo.signed_integer, pat.ly4.lo.signed_integer, pat.ly5.lo.signed_integer] # List of los for patterns
+        sw_bits = [0 for _ in range(6)]
+        for ly in range(6):
+            center = (strip % 12) + 18 # Indexes from right, by 0
+            left_index = center - los_list[ly]
+            mask = reduce(lambda x, y : x | y, [2**(left_index-i) for i in range(6)]) # Take 6 bits, starting from left_index bit and going right
+            sw_bits[ly] = mask & sbit_window[ly]
+
+        print(sw_bits)
 
         # Read updated internal signals and output
 
