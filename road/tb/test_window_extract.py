@@ -18,7 +18,8 @@ async def extract_test_center(dut, nloops=10):
    await extract_test(dut, "CENTER", nloops) 
 
 async def extract_test(dut, test, nloops=512, verbose=True):
-    pat_hi_los = dut.patdef_array.value.reverse # List of hi_lo pairs for patterns, should index 16: straight pattern, but need to check TODO
+    pat_los = [[eval("pat.ly"+str(j)+".lo.value", {}, {"pat" : pat}) for j in range(6)] for pat in dut.patlist] # Need to use eval since the FW has the pattern values stored as 6 singals labeled "ly0", "ly1", ...
+    pat_los.reverse() # Reverse the list so index 16 is the straight pattern
     
     setup(dut)
 
@@ -60,16 +61,15 @@ async def extract_test(dut, test, nloops=512, verbose=True):
         await RisingEdge(dut.clock)
 
         # Extract bits with SW to check for correctness
-        pat = pat_hi_los[pid-1] # Subtract 1 from PID since the values index by 1 for now
-        los_list = [pat.ly0.lo.signed_integer, pat.ly1.lo.signed_integer, pat.ly2.lo.signed_integer, pat.ly3.lo.signed_integer, pat.ly4.lo.signed_integer, pat.ly5.lo.signed_integer] # List of los for patterns
+        los_ly_list = pat_los[pid-1] # Subtract 1 from PID since the values index by 1 for now
         sw_bits = [0 for _ in range(6)]
         for ly in range(6):
             center = (strip % 12) + 18 # Indexes from right, by 0
-            left_index = center - los_list[ly]
+            left_index = center - los_ly_list[ly]
             mask = reduce(lambda x, y : x | y, [2**(left_index-i) for i in range(6)]) # Take 6 bits, starting from left_index bit and going right
-            sw_bits[ly] = mask & sbit_window[ly]
+            sw_bits[ly] = format(mask & sbit_window[ly], "06b")[:6] # Need the [:6], since values greater than 2^6-1 will keep more than 6 digits
 
-        print(sw_bits)
+        print(f"{sw_bits=}")
 
         # Read updated internal signals and output
 

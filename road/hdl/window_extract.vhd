@@ -38,6 +38,9 @@ use ieee.numeric_std.all;
 use ieee.math_real.all;
 
 entity window_extract is
+  generic (
+    patlist        : patdef_array_t := patdef_array
+  );
   port (
     clock          : in std_logic;
     window_i       : in  sbit_window_t;
