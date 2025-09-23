@@ -3,11 +3,109 @@ import math
 import os
 import random
 
+from fxpmath import Fxp
+
 import cocotb
 from cocotb.clock import Clock
 from cocotb.triggers import RisingEdge
 from cocotb_test.simulator import run
 import apytypes as apy
+
+from fxpmath import Fxp
+
+def reciprocal6(x: int, nbits: int) -> Fxp:
+    lut = {
+        1: 1.0,
+        2: 0.5,
+        3: 1.0 / 3.0,
+        4: 0.25,
+        5: 0.2,
+        6: 1.0 / 6.0
+    }
+    if x not in lut:
+        print(f"WARNING: invalid reciprocal6 lookup x={x}")
+        return Fxp(0.0, signed=True, n_word=nbits+1, n_frac=nbits, rounding='trunc')
+
+    return Fxp(lut[x], signed=True, n_word=nbits+1, n_frac=nbits, rounding='trunc')
+
+
+def vhdl_exact_fit(ly_vals, valid_mask):   
+    cnt = max(sum(valid_mask), 1)
+    
+    # Stage 1: raw sums x_sum, y_sum (integers)
+    x_sum = sum(i for i, v in enumerate(valid_mask) if v)
+    y_sum = sum(ly_vals[i] for i, v in enumerate(valid_mask) if v)
+    
+    # Stage 2: n_x and n_y arrays
+    n_x = [cnt * i if valid_mask[i] else 0 for i in range(6)]
+    n_y = [cnt * ly_vals[i] if valid_mask[i] else 0 for i in range(6)]
+    
+    # Stage 3: x_diff and y_diff
+    x_diff = [n_x[i] - x_sum if valid_mask[i] else 0 for i in range(6)]
+    y_diff = [n_y[i] - y_sum if valid_mask[i] else 0 for i in range(6)]
+    
+    # Stage 4: product and square arrays
+    product = [x_diff[i] * y_diff[i] for i in range(6)]
+    square = [x_diff[i] * x_diff[i] for i in range(6)]
+
+    # Stage 5: product_sum and square_sum, only sum those where valid_mask=1
+    square_sum = 0
+    product_sum= 0
+    for i in range(6):
+        if valid_mask[i]:
+            product_sum += product[i]
+            square_sum += square[i]
+    
+    # Stage 6: reciprocal of square_sum (sfixed(1 downto -13))
+    if square_sum == 0:
+        square_recip = Fxp(0, signed=True, n_word=15, n_frac=13, rounding='trunc')
+    else:
+        square_recip = Fxp(1.0 / square_sum, signed=True, n_word=15, n_frac=13, rounding='trunc')
+
+    #product_sum_fx = Fxp(product_sum, signed=True, n_word=14, n_frac=0) 
+    product_sum_fx = Fxp(product_sum, signed=True, n_word=15, n_frac=0) # After doubling resolution
+
+
+    # Stage 7: slope_test = product_sum * square_recip (sfixed(15 downto -13))
+    slope_test = Fxp(product_sum_fx * square_recip, signed=True, n_word=29, n_frac=13, rounding='trunc')
+    
+    # Stage 8: slope = resize slope_test to sfixed(3 downto -6)
+    slope = Fxp(slope_test, signed=True, n_word=10, n_frac=6, rounding='trunc')
+    
+    # Stage 9: slope_mult = slope * x_sum_fixed (sfixed(5 downto 0))
+    x_sum_fx = Fxp(x_sum, signed=True, n_word=15, n_frac=7, rounding='trunc')
+    slope_mult = Fxp(slope * x_sum_fx, signed=True, n_word=16, n_frac=6, rounding='trunc')
+    
+    # Stage 10: slope_times_x = resize slope_mult to sfixed(7 downto -7)
+    slope_times_x = Fxp(slope_mult, signed=True, n_word=15, n_frac=7, rounding='trunc')
+    
+    # Stage 11: intercept_mult = reciprocal(cnt) * (y_sum_fx - slope_times_x)
+    
+    #y_sum_fx = Fxp(y_sum, signed=True, n_word=15, n_frac=7, rounding='trunc')
+    y_sum_fx = Fxp(y_sum, signed=True, n_word=16, n_frac=7, rounding='trunc') # After doubling resolution
+    diff_fx = y_sum_fx - slope_times_x
+    recip_fx = reciprocal6(cnt, 14)
+    intercept_mult = Fxp(recip_fx * diff_fx, signed=True, n_word=32, n_frac=21, rounding='trunc')
+
+    
+    # Stage 12: intercept resize to sfixed(6 downto -8)
+    #intercept = Fxp(intercept_mult, signed=True, n_word=15, n_frac=8, rounding='trunc')
+    intercept = Fxp(intercept_mult, signed=True, n_word=16, n_frac=8, rounding='trunc') # After doubling resolution
+    
+    # Stage 13: slope * 5.0 (sfixed(7 downto -12))
+    slope_5x = Fxp(slope.get_val() * 5.0, signed=True, n_word=20, n_frac=12, rounding='trunc')
+    
+    # Stage 14: slope_5x / 2.0 resize to sfixed(6 downto -8)
+    slope_2p5 = Fxp(slope_5x.get_val() / 2.0, signed=True, n_word=15, n_frac=8, rounding='trunc')
+    
+    # Stage 15: strip_o = slope_2p5 + intercept (sfixed(6 downto -8))
+    #strip_o = Fxp(slope_2p5.get_val() + intercept.get_val(), signed=True, n_word=15, n_frac=8, rounding='trunc')
+    strip_o = Fxp(slope_2p5.get_val() + intercept.get_val(), signed=True, n_word=16, n_frac=8, rounding='trunc')  # After doubling resolution
+
+    
+    # Return all fxp values if you want to inspect intermediate fixed-point numbers later
+    return slope, intercept, strip_o
+
 
 #Perform a linear fit in the same way that it is performed in fit.vhd
 def fit_modified(x, y):
@@ -34,7 +132,8 @@ def fit_modified(x, y):
 #Random data to feed into the fitter
 def rand_y():
     rand_m = random.randint(math.floor(-37 / 6), math.floor(37 / 6))
-    rand_b = random.randint(-5, 5)
+    #rand_b = random.randint(-5, 5)
+    rand_b = random.randint(-10, 10)
     return [math.floor(rand_m * (0 - 2.5) + rand_b + random.randint(-1, 1)),
             math.floor(rand_m * (1 - 2.5) + rand_b + random.randint(-1, 1)),
             math.floor(rand_m * (2 - 2.5) + rand_b + random.randint(-1, 1)),
@@ -106,13 +205,11 @@ async def fit_tb(dut, NLOOPS=10000):
         #Create random data, potentially with invalid layers
         valid_mask = [(dut.valid_i.value.integer >> i) & 1 for i in range(6)]
         masked_data = [v if valid else float('NaN') for v, valid in zip(this_data, valid_mask)]
-        masked_x = [v if valid else float('NaN') for v, valid in zip(x, valid_mask)]
-        m, b = fit_modified(masked_x, masked_data)
+        m, b, key_s = vhdl_exact_fit(this_data, valid_mask)
 
         slope = dut.slope_o.value.signed_integer / (2**slope_fracb - 1)
         intercept = dut.intercept_o.value.signed_integer / (2**intercept_fracb - 1)
         key_strip = dut.strip_o.value.signed_integer / (2**strip_fracb - 1)
-        key_s = m * 2.5 + b
 
         #Define the maximum allowed discrepancy between python fit and fit.vhd
         max_error_slope = 0.65

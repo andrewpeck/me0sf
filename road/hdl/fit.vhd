@@ -36,12 +36,14 @@ entity fit is
 
     -- intercept
     -- this is the intercept at the 0th layer, different than the pattern-centered strip
-    B_INT_BITS  : natural := 6;
+    --B_INT_BITS  : natural := 6;
+    B_INT_BITS  : natural := 7; -- After doubling resolution
     B_FRAC_BITS : natural := 7;
 
     -- strip
     -- this is the strip, centered in the 2.5 layer (center of the chamber)
-    STRIP_INT_BITS  : natural := 4;
+    --STRIP_INT_BITS  : natural := 4;
+    STRIP_INT_BITS  : natural := 5;
     STRIP_FRAC_BITS : natural := 5
     );
 
@@ -84,7 +86,8 @@ architecture behavioral of fit is
   type x_sum_array_t is array (integer range 1 to 6) of integer range 0 to 15;  
   signal x_sum : x_sum_array_t := (others => 0);
 
-  type y_sum_array_t is array (integer range 1 to 9) of integer range -63 to 63;
+  --type y_sum_array_t is array (integer range 1 to 9) of integer range -255 to 255;
+  type y_sum_array_t is array (integer range 1 to 9) of integer range -511 to 511; -- After doubling resolution
   signal y_sum : y_sum_array_t := (others => 0);  -- sum (y_i)
 
   --------------------------------------------------------------------------------
@@ -92,7 +95,8 @@ architecture behavioral of fit is
   --------------------------------------------------------------------------------
 
   type n_x_array_t is array (integer range 0 to 5) of integer range 0 to 30;  -- ly=5 * cnt=6
-  type n_y_array_t is array (integer range 0 to 5) of integer range -255 to 255;  -- n_y on average is at most ~ +/-40, 40 * 6 ~ 240
+  --type n_y_array_t is array (integer range 0 to 5) of integer range -255 to 255;  -- n_y on average is at most ~ +/-40, 40 * 6 ~ 240
+  type n_y_array_t is array (integer range 0 to 5) of integer range -511 to 511; -- After doubling resolution
   signal n_x : n_x_array_t := (others => 0);
   signal n_y : n_y_array_t := (others => 0);
 
@@ -103,7 +107,8 @@ architecture behavioral of fit is
   type x_diff_array_t is array (integer range 0 to N_LAYERS-1) of integer range -30 to 30;  --x_diff = n_x - x_sum, max value is 30
   signal x_diff : x_diff_array_t := (others => 0);
 
-  type y_diff_array_t is array (integer range 0 to N_LAYERS-1) of integer range -255 to 255;  --y_diff = n_y - y_sum, max value is +/- 255
+  --type y_diff_array_t is array (integer range 0 to N_LAYERS-1) of integer range -255 to 255;  --y_diff = n_y - y_sum, max value is +/- 255
+  type y_diff_array_t is array (integer range 0 to N_LAYERS-1) of integer range -511 to 511; -- After doubling resolution
   signal y_diff : y_diff_array_t := (others => 0);
 
   --------------------------------------------------------------------------------
@@ -113,7 +118,8 @@ architecture behavioral of fit is
   type square_array_t is array (integer range 0 to N_LAYERS-1) of integer range -2047 to 2047;
   signal square : square_array_t  := (others => 0);
 
-  type product_array_t is array (integer range 0 to N_LAYERS-1) of integer range -8191 to 8191;
+  --type product_array_t is array (integer range 0 to N_LAYERS-1) of integer range -8191 to 8191;
+  type product_array_t is array (integer range 0 to N_LAYERS-1) of integer range -16383 to 16383; -- After doubling resolution
   signal product : product_array_t := (others => 0);
 
   --------------------------------------------------------------------------------
@@ -122,9 +128,18 @@ architecture behavioral of fit is
 
   signal product_sum : integer range -8191 to 8191 := 0;
   signal product_sum_1 : integer range -8191 to 8191 := 0;
+  signal product_sum_sfixed : sfixed(13 downto 0);
 
   signal square_sum : integer range -8191 to 8191 := 0;
   signal square_sum_reciprocal : sfixed (1 downto -13);
+
+  --------------------------------------------------------------------------------
+  -- s6,7 (pipelined multiplier)
+  --------------------------------------------------------------------------------
+
+  signal r_ma       : signed(13 downto 0);
+  signal r_mb       : signed(14 downto 0);
+  signal r_m_stage1 : signed(26 downto 0);
 
   --------------------------------------------------------------------------------
   -- slopes and intercept
@@ -135,7 +150,11 @@ architecture behavioral of fit is
   signal slope_signed : signed (28 downto 0) := (others => '0');
   signal slope_sfixed : sfixed (15 downto -13) := (others => '0');
 
+  signal slope_signed_test : signed (28 downto 0) := (others => '0');
+  signal slope_sfixed_test : sfixed (15 downto -13) := (others => '0');
+
   signal slope, slope_s9, slope_s10, slope_s11, slope_s12: sfixed (3 downto -6) := (others => '0');
+  signal slope_test : sfixed (15 downto -13) := (others => '0');
 
   signal slope_s10_mult : sfixed (7 downto -12);
   signal slope_s11_x5 : sfixed (6 downto -2);
@@ -249,13 +268,13 @@ begin
       cnt(6) <= cnt(5);
       cnt(7) <= cnt(6);
       cnt(8) <= cnt(7);
-      cnt(9) <= cnt(8);
+      cnt(9) <= cnt(8); --cnt is used in stage 9
 
-      x_sum_dly : for I in 2 to 6 loop
+      x_sum_dly : for I in 2 to 6 loop --x_sum is used in stage 6
         x_sum(I) <= x_sum(I-1);
       end loop;
 
-      y_sum_dly : for I in 2 to 9 loop
+      y_sum_dly : for I in 2 to 9 loop  --y_sum is used in stage 9
         y_sum(I) <= y_sum(I-1);
       end loop;
 
@@ -281,25 +300,32 @@ begin
       -- Stage 4, 5
       -------------------------------------------------------------------------
 
-      -- Σ (n*xi - Σx)*(n*yi - Σy)
+      -- Σ (n*xi - Σx)*(n*yi - Σy), numerator of slope
       product_sum_1 <= sum6(product(0), product(1), product(2), product(3), product(4), product(5), valid(4));
       product_sum <= product_sum_1; --To account for the delay needed in square_sum_reciprocal
 
-      -- Σ (n*xi - Σx)^2
+      product_sum_sfixed <= to_sfixed(product_sum_1, product_sum_sfixed'high, product_sum_sfixed'low);
+
+      -- Σ (n*xi - Σx)^2, denominator of slope
       square_sum <= sum6(square(0), square(1), square(2), square(3), square(4), square(5), valid(4));
-      square_sum_reciprocal <= reciprocal (square_sum ,-square_sum_reciprocal'low);
+      square_sum_reciprocal <= reciprocal (square_sum ,-square_sum_reciprocal'low); --Instead of dividing, find the reciprocal in a lookup table
 
       ---------------------------------------------------------------------------
       -- Stages 6-7: Pipelined Multiplier (takes 2 clock cycles), product_sum * square_sum_reciprocal, 
       ---------------------------------------------------------------------------
 
+      slope_test <= square_sum_reciprocal * product_sum_sfixed;
+      slope <= resize(slope_test, slope);
+
       x_sum_fixed<= to_sfixed(x_sum(6), 5);
+      --x_sum_fixed<= to_sfixed(x_sum(5), 5);
 
       -------------------------------------------------------------------------
       -- Stage 8
       -------------------------------------------------------------------------
 
       slope_mult <= slope * x_sum_fixed;
+      --slope_mult <= slope_test * x_sum_fixed;
 
       -------------------------------------------------------------------------
       -- Stage 9
@@ -307,12 +333,14 @@ begin
 
       slope_times_x <= resize(slope_mult, slope_times_x); 
       slope_s9 <= slope;
+      --slope_s9 <= slope_test;
 
       -------------------------------------------------------------------------
       -- Stage 10, 11, 12
       -------------------------------------------------------------------------
 
       intercept_mult <= reciprocal6(cnt(9), 14) * (to_sfixed(y_sum(9), 7) - slope_times_x);
+      --intercept_mult <= reciprocal6(cnt(8), 14) * (to_sfixed(y_sum(8), 7) - slope_times_x);
       slope_s10_mult <= slope_s9*5.0;
       slope_s10 <= slope_s9;
 
@@ -338,17 +366,17 @@ begin
   -- Pipelined Multiplier
   --------------------------------------------------------------------------------------------------------------
 
-  slope_multiplier : entity work.mult_sgn_12x12
-    generic map (
-      WIDTH_A => 14,
-      WIDTH_B => 15
-      )
-    port map (
-      clock   => clock,
-      input_a => to_signed(product_sum, 14),
-      input_b => signed(to_slv(square_sum_reciprocal)),
-      output  => slope_signed
-      );
-  slope_sfixed <= to_sfixed(std_logic_vector(slope_signed), slope_sfixed'high, slope_sfixed'low);
-  slope <= resize(slope_sfixed, slope);
+  --slope_multiplier : entity work.mult_sgn_12x12
+  --  generic map (
+  --    WIDTH_A => 14,
+  --    WIDTH_B => 15
+  --    )
+  --  port map (
+  --    clock   => clock,
+  --    input_a => to_signed(product_sum, 14),
+  --    input_b => signed(to_slv(square_sum_reciprocal)),
+  --    output  => slope_signed
+  --    );
+  --slope_sfixed <= to_sfixed(std_logic_vector(slope_signed), slope_sfixed'high, slope_sfixed'low);
+  --slope <= resize(slope_sfixed, slope);
 end behavioral;
