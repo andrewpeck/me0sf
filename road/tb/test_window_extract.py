@@ -1,5 +1,6 @@
 import os
 from functools import reduce
+import random
 
 import cocotb
 from cocotb.clock import Clock
@@ -14,14 +15,19 @@ def setup(dut):
    # cocotb.start_soon(generate_dav(dut))
 
 @cocotb.test() # type: ignore
-async def extract_test_center(dut, nloops=10):
-   await extract_test(dut, "CENTER", nloops) 
+async def extract_test_random(dut, nloops=1000):
+   await extract_test(dut, "RANDOM", nloops) 
+
+@cocotb.test() # type: ignore
+async def extract_test_custom(dut, nloops=10):
+   await extract_test(dut, "CUSTOM", nloops)
 
 async def extract_test(dut, test, nloops=512, verbose=True):
     pat_los = [[eval("pat.ly"+str(j)+".lo.value", {}, {"pat" : pat}) for j in range(6)] for pat in dut.patlist] # Need to use eval since the FW has the pattern values stored as 6 singals labeled "ly0", "ly1", ...
     pat_los.reverse() # Reverse the list so index 16 is the straight pattern
     
     setup(dut)
+    random.seed(1337)
 
     for _ in range(16):
         await RisingEdge(dut.clock)
@@ -36,29 +42,47 @@ async def extract_test(dut, test, nloops=512, verbose=True):
         if verbose:
             print(f"{loop=}")
 
-        #sbits_q.append([2**18 for _ in range(6)]) # Straight segment centered on strip 0
-        sbits_q.append([(1+2+4+8+16+32), (2**7+2**8+2**9+2**10), (2**14+2**15+2**16), 0, 0, 0])
-        strip_q.append(0)
-        pid_q.append(1)
-
-        if test=="CENTER":
-
-            sbit_window = sbits_q.pop(0)
-            strip = strip_q.pop(0)
-            pid = pid_q.pop(0)
-            
-            if verbose:
-                print(f"{sbit_window=}")
-                print(f"{strip=}")
-                print(f"{pid=}")
-
-            dut.window_i.value = sbit_window
-            dut.wanted_strip_i.value = strip
-            dut.wanted_PID_i.value = pid
+        # Generate input data, and decide on which strip and PID to use
+        if test=="RANDOM":
+            sbits_q.append(random.randint(0, 2**48-1))
+            strip_q.append(random.randint(0, 47))
+            pid_q.append(random.randint(1, 17))
+        elif test=="CUSTOM":
+            #sbits_q.append([2**18 for _ in range(6)]) # Straight segment centered on strip 0
+            sbits_q.append([(1+2+4+8+16+32), (2**7+2**8+2**9+2**10), (2**14+2**15+2**16), 0, 0, 0])
+            strip_q.append(0)
+            pid_q.append(1)
         else:
             raise Exception("Test not found")
+        
+        # Set FW values
+        dut.window_i.value = sbit_window
+        dut.wanted_strip_i.value = strip
+        dut.wanted_PID_i.value = pid
 
+        if verbose:
+            print(f"{sbit_window=}")
+            print(f"{strip=}")
+            print(f"{pid=}")
+
+        # Wait a clock
         await RisingEdge(dut.clock)
+
+        # Read updated internal signals and output
+
+        center = dut.center_position.value.integer
+        ly_offsets = [v.signed_integer for v in dut.ly_offsets.value]
+        pat_sbits = dut.pat_sbits.value
+
+        if verbose:
+            print(f"{center=}")
+            print(f"{ly_offsets=}")
+            print(f"{pat_sbits=}")
+
+        # Get values from previous clock, to find the expected output in SW
+        sbit_window = sbits_q.pop(0)
+        strip = strip_q.pop(0)
+        pid = pid_q.pop(0)
 
         # Extract bits with SW to check for correctness
         los_ly_list = pat_los[pid-1] # Subtract 1 from PID since the values index by 1 for now
@@ -71,17 +95,8 @@ async def extract_test(dut, test, nloops=512, verbose=True):
 
         print(f"{sw_bits=}")
 
-        # Read updated internal signals and output
-
-        # pat_sbits = dut.pat_sbits.value
-        center = dut.center_position.value.integer
-        ly_offsets = [v.signed_integer for v in dut.ly_offsets.value]
-        pat_sbits = dut.pat_sbits.value
-
-        if verbose:
-            print(f"{center=}")
-            print(f"{ly_offsets=}")
-            print(f"{pat_sbits=}")
+        # Assert SW value == FW value
+        assert sw_bits == pat_sbits
 
         if verbose:
             print(f"{loop=}")
