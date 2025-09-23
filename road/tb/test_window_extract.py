@@ -15,12 +15,12 @@ def setup(dut):
    # cocotb.start_soon(generate_dav(dut))
 
 @cocotb.test() # type: ignore
-async def extract_test_random(dut, nloops=1000):
+async def extract_test_random(dut, nloops=10000):
    await extract_test(dut, "RANDOM", nloops) 
 
-@cocotb.test() # type: ignore
-async def extract_test_custom(dut, nloops=10):
-   await extract_test(dut, "CUSTOM", nloops)
+#@cocotb.test() # type: ignore
+#async def extract_test_custom(dut, nloops=10):
+#   await extract_test(dut, "CUSTOM", nloops)
 
 async def extract_test(dut, test, nloops=512, verbose=True):
     pat_los = [[eval("pat.ly"+str(j)+".lo.value", {}, {"pat" : pat}) for j in range(6)] for pat in dut.patlist] # Need to use eval since the FW has the pattern values stored as 6 singals labeled "ly0", "ly1", ...
@@ -32,9 +32,9 @@ async def extract_test(dut, test, nloops=512, verbose=True):
     for _ in range(16):
         await RisingEdge(dut.clock)
 
-    sbits_q = [[0 for _ in range(6)]]
-    strip_q = [0]
-    pid_q = [17]
+    sbits_q = []
+    strip_q = []
+    pid_q = []
 
     # loop over some number of test cases
     loop = 0
@@ -44,14 +44,26 @@ async def extract_test(dut, test, nloops=512, verbose=True):
 
         # Generate input data, and decide on which strip and PID to use
         if test=="RANDOM":
-            sbits_q.append(random.randint(0, 2**48-1))
-            strip_q.append(random.randint(0, 47))
-            pid_q.append(random.randint(1, 17))
+            sbit_window = [random.randint(0, 2**48-1) for _ in range(6)]
+            sbits_q.append(sbit_window)
+
+            strip = random.randint(0, 47) # Should be 0, 191
+            strip_q.append(strip)
+
+            pid = random.randint(1, 17)
+            pid_q.append(pid)
         elif test=="CUSTOM":
-            #sbits_q.append([2**18 for _ in range(6)]) # Straight segment centered on strip 0
-            sbits_q.append([(1+2+4+8+16+32), (2**7+2**8+2**9+2**10), (2**14+2**15+2**16), 0, 0, 0])
-            strip_q.append(0)
-            pid_q.append(1)
+
+            #sbit_window = [2**18 for _ in range(6)] # Straight segment centered on strip 0
+
+            sbit_window = [(1+2+4+8+16+32), (2**7+2**8+2**9+2**10), (2**14+2**15+2**16), 0, 0, 0] # Matches widest pattern for lys 0,1,2 at rightmost sbits
+            sbits_q.append(sbit_window)
+
+            strip = 0 
+            strip_q.append(strip)
+
+            pid = 1 
+            pid_q.append(pid)
         else:
             raise Exception("Test not found")
         
@@ -60,16 +72,10 @@ async def extract_test(dut, test, nloops=512, verbose=True):
         dut.wanted_strip_i.value = strip
         dut.wanted_PID_i.value = pid
 
-        if verbose:
-            print(f"{sbit_window=}")
-            print(f"{strip=}")
-            print(f"{pid=}")
-
         # Wait a clock
         await RisingEdge(dut.clock)
 
-        # Read updated internal signals and output
-
+        # Read updated internal signals and output signals
         center = dut.center_position.value.integer
         ly_offsets = [v.signed_integer for v in dut.ly_offsets.value]
         pat_sbits = dut.pat_sbits.value
@@ -79,19 +85,26 @@ async def extract_test(dut, test, nloops=512, verbose=True):
             print(f"{ly_offsets=}")
             print(f"{pat_sbits=}")
 
-        # Get values from previous clock, to find the expected output in SW
+        # Get input values from previous clock, to find the expected output in SW
         sbit_window = sbits_q.pop(0)
         strip = strip_q.pop(0)
         pid = pid_q.pop(0)
 
+        if verbose:
+            print("{sbit_window=}")
+            for i in range(6):
+                print(format(sbit_window[i], "048b"))
+            print(f"{strip=}")
+            print(f"{pid=}")
+
         # Extract bits with SW to check for correctness
         los_ly_list = pat_los[pid-1] # Subtract 1 from PID since the values index by 1 for now
         sw_bits = [0 for _ in range(6)]
+        center = (strip % 12) + 18 # Indexes from right, by 0
         for ly in range(6):
-            center = (strip % 12) + 18 # Indexes from right, by 0
             left_index = center - los_ly_list[ly]
             mask = reduce(lambda x, y : x | y, [2**(left_index-i) for i in range(6)]) # Take 6 bits, starting from left_index bit and going right
-            sw_bits[ly] = format(mask & sbit_window[ly], "06b")[:6] # Need the [:6], since values greater than 2^6-1 will keep more than 6 digits
+            sw_bits[ly] = format(mask & sbit_window[ly], "048b")[(47-left_index):(47-left_index+6)] # Apply mask and extract only the relevant bits
 
         print(f"{sw_bits=}")
 
