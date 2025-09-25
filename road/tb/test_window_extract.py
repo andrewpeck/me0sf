@@ -14,27 +14,32 @@ def setup(dut):
     cocotb.start_soon(c.start())
    # cocotb.start_soon(generate_dav(dut))
 
-#@cocotb.test() # type: ignore
-#async def extract_test_random(dut, nloops=10000):
-#   await extract_test(dut, "RANDOM", nloops) 
-
 @cocotb.test() # type: ignore
-async def extract_test_custom(dut, nloops=10):
-   await extract_test(dut, "CUSTOM", nloops)
+async def extract_test_random(dut, nloops=100000):
+   await extract_test(dut, "RANDOM", nloops) 
+
+#@cocotb.test() # type: ignore
+#async def extract_test_custom(dut, nloops=10):
+#   await extract_test(dut, "CUSTOM", nloops)
 
 async def extract_test(dut, test, nloops=512, verbose=True):
-    pat_los = [[eval("pat.ly"+str(j)+".lo.value", {}, {"pat" : pat}) for j in range(6)] for pat in dut.patlist] # Need to use eval since the FW has the pattern values stored as 6 singals labeled "ly0", "ly1", ...
+    pat_los = [[eval("pat.ly"+str(j)+".lo.value", {}, {"pat" : pat}) for j in range(6)] for pat in dut.patlist] # Need to use eval since the FW has the pattern values stored as 6 signals labeled "ly0", "ly1", ...
     pat_los.reverse() # Reverse the list so index 16 is the straight pattern
-    
+    pat_his = [[eval("pat.ly"+str(j)+".hi.value", {}, {"pat" : pat}) for j in range(6)] for pat in dut.patlist]
+    pat_his.reverse()
+
+    pat_sbit_sizes = [[hi-lo+1 for hi, lo in zip(hi_lys, lo_lys)] for hi_lys, lo_lys in zip(pat_his, pat_los)]
+
+
     setup(dut)
     random.seed(1337)
 
     for _ in range(16):
         await RisingEdge(dut.clock)
 
-    sbits_q = []
-    strip_q = []
-    pid_q = []
+    sbits_q = [[0 for _ in range(6)]]
+    strip_q = [0]
+    pid_q = [1]
 
     # loop over some number of test cases
     loop = 0
@@ -103,13 +108,18 @@ async def extract_test(dut, test, nloops=512, verbose=True):
         center = (strip % 12) + 18 # Indexes from right, by 0
         for ly in range(6):
             left_index = center - los_ly_list[ly]
-            mask = reduce(lambda x, y : x | y, [2**(left_index-i) for i in range(6)]) # Take 6 bits, starting from left_index bit and going right
-            sw_bits[ly] = format(mask & sbit_window[ly], "048b")[(47-left_index):(47-left_index+6)] # Apply mask and extract only the relevant bits
+            size = pat_sbit_sizes[pid-1][ly]
+            mask = reduce(lambda x, y : x | y, [2**(left_index-i) for i in range(size)]) # Take SIZE bits, starting from left_index bit and going right
+            sbits_not_zero_padded = format(mask & sbit_window[ly], "048b")[(47-left_index):(47-left_index+size)] # Apply mask and extract only the relevant bits
+            left_pad = "0"*((6-size)//2)
+            right_pad = "0"*((7-size)//2)
+            sw_bits[ly] = left_pad + sbits_not_zero_padded + right_pad
 
         print(f"{sw_bits=}")
 
         # Assert SW value == FW value
-        #assert sw_bits == pat_sbits
+        if loop > 0:
+            assert sw_bits == pat_sbits
 
         if verbose:
             print(f"{loop=}")
