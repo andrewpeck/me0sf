@@ -112,13 +112,23 @@ end function;
 function get_sbits_and_zero_pad (window : sbit_window_t; center_position : unsigned; ly_offsets : ly_offsets_t; sizes_by_ly : pat_sbits_size_t) return pat_sbits_t is
   variable pat_sbits : pat_sbits_t;
   variable LMB : integer range 5 to 47;
-  variable ly_size : unsigned (2 downto 0);
+  variable ly_size : integer range 2 to 6;
 begin
   for I in 0 to 5 loop
     LMB := to_integer(center_position - unsigned(ly_offsets(I))); -- Can just interpret ly_offsets(I) as unsigned, since subtraction for unsiged vs. signed is identical. Can take result as unsigned, since it is guaranteed to be non-negative
     ly_size := to_integer(sizes_by_ly(I));
 
-    pat_sbits(I) := (others => '0') & window(I)(LMB downto LMB-(ly_size-1));
+    if ly_size = 2 then
+        pat_sbits(I) := "0000" & window(I)(LMB downto LMB-1);
+    elsif ly_size = 3 then
+        pat_sbits(I) := "000" & window(I)(LMB downto LMB-2);
+    elsif ly_size = 4 then
+        pat_sbits(I) := "00" & window(I)(LMB downto LMB-3);
+    elsif ly_size = 5 then
+        pat_sbits(I) := "0" & window(I)(LMB downto LMB-4);
+    elsif ly_size = 6 then
+        pat_sbits(I) := window(I)(LMB downto LMB-5);
+    end if;
   end loop;
 
   return pat_sbits;

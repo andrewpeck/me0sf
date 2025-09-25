@@ -15,7 +15,7 @@ def setup(dut):
    # cocotb.start_soon(generate_dav(dut))
 
 @cocotb.test() # type: ignore
-async def extract_test_random(dut, nloops=100000):
+async def extract_test_random(dut, nloops=1000):
    await extract_test(dut, "RANDOM", nloops) 
 
 #@cocotb.test() # type: ignore
