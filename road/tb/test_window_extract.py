@@ -111,9 +111,7 @@ async def extract_test(dut, test, nloops=512, verbose=True):
             size = pat_sbit_sizes[pid-1][ly]
             mask = reduce(lambda x, y : x | y, [2**(left_index-i) for i in range(size)]) # Take SIZE bits, starting from left_index bit and going right
             sbits_not_zero_padded = format(mask & sbit_window[ly], "048b")[(47-left_index):(47-left_index+size)] # Apply mask and extract only the relevant bits
-            left_pad = "0"*((6-size)//2)
-            right_pad = "0"*((7-size)//2)
-            sw_bits[ly] = left_pad + sbits_not_zero_padded + right_pad
+            sw_bits[ly] = "0"*(6-size) + sbits_not_zero_padded
 
         print(f"{sw_bits=}")
 

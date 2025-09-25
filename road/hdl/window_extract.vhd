@@ -22,7 +22,7 @@
 -- From the strip center, finds where in the window the center of the desired pattern is (derived from sbit BRAM architecture).
 -- From the PID, takes only the leftmost bit, and follwing 5 bits from each layer.
 -- Since patterns can have 1-6 bits, depending on PID and layer, this module also zeros bits that are not part of the pattern, and shifts the desired sbits
--- such that they are centered. Odd sized layers (1, 3, 5) have an additional 0 to the left, that must be accounted for later. This is done since the size of these vectors
+-- such that they are centered. Odd sized layers (1, 3, 5) have an additional 0 to the right, that must be accounted for later. This is done since the size of these vectors
 -- must be constant.
 ----------------------------------------------------------------------------------
 
@@ -116,20 +116,9 @@ function get_sbits_and_zero_pad (window : sbit_window_t; center_position : unsig
 begin
   for I in 0 to 5 loop
     LMB := to_integer(center_position - unsigned(ly_offsets(I))); -- Can just interpret ly_offsets(I) as unsigned, since subtraction for unsiged vs. signed is identical. Can take result as unsigned, since it is guaranteed to be non-negative
-    ly_size := sizes_by_ly(I);
+    ly_size := to_integer(sizes_by_ly(I));
 
-    if ly_size = to_unsigned(2, 3) then
-      pat_sbits(I) := "00" & window(I)(LMB downto LMB-1) & "00";
-    elsif ly_size = to_unsigned(3, 3) then
-      pat_sbits(I) := "0" & window(I)(LMB downto LMB-2) & "00";
-    elsif ly_size = to_unsigned(4, 3) then
-      pat_sbits(I) := "0" & window(I)(LMB downto LMB-3) & "0";
-    elsif ly_size = to_unsigned(5, 3) then
-      pat_sbits(I) := window(I)(LMB downto LMB-4) & "0";
-    elsif ly_size = to_unsigned(6, 3) then
-      pat_sbits(I) := window(I)(LMB downto LMB-5);
-    end if;
-
+    pat_sbits(I) := (others => '0') & window(I)(LMB downto LMB-(ly_size-1));
   end loop;
 
   return pat_sbits;
