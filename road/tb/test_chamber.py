@@ -408,7 +408,7 @@ def test_chamber():
         #voptargs arg might increase sim speed, qwaveb to display signals in sim
         #sim_args=["-suppress", "14408", "-do", "set NumericStdNoWarnings 1;", "-voptargs=\"-access=rw+/.\""],
         parameters=parameters,
-        gui=1)
+        gui=0)
 
 if __name__ == "__main__":
     test_chamber()

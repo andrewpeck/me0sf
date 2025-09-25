@@ -43,8 +43,8 @@ entity sbit_bram is
   port (
     clock320 : in  std_logic;
     sbits_i  : in  chamber_w_virtual_t;
-    wanted_strip : in std_logic_vector (STRIP_BITS-1 downto 0);
-    wanted_prt : in std_logic_vector (PARTITION_BITS-1 downto 0);
+    wanted_strip : in unsigned (STRIP_BITS-1 downto 0);
+    wanted_prt : in unsigned (PARTITION_BITS-1 downto 0);
     my_out   : out sbit_window_t
     );
 end sbit_bram;
@@ -74,7 +74,7 @@ signal full_addr_a : std_logic_vector (5 downto 0);
 signal full_addr_b : std_logic_vector (7 downto 0) := (others => '0');
 signal wanted_bram_from_strip : std_logic_vector (1 downto 0) := "00";
 signal wanted_word_from_strip : std_logic_vector (1 downto 0) := "00";
-signal wanted_prt_reg, wanted_prt_reg2 : std_logic_vector (PARTITION_BITS-1 downto 0) := "0000";
+signal wanted_prt_reg, wanted_prt_reg2 : unsigned (PARTITION_BITS-1 downto 0) := "0000";
 
 signal global_phase : unsigned (2 downto 0) := to_unsigned(0, 3);
 
@@ -177,9 +177,9 @@ process (clock320) begin
 
     wanted_prt_reg2 <= wanted_prt;
     wanted_prt_reg <= wanted_prt_reg2;
-    wanted_word_from_strip <= std_logic_vector(to_unsigned(to_integer(unsigned(wanted_strip)) / 48, wanted_word_from_strip'length));
-    wanted_bram_from_strip <= std_logic_vector(to_unsigned((to_integer(unsigned(wanted_strip)) / 12) mod 4, wanted_bram_from_strip'length));
-    my_out <= bram_o(to_integer(unsigned(wanted_prt_reg)));
+    wanted_word_from_strip <= std_logic_vector(to_unsigned(to_integer(wanted_strip) / 48, wanted_word_from_strip'length));
+    wanted_bram_from_strip <= std_logic_vector(to_unsigned((to_integer(wanted_strip) / 12) mod 4, wanted_bram_from_strip'length));
+    my_out <= bram_o(to_integer(wanted_prt_reg));
    end if;
 end process;
 

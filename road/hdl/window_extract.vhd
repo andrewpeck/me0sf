@@ -44,8 +44,8 @@ entity window_extract is
   port (
     clock          : in std_logic;
     window_i       : in  sbit_window_t;
-    wanted_strip_i : in std_logic_vector (STRIP_BITS-1 downto 0);
-    wanted_PID_i   : in std_logic_vector (PID_BITS-1 downto 0);
+    wanted_strip_i : in unsigned (STRIP_BITS-1 downto 0);
+    wanted_PID_i   : in unsigned (PID_BITS-1 downto 0);
     pat_sbits      : out pat_sbits_t
     );
 end window_extract;
@@ -142,10 +142,10 @@ signal wanted_pid_index : unsigned (PID_BITS-1 downto 0);
 begin
 
   -- Since PID is currently indexing by 1, need to subtract 1. But 0 is invalid, so need to take care if it initializes to this.
-  wanted_pid_index <= unsigned(wanted_PID_i) - 1 when unsigned(wanted_PID_i) /= 0 else (others => '0');
+  wanted_pid_index <= wanted_PID_i - 1 when wanted_PID_i /= 0 else (others => '0');
 
   -- Find where in the window the center is, f(strip) only, but depends on BRAM ring buffer architecture
-  center_position <= to_unsigned((to_integer(unsigned(wanted_strip_i)) mod 12) + 18, center_position'length); -- Indexing from right, and by 0
+  center_position <= to_unsigned((to_integer(wanted_strip_i) mod 12) + 18, center_position'length); -- Indexing from right, and by 0
 
   -- Get the leftmost bit offset for each layer based on PID
   ly_offsets <= get_offsets_from_pats(wanted_pid_index);

@@ -219,36 +219,14 @@ architecture behavioral of chamber is
   signal bram_in : chamber_w_virtual_t;
   signal bram_out : sbit_window_t;
   signal bram_seg_select_phase : unsigned (2 downto 0) := (others => '0'); -- TODO: initialize to correct starting phase, should be f(SBIT_PHASE, BRAM_DELAY)
-  signal bram_seg_select_prt : std_logic_vector (PARTITION_BITS-1 downto 0);
-  signal bram_seg_select_strip : std_logic_vector (STRIP_BITS-1 downto 0);
-  signal bram_seg_select_pid : unsigned (PID_BITS-1 downto 0) := (others => '0'); -- Initialize to 0 so simulator doesn't crash
+
+  type seg_info_buffer_t is array (0 to 2) of segment_t;
+
+  signal seg_info_buffer : seg_info_buffer_t;
+
   signal center_position : unsigned (5 downto 0);
-
-  type ly_offsets_t is array (5 downto 0) of signed(5 downto 0); -- Min lo value is -18, so need 6 bits to hold this
-  signal ly_offsets : ly_offsets_t;
   
-  type centroids_in_t is array (0 to 5) of std_logic_vector(0 to 5);
-  signal centroids_in : centroids_in_t;
-
-  function get_offsets_from_pats (pid : unsigned) return ly_offsets_t is
-    variable ly_offsets : ly_offsets_t;
-  begin
-    if pid >= 1 and pid <= 17 then
-      ly_offsets(0) := to_signed(patdef_array(NUM_PATTERNS-1 - (to_integer(pid) - 1) ).ly0.lo, 6); --For now, PID=0 is NaN segment, so subtract 1 to index with it.
-      ly_offsets(1) := to_signed(patdef_array(NUM_PATTERNS-1 - (to_integer(pid) - 1) ).ly1.lo, 6); --For now, PID=0 is NaN segment, so subtract 1 to index with it.
-      ly_offsets(2) := to_signed(patdef_array(NUM_PATTERNS-1 - (to_integer(pid) - 1) ).ly2.lo, 6); --For now, PID=0 is NaN segment, so subtract 1 to index with it.
-      ly_offsets(3) := to_signed(patdef_array(NUM_PATTERNS-1 - (to_integer(pid) - 1) ).ly3.lo, 6); --For now, PID=0 is NaN segment, so subtract 1 to index with it.
-      ly_offsets(4) := to_signed(patdef_array(NUM_PATTERNS-1 - (to_integer(pid) - 1) ).ly4.lo, 6); --For now, PID=0 is NaN segment, so subtract 1 to index with it.
-      ly_offsets(5) := to_signed(patdef_array(NUM_PATTERNS-1 - (to_integer(pid) - 1) ).ly5.lo, 6); --For now, PID=0 is NaN segment, so subtract 1 to index with it.
-    else
-      for I in 0 to 5 loop
-        ly_offsets(I) := to_signed(0, 6);
-      end loop;
-    end if;
-
-    return ly_offsets;
-  end function;
-
+  signal centroids_in : pat_sbits_t;
 
 begin
 
@@ -440,8 +418,8 @@ begin
     port map (
       clock320 => clock,
       sbits_i  => bram_in,
-      wanted_strip => bram_seg_select_strip,
-      wanted_prt => bram_seg_select_prt,
+      wanted_strip => seg_info_buffer(0).strip,
+      wanted_prt => seg_info_buffer(0).prt,
       my_out => bram_out
     );
 
@@ -658,9 +636,9 @@ begin
   begin
     if (rising_edge(clock)) then
       bram_seg_select_phase <= bram_seg_select_phase + 1;
-      bram_seg_select_prt <= std_logic_vector(final_segs(to_integer(bram_seg_select_phase)).partition);
-      bram_seg_select_strip <= std_logic_vector(final_segs(to_integer(bram_seg_select_phase)).strip);
-      bram_seg_select_pid <= final_segs(to_integer(bram_seg_select_phase)).id;
+      seg_info_buffer(0) <= final_segs(to_integer(bram_seg_select_phase));
+      seg_info_buffer(1) <= seg_info_buffer(0);
+      seg_info_buffer(2) <= seg_info_buffer(1);
     end if;
   end process;
 
@@ -668,28 +646,14 @@ begin
   -- Extract sbits for centroid finders from BRAM window
   --------------------------------------------------------------------------------
 
-  center_position <= to_unsigned((to_integer(unsigned(bram_seg_select_strip)) mod 12) + 18, center_position'length); -- Indexing from left, and by 0
-  --TODO: see if it is correct to index from left, or need to index from right. Also see if BRAM output is flipped form expected.
-  ly_offsets <= get_offsets_from_pats(bram_seg_select_pid);
-
-  ly_sbit_select_g : for I in 0 to 5 generate
-    signal LMB : integer range 0 to 42; --Can be 0 to 42, so 6 bits
-  begin  
-      LMB <= to_integer(signed(center_position) + ly_offsets(I));
-      centroids_in(I) <= bram_out(I)(LMB+5 downto LMB);
-  end generate;
-
-  --for each layer, add center_position to ly_offsets(ly). Take this, and next 5 bits (total of 6 bits)
-  --Rightshift by pid (hi-lo)
-
-  --6 do nothing 111111 -> 111111
-  --5 rightshift 1 11111X -> 011111
-  --4 rightshift 1, zero rightmost bit 1111XX -> 011110
-  --3 rightshift 2, zero rightmost bit 111XXX -> 001110
-  --2 rightshift 2, zero 2 rightmost bits 11XXXX -> 001100
-  --1 rightshift 3, zero 2 rightmost bits 1XXXXX -> 000100
-
-  --This leaves odd values with a 0 to the left, account for this later
+  window_extractor : entity work.window_extract
+    port map (
+      clock => clock;
+      window_i => bram_out;
+      wanted_strip_i => seg_info_buffer(2).strip;
+      wanted_PID_i => seg_info_buffer(2).pid;
+      pat_sbits => centroids_in
+    );
 
   --------------------------------------------------------------------------------
   -- Fitting
