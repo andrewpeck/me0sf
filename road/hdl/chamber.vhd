@@ -419,7 +419,7 @@ begin
       clock320 => clock,
       sbits_i  => bram_in,
       wanted_strip => seg_info_buffer(0).strip,
-      wanted_prt => seg_info_buffer(0).prt,
+      wanted_prt => seg_info_buffer(0).partition,
       my_out => bram_out
     );
 
@@ -648,10 +648,10 @@ begin
 
   window_extractor : entity work.window_extract
     port map (
-      clock => clock;
-      window_i => bram_out;
-      wanted_strip_i => seg_info_buffer(2).strip;
-      wanted_PID_i => seg_info_buffer(2).pid;
+      clock => clock,
+      window_i => bram_out,
+      wanted_strip_i => seg_info_buffer(2).strip,
+      wanted_PID_i => seg_info_buffer(2).id,
       pat_sbits => centroids_in
     );
 
