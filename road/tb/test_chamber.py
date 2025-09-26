@@ -21,25 +21,25 @@ from tb_common import (get_max_span_from_dut, get_segments_from_dut,
                        monitor_dav, setup, measure_latency)
 #from get_sbits_from_root import (read_ntuple_stack, get_sbits_from_event)
 
-#@cocotb.test() # type: ignore
-#async def chamber_test_ff(dut, nloops=20):
-#   await chamber_test(dut, "FF", nloops)
-#
-#@cocotb.test() # type: ignore
-#async def chamber_test_5a(dut, nloops=20):
-#   await chamber_test(dut, "5A", nloops)
-#
-#@cocotb.test() # type: ignore
-#async def chamber_test_walking1(dut, nloops=191):
-#   await chamber_test(dut, "WALKING1", nloops)
-#
-#@cocotb.test() # type: ignore
-#async def chamber_test_walkingf(dut, nloops=192):
-#   await chamber_test(dut, "WALKINGF", nloops)
+@cocotb.test() # type: ignore
+async def chamber_test_ff(dut, nloops=20):
+   await chamber_test(dut, "FF", nloops)
 
-#@cocotb.test() # type: ignore
-#async def chamber_test_xprt(dut, nloops=100):
-#   await chamber_test(dut, "XPRT", nloops)
+@cocotb.test() # type: ignore
+async def chamber_test_5a(dut, nloops=20):
+   await chamber_test(dut, "5A", nloops)
+
+@cocotb.test() # type: ignore
+async def chamber_test_walking1(dut, nloops=191):
+   await chamber_test(dut, "WALKING1", nloops)
+
+@cocotb.test() # type: ignore
+async def chamber_test_walkingf(dut, nloops=192):
+   await chamber_test(dut, "WALKINGF", nloops)
+
+@cocotb.test() # type: ignore
+async def chamber_test_xprt(dut, nloops=100):
+   await chamber_test(dut, "XPRT", nloops)
 
 @cocotb.test() # type: ignore
 async def chamber_test_segs(dut, nloops=100):
@@ -340,7 +340,7 @@ async def chamber_test(dut, test, nloops=512, verbose=True):
                         print("   > sw: " + str(sw_segments[i]))
                         print("   > fw: " + str(fw_segments[i]))
 
-                    #assert sw_segments[i] == fw_segments[i]
+                    assert sw_segments[i] == fw_segments[i]
 
         await RisingEdge(dut.clock)
 
