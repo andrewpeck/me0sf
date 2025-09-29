@@ -219,7 +219,12 @@ def pat_unit(data,
         centroid = [0 for _ in range(6)]
         bx = -9999
     else:
+        # We are not currently passing in a rectangular window to a pat_unit, but instead an "hourglass" shape that depends on the max span for each layer (rather than a global max span)
+        # So, centroids are offset depending on this, and needs to be corrected
         centroid, bx = calculate_centroids(masked_data[best_pid-1], bx_data)
+        max_span = max(config.ly_spans)
+        offsets = [(max_span - ly_span)//2 for ly_span in config.ly_spans]
+        centroid = [(c+o) if c>0 else 0 for c, o in zip(centroid, offsets)]
 
     best = Segment(lc=lcs[best_pid-1], hc=hcs[best_pid-1], id=best_pid, partition=partition, strip=strip, centroid=centroid, bx=bx)
 

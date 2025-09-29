@@ -305,7 +305,7 @@ def analysis(root_dat, hits, bx, bx_list, cross_part, verbose, pu, num_or):
     seg_bx_collections = []
 
     config = Config()
-    config.num_outputs = 16
+    config.num_outputs = 8
     #config.deghost_pre = False
     #config.deghost_post = False
     #config.cross_part_seg_width = 4
@@ -739,6 +739,7 @@ def analysis(root_dat, hits, bx, bx_list, cross_part, verbose, pu, num_or):
                         file_out.write("\n")
                 
                 seglist_final[chamber_nr][bx_offset_i] = np.array(bx_cham_seglist_final, dtype=Segment)
+
 
             # Print offline segs
             for i in range(0, n_offline_seg):

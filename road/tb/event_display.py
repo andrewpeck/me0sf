@@ -1,7 +1,7 @@
 # Matplotlib display for different levels of hardware design
 import matplotlib.pyplot as plt
 from subfunc import *
-from pat_unit_beh import pat_unit, get_ly_mask
+from pat_unit_beh import pat_unit
 from datagen import datagen
 import random
 import math
@@ -73,9 +73,12 @@ def event_display(hits=None, fits=None, pats=None, width=192, max_span=37, event
     # plot pattern masks
     if pats is not None:
 
-        for pat in pats:
+        config = Config()
+        config.initialize_patlist(pats)
+
+        for i, pat in enumerate(pats):
             (pat, strip) = pat
-            mask = get_ly_mask(pat)
+            mask = config.ly_mask[i]
             # print(mask)
             (x, y) = int2_xy(mask.mask, strip-math.floor(max_span/2.0))
             # plt.scatter(x, y, s=60, marker='s', facecolors='cyan',  alpha=0.5, edgecolors='gray')
