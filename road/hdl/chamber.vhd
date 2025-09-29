@@ -721,7 +721,7 @@ begin
     );
     
   offset_g : for i in 0 to 5 generate
-    centroids_offset(i) <= centroids(I) + offsets(to_integer(seg_info_buffer(4).id)-1)(i);
+    centroids_offset(i) <= ("000" & centroids(I)) + to_unsigned(offsets(to_integer(seg_info_buffer(4).id)-1)(i), centroids_offset(i)'length);
   end generate;
 
   --------------------------------------------------------------------------------

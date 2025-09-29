@@ -15,7 +15,7 @@ use work.pat_pkg.all;
 entity centroid_finder is
   generic (
     NLAYERS : natural := 6;
-    NBITS   : natural := 6  -- number of bits for centroid output
+    NBITS   : natural := 4  -- number of bits for centroid output
   );
   port (
     clk    : in  std_logic;
@@ -27,7 +27,7 @@ entity centroid_finder is
 end entity centroid_finder;
 
 architecture rtl of centroid_finder is
-  function centroid_for_layer(din : std_logic_vector) return natural is
+  function centroid_for_layer(din : std_logic_vector (5 downto 0)) return natural is
     variable index : natural := 0;
   begin
     case din'length is
