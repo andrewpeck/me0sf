@@ -71,6 +71,8 @@ entity chamber is
     vfat_pretrigger_o : out std_logic_vector (23 downto 0);
     segments_o        : out segment_list_t (NUM_SEGMENTS-1 downto 0);
     
+    centroids_offset  : out centroids_offset_t; -- Temporary output for testing
+    
     dav_i             : in  std_logic;
     dav_o             : out std_logic
     );
@@ -220,13 +222,63 @@ architecture behavioral of chamber is
   signal bram_out : sbit_window_t;
   signal bram_seg_select_phase : unsigned (2 downto 0) := (others => '0'); -- TODO: initialize to correct starting phase, should be f(SBIT_PHASE, BRAM_DELAY)
 
-  type seg_info_buffer_t is array (0 to 2) of segment_t;
+  type seg_info_buffer_t is array (0 to 4) of segment_t;
 
   signal seg_info_buffer : seg_info_buffer_t;
-
-  signal center_position : unsigned (5 downto 0);
   
+  --------------------------------------------------------------------------------
+  -- Centroids
+  --------------------------------------------------------------------------------
+    
   signal centroids_in : pat_sbits_t;
+  signal centroids : centroids_t;
+  -- Temporarily commenting out this for testing, bring back later
+  --signal centroids_offset : centroids_offset_t; 
+  
+  -- Constants (per pattern, per layer) for the offsets for each pattern's sbits in each signal
+  -- E.g. in this example, the centroid finders only receive the single bit in the place of the X per layer, but their true positions are offset
+  -- from one another
+  -- --X
+  -- -X-
+  -- X--
+  -- These are constants computed at compile time, so don't need to worry about resources for implementation
+  
+  type ly_offsets_t is array (0 to 5) of integer;
+  type pat_ly_offsets_t is array (0 to NUM_PATTERNS-1) of ly_offsets_t;
+  
+  function find_offsets (patlist : patdef_array_t) return pat_ly_offsets_t is
+    variable rightmost_position : integer;
+    variable ly_hi : integer;
+    variable offsets : pat_ly_offsets_t;
+  begin
+    for pat_i in 0 to NUM_PATTERNS-1 loop
+      -- First, find rightmost positions for each pattern, which must be in either layer 0 or layer 5
+      rightmost_position := maximum(patlist(pat_i).ly0.hi, patlist(pat_i).ly5.hi);
+      -- Then, find the offset for each layer in the pattern
+      for ly_i in 0 to 5 loop
+        -- Have to do this monstrosity since the ly0, ly1, ... values in the patlist are currently implemented as separately named signals
+        if ly_i = 0 then
+          ly_hi := patlist(pat_i).ly0.hi;
+        elsif ly_i = 1 then
+          ly_hi := patlist(pat_i).ly1.hi;
+        elsif ly_i = 2 then
+          ly_hi := patlist(pat_i).ly2.hi;
+        elsif ly_i = 3 then
+          ly_hi := patlist(pat_i).ly3.hi;
+        elsif ly_i = 4 then
+          ly_hi := patlist(pat_i).ly4.hi;
+        elsif ly_i = 5 then
+          ly_hi := patlist(pat_i).ly5.hi;
+        end if;
+        
+        offsets(pat_i)(ly_i) := (rightmost_position - ly_hi) * 2; -- Factor of 2 for double resolution that comes from centroid finder
+      end loop; 
+    end loop;
+    
+    return offsets;
+  end function;
+  
+  constant offsets : pat_ly_offsets_t := find_offsets(PATLIST);
 
 begin
 
@@ -637,8 +689,9 @@ begin
     if (rising_edge(clock)) then
       bram_seg_select_phase <= bram_seg_select_phase + 1;
       seg_info_buffer(0) <= final_segs(to_integer(bram_seg_select_phase));
-      seg_info_buffer(1) <= seg_info_buffer(0);
-      seg_info_buffer(2) <= seg_info_buffer(1);
+      for i in 1 to seg_info_buffer'length-1  loop
+        seg_info_buffer(i) <= seg_info_buffer(i-1);
+      end loop;
     end if;
   end process;
 
@@ -654,6 +707,22 @@ begin
       wanted_PID_i => seg_info_buffer(2).id,
       pat_sbits => centroids_in
     );
+    
+  --------------------------------------------------------------------------------
+  -- Find centroids for each layer, then add the offsets
+  --------------------------------------------------------------------------------
+  
+  centroid_finder_i : entity work.centroid_finder
+    port map (
+      clk => clock,
+      din => centroids_in,
+      valid_i => (others => '1'), -- Just keeping all layers valid for now
+      dout => centroids
+    );
+    
+  offset_g : for i in 0 to 5 generate
+    centroids_offset(i) <= centroids(I) + offsets(to_integer(seg_info_buffer(4).id)-1)(i);
+  end generate;
 
   --------------------------------------------------------------------------------
   -- Fitting

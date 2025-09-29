@@ -9,7 +9,8 @@
 library ieee;
 use ieee.std_logic_1164.all;
 use ieee.numeric_std.all;
-use work.signed_array_pkg.all;
+
+use work.pat_pkg.all;
 
 entity centroid_finder is
   generic (
@@ -18,27 +19,14 @@ entity centroid_finder is
   );
   port (
     clk    : in  std_logic;
-    din0   : in  std_logic_vector(0 to 12);  
-    din1   : in  std_logic_vector(0 to 12);
-    din2   : in  std_logic_vector(0 to 12);
-    din3   : in  std_logic_vector(0 to 12);
-    din4   : in  std_logic_vector(0 to 12);
-    din5   : in  std_logic_vector(0 to 12);
-    width0 : in  natural range 1 to 13;  -- number of active bits
-    width1 : in  natural range 1 to 13;
-    width2 : in  natural range 1 to 13;
-    width3 : in  natural range 1 to 13;
-    width4 : in  natural range 1 to 13;
-    width5 : in  natural range 1 to 13;
+    din   : in  pat_sbits_t;
     valid_i : in  std_logic_vector(0 to NLAYERS-1);
-    dout    : out signed_array;
+    dout    : out centroids_t; -- centroids_t currently works for input size 6 bits, at double resolution
     valid_o : out std_logic_vector(0 to NLAYERS-1)
   );
 end entity centroid_finder;
 
 architecture rtl of centroid_finder is
-  type signed_array is array (natural range <>) of signed(5 downto 0);
-  --type signed_array is array (natural range <>) of unsigned(NBITS-1 downto 0);
   function centroid_for_layer(din : std_logic_vector) return natural is
     variable index : natural := 0;
   begin
@@ -16505,12 +16493,10 @@ architecture rtl of centroid_finder is
   process(clk)
   begin
     if rising_edge(clk) then
-      dout(0) <= to_signed(centroid_for_layer(din0), NBITS);
-      dout(1) <= to_signed(centroid_for_layer(din1), NBITS);
-      dout(2) <= to_signed(centroid_for_layer(din2), NBITS);
-      dout(3) <= to_signed(centroid_for_layer(din3), NBITS);
-      dout(4) <= to_signed(centroid_for_layer(din4), NBITS);
-      dout(5) <= to_signed(centroid_for_layer(din5), NBITS);
+    
+      for ly in 0 to 5 loop
+        dout(ly) <= to_unsigned(centroid_for_layer(din(ly)), NBITS);
+      end loop;
 
       valid_o <= valid_i;
     end if;
