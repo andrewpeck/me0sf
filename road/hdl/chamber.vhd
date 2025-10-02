@@ -72,6 +72,7 @@ entity chamber is
     segments_o        : out segment_list_t (NUM_SEGMENTS-1 downto 0);
     
     centroids_offset  : out centroids_offset_t; -- Temporary output for testing
+    valid_hits        : out std_logic_vector (5 downto 0); -- Temporary output for testing
     
     dav_i             : in  std_logic;
     dav_o             : out std_logic
@@ -222,7 +223,7 @@ architecture behavioral of chamber is
   signal bram_out : sbit_window_t;
   signal bram_seg_select_phase : unsigned (2 downto 0) := (others => '0'); -- TODO: initialize to correct starting phase, should be f(SBIT_PHASE, BRAM_DELAY)
 
-  type seg_info_buffer_t is array (0 to 4) of segment_t;
+  type seg_info_buffer_t is array (0 to 5) of segment_t;
 
   signal seg_info_buffer : seg_info_buffer_t;
   
@@ -703,8 +704,8 @@ begin
     port map (
       clock => clock,
       window_i => bram_out,
-      wanted_strip_i => seg_info_buffer(2).strip,
-      wanted_PID_i => seg_info_buffer(2).id,
+      wanted_strip_i => seg_info_buffer(3).strip,
+      wanted_PID_i => seg_info_buffer(3).id,
       pat_sbits => centroids_in
     );
     
@@ -721,7 +722,8 @@ begin
     );
     
   offset_g : for i in 0 to 5 generate
-    centroids_offset(i) <= ("000" & centroids(I)) + to_unsigned(offsets(to_integer(seg_info_buffer(4).id)-1)(i), centroids_offset(i)'length);
+    centroids_offset(i) <= ("000" & centroids(i)) + to_unsigned(offsets(maximum(to_integer(seg_info_buffer(5).id)-1, 0))(i), centroids_offset(i)'length); -- Need the maximum for now, since PID indexes by 1
+    valid_hits(i) <= '0' when centroids(i) = to_unsigned(0, centroids(i)'length) else '1';
   end generate;
 
   --------------------------------------------------------------------------------

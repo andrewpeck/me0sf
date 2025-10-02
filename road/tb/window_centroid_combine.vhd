@@ -9,6 +9,9 @@ use ieee.numeric_std.all;
 use ieee.math_real.all;
 
 entity window_centroid is
+  generic (
+    PATLIST : patdef_array_t := patdef_array
+  );
   port(
     clock             : in  std_logic;
     window_i         : in  sbit_window_t;
@@ -93,7 +96,7 @@ begin
     port map (
       clock => clock,
       window_i => window_i,
-      wanted_strip_i => wanted_strip,
+      wanted_strip_i => wanted_strip_i,
       wanted_PID_i => wanted_PID_i,
       pat_sbits => centroids_in
     );
@@ -111,14 +114,15 @@ begin
     );
     
   offset_g : for i in 0 to 5 generate
-    centroids_offset(i) <= ("000" & centroids(I)) + to_unsigned(offsets(to_integer(pid_buffer(1))-1)(i), centroids_offset(i)'length);
+    centroids_offset(i) <= ("000" & centroids(i)) + to_unsigned(offsets(maximum(to_integer(pid_buffer(1))-1, 0))(i), centroids_offset(i)'length); -- Need the maximum for now, since PID indexes by 1
   end generate;
 
   strip_buffer(0) <= wanted_strip_i;
-  pid_buffer(0) <= wanted_PID_i;
 
   process (clock) is
+  begin
     if (rising_edge(clock)) then
+      pid_buffer(0) <= wanted_PID_i;
       for i in 1 to BUFFER_SIZE-1 loop
         strip_buffer(i) <= strip_buffer(i-1);
         pid_buffer(i) <= pid_buffer(i-1);

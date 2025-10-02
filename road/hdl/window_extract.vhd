@@ -119,15 +119,15 @@ begin
     ly_size := to_integer(sizes_by_ly(I));
 
     if ly_size = 2 then
-        pat_sbits(I) := "0000" & window(I)(LMB downto LMB-1);
+        pat_sbits(I) := "0000" & window(5-I)(LMB downto LMB-1); -- Indexing is backwards somewhere, the 5-I fixes it for now
     elsif ly_size = 3 then
-        pat_sbits(I) := "000" & window(I)(LMB downto LMB-2);
+        pat_sbits(I) := "000" & window(5-I)(LMB downto LMB-2);
     elsif ly_size = 4 then
-        pat_sbits(I) := "00" & window(I)(LMB downto LMB-3);
+        pat_sbits(I) := "00" & window(5-I)(LMB downto LMB-3);
     elsif ly_size = 5 then
-        pat_sbits(I) := "0" & window(I)(LMB downto LMB-4);
+        pat_sbits(I) := "0" & window(5-I)(LMB downto LMB-4);
     elsif ly_size = 6 then
-        pat_sbits(I) := window(I)(LMB downto LMB-5);
+        pat_sbits(I) := window(5-I)(LMB downto LMB-5);
     end if;
   end loop;
 

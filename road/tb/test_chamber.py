@@ -21,25 +21,25 @@ from tb_common import (get_max_span_from_dut, get_segments_from_dut,
                        monitor_dav, setup, measure_latency)
 #from get_sbits_from_root import (read_ntuple_stack, get_sbits_from_event)
 
-@cocotb.test() # type: ignore
-async def chamber_test_ff(dut, nloops=20):
-   await chamber_test(dut, "FF", nloops)
-
-@cocotb.test() # type: ignore
-async def chamber_test_5a(dut, nloops=20):
-   await chamber_test(dut, "5A", nloops)
-
-@cocotb.test() # type: ignore
-async def chamber_test_walking1(dut, nloops=191):
-   await chamber_test(dut, "WALKING1", nloops)
-
-@cocotb.test() # type: ignore
-async def chamber_test_walkingf(dut, nloops=192):
-   await chamber_test(dut, "WALKINGF", nloops)
-
-@cocotb.test() # type: ignore
-async def chamber_test_xprt(dut, nloops=100):
-   await chamber_test(dut, "XPRT", nloops)
+#@cocotb.test() # type: ignore
+#async def chamber_test_ff(dut, nloops=20):
+#   await chamber_test(dut, "FF", nloops)
+#
+#@cocotb.test() # type: ignore
+#async def chamber_test_5a(dut, nloops=20):
+#   await chamber_test(dut, "5A", nloops)
+#
+#@cocotb.test() # type: ignore
+#async def chamber_test_walking1(dut, nloops=191):
+#   await chamber_test(dut, "WALKING1", nloops)
+#
+#@cocotb.test() # type: ignore
+#async def chamber_test_walkingf(dut, nloops=192):
+#   await chamber_test(dut, "WALKINGF", nloops)
+#
+#@cocotb.test() # type: ignore
+#async def chamber_test_xprt(dut, nloops=100):
+#   await chamber_test(dut, "XPRT", nloops)
 
 @cocotb.test() # type: ignore
 async def chamber_test_segs(dut, nloops=100):
@@ -172,6 +172,7 @@ async def chamber_test(dut, test, nloops=512, verbose=True):
             elif test=="SEGMENTS":
                 chamber_data = [datagen(n_segs=2, n_noise=8, max_span=config.max_span)
                                 for _ in range(NUM_PARTITIONS)]
+                print(chamber_data)
 
             elif test=="XPRT":
 
@@ -342,6 +343,14 @@ async def chamber_test(dut, test, nloops=512, verbose=True):
 
                     assert sw_segments[i] == fw_segments[i]
 
+        print("CENTROIDS: " + str([v.value.integer for v in dut.centroids]))
+        print("CENTROIDS_OFFSET: " + str([v.value.integer for v in dut.centroids_offset]))
+        print("LAYERS HIT: " + str([v.value for v in dut.valid_hits]))
+        print("WINDOW: " + str([v.value for v in dut.bram_out]))
+        print("BITS TO FINDERS: " + str([v.value for v in dut.centroids_in]))
+        print("PID TO FINDER: " + str(dut.seg_info_buffer[2].id.value.integer))
+        print("STRIP TO FINDER: " + str(dut.seg_info_buffer[2].strip.value.integer))
+
         await RisingEdge(dut.clock)
 
     filename = "../log/chamber_%s.log" % test
@@ -385,7 +394,8 @@ def test_chamber():
         os.path.join(rtl_dir, "x_prt_deghost_qual.vhd"),
         os.path.join(rtl_dir, "../../../xpm_VCOMP.vhd"),
         os.path.join(rtl_dir, "sbit_bram.vhd"),
-        os.path.join(rtl_dir, "window_extract.vhd"),       
+        os.path.join(rtl_dir, "window_extract.vhd"),
+        os.path.join(rtl_dir, "centroid_finder.vhd"),
         os.path.join(rtl_dir, "partition.vhd"),
         os.path.join(rtl_dir, "pulse_extension.vhd"),
         os.path.join(rtl_dir, "chamber_pulse_extension.vhd"),

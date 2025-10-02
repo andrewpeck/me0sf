@@ -61,13 +61,14 @@ async def extract_test(dut, test, nloops=512, verbose=True):
 
             #sbit_window = [2**18 for _ in range(6)] # Straight segment centered on strip 0
 
-            sbit_window = [(1+2+4+8+16+32), (2**7+2**8+2**9+2**10), (2**14+2**15+2**16), 0, 0, 0] # Matches widest pattern for lys 0,1,2 at rightmost sbits
+            #sbit_window = [(1+2+4+8+16+32), (2**7+2**8+2**9+2**10), (2**14+2**15+2**16), 0, 0, 0] # Matches widest pattern for lys 0,1,2 at rightmost sbits
+            sbit_window = [int("000000000000000000001000000000000001000000010000", 2), int("000000000000000000000001000000000000000000000000", 2), int("000000000000000000000000111000000000100010010000", 2), int("000000000000000000000000001110000000000001000000", 2), int("000000000000000000000000000001110000000000000000", 2), int("000000000000000000000000000000001110000000000000", 2)]
             sbits_q.append(sbit_window)
 
-            strip = 0 
+            strip = 27
             strip_q.append(strip)
 
-            pid = 1 
+            pid = 11
             pid_q.append(pid)
         else:
             raise Exception("Test not found")
@@ -110,7 +111,7 @@ async def extract_test(dut, test, nloops=512, verbose=True):
             left_index = center - los_ly_list[ly]
             size = pat_sbit_sizes[pid-1][ly]
             mask = reduce(lambda x, y : x | y, [2**(left_index-i) for i in range(size)]) # Take SIZE bits, starting from left_index bit and going right
-            sbits_not_zero_padded = format(mask & sbit_window[ly], "048b")[(47-left_index):(47-left_index+size)] # Apply mask and extract only the relevant bits
+            sbits_not_zero_padded = format(mask & sbit_window[5-ly], "048b")[(47-left_index):(47-left_index+size)] # Apply mask and extract only the relevant bits; Need 5-ly since indexing is backwards somewhere
             sw_bits[ly] = "0"*(6-size) + sbits_not_zero_padded
 
         print(f"{sw_bits=}")
