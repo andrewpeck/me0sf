@@ -24,7 +24,7 @@ from tb_common import (get_max_span_from_dut, get_segments_from_dut,
 #@cocotb.test() # type: ignore
 #async def chamber_test_ff(dut, nloops=20):
 #   await chamber_test(dut, "FF", nloops)
-#
+
 #@cocotb.test() # type: ignore
 #async def chamber_test_5a(dut, nloops=20):
 #   await chamber_test(dut, "5A", nloops)
@@ -139,10 +139,21 @@ async def chamber_test(dut, test, nloops=512, verbose=True):
         await RisingEdge(dut.dav_i)
         queue.append(NULL())
 
+    # Find pattern sizes for use in converting the fitter output to global position
+    # Temporarily needed, will be implemented in FW later
+    pat_los = [[eval("pat.ly"+str(j)+".lo.value", {}, {"pat" : pat}) for j in range(6)] for pat in dut.patlist] # Need to use eval since the FW has the pattern values stored as 6 signals labeled "ly0", "ly1", ...
+    pat_los.reverse() # Reverse the list so index 16 is the straight pattern
+    pat_his = [[eval("pat.ly"+str(j)+".hi.value", {}, {"pat" : pat}) for j in range(6)] for pat in dut.patlist]
+    pat_his.reverse()
+
+    pat_sbit_sizes = [[hi-lo+1 for hi, lo in zip(hi_lys, lo_lys)] for hi_lys, lo_lys in zip(pat_his, pat_los)]
+    pat_sbit_window_sizes = [max(sizes) for sizes in pat_sbit_sizes]
+
     # loop over some number of test cases
     istrip = 0
     iprt = 0
     loop = 0
+
     while loop < nloops:
 
         # push new data on dav_i
@@ -343,13 +354,63 @@ async def chamber_test(dut, test, nloops=512, verbose=True):
 
                     assert sw_segments[i] == fw_segments[i]
 
-        print("CENTROIDS: " + str([v.value.integer for v in dut.centroids]))
-        print("CENTROIDS_OFFSET: " + str([v.value.integer for v in dut.centroids_offset]))
-        print("LAYERS HIT: " + str([v.value for v in dut.valid_hits]))
-        print("WINDOW: " + str([v.value for v in dut.bram_out]))
-        print("BITS TO FINDERS: " + str([v.value for v in dut.centroids_in]))
-        print("PID TO FINDER: " + str(dut.seg_info_buffer[2].id.value.integer))
-        print("STRIP TO FINDER: " + str(dut.seg_info_buffer[2].strip.value.integer))
+       # print("CENTROIDS: " + str([v.value.integer for v in dut.centroids]))
+       # print("CENTROIDS_OFFSET: " + str([v.value.integer for v in dut.centroids_offset]))
+       # print("LAYERS HIT: " + str([v.value for v in dut.valid_hits]))
+       # print("WINDOW: " + str([v.value for v in dut.bram_out]))
+       # print("BITS TO FINDERS: " + str([v.value for v in dut.centroids_in]))
+       # print("PID TO FINDER: " + str(dut.seg_info_buffer[2].id.value.integer))
+       # print("STRIP TO FINDER: " + str(dut.seg_info_buffer[2].strip.value.integer))
+
+        def sfixed_to_float(x, left_bits):
+            # Convert integer portion
+            upper_bits = x[0:left_bits]
+            upper_bits_int = int(upper_bits, 2)
+
+            # If negative, take 2's complement.
+            if upper_bits[0] == '1': 
+                upper_bits_int = -((int(upper_bits, 2) ^ (2**left_bits-1)) + 1)
+
+            # Convert decimal part
+            right_bits = len(x) - left_bits
+            lower_bits = x[left_bits:]
+            lower_bits_int = int(lower_bits, 2)/(2**right_bits)
+            
+            return upper_bits_int + lower_bits_int
+
+        # Temp printout for checking fit
+        print("\n")
+
+        print("SLOPE: " + str(dut.slope_o.value) + " = " + str(sfixed_to_float(str(dut.slope_o.value), 4)))
+        print("INTERCEPT: " + str(dut.intercept_o.value) + " = " + str(sfixed_to_float(str(dut.intercept_o.value), 7)))
+        print("STRIP_O: " + str(dut.strip_o.value) + " = " + str(sfixed_to_float(str(dut.strip_o.value), 5)))
+
+        if dut.dav_o_phase.value == 0:
+            # Temp pointer for reading output nicely, delete later once reordering is done in FW
+            seg_pointer = 1
+
+        if loop == 1: # Initialize
+            old_segs_arr = [sw_segments for _ in range(3)]
+            old_segs = sw_segments
+        if loop > 4: # Make sure we have segs
+            if dut.dav_o_phase.value == 0: # Got new segs
+                old_segs = old_segs_arr.pop(0)
+                old_segs_arr.append(sw_segments)
+
+            if seg_pointer == 1 or seg_pointer == 2: # Need to read from old segs in these cases
+                my_seg = old_segs[seg_pointer]
+            else: # Read from current segs
+                my_seg = old_segs_arr[0][seg_pointer]
+            seg_pointer = (seg_pointer+1) % 8 # Increment seg pointer
+            print(f"MY SEGMENT: {my_seg}")
+            L = pat_sbit_window_sizes[my_seg.id-1]/2
+            C = 2*my_seg.strip
+            x1 = sfixed_to_float(str(dut.strip_o.value), 5)
+            global_strip_out = x1 + C - L
+            print(f"GLOBAL STRIP_O: {global_strip_out}")
+
+        print("\n")
+        # End temp printout
 
         await RisingEdge(dut.clock)
 
@@ -396,6 +457,8 @@ def test_chamber():
         os.path.join(rtl_dir, "sbit_bram.vhd"),
         os.path.join(rtl_dir, "window_extract.vhd"),
         os.path.join(rtl_dir, "centroid_finder.vhd"),
+        os.path.join(rtl_dir, "reciprocal.vhd"),
+        os.path.join(rtl_dir, "fit.vhd"),
         os.path.join(rtl_dir, "partition.vhd"),
         os.path.join(rtl_dir, "pulse_extension.vhd"),
         os.path.join(rtl_dir, "chamber_pulse_extension.vhd"),

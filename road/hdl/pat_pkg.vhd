@@ -50,7 +50,7 @@ package pat_pkg is
   type ly_offsets_t is array (5 downto 0) of signed(5 downto 0); -- Min lo value is -18, so need 6 bits to hold this
   
   type centroids_t is array (0 to 5) of unsigned(3 downto 0); -- Max value = 2*centroid_input_width (at double resolution), so max value for 6 bits is 12 => 4 bits here
-  type centroids_offset_t is array (0 to 5) of unsigned(6 downto 0); -- Max value is MAX_SPAN*2 = 37*2 = 74, so 7 bits
+  type centroids_offset_t is array (0 to 5) of unsigned(7 downto 0); -- Max value is MAX_SPAN*2 = 37*2 = 74, so 7 bits
                                                           
   --------------------------------------------------------------------------------
   -- Build Parameters

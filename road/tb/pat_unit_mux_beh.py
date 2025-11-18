@@ -69,17 +69,40 @@ def pat_mux(partition_data, partition, config : Config, partition_bx_data):
     out_list = []
 
     # Big increase metric
-    # for i in range(config.width):
-    #     if segs_oldest[i] is None and segs_old[i] is not None:
-    #         out_list.append(new_segs[i] if new_segs[i].lc > 0 else segs_old[i])
+  #  for i in range(config.width):
+  #      if config.peaking_manager.trigger[partition,i] == True:
+  #          out_list.append(segs_old[i])
+  #          config.peaking_manager.trigger[partition,i] = False
+  #      elif segs_oldest[i] is None and segs_old[i] is not None:
+  #          if new_segs[i].lc == 0:
+  #              out_list.append(segs_old[i])
+  #          else:
+  #              config.peaking_manager.trigger[partition,i] = True
+  #              out_list.append(Segment(0,0,0))
+  #      else:
+  #          out_list.append(Segment(0,0,0))
 
-    # Big increase metric
+    # Big decrease metric
+#    for i in range(config.width):
+#        if segs_old[i] is not None and new_segs[i].lc == 0:
+#            out_list.append(segs_oldest[i] if segs_oldest[i] is not None else segs_old[i])
+#        else:
+#            out_list.append(Segment(0,0,0,i,partition))
+
+#    # Any decrease metric
+#    for i in range(config.width):
+#        if segs_old[i] is not None and new_segs[i].lc < segs_old[i].lc:
+#            out_list.append(segs_old[i])
+#        else:
+#            out_list.append(Segment(0,0,0,i,partition))
+
+   # Any increase metric
     for i in range(config.width):
         if config.peaking_manager.trigger[partition,i] == True:
             out_list.append(segs_old[i])
             config.peaking_manager.trigger[partition,i] = False
-        elif segs_oldest[i] is None and segs_old[i] is not None:
-            if new_segs[i].lc == 0:
+        elif (segs_oldest[i] is None and segs_old[i] is not None) or (segs_oldest[i] is not None and segs_old[i] is not None and segs_oldest[i].lc < segs_old[i].lc):
+            if new_segs[i].lc <= segs_old[i].lc:
                 out_list.append(segs_old[i])
             else:
                 config.peaking_manager.trigger[partition,i] = True
@@ -87,15 +110,6 @@ def pat_mux(partition_data, partition, config : Config, partition_bx_data):
         else:
             out_list.append(Segment(0,0,0))
 
-    # if partition == 6 and sum([seg.lc for seg in out_list]) > 0:
-    #     print(out_list)
-
-    # Big decrease metric
-    # for i in range(config.width):
-    #     if segs_old[i] is not None and new_segs[i].lc == 0:
-    #         out_list.append(segs_oldest[i] if segs_oldest[i] is not None else segs_old[i])
-    #     else:
-    #         out_list.append(Segment(0,0,0,i,partition))
 
     # Smart metric
     # Needs to address 3,3 (Sequence: 0, 6, 6, 0) case

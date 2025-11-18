@@ -30,6 +30,7 @@ use ieee.std_logic_1164.all;
 use ieee.std_logic_misc.all;
 use ieee.numeric_std.all;
 use ieee.math_real.all;
+use ieee.fixed_pkg.all;
 
 entity chamber is
   generic (
@@ -71,8 +72,9 @@ entity chamber is
     vfat_pretrigger_o : out std_logic_vector (23 downto 0);
     segments_o        : out segment_list_t (NUM_SEGMENTS-1 downto 0);
     
-    centroids_offset  : out centroids_offset_t; -- Temporary output for testing
-    valid_hits        : out std_logic_vector (5 downto 0); -- Temporary output for testing
+    strip_o : out sfixed (5-1 downto -5);
+    intercept_o : out sfixed (7-1 downto -7);
+    slope_o : out sfixed (4-1 downto -6);
     
     dav_i             : in  std_logic;
     dav_o             : out std_logic
@@ -233,8 +235,8 @@ architecture behavioral of chamber is
     
   signal centroids_in : pat_sbits_t;
   signal centroids : centroids_t;
-  -- Temporarily commenting out this for testing, bring back later
-  --signal centroids_offset : centroids_offset_t; 
+  signal centroids_offset : centroids_offset_t;
+  signal valid_hits : std_logic_vector (5 downto 0);
   
   -- Constants (per pattern, per layer) for the offsets for each pattern's sbits in each signal
   -- E.g. in this example, the centroid finders only receive the single bit in the place of the X per layer, but their true positions are offset
@@ -257,7 +259,7 @@ architecture behavioral of chamber is
       rightmost_position := maximum(patlist(pat_i).ly0.hi, patlist(pat_i).ly5.hi);
       -- Then, find the offset for each layer in the pattern
       for ly_i in 0 to 5 loop
-        -- Have to do this monstrosity since the ly0, ly1, ... values in the patlist are currently implemented as separately named signals
+        -- Have to do it this way since the ly0, ly1, ... values in the patlist are currently implemented as separately named signals
         if ly_i = 0 then
           ly_hi := patlist(pat_i).ly0.hi;
         elsif ly_i = 1 then
@@ -713,7 +715,7 @@ begin
   -- Find centroids for each layer, then add the offsets
   --------------------------------------------------------------------------------
   
-  centroid_finder_i : entity work.centroid_finder
+  centroid_finder_inst : entity work.centroid_finder
     port map (
       clk => clock,
       din => centroids_in,
@@ -722,13 +724,31 @@ begin
     );
     
   offset_g : for i in 0 to 5 generate
-    centroids_offset(i) <= ("000" & centroids(i)) + to_unsigned(offsets(maximum(to_integer(seg_info_buffer(5).id)-1, 0))(i), centroids_offset(i)'length); -- Need the maximum for now, since PID indexes by 1
+    centroids_offset(i) <= ("0000" & centroids(i)) + to_unsigned(offsets(maximum(to_integer(seg_info_buffer(5).id)-1, 0))(i), centroids_offset(i)'length); -- Need the maximum for now, since PID indexes by 1
     valid_hits(i) <= '0' when centroids(i) = to_unsigned(0, centroids(i)'length) else '1';
   end generate;
 
   --------------------------------------------------------------------------------
   -- Fitting
   --------------------------------------------------------------------------------
+
+  fitter_inst : entity work.fit
+    generic map (
+      STRIP_BITS => 8
+    )
+    port map (
+      clock => clock,
+      ly0 => signed(centroids_offset(0)), --For now, zero padding, since input type is signed. TODO: should be changed to unsigned, since the origin is at the right, and all values are positive; NOTE: moved zero pad above, so "000" --> "0000"
+      ly1 => signed(centroids_offset(1)),
+      ly2 => signed(centroids_offset(2)),
+      ly3 => signed(centroids_offset(3)),
+      ly4 => signed(centroids_offset(4)),
+      ly5 => signed(centroids_offset(5)),
+      valid_i => valid_hits,
+      strip_o => strip_o,
+      intercept_o => intercept_o,
+      slope_o => slope_o
+    );
 
   --------------------------------------------------------------------------------
   -- Outputs
