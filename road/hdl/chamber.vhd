@@ -402,39 +402,7 @@ begin
     -- Per Partition Pattern Finders
     --------------------------------------------------------------------------------
     
-    partition_gen_real : if (I mod 2 = 0) generate
-    
-      partition_inst : entity work.partition
-        generic map (
-          DISABLE_PEAKING => DISABLE_PEAKING,
-          NUM_SEGMENTS    => NUM_SEGMENTS,
-          S0_WIDTH        => S0_WIDTH,
-          --DEADTIME        => DEADTIME
-          EN_HC_COMPRESS => EN_HC_COMPRESS
-          )
-        port map (
-
-          clock => clock,
-          dav_i => dav_or,
-
-          partition_num => I,
-
-          ly_thresh  => ly_thresh_compressed(I),
-
-          -- primary layer
-          partition_i => partition_or_reg,
-
-          -- output patterns
-          dav_o      => all_segs_dav(I),
-          segments_o => all_segs((I+1)*NUM_SEGS_PER_PRT-1 downto I*NUM_SEGS_PER_PRT),
-          trigger_o  => strip_triggers(I)
-          );
-    
-    end generate;
-    
-    partition_gen_cross : if (I mod 2 = 1) generate
-    
-      partition_inst : entity work.partition
+    partition_inst : entity work.partition
       generic map (
         DISABLE_PEAKING => DISABLE_PEAKING,
         NUM_SEGMENTS    => NUM_SEGMENTS,
@@ -459,8 +427,6 @@ begin
         segments_o => all_segs((I+1)*NUM_SEGS_PER_PRT-1 downto I*NUM_SEGS_PER_PRT),
         trigger_o  => strip_triggers(I)
         );
-    
-    end generate;
     
   end generate;
   
