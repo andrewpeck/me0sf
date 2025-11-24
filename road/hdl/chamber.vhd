@@ -70,7 +70,7 @@ entity chamber is
 
     sbits_i           : in  chamber_t;
     vfat_pretrigger_o : out std_logic_vector (23 downto 0);
-    segments_o        : out segment_list_t (NUM_SEGMENTS-1 downto 0);
+    segments_o        : out segment_list_w_fit_t (NUM_SEGMENTS-1 downto 0);
     
     strip_o : out sfixed (5-1 downto -5);
     intercept_o : out sfixed (7-1 downto -7);
@@ -102,7 +102,7 @@ architecture behavioral of chamber is
 -- signal vfat_pretrigger_o : std_logic_vector(23 downto 0);
 -- attribute dont_touch of vfat_pretrigger_o : signal is "true";
 -- 
--- signal segments_o        : segment_list_t (NUM_SEGMENTS-1 downto 0);
+-- signal segments_o        : segment_list_w_fit_t (NUM_SEGMENTS-1 downto 0);
 -- attribute dont_touch of segments_o : signal is "true";
 -- 
 -- signal ly_thresh_i : ly_thresh_chamber;
@@ -137,6 +137,8 @@ architecture behavioral of chamber is
   
   constant MIN_LY_THRESH : natural := 4;
 
+  constant FIT_DELAY : natural := 13; -- TODO: Find what this is currently
+
   --------------------------------------------------------------------------------
   -- Extension
   --------------------------------------------------------------------------------
@@ -154,6 +156,7 @@ architecture behavioral of chamber is
   signal one_prt_sorted_segs : segment_list_t (NUM_FINDERS_DIV2*2 * NUM_SEGMENTS - 1 downto 0) := (others => null_pattern);  -- sort down to the number of output segments for each partition
   signal final_segs          : segment_list_t (NUM_SEGMENTS - 1 downto 0); 
   signal final_segs_phase    : unsigned (2 downto 0)                                           := (others => '0');
+  signal fit_segments : segment_w_fit_list_t (NUM_SEGMENTS-1 downto 0);
 
   --------------------------------------------------------------------------------
   -- Pretriggers
@@ -225,7 +228,7 @@ architecture behavioral of chamber is
   signal bram_out : sbit_window_t;
   signal bram_seg_select_phase : unsigned (2 downto 0) := (others => '0'); -- TODO: initialize to correct starting phase, should be f(SBIT_PHASE, BRAM_DELAY)
 
-  type seg_info_buffer_t is array (0 to 5) of segment_t;
+  type seg_info_buffer_t is array (0 to 5+FIT_DELAY) of segment_t;
 
   signal seg_info_buffer : seg_info_buffer_t;
   
@@ -754,6 +757,24 @@ begin
   -- Outputs
   --------------------------------------------------------------------------------
 
+  process (clock) is
+  begin
+    if rising_edge(clock) then
+      for i in 0 to NUM_SEGS loop
+        -- Get segment info from seg_info_buffer
+        fit_segments[i].lc <= seg_info_buffer[seg_info_buffer'length-1].lc;
+        fit_segments[i].id <= seg_info_buffer[seg_info_buffer'length-1].id;
+        fit_segments[i].strip <= seg_info_buffer[seg_info_buffer'length-1].strip;
+        fit_segments[i].partition <= seg_info_buffer[seg_info_buffer'length-1].partition;
+        
+        -- Get fit info from fitter output
+        fit_segments[i].intercept <= intercept_o;
+        fit_segments[i].slope <= slope_o;
+      end loop;
+    end if;
+  end process;
+
+
   clk40gen : if (REG_OUTPUTS) generate
     outclk <= clock40;
   end generate;
@@ -765,7 +786,7 @@ begin
   begin
     if (rising_edge(outclk)) then
       dav_o             <= final_segs_dav;
-      segments_o        <= final_segs;
+      segments_o <= fit_segments;
     end if;
   end process;
 

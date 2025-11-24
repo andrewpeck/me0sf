@@ -12,6 +12,7 @@ library ieee;
 use ieee.std_logic_1164.all;
 use ieee.std_logic_misc.all;
 use ieee.numeric_std.all;
+use ieee.fixed_pkg.all;
 
 use work.pat_types.all;
 
@@ -51,6 +52,17 @@ package pat_pkg is
   
   type centroids_t is array (0 to 5) of unsigned(3 downto 0); -- Max value = 2*centroid_input_width (at double resolution), so max value for 6 bits is 12 => 4 bits here
   type centroids_offset_t is array (0 to 5) of unsigned(7 downto 0); -- Max value is MAX_SPAN*2 = 37*2 = 74, so 7 bits
+
+  type segment_w_fit_t is record
+      lc : unsigned(LC_BITS-1 downto 0);
+      id : unsigned(PID_BITS-1 downto 0);
+      strip : unsigned(7 downto 0);
+      partition : unsigned(PARTITION_BITS-1 downto 0);
+      intercept : sfixed(7-1 downto -7);
+      slope     : sfixed(4-1 downto -6);
+  end record segment_t;
+
+  type segment_w_fit_list_t is array(integer range <>) of segment_w_fit_t; 
                                                           
   --------------------------------------------------------------------------------
   -- Build Parameters
