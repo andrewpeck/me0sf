@@ -204,22 +204,6 @@ architecture behavioral of chamber is
     end loop;
     return ly_thresh_compressed;
   end;
-  
-  --Function to increase all thresholds by 1, to a maximum of 5. Values already greater
-  --than 5 remain unchanged. Now outdated since eta-dependent thresholding, maybe remove later.
---  function increase_ly_thresh (ly_thresh : ly_thresh_t)
---    return ly_thresh_t is
---    variable ly_thresh_strict : ly_thresh_t;
---  begin
---    for i in 0 to NUM_PATTERNS-1 loop
---        if (unsigned(ly_thresh(i)) >= 5) then
---          ly_thresh_strict(i) := ly_thresh(i);
---        else
---          ly_thresh_strict(i) := std_logic_vector(unsigned(ly_thresh(i)) + 1);
---        end if;
---    end loop;
---    return ly_thresh_strict;
---  end;
 
   --------------------------------------------------------------------------------
   -- Sbit BRAM
