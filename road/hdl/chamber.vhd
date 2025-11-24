@@ -70,10 +70,10 @@ entity chamber is
 
     sbits_i           : in  chamber_t;
     vfat_pretrigger_o : out std_logic_vector (23 downto 0);
-    segments_o        : out segment_list_w_fit_t (NUM_SEGMENTS-1 downto 0);
+    segments_o        : out segment_w_fit_list_t (NUM_SEGMENTS-1 downto 0);
     
-    strip_o : out sfixed (5-1 downto -5);
-    intercept_o : out sfixed (7-1 downto -7);
+    strip_o : out sfixed (4-1 downto -5);
+    intercept_o : out sfixed (6-1 downto -6);
     slope_o : out sfixed (4-1 downto -6);
     
     dav_i             : in  std_logic;
@@ -285,6 +285,8 @@ architecture behavioral of chamber is
   end function;
   
   constant offsets : pat_ly_offsets_t := find_offsets(PATLIST);
+  
+  signal seg_fit_list_phase : integer range 7 downto 0 := 0;
 
 begin
 
@@ -654,17 +656,19 @@ begin
   process (clock) is
   begin
     if rising_edge(clock) then
-      for i in 0 to NUM_SEGS loop
+      for i in 0 to NUM_SEGMENTS loop
         -- Get segment info from seg_info_buffer
-        fit_segments[i].lc <= seg_info_buffer[seg_info_buffer'length-1].lc;
-        fit_segments[i].id <= seg_info_buffer[seg_info_buffer'length-1].id;
-        fit_segments[i].strip <= seg_info_buffer[seg_info_buffer'length-1].strip;
-        fit_segments[i].partition <= seg_info_buffer[seg_info_buffer'length-1].partition;
+        fit_segments(seg_fit_list_phase).lc <= seg_info_buffer(seg_info_buffer'length-1).lc;
+        fit_segments(seg_fit_list_phase).id <= seg_info_buffer(seg_info_buffer'length-1).id;
+        fit_segments(seg_fit_list_phase).strip <= seg_info_buffer(seg_info_buffer'length-1).strip;
+        fit_segments(seg_fit_list_phase).partition <= seg_info_buffer(seg_info_buffer'length-1).partition;
         
         -- Get fit info from fitter output
-        fit_segments[i].intercept <= intercept_o;
-        fit_segments[i].slope <= slope_o;
+        fit_segments(seg_fit_list_phase).intercept <= intercept_o;
+        fit_segments(seg_fit_list_phase).slope <= slope_o;
       end loop;
+      
+      seg_fit_list_phase <= seg_fit_list_phase + 1;
     end if;
   end process;
 

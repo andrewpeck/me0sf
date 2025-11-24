@@ -58,9 +58,9 @@ package pat_pkg is
       id : unsigned(PID_BITS-1 downto 0);
       strip : unsigned(7 downto 0);
       partition : unsigned(PARTITION_BITS-1 downto 0);
-      intercept : sfixed(7-1 downto -7);
+      intercept : sfixed(6-1 downto -6);
       slope     : sfixed(4-1 downto -6);
-  end record segment_t;
+  end record segment_w_fit_t;
 
   type segment_w_fit_list_t is array(integer range <>) of segment_w_fit_t; 
                                                           
