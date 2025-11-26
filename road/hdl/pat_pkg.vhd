@@ -60,6 +60,7 @@ package pat_pkg is
       partition : unsigned(PARTITION_BITS-1 downto 0);
       intercept : sfixed(7-1 downto -7);
       slope     : sfixed(4-1 downto -6);
+      fit_strip : sfixed(5-1 downto -5);
   end record segment_w_fit_t;
 
   type segment_w_fit_list_t is array(integer range <>) of segment_w_fit_t; 

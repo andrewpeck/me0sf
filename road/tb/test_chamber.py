@@ -30,9 +30,9 @@ from tb_common import (get_max_span_from_dut, get_segments_from_dut,
 #async def chamber_test_5a(dut, nloops=20):
 #   await chamber_test(dut, "5A", nloops)
 #
-#@cocotb.test() # type: ignore
-#async def chamber_test_walking1(dut, nloops=191):
-#   await chamber_test(dut, "WALKING1", nloops)
+@cocotb.test() # type: ignore
+async def chamber_test_walking1(dut, nloops=191):
+   await chamber_test(dut, "WALKING1", nloops)
 #
 #@cocotb.test() # type: ignore
 #async def chamber_test_walkingf(dut, nloops=192):
@@ -332,11 +332,42 @@ async def chamber_test(dut, test, nloops=512, verbose=True):
                         segment.lc += 3
                         segment.update_quality()
 
+            # Function to convert from sfixed bits to float. TODO: Move to a better place (subfunc probably)
+            def sfixed_to_float(x, left_bits):
+                # Convert integer portion
+                upper_bits = x[0:left_bits]
+                upper_bits_int = int(upper_bits, 2)
+    
+                # If negative, take 2's complement.
+                if upper_bits[0] == '1': 
+                    upper_bits_int = -((int(upper_bits, 2) ^ (2**left_bits-1)) + 1)
+    
+                # Convert decimal part
+                right_bits = len(x) - left_bits
+                lower_bits = x[left_bits:]
+                lower_bits_int = int(lower_bits, 2)/(2**right_bits)
+                
+                return upper_bits_int + lower_bits_int
+
             if verbose:
                 print(f'{loop}=')
                 for i in range(len(fw_segments)):
                     print("  > fw: " + str(fw_segments[i]))
                     print("  > sw: " + str(sw_segments[i]))
+
+                    slope = sfixed_to_float(str(dut.segments_o[len(fw_segments)-1-i].slope.value), 4)
+                    intercept = sfixed_to_float(str(dut.segments_o[len(fw_segments)-1-i].intercept.value), 7)
+                    fit_strip = sfixed_to_float(str(dut.segments_o[len(fw_segments)-1-i].fit_strip.value), 5)
+
+                    print("FW slope: ", slope)
+                    print("FW intercept: ", intercept)
+
+                    my_seg = fw_segments[i]
+                    L = pat_sbit_window_sizes[my_seg.id-1]/2
+                    C = 2*my_seg.strip
+                    x1 = fit_strip
+                    global_strip_out = x1 + C - L
+                    print(f"GLOBAL STRIP_O: {global_strip_out}")
 
             for i in range(max((len(sw_segments), len(fw_segments)))):
 
@@ -352,6 +383,7 @@ async def chamber_test(dut, test, nloops=512, verbose=True):
                         print(f"ERR seg {i}:")
                         print("   > sw: " + str(sw_segments[i]))
                         print("   > fw: " + str(fw_segments[i]))
+                        print("FW ")
 
                     assert sw_segments[i] == fw_segments[i]
 
@@ -363,21 +395,7 @@ async def chamber_test(dut, test, nloops=512, verbose=True):
        # print("PID TO FINDER: " + str(dut.seg_info_buffer[2].id.value.integer))
        # print("STRIP TO FINDER: " + str(dut.seg_info_buffer[2].strip.value.integer))
 
-        def sfixed_to_float(x, left_bits):
-            # Convert integer portion
-            upper_bits = x[0:left_bits]
-            upper_bits_int = int(upper_bits, 2)
 
-            # If negative, take 2's complement.
-            if upper_bits[0] == '1': 
-                upper_bits_int = -((int(upper_bits, 2) ^ (2**left_bits-1)) + 1)
-
-            # Convert decimal part
-            right_bits = len(x) - left_bits
-            lower_bits = x[left_bits:]
-            lower_bits_int = int(lower_bits, 2)/(2**right_bits)
-            
-            return upper_bits_int + lower_bits_int
 
         # Temp printout for checking fit
         #print("\n")
@@ -386,29 +404,11 @@ async def chamber_test(dut, test, nloops=512, verbose=True):
         #print("INTERCEPT: " + str(dut.intercept_o.value) + " = " + str(sfixed_to_float(str(dut.intercept_o.value), 7)))
         #print("STRIP_O: " + str(dut.strip_o.value) + " = " + str(sfixed_to_float(str(dut.strip_o.value), 5)))
 
-        if dut.dav_o_phase.value == 0:
-            # Temp pointer for reading output nicely, delete later once reordering is done in FW
-            seg_pointer = 1
-
-        if loop == 1: # Initialize
-            old_segs_arr = [sw_segments for _ in range(3)]
-            old_segs = sw_segments
-        if loop > 10: # Make sure we have segs
-            if dut.dav_o_phase.value == 0: # Got new segs
-                old_segs = old_segs_arr.pop(0)
-                old_segs_arr.append(sw_segments)
-
-            if seg_pointer == 1 or seg_pointer == 2: # Need to read from old segs in these cases
-                my_seg = old_segs[seg_pointer]
-            else: # Read from current segs
-                my_seg = old_segs_arr[0][seg_pointer]
-            seg_pointer = (seg_pointer+1) % 8 # Increment seg pointer
-            #print(f"MY SEGMENT: {my_seg}")
-            L = pat_sbit_window_sizes[my_seg.id-1]/2
-            C = 2*my_seg.strip
-            x1 = sfixed_to_float(str(dut.strip_o.value), 5)
-            global_strip_out = x1 + C - L
-            #print(f"GLOBAL STRIP_O: {global_strip_out}")
+        #L = pat_sbit_window_sizes[my_seg.id-1]/2
+        #C = 2*my_seg.strip
+        #x1 = sfixed_to_float(str(dut.strip_o.value), 5)
+        #global_strip_out = x1 + C - L
+        #print(f"GLOBAL STRIP_O: {global_strip_out}")
 
         print("\n")
         # End temp printout

@@ -651,6 +651,7 @@ begin
       -- Get fit info from fitter output
       fit_segments(to_integer(seg_fit_list_phase)).intercept <= intercept_o;
       fit_segments(to_integer(seg_fit_list_phase)).slope <= slope_o;
+      fit_segments(to_integer(seg_fit_list_phase)).fit_strip <= strip_o;
 
       
       seg_fit_list_phase <= seg_fit_list_phase + 1;
