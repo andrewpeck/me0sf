@@ -95,7 +95,7 @@ async def monitor_dav(dut):
     await RisingEdge(dut.dav_o)
     await RisingEdge(dut.dav_o)
     while True:
-        await Edge(dut.segments_o)
+        await Edge(dut.segments_o[len(dut.segments_o) - 1]) # Only watching for a change on last segment in output list, since it is updated every clock now
         await Timer(1, units="ns")
         assert dut.dav_o == 1
         await RisingEdge(dut.clock)

@@ -314,7 +314,7 @@ def analysis(root_dat, hits, bx, bx_list, cross_part, verbose, pu, num_or):
     config.max_span = num_or_to_span[num_or]
     config.num_or = num_or
     config.group_width = 16
-    #config.start_peaking_manager()
+    config.start_peaking_manager()
     # config.start_vectoring_manager()
 
     if pu == "140":
@@ -336,9 +336,9 @@ def analysis(root_dat, hits, bx, bx_list, cross_part, verbose, pu, num_or):
     # Determines how many and which BX offsets to look at
     # bx_offset_windows = list(range(-4, 3))# if config.peaking_enabled else [0]
     bx_offset_windows = list(range(-2, 4))
-    #bx_offset_0_index = bx_offset_windows.index(1) if config.peaking_enabled else bx_offset_windows.index(0)
+    bx_offset_0_index = bx_offset_windows.index(1) if config.peaking_enabled else bx_offset_windows.index(0)
     #bx_offset_0_index = bx_offset_windows.index(2) # Use this for big decrease metric
-    bx_offset_0_index = bx_offset_windows.index(0) # Use this for any increase metric
+    #bx_offset_0_index = bx_offset_windows.index(0) # Use this for any increase metric
 
     # Counters for time resolution
     n_segs_matched_by_bx = [0]*len(bx_offset_windows)

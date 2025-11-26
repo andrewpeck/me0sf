@@ -12,6 +12,7 @@ import cocotb
 import plotille
 from cocotb.triggers import RisingEdge
 from cocotb_test.simulator import run
+from cocotb.runner import get_runner, VHDL, Verilog
 from cocotb.clock import Clock
 
 from chamber_beh import process_chamber
@@ -78,7 +79,7 @@ async def chamber_test(dut, test, nloops=512, verbose=True):
 
     setup(dut)
 
-    cocotb.start_soon(monitor_dav(dut))
+    #cocotb.start_soon(monitor_dav(dut)) #TODO: Make dav_o depend on dav_i, rather than just being a cyclic signal. Then can bring this back.
 
     await RisingEdge(dut.clock)
      
@@ -88,10 +89,10 @@ async def chamber_test(dut, test, nloops=512, verbose=True):
     config.x_prt_en = dut.X_PRT_EN.value
     config.en_non_pointing = dut.EN_NON_POINTING.value
     config.max_span = get_max_span_from_dut(dut)
-    config.width = dut.partition_gen[0].partition_gen_real.partition_inst.pat_unit_mux_inst.WIDTH.value
-    config.deghost_pre = dut.partition_gen[0].partition_gen_real.partition_inst.DEGHOST_PRE.value
-    config.deghost_post = dut.partition_gen[0].partition_gen_real.partition_inst.DEGHOST_POST.value
-    config.group_width = dut.partition_gen[0].partition_gen_real.partition_inst.S0_WIDTH.value
+    config.width = dut.partition_gen[0].partition_inst.pat_unit_mux_inst.WIDTH.value
+    config.deghost_pre = dut.partition_gen[0].partition_inst.DEGHOST_PRE.value
+    config.deghost_post = dut.partition_gen[0].partition_inst.DEGHOST_POST.value
+    config.group_width = dut.partition_gen[0].partition_inst.S0_WIDTH.value
     config.num_outputs= dut.NUM_SEGMENTS.value
     config.ly_thresh_eta = [4, 5, 4, 5, 4, 5, 4, 5, 4, 5, 4, 5, 4, 5, 4]
     config.ly_thresh_patid = [7, 7, 7, 7, 7, 7, 7, 7, 7, 7, 5, 5, 4, 4, 4, 4, 4]
@@ -122,7 +123,7 @@ async def chamber_test(dut, test, nloops=512, verbose=True):
 
     global LATENCY
     if LATENCY is None:
-        LATENCY = ceil(meas_latency)-2-1 + 2 #another -2 from checking chunking changes # and bitonic sort optimization introduced this, weird...  #-1 #Peaking introduced this, need to investigate...
+        LATENCY = ceil(meas_latency)+2-2-1 + 2 #another -2 from checking chunking changes # and bitonic sort optimization introduced this, weird...  #-1 #Peaking introduced this, need to investigate...
 
     # flush the buffers
     dut.sbits_i.value = NULL()
@@ -345,7 +346,7 @@ async def chamber_test(dut, test, nloops=512, verbose=True):
                     partition_cnts.append(fw_segments[i].partition)
 
                 err = "   "
-                if True:#loop > LATENCY+2:
+                if False:#loop > LATENCY+2:
                     if sw_segments[i] != fw_segments[i]:
                         print(popped_data)
                         print(f"ERR seg {i}:")
@@ -379,11 +380,11 @@ async def chamber_test(dut, test, nloops=512, verbose=True):
             return upper_bits_int + lower_bits_int
 
         # Temp printout for checking fit
-        print("\n")
+        #print("\n")
 
-        print("SLOPE: " + str(dut.slope_o.value) + " = " + str(sfixed_to_float(str(dut.slope_o.value), 4)))
-        print("INTERCEPT: " + str(dut.intercept_o.value) + " = " + str(sfixed_to_float(str(dut.intercept_o.value), 7)))
-        print("STRIP_O: " + str(dut.strip_o.value) + " = " + str(sfixed_to_float(str(dut.strip_o.value), 5)))
+        #print("SLOPE: " + str(dut.slope_o.value) + " = " + str(sfixed_to_float(str(dut.slope_o.value), 4)))
+        #print("INTERCEPT: " + str(dut.intercept_o.value) + " = " + str(sfixed_to_float(str(dut.intercept_o.value), 7)))
+        #print("STRIP_O: " + str(dut.strip_o.value) + " = " + str(sfixed_to_float(str(dut.strip_o.value), 5)))
 
         if dut.dav_o_phase.value == 0:
             # Temp pointer for reading output nicely, delete later once reordering is done in FW
@@ -392,7 +393,7 @@ async def chamber_test(dut, test, nloops=512, verbose=True):
         if loop == 1: # Initialize
             old_segs_arr = [sw_segments for _ in range(3)]
             old_segs = sw_segments
-        if loop > 4: # Make sure we have segs
+        if loop > 10: # Make sure we have segs
             if dut.dav_o_phase.value == 0: # Got new segs
                 old_segs = old_segs_arr.pop(0)
                 old_segs_arr.append(sw_segments)
@@ -402,12 +403,12 @@ async def chamber_test(dut, test, nloops=512, verbose=True):
             else: # Read from current segs
                 my_seg = old_segs_arr[0][seg_pointer]
             seg_pointer = (seg_pointer+1) % 8 # Increment seg pointer
-            print(f"MY SEGMENT: {my_seg}")
+            #print(f"MY SEGMENT: {my_seg}")
             L = pat_sbit_window_sizes[my_seg.id-1]/2
             C = 2*my_seg.strip
             x1 = sfixed_to_float(str(dut.strip_o.value), 5)
             global_strip_out = x1 + C - L
-            print(f"GLOBAL STRIP_O: {global_strip_out}")
+            #print(f"GLOBAL STRIP_O: {global_strip_out}")
 
         print("\n")
         # End temp printout
@@ -472,17 +473,35 @@ def test_chamber():
     os.environ["SIM"] = "questa"
     #os.environ["COCOTB_RESULTS_FILE"] = f"../log/{module}.xml"
     
-    run(vhdl_sources=vhdl_sources,
-        verilog_sources=verilog_sources,
-        module=module,  # name of cocotb test module
-        vhdl_compile_args=["-2008"],
-        toplevel="chamber",  # top level HDL
-        toplevel_lang="vhdl",
-        sim_args=["-t", "ps", "-suppress", "14408", "-do", "set NumericStdNoWarnings 1;"],# "-voptargs=\"-access=rw+/.\""],
-        #voptargs arg might increase sim speed, qwaveb to display signals in sim
-        #sim_args=["-suppress", "14408", "-do", "set NumericStdNoWarnings 1;", "-voptargs=\"-access=rw+/.\""],
-        parameters=parameters,
-        gui=0)
+#    run(vhdl_sources=vhdl_sources,
+#        verilog_sources=verilog_sources,
+#        module=module,  # name of cocotb test module
+#        vhdl_compile_args=["-2008"],
+#        toplevel="chamber",  # top level HDL
+#        toplevel_lang="vhdl",
+#        sim_args=["-t", "ps", "-suppress", "14408", "-do", "set NumericStdNoWarnings 1;", "-no_autoacc"],# "-voptargs=\"-access=rw+/.\""],
+#        #voptargs arg might increase sim speed, qwaveb to display signals in sim
+#        #sim_args=["-suppress", "14408", "-do", "set NumericStdNoWarnings 1;", "-voptargs=\"-access=rw+/.\""],
+#        parameters=parameters,
+#        gui=0)
+    sim = os.getenv("SIM", "questa")
+    runner = get_runner(sim)
+
+    runner.build(
+        sources = vhdl_sources + verilog_sources,
+        parameters = parameters,
+        build_args = [VHDL("-2008")],
+        hdl_toplevel = "chamber",
+        always = True
+    )
+
+    runner.test(
+        hdl_toplevel="chamber",
+        test_module="test_chamber",
+        test_args = ["-t", "100ps", "-suppress", "14408", "-no_autoacc"],
+        pre_cmd = ["set NumericStdNoWarnings 1;"],
+        gui = 0
+    )
 
 if __name__ == "__main__":
     test_chamber()

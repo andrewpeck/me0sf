@@ -72,8 +72,8 @@ entity chamber is
     vfat_pretrigger_o : out std_logic_vector (23 downto 0);
     segments_o        : out segment_w_fit_list_t (NUM_SEGMENTS-1 downto 0);
     
-    strip_o : out sfixed (4-1 downto -5);
-    intercept_o : out sfixed (6-1 downto -6);
+    strip_o : out sfixed (5-1 downto -5);
+    intercept_o : out sfixed (7-1 downto -7);
     slope_o : out sfixed (4-1 downto -6);
     
     dav_i             : in  std_logic;
@@ -210,7 +210,7 @@ architecture behavioral of chamber is
   --------------------------------------------------------------------------------
   signal bram_in : chamber_w_virtual_t;
   signal bram_out : sbit_window_t;
-  signal bram_seg_select_phase : unsigned (2 downto 0) := (others => '0'); -- TODO: initialize to correct starting phase, should be f(SBIT_PHASE, BRAM_DELAY)
+  signal bram_seg_select_phase : unsigned (2 downto 0) := (others => '0');
 
   type seg_info_buffer_t is array (0 to 5+FIT_DELAY) of segment_t;
 
@@ -270,7 +270,7 @@ architecture behavioral of chamber is
   
   constant offsets : pat_ly_offsets_t := find_offsets(PATLIST);
   
-  signal seg_fit_list_phase : integer range 7 downto 0 := 0;
+  signal seg_fit_list_phase : unsigned (2 downto 0) := to_unsigned(2, 3); --TODO: Generalize this, might depend on some other phase(s)
 
 begin
 
@@ -573,7 +573,9 @@ begin
   process (clock) is
   begin
     if (rising_edge(clock)) then
-      bram_seg_select_phase <= bram_seg_select_phase + 1;
+      -- Want to read index 0 first when new segments arrive, so phase should be 0 when final_segs_dav = 1
+      bram_seg_select_phase <= to_unsigned(1, bram_seg_select_phase'length) when final_segs_dav = '1' else bram_seg_select_phase + 1; -- Set to phase=1 when DAV is high, since the current phase should be 0
+
       seg_info_buffer(0) <= final_segs(to_integer(bram_seg_select_phase));
       for i in 1 to seg_info_buffer'length-1  loop
         seg_info_buffer(i) <= seg_info_buffer(i-1);
@@ -640,36 +642,38 @@ begin
   process (clock) is
   begin
     if rising_edge(clock) then
-      for i in 0 to NUM_SEGMENTS loop
-        -- Get segment info from seg_info_buffer
-        fit_segments(seg_fit_list_phase).lc <= seg_info_buffer(seg_info_buffer'length-1).lc;
-        fit_segments(seg_fit_list_phase).id <= seg_info_buffer(seg_info_buffer'length-1).id;
-        fit_segments(seg_fit_list_phase).strip <= seg_info_buffer(seg_info_buffer'length-1).strip;
-        fit_segments(seg_fit_list_phase).partition <= seg_info_buffer(seg_info_buffer'length-1).partition;
-        
-        -- Get fit info from fitter output
-        fit_segments(seg_fit_list_phase).intercept <= intercept_o;
-        fit_segments(seg_fit_list_phase).slope <= slope_o;
-      end loop;
+      -- Get segment info from seg_info_buffer
+      fit_segments(to_integer(seg_fit_list_phase)).lc <= seg_info_buffer(seg_info_buffer'length-1).lc;
+      fit_segments(to_integer(seg_fit_list_phase)).id <= seg_info_buffer(seg_info_buffer'length-1).id;
+      fit_segments(to_integer(seg_fit_list_phase)).strip <= seg_info_buffer(seg_info_buffer'length-1).strip;
+      fit_segments(to_integer(seg_fit_list_phase)).partition <= seg_info_buffer(seg_info_buffer'length-1).partition;
+      
+      -- Get fit info from fitter output
+      fit_segments(to_integer(seg_fit_list_phase)).intercept <= intercept_o;
+      fit_segments(to_integer(seg_fit_list_phase)).slope <= slope_o;
+
       
       seg_fit_list_phase <= seg_fit_list_phase + 1;
-    end if;
-  end process;
 
-
-  clk40gen : if (REG_OUTPUTS) generate
-    outclk <= clock40;
-  end generate;
-  clk320 : if (not REG_OUTPUTS) generate
-    outclk <= clock;
-  end generate;
-
-  process (outclk) is
-  begin
-    if (rising_edge(outclk)) then
-      dav_o             <= final_segs_dav;
+      dav_o             <= '1' when seg_fit_list_phase = "000" else '0';
       segments_o <= fit_segments;
     end if;
   end process;
+
+
+--  clk40gen : if (REG_OUTPUTS) generate
+--    outclk <= clock40;
+--  end generate;
+--  clk320 : if (not REG_OUTPUTS) generate
+--    outclk <= clock;
+--  end generate;
+
+--  process (outclk) is
+--  begin
+--    if (rising_edge(outclk)) then
+--      dav_o             <= '1' when seg_fit_list_phase = "110" else '0';
+--      segments_o <= fit_segments;
+--    end if;
+--  end process;
 
 end behavioral;
