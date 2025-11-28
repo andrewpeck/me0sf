@@ -28,7 +28,7 @@ entity fit is
 
     N_STAGES : natural := 13;
 
-    STRIP_BITS : natural := 6;
+    STRIP_BITS : natural := 8;
     -- slope
     -- max slope is ~40 strips / 6 layers = ~7 so give it 4 bits
     M_INT_BITS  : natural := 4;
@@ -49,13 +49,13 @@ entity fit is
 
   port (
     clock   : in std_logic;
-    ly0     : in signed (STRIP_BITS-1 downto 0)        := (others => '0');
-    ly1     : in signed (STRIP_BITS-1 downto 0)        := (others => '0');
-    ly2     : in signed (STRIP_BITS-1 downto 0)        := (others => '0');
-    ly3     : in signed (STRIP_BITS-1 downto 0)        := (others => '0');
-    ly4     : in signed (STRIP_BITS-1 downto 0)        := (others => '0');
-    ly5     : in signed (STRIP_BITS-1 downto 0)        := (others => '0');
-    valid_i : in std_logic_vector(N_LAYERS-1 downto 0) := (others => '1');
+    ly0     : in signed (STRIP_BITS-1 downto 0);
+    ly1     : in signed (STRIP_BITS-1 downto 0);
+    ly2     : in signed (STRIP_BITS-1 downto 0);
+    ly3     : in signed (STRIP_BITS-1 downto 0);
+    ly4     : in signed (STRIP_BITS-1 downto 0);
+    ly5     : in signed (STRIP_BITS-1 downto 0);
+    valid_i : in std_logic_vector(N_LAYERS-1 downto 0);
 
     strip_o     : out sfixed (STRIP_INT_BITS-1 downto -STRIP_FRAC_BITS);
     intercept_o : out sfixed (B_INT_BITS-1 downto -B_FRAC_BITS);
@@ -78,7 +78,7 @@ architecture behavioral of fit is
   --------------------------------------------------------------------------------
   
   type valid_array_t is array (integer range 0 to 4) of std_logic_vector(N_LAYERS-1 downto 0);
-  signal valid : valid_array_t := (others => (others => '1'));
+  signal valid : valid_array_t;
 
   type cnt_array_t is array (integer range 0 to 9) of integer range 0 to 6;
   signal cnt : cnt_array_t := (others => 6);
@@ -225,8 +225,6 @@ begin
   -- s0
   --------------------------------------------------------------------------------
 
-  valid(0) <= valid_i;
-
   ly(0) <= ly0;
   ly(1) <= ly1;
   ly(2) <= ly2;
@@ -256,6 +254,7 @@ begin
       -- DELAYS
       -------------------------------------------------------------------------
 
+      valid(0) <= valid_i;
       valid_dly : for idly in 1 to valid'length-1 loop
         valid(idly) <= valid(idly-1);
       end loop;
@@ -301,13 +300,13 @@ begin
       -------------------------------------------------------------------------
 
       -- Σ (n*xi - Σx)*(n*yi - Σy), numerator of slope
-      product_sum_1 <= sum6(product(0), product(1), product(2), product(3), product(4), product(5), valid(4));
+      product_sum_1 <= sum6(product(0), product(1), product(2), product(3), product(4), product(5), valid(2));
       product_sum <= product_sum_1; --To account for the delay needed in square_sum_reciprocal
 
       product_sum_sfixed <= to_sfixed(product_sum_1, product_sum_sfixed'high, product_sum_sfixed'low);
 
       -- Σ (n*xi - Σx)^2, denominator of slope
-      square_sum <= sum6(square(0), square(1), square(2), square(3), square(4), square(5), valid(4));
+      square_sum <= sum6(square(0), square(1), square(2), square(3), square(4), square(5), valid(2));
       square_sum_reciprocal <= reciprocal (square_sum ,-square_sum_reciprocal'low); --Instead of dividing, find the reciprocal in a lookup table
 
       ---------------------------------------------------------------------------

@@ -148,7 +148,7 @@ def print_slope(slope, intercept, key_strip, m, b, key_s):
 
 
 @cocotb.test()
-async def fit_tb(dut, NLOOPS=10000):
+async def fit_tb(dut, NLOOPS=10000, verbose=False):
     """Test for priority encoder with randomized data on all inputs"""
 
     cocotb.start_soon(Clock(dut.clock, 20, units="ns").start())  # Create a clock
@@ -167,17 +167,19 @@ async def fit_tb(dut, NLOOPS=10000):
     dut.ly4.value = 5
     dut.ly5.value = 6
 
+    dut.valid_i.value = 0
+
     LATENCY = dut.N_STAGES.value # Number of clock cycles that it takes to run, as specified in fit.vhd (13 cycles)
 
     for _ in range(LATENCY):
         await RisingEdge(dut.clock)
     data = []
 
+    # Place dummy data into the queue, to account for the latency
     for _ in range(LATENCY - 1):
         y = rand_y()
-        data.append(y)
-        (dut.ly0.value, dut.ly1.value, dut.ly2.value, dut.ly3.value, dut.ly4.value, dut.ly5.value) = y
-        await RisingEdge(dut.clock)
+        data.append([0, 0, 0, 0, 0, 0])
+
     failed_fits = 0
     failed_fits_intercept = 0
     failed_fits_strip = 0
@@ -185,8 +187,13 @@ async def fit_tb(dut, NLOOPS=10000):
 
     for iloop in range(NLOOPS):
 
-        valid_layers = sorted(random.sample(range(6), random.randint(5, 6)))
-        dut.valid_i.value = sum(1 << i for i in valid_layers)
+        # Set 5 or 6 layers valid (50% chance to 0 a random layer)
+        if random.randint(0, 1) == 0: # Set all 6 layers valid
+            valid_layers = 2**6 - 1 
+        else: # Set a random layer to 0
+            valid_layers = (2**6 - 1) ^ (2**random.randint(0, 5))
+
+        dut.valid_i.value = valid_layers
 
         y = rand_y()
 
@@ -207,9 +214,9 @@ async def fit_tb(dut, NLOOPS=10000):
         masked_data = [v if valid else float('NaN') for v, valid in zip(this_data, valid_mask)]
         m, b, key_s = vhdl_exact_fit(this_data, valid_mask)
 
-        slope = dut.slope_o.value.signed_integer / (2**slope_fracb - 1)
-        intercept = dut.intercept_o.value.signed_integer / (2**intercept_fracb - 1)
-        key_strip = dut.strip_o.value.signed_integer / (2**strip_fracb - 1)
+        slope = dut.slope_o.value.signed_integer / (2**slope_fracb)
+        intercept = dut.intercept_o.value.signed_integer / (2**intercept_fracb)
+        key_strip = dut.strip_o.value.signed_integer / (2**strip_fracb)
 
         #Define the maximum allowed discrepancy between python fit and fit.vhd
         max_error_slope = 0.65
@@ -218,25 +225,33 @@ async def fit_tb(dut, NLOOPS=10000):
 
         if abs(b - intercept) >= max_error_intercept:
             print('FIT FAILED (intercept)')
+            print(f"{iloop=}")
             print(masked_data)
             print(valid_mask)
             print_slope(slope, intercept, key_strip, m, b, key_s)
             failed_fits += 1
             failed_fits_intercept += 1
+
         elif abs(m - slope) >= max_error_slope:
             print('FIT FAILED (slope)')
+            print(f"{iloop=}")
             print(masked_data)
             print(valid_mask)
             print_slope(slope, intercept, key_strip, m, b, key_s)
             failed_fits += 1
             failed_fits_slope += 1
+
         elif abs(key_s - key_strip) >= max_error_strips:
             print('FIT FAILED (strip)')
+            print(f"{iloop=}")
             print(masked_data)
             print(valid_mask)
             print_slope(slope, intercept, key_strip, m, b, key_s)
             failed_fits += 1
             failed_fits_strip += 1
+
+        elif verbose == True:
+            print_slope(slope, intercept, key_strip, m, b, key_s)
 
         if iloop % 1000 == 0:
             print("%d fits tested" % iloop)
