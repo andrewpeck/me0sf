@@ -17,10 +17,11 @@ from cocotb.clock import Clock
 
 from chamber_beh import process_chamber
 from datagen import datagen
-from subfunc import Config
+from subfunc import (Config, get_sbits_from_event, get_bending_angle_from_event)
 from tb_common import (get_max_span_from_dut, get_segments_from_dut,
                        monitor_dav, setup, measure_latency)
 #from get_sbits_from_root import (read_ntuple_stack, get_sbits_from_event)
+from read_ntuple import read_ntuple
 
 #@cocotb.test() # type: ignore
 #async def chamber_test_ff(dut, nloops=20):
@@ -54,21 +55,36 @@ from tb_common import (get_max_span_from_dut, get_segments_from_dut,
 #async def chamber_test_deghost(dut, nloops=20):
 #    await chamber_test(dut, "DEGHOST", nloops)   
 
-@cocotb.test() # type: ignore
-async def chamber_test_dat(dut, nloops=20):
-   await chamber_test(dut, "TEST_DAT", nloops)
-
 #@cocotb.test() # type: ignore
-#async def chamber_test_stack(dut, nloops=100):
-#    await chamber_test(dut, "STACK_DAT", nloops)   
+#async def chamber_test_dat(dut, nloops=20):
+#   await chamber_test(dut, "TEST_DAT", nloops)
+
+@cocotb.test() # type: ignore
+async def chamber_test_stack(dut, nloops=20):
+    await chamber_test(dut, "STACK_DAT", nloops)   
 
 #@cocotb.test() # type: ignore
 #async def chamber_test_stack(dut, nloops=30):
 #    await chamber_test(dut, "PEAKING", nloops)
 
-LATENCY = None 
+LATENCY = None
  
 async def chamber_test(dut, test, nloops=512, verbose=True):
+
+    # Read root file if needed
+    if test == "STACK_DAT":
+       # if (os.path.exists("00001199.root")):
+       #     i_file_path = "00001199.root"
+       # elif (os.path.exists("../00001199.root")):
+       #     i_file_path = "../00001199.root"
+       # else:
+       #     raise Exception("Root file not found")
+        if (os.path.exists("../test_data/step3_noPU.root")): # Need ../ since the working directory is actually sim_build, a subdirectory of tb/
+            i_file_path = "../test_data/step3_noPU.root"
+        else:
+            raise Exception("Root file not found")
+        #events = read_ntuple_stack(i_file_path)
+        events = read_ntuple(i_file_path)
 
     '''
     Test the chamber.vhd module
@@ -119,11 +135,12 @@ async def chamber_test(dut, test, nloops=512, verbose=True):
     def setfn(dut, x):
         dut.sbits_i.value = [[x for _ in range(6)] for _ in range(NUM_PARTITIONS)]
 
-    meas_latency = await measure_latency(dut, checkfn, setfn)
+    #meas_latency = await measure_latency(dut, checkfn, setfn)
 
     global LATENCY
-    if LATENCY is None:
-        LATENCY = ceil(meas_latency)+2-2-1 + 2 #another -2 from checking chunking changes # and bitonic sort optimization introduced this, weird...  #-1 #Peaking introduced this, need to investigate...
+    #if LATENCY is None:
+    #    LATENCY = ceil(meas_latency)+2-2-1 + 2 #another -2 from checking chunking changes # and bitonic sort optimization introduced this, weird...  #-1 #Peaking introduced this, need to investigate...
+    LATENCY = 10+2+2 
 
     # flush the buffers
     dut.sbits_i.value = NULL()
@@ -283,24 +300,14 @@ async def chamber_test(dut, test, nloops=512, verbose=True):
                 #chamber_data = [[3, 1, 1, 1, 1, 1], [1, 1, 1, 1, 1, 1], zeros, zeros, zeros, zeros, zeros, zeros]
                 
             elif test=="STACK_DAT":
-                if (loop == 0):
-                    if (os.path.exists("00001199.root")):
-                        i_file_path = "00001199.root"
-                    elif (os.path.exists("../00001199.root")):
-                        i_file_path = "../00001199.root"
-                    else:
-                        raise Exception("Root file not found")
-
-                    events = read_ntuple_stack(i_file_path)
-
                 if (loop < len(events)):
                     event = events[loop]
                 else:
-                    print("Reached end of stack data file for given nloops. Repeating last entry.")
+                    print("Reached end of root file for given nloops. Repeating last entry.")
                     event = events[-1]
 
                 chamber_data = get_sbits_from_event(event)
-                
+
             
             elif test=="PEAKING":
                 zeros = [0]*6
@@ -340,11 +347,13 @@ async def chamber_test(dut, test, nloops=512, verbose=True):
                     print("  > fw: " + str(fw_segments[i]))
                     print("  > sw: " + str(sw_segments[i]))
 
-                    slope = dut.segments_o[len(fw_segments)-1-i].slope.value.signed_integer) / (2**4)
+                    slope = dut.segments_o[len(fw_segments)-1-i].slope.value.signed_integer / (2**4)
                     intercept = dut.segments_o[len(fw_segments)-1-i].intercept.value.signed_integer / (2**7)
-                    fit_strip = str(dut.segments_o[len(fw_segments)-1-i].fit_strip.value.signed_integer / (2**5)
+                    fit_strip = dut.segments_o[len(fw_segments)-1-i].fit_strip.value.signed_integer / (2**5)
 
                     print("FW slope: ", slope)
+                    if loop >= (LATENCY-1):
+                        print("Simtrack slope: ", get_bending_angle_from_event(events[loop-(LATENCY)], sw_segments[i]))
                     print("FW intercept: ", intercept)
 
                     my_seg = fw_segments[i]

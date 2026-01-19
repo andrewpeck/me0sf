@@ -445,6 +445,53 @@ def chunk(in_list, n):
 Partition = List[Segment]
 Chamber = List[Partition]
 
+def get_sbits_from_event(event):
+    hit_data = [[0 for _ in range(6)] for _ in range(8)]
+
+    for tup in zip(event["me0_digi_hit_strip_i"], [e-1 for e in event["me0_digi_hit_eta_partition_i"]], [e-1 for e in event["me0_digi_hit_layer_i"]], event["me0_digi_hit_region_i"], event["me0_digi_hit_chamber_i"]):
+        strip, prt, ly, reg, station = tup
+        if reg == 1 and station == 1:
+            hit_data[prt][ly] |= 1 << (int(strip)//2)
+
+    return hit_data
+
+# Finds the sim hits that are near a given segment, and finds the expected bending angle
+def get_bending_angle_from_event(event, seg):
+
+    if seg.partition % 2 != 0:
+        print("Segment is from a cross-partition, not supported!")
+
+    # TODO: add support for cross-partition segments
+    hit_data = [0 for _ in range(6)]
+
+    leftmost = 0
+    rightmost = 383
+
+    for tup in zip(event["me0_sim_hit_strip_i"], [e-1 for e in event["me0_sim_hit_eta_partition_i"]], [e-1 for e in event["me0_sim_hit_layer_i"]], event["me0_sim_hit_region_i"], event["me0_sim_hit_chamber_i"]):
+        strip, prt, ly, reg, station = tup
+        print(f"Hit found: {tup}")
+        if reg == 1 and station == 1 and prt == seg.partition//2 and abs(strip - seg.strip*2) <= 36:
+            leftmost = max(leftmost, strip)
+            rightmost = min(rightmost, strip)
+
+    return (rightmost-leftmost)/6 # Ouputs bending angle in strips/layer, where strips are the physical readout board strips (384 per layer)
+
+# For debugging get_bending_angle_from_event
+def debug_bending_angle_function():
+    import uproot
+    from read_ntuple import read_ntuple
+    
+    events = read_ntuple("test_data/step3_noPU.root")
+    
+    for i in [4]:
+        seg = Segment(strip=71, partition=0, lc=6, id=17)
+    
+        event = events[i]
+        get_bending_angle_from_event(event, seg)
+
+if __name__ == "__main__":
+    debug_bending_angle_function()
+
 #-------------------------------------------------------------------------------
 # Tests
 #-------------------------------------------------------------------------------
