@@ -340,13 +340,12 @@ async def chamber_test(dut, test, nloops=512, verbose=True):
                     print("  > fw: " + str(fw_segments[i]))
                     print("  > sw: " + str(sw_segments[i]))
 
-                    slope = dut.segments_o[len(fw_segments)-1-i].slope.value.signed_integer) / (2**4)
+                    slope = dut.segments_o[len(fw_segments)-1-i].slope.value.signed_integer / (2**4)
                     intercept = dut.segments_o[len(fw_segments)-1-i].intercept.value.signed_integer / (2**7)
-                    fit_strip = str(dut.segments_o[len(fw_segments)-1-i].fit_strip.value.signed_integer / (2**5)
+                    fit_strip = dut.segments_o[len(fw_segments)-1-i].fit_strip.value.signed_integer / (2**5)
 
                     print("FW slope: ", slope)
-                    print("FW intercept: ", intercept)
-
+                    print(f"FW intercept: ", intercept)
                     my_seg = fw_segments[i]
                     L = pat_sbit_window_sizes[my_seg.id-1]/2
                     C = 2*my_seg.strip
@@ -402,7 +401,7 @@ async def chamber_test(dut, test, nloops=512, verbose=True):
 
     filename = "../log/chamber_%s.log" % test
     os.makedirs(os.path.dirname(filename), exist_ok=True)
-    with open(filename, "w+") as f:
+    with open(filename, "w+", encoding="utf-8") as f:
 
         f.write("Strips:\n")
         f.write(plotille.hist(strip_cnts, bins=int(192/4)))
@@ -483,7 +482,7 @@ def test_chamber():
     runner.test(
         hdl_toplevel="chamber",
         test_module="test_chamber",
-        test_args = ["-t", "100ps", "-suppress", "14408", "-no_autoacc"],
+        test_args = ["-t", "100ps", "-suppress", "14408", "-no_autoacc", "-noautoldlibpath"],
         pre_cmd = ["set NumericStdNoWarnings 1;"],
         gui = 0
     )
