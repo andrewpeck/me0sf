@@ -103,10 +103,10 @@ class Config:
     group_width : int = 8
     ghost_width : int = 1
     cross_part_seg_width : int = 4
+    clearance_width: int = 0 # use 2 if you want to try this
     num_outputs : int = 4
     edge_distance : int = 2
     num_or : int = 2
-
 
 class hi_lo_t:
     def __init__(self, hi, lo):

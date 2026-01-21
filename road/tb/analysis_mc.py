@@ -26,10 +26,7 @@ from time import time
 
 # Function to process a chamber in parallel
 def process_chamber_multiProc(dat_w_segs, config, chamber_id, chamber_bx_data):
-    # if chamber_id != 4:
-    #     return(chamber_id, [Segment(0,0,0) for _ in range(8)], config)
     seglist, new_config = process_chamber(dat_w_segs, config, chamber_bx_data)
-    # seglist = process_chamber(dat_w_segs[0][0], config, chamber_bx_data)
     return (chamber_id, seglist, new_config)
 
 # Function to group hit info into tuples in parallel
@@ -346,9 +343,6 @@ def analysis(root_dat, hits, bx, bx_list, cross_part, verbose, pu, num_or):
 
     for (ievent, event) in enumerate(root_dat):
 
-        # if ievent != 3:
-        #     continue
-
         # Restart peaking manager, to clear all segments
         if config.peaking_enabled:
             for conf in config_chams:
@@ -362,8 +356,7 @@ def analysis(root_dat, hits, bx, bx_list, cross_part, verbose, pu, num_or):
         if (frac_done - prev_frac_done) >= 0.05:
             print ("%.2f"%(frac_done*100) + "% Events Done")
             prev_frac_done = frac_done
-        #if ievent >= 3:
-        #    continue
+
         if verbose:
             file_out.write("Event number = %d\n"%ievent)
             file_out_summary.write("Event number = %d\n"%ievent)
@@ -651,15 +644,6 @@ def analysis(root_dat, hits, bx, bx_list, cross_part, verbose, pu, num_or):
             # Find segments per chamber
             online_segment_chamber = {}
 
-            # from printly_dat import printly_dat
-
-            # for i in [4]:
-            #     # if np.count_nonzero(datlist[i]) > 0:
-            #     print(f"Chamber {i}:\n")
-            #     for j in [3]:
-            #         print(f"Partition {j}:\n")
-            #         printly_dat(datlist[i,j], MAX_SPAN=192)
-
             print("TIMESTAMP 3: " + str(time() - start_time))
 
             datazip = zip(datlist, config_chams, range(36), bx_data)
@@ -673,10 +657,6 @@ def analysis(root_dat, hits, bx, bx_list, cross_part, verbose, pu, num_or):
                 cham_nr, segs_out, new_config = cham
                 online_segs_cham[cham_nr, bx_i] = segs_out
                 config_chams[cham_nr] = new_config
-
-                # for seg in segs_out:
-                #     if seg.lc > 0:
-                #         print(new_config.vector_manager.lcs[seg.partition, seg.strip, :, seg.id-1])
 
         print("Time to process chambers: " + str(time() - start_time))
 
@@ -714,9 +694,9 @@ def analysis(root_dat, hits, bx, bx_list, cross_part, verbose, pu, num_or):
                     if pu == "200":
                         if abs(seg.bend_ang) > 1: 
                             seg.id = 0
-                        #if seg.partition >= 9: 
-                        #    if abs(seg.bend_ang) > 0.5: 
-                        #        seg.id = 0
+                        if seg.partition >= 9: 
+                            if abs(seg.bend_ang) > 0.5: 
+                                seg.id = 0
                     if seg.id == 0:
                         continue
                     #mse_collections.append(seg.mse)
@@ -1295,7 +1275,6 @@ def analysis(root_dat, hits, bx, bx_list, cross_part, verbose, pu, num_or):
         for i in range(0, n_offline_seg):
             if matched_matrix_sim_offline[i] == True:
                 continue
-
             offline_chamber = seg_chamber_nr[i]
             offline_eta_partition = seg_eta_partition[i]
             offline_bending_angle = seg_bending_angle[i]
@@ -1317,7 +1296,6 @@ def analysis(root_dat, hits, bx, bx_list, cross_part, verbose, pu, num_or):
                 n_offline_signal_seg_per_chamber_per_event += 1
                 num_offline_signal_seg_per_chamber_per_event_eta.Fill(offline_eta_partition+1)
                 matched_matrix_sim_offline[i] = True
-
         if verbose:
             file_out_summary.write("  Online Segments: \n")
             for chamber in range(0, 36):
@@ -1326,6 +1304,7 @@ def analysis(root_dat, hits, bx, bx_list, cross_part, verbose, pu, num_or):
                 file_out_summary.write("    Chamber %d: "%chamber)
                 eta_partition_list = []
                 pattern_id_list = []
+
                 for seg in seglist_final[chamber][bx_offset_0_index]:
                     eta_partition_list.append(seg.partition)
                     pattern_id_list.append(seg.id)
@@ -1352,6 +1331,7 @@ def analysis(root_dat, hits, bx, bx_list, cross_part, verbose, pu, num_or):
                     continue
                 file_out_summary.write("    Chamber %d: "%chamber)
                 eta_partition_list = []
+                pt_list = []
                 for i in range(0, n_me0_track):
                     if chamber != track_chamber_nr[i]:
                         continue
@@ -1425,7 +1405,6 @@ def analysis(root_dat, hits, bx, bx_list, cross_part, verbose, pu, num_or):
     print ("Rate of offline signal segments per chamber per event (with fill factor of 0.7710) = %.4f MHz\n"%rate_offline_with_ff_signal_seg_per_chamber_per_event)
     file_out.write("Rate of offline signal segments per chamber per event (with fill factor of 0.7710) = %.4f MHz\n\n"%rate_offline_with_ff_signal_seg_per_chamber_per_event)
 
-
     for i, num_segs in enumerate(n_segs_matched_by_bx):
         print(f"Number of matched online segs in BX = {bx_offset_windows[i]}: {n_segs_matched_by_bx}")
     print("\n")
@@ -1437,8 +1416,6 @@ def analysis(root_dat, hits, bx, bx_list, cross_part, verbose, pu, num_or):
     print("Total number of matched online segs: %d\n"%temp_abcd)
 
     print(f"Total number of simtracks: {n_simtracks_total}")
-
-    sys.exit()
 
 
     plot_file = ROOT.TFile("output_plots_%s_bx%s_crosspart_%s_or%d.root"%(hits, bx, cross_part, num_or), "recreate")

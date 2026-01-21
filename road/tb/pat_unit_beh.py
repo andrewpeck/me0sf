@@ -266,20 +266,13 @@ def pat_unit(data,
 
     ####################################################################################
     
-    # (7) apply a layer threshold
+    # (7) apply a layer threshold - dependent on pattern id and eta partition
     ly_thresh_final = max(ly_thresh_patid[best.id-1], ly_thresh_eta[partition]) 
     if (best.lc < ly_thresh_final):
         best.reset()
 
-    # (8) remove very wide segments
-    #if (best.id <= 10):
-        #best.reset()
+    # (8) remove segments with large clusters for wide segments - ONLY NEEDED FOR PU200 - NOT USED AT THE MOEMENT
 
-    #for i in seg_list:
-    #    if i.id == 17:
-    #        print(i)
-
-    # (9) remove segments with large clusters for wide segments - ONLY NEEDED FOR PU200 - NOT USED AT THE MOEMENT
     cluster_size_max_limits = [3, 6, 9, 12, 15]
     n_hits_max_limits = [3, 6, 9, 12, 15]
     cluster_size_counts = calculate_cluster_size(data)

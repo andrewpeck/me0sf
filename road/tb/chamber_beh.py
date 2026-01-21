@@ -10,52 +10,38 @@ from typing import List
 from partition_beh import process_partition
 from subfunc import *
 
-
-# def cross_partition_cancellation(segments : List[List[Segment]],
-#                                  cross_part_seg_width : int) -> List[List[Segment]]:
-#     segs_real_killed = [prt for prt in deepcopy(segments)]
-#     for i in range(1,15,2):        
-#         for (l,seg) in enumerate(segments[i]):
-#             if seg.lc == 0:
-#                 continue
-
-#             strip = seg.strip
-#             segs_above = []
-#             segs_below = []
-
-#             for (j,seg1) in enumerate(segments[i-1]):
-#                 if seg1.lc != 0 and abs(strip - seg1.strip) <= cross_part_seg_width:
-#                     segs_above.append(j)
-#             for (k,seg2) in enumerate(segments[i+1]):
-#                 if seg2.lc != 0 and abs(strip - seg2.strip) <= cross_part_seg_width:
-#                     segs_below.append(k)
-                   
-#             if len(segs_above) > 0 and len(segs_below) > 0:
-#                 for above_seg in segs_above:
-#                     segs_real_killed[i-1][above_seg].reset()
-#                 for below_seg in segs_below:
-#                     segs_real_killed[i+1][below_seg].reset()
-
-#     segs_o = [prt for prt in deepcopy(segs_real_killed)]
-
-#     for i in range(1, 15, 2):
-#         for (l,seg) in enumerate(segs_real_killed[i]):
-#             if seg.lc == 0:
-#                 continue
-#             strip = seg.strip
-
-#             kill = False
-#             for seg_up in segs_real_killed[i-1]:
-#                 if seg_up.lc != 0 and abs(strip - seg_up.strip) <= cross_part_seg_width:
-#                     kill = True
-#             for seg_down in segs_real_killed[i+1]:
-#                 if seg_down.lc != 0 and  abs(strip - seg_down.strip) <= cross_part_seg_width:
-#                     kill = True
-
-#             if kill:
-#                 segs_o[i][l].reset()
-
-#     return segs_o
+def deghosting_clearance(segments : List[List[Segment]],
+                         clearance_width : int) -> List[List[Segment]]:
+    # Make a copy of input array to do concurrent deghosting, as FW will do
+    segs_out = deepcopy(segments)
+    # Look at each chunk in each partition. In real partitions, only look left and right. In virtual partitions, look in all (max 8) directions.
+    for prt_i in range(0,len(segments)):
+        for seg_i in range(0, len(segments[prt_i])):
+            prts = [0]
+            chunks = [0]
+            # If virtual partition, do x-prt deghosting. If at top or bottom, don't try to look out of bounds.
+            if (prt_i % 2 == 1):
+                if prt_i != 0:
+                    prts.append(-1)
+                if prt_i != len(segments)-1:
+                    prts.append(1)
+            # Don't look out of bounds
+            if seg_i != 0:
+                chunks.append(-1)
+            if seg_i != len(segments[prt_i])-1:
+                chunks.append(1)
+            # Generate all permutations of (relative_partition, relative_chunk)
+            relative_indices = [(prt, chunk) for prt in prts for chunk in chunks]
+            # Don't compare with self: remove (0,0)
+            relative_indices.remove((0,0))
+            seg = segments[prt_i][seg_i]
+            for x,y in relative_indices:
+                if (abs(segments[prt_i+x][seg_i+y].strip - seg.strip) <= clearance_width):
+                    if seg.quality > segments[prt_i+x][seg_i+y].quality:
+                        segs_out[prt_i+x][seg_i+y].reset()
+                    else:
+                        segs_out[prt_i][seg_i].reset()
+    return segs_out
 
 def cross_partition_cancellation(segments,
                                  cross_part_seg_width : int) -> List[List[Segment]]:
@@ -193,11 +179,14 @@ def process_chamber(chamber_data, config : Config, chamber_bx_data):
     #
     # (errno = ENOENT)
 
-    if "SIM" in os.environ and os.environ["SIM"] == "questa" or True:
-        segments = starmap(process_partition, datazip)
-    else:
-        with multiprocessing.pool.Pool() as pool:
-            segments = pool.starmap(process_partition, datazip)
+    ##### note: multiprocessing pool can not be used inside of another pool #####
+    # if "SIM" in os.environ and os.environ["SIM"] == "questa":
+    #     segments = starmap(process_partition, datazip)
+    # else:
+    #     with multiprocessing.pool.Pool() as pool:
+    #         segments = pool.starmap(process_partition, datazip)
+    #############################################################################
+    segments = pool.starmap(process_partition, datazip)
 
     segments = list(segments)
 
@@ -214,6 +203,8 @@ def process_chamber(chamber_data, config : Config, chamber_bx_data):
     # Remove redundant segments from cross-partitions and grouping neighbouring eta partitions
     if (config.cross_part_seg_width > 0):
         segments = cross_partition_cancellation(segments, config.cross_part_seg_width)
+    if (config.clearance_width > 0):
+        segments = deghosting_clearance(segments, config.clearance_width)
 
     # for prt in segments:
     #     for segment in prt:
