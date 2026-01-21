@@ -334,8 +334,7 @@ def analysis(root_dat, hits, bx, bx_list, cross_part, verbose, pu, num_or):
     config_chams = [deepcopy(config) for _ in range(36)]
 
     # Determines how many and which BX offsets to look at
-    # bx_offset_windows = list(range(-4, 3))# if config.peaking_enabled else [0]
-    bx_offset_windows = list(range(-2, 4))
+    bx_offset_windows = list(range(-2, 4)) if config.peaking_enabled else [0]
     bx_offset_0_index = bx_offset_windows.index(1) if config.peaking_enabled else bx_offset_windows.index(0)
     #bx_offset_0_index = bx_offset_windows.index(2) # Use this for big decrease metric
     #bx_offset_0_index = bx_offset_windows.index(0) # Use this for any increase metric
