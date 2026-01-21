@@ -186,7 +186,7 @@ def process_chamber(chamber_data, config : Config, chamber_bx_data):
     #     with multiprocessing.pool.Pool() as pool:
     #         segments = pool.starmap(process_partition, datazip)
     #############################################################################
-    segments = pool.starmap(process_partition, datazip)
+    segments = starmap(process_partition, datazip)
 
     segments = list(segments)
 
