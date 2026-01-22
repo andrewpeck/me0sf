@@ -694,9 +694,9 @@ def analysis(root_dat, hits, bx, bx_list, cross_part, verbose, pu, num_or):
                     if pu == "200":
                         if abs(seg.bend_ang) > 1: 
                             seg.id = 0
-                        if seg.partition >= 9: 
-                            if abs(seg.bend_ang) > 0.5: 
-                                seg.id = 0
+                        #if seg.partition >= 9: 
+                        #    if abs(seg.bend_ang) > 0.5: 
+                        #        seg.id = 0
                     if seg.id == 0:
                         continue
                     #mse_collections.append(seg.mse)
