@@ -34,14 +34,14 @@ use ieee.fixed_pkg.all;
 
 entity chamber is
   generic (
-    DISABLE_PEAKING : boolean := true;  -- true to disable peaking logic; useful for simulation until the tb is updated
+    DISABLE_PEAKING : boolean := false;  -- true to disable peaking logic; useful for simulation until the tb is updated
     X_PRT_EN        : boolean := true;   -- true to enable x-prt segment finding
     EN_NON_POINTING : boolean := false;  -- true to enable x-prt segment finding on non-pointing muons
     NUM_SEGMENTS    : integer := 8;      -- number of output segments
     S0_WIDTH        : natural := 16;     -- chunk each partition into groups this size and choose only 1 segment from each group
     S1_REUSE        : natural := 4;      -- reuse sorters
     REG_OUTPUTS     : boolean := false;  -- true to  register outputs on the 40MHz clock
-    --PULSE_EXTEND    : integer := 0;      -- how long pulses should be extended by
+    PULSE_EXTEND    : integer := 2;      -- how long pulses should be extended by
     --DEADTIME        : natural := 3;      -- deadtime in bx
     EN_HC_COMPRESS : boolean := true;   -- true to enable compression of hit count function (REQUIRED: minimum ly_thresh value is 4)
     X_DEGHOST_EDGE_DIST : natural := 2;  -- radius for cross partition deghosting
@@ -143,8 +143,8 @@ architecture behavioral of chamber is
   -- Extension
   --------------------------------------------------------------------------------
 
-  --signal sbits_extend : chamber_t;
-  --signal dav_extend   : std_logic := '0';
+  signal sbits_extend : chamber_t;
+  signal dav_extend   : std_logic := '0';
 
   --------------------------------------------------------------------------------
   -- Segments
@@ -270,7 +270,7 @@ architecture behavioral of chamber is
   
   constant offsets : pat_ly_offsets_t := find_offsets(PATLIST);
   
-  signal seg_fit_list_phase : unsigned (2 downto 0) := to_unsigned(2, 3); --TODO: Generalize this, might depend on some other phase(s)
+  signal seg_fit_list_phase : unsigned (2 downto 0) := to_unsigned(3, 3); --TODO: Generalize this, might depend on some other phase(s)
 
 begin
 
@@ -296,15 +296,15 @@ begin
     severity error;
 
   --Safety check to ensure compression works correctly
-  process (clock) begin
-    if (rising_edge(clock)) then
-      for i in 0 to 15-1 loop
-        for j in 0 to ly_thresh_i'length-1 loop
-          assert not EN_HC_COMPRESS or unsigned(ly_thresh_i(i)(j)) >= 4 report "Minimum threshold cannot be below 4 if compression is enabled" severity error;
-        end loop;
-      end loop;
-    end if;
-  end process;
+  --process (clock) begin
+  --  if (rising_edge(clock)) then
+  --    for i in 0 to 15-1 loop
+  --      for j in 0 to ly_thresh_i'length-1 loop
+  --        assert not EN_HC_COMPRESS or unsigned(ly_thresh_i(i)(j)) >= 4 report "Minimum threshold cannot be below 4 if compression is enabled" severity error;
+  --      end loop;
+  --    end loop;
+  --  end if;
+  --end process;
 
   -- synthesis translate_off
   dav_to_phase_i_mon : entity work.dav_to_phase
@@ -319,14 +319,18 @@ begin
   -- Pulse Extension
   --------------------------------------------------------------------------------
 
---  chamber_pulse_extension_inst : entity work.chamber_pulse_extension
---    generic map (LENGTH => PULSE_EXTEND)
---    port map (
---      clock   => clock40,
---      sbits_i => sbits_i,
---      sbits_o => sbits_extend);
+  pulse_extension_gen : if PULSE_EXTEND > 0 generate
+    chamber_pulse_extension_inst : entity work.chamber_pulse_extension
+      generic map (LENGTH => PULSE_EXTEND)
+      port map (
+        clock   => clock40,
+        sbits_i => sbits_i,
+        sbits_o => sbits_extend);
+  else generate
+    sbits_extend <= sbits_i;
+  end generate;
 
---  dav_extend <= dav_i;
+  dav_extend <= dav_i;
 
   --------------------------------------------------------------------------------
   -- Input signal assignment
@@ -339,14 +343,14 @@ begin
   begin
 
     single_partitions : if (NUM_FINDERS <= 8) generate
-      partition_or <= sbits_i(I);
+      partition_or <= sbits_extend(I);
     end generate;
 
     half_partitions : if (NUM_FINDERS > 8) generate
 
       -- for even finders, just take the partition as it is
       even_gen : if (I mod 2 = 0) generate
-        partition_or <= sbits_i(I/2);
+        partition_or <= sbits_extend(I/2);
       end generate;
 
       -- for odd finders, or adjacent partitions
@@ -354,12 +358,12 @@ begin
 
         -- look for only straight and pointing segments (for cms)
         pointing : if (not EN_NON_POINTING) generate
-          partition_or(0) <=                         sbits_i(I/2 + 1)(0);
-          partition_or(1) <=                         sbits_i(I/2 + 1)(1);
-          partition_or(2) <= sbits_i(I/2)(2) or sbits_i(I/2 + 1)(2);
-          partition_or(3) <= sbits_i(I/2)(3) or sbits_i(I/2 + 1)(3);
-          partition_or(4) <= sbits_i(I/2)(4);
-          partition_or(5) <= sbits_i(I/2)(5);
+          partition_or(0) <=                         sbits_extend(I/2 + 1)(0);
+          partition_or(1) <=                         sbits_extend(I/2 + 1)(1);
+          partition_or(2) <= sbits_extend(I/2)(2) or sbits_extend(I/2 + 1)(2);
+          partition_or(3) <= sbits_extend(I/2)(3) or sbits_extend(I/2 + 1)(3);
+          partition_or(4) <= sbits_extend(I/2)(4);
+          partition_or(5) <= sbits_extend(I/2)(5);
         end generate;
 
         -- look for both x-partition segments toward the IP and away
@@ -379,7 +383,7 @@ begin
     process (clock) is
     begin
       if (rising_edge(clock)) then
-        dav_or           <= dav_i;
+        dav_or           <= dav_extend;
         partition_or_reg <= partition_or;
       end if;
     end process;

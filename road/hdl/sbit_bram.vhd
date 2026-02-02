@@ -22,12 +22,8 @@
 use work.pat_types.all;
 use work.pat_pkg.all;
 
---use this on machine with Vivado and XPM library available
---library xpm;
---use xpm.vcomponents.xpm_memory_sdpram;
-
---use this on machine without Vivado available (needs XPM BRAM files included in HDL sources)
-use work.vcomponents.all;
+library xpm;
+use xpm.vcomponents.all;
 
 library ieee;
 use ieee.std_logic_1164.all;

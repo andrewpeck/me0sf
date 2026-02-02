@@ -71,7 +71,7 @@ entity pat_unit_mux is
 
     segments_o : out pat_unit_mux_list_t (WIDTH-1 downto 0);
 
-    trigger_o : out std_logic_vector (WIDTH-1 downto 0)
+    trigger_o : out std_logic_vector (WIDTH-1 downto 0) := (others => '0')
 
     );
 end pat_unit_mux;
@@ -112,24 +112,23 @@ architecture behavioral of pat_unit_mux is
   signal ly5_padded : std_logic_vector (WIDTH-1 + 2*PADDING_LY5 downto 0);
 
   signal patterns_mux : pat_unit_list_t (NUM_SECTORS-1 downto 0);
-
-  -- convert to strip type, appends the strip # to the format
-  signal strips_demux : pat_unit_mux_list_t (WIDTH-1 downto 0);
+  signal segments_o_accumulator : pat_unit_mux_list_t (WIDTH-1 downto 0); -- Needed to update every 320 MHz clock, so semgent_o can be stable for 8 clocks. This is needed later in chamber.vhd, for the seg_info_buffer.
 
   signal phase_i, patterns_mux_phase : natural range 0 to MUX_FACTOR-1;
 
   attribute MAX_FANOUT                       : integer;
   attribute MAX_FANOUT of patterns_mux_phase : signal is 128;
 
-  signal dav_reg     : std_logic := '0';
-  signal dav_peaking : std_logic := '0';
-  signal dav_demux   : std_logic := '0';
 
   signal pat_unit_dav : std_logic_vector(NUM_SECTORS-1 downto 0);
-
+ 
   signal segments      : pat_unit_mux_list_t (WIDTH-1 downto 0);
-  signal segments_last : pat_unit_mux_list_t (WIDTH-1 downto 0);
-
+  
+  signal peaking_segments_current : pat_unit_list_t (WIDTH-1 downto 0);
+  signal peaking_segments_old : pat_unit_list_t (WIDTH-1 downto 0);
+  signal peaking_segments_oldest : std_logic_vector (WIDTH-1 downto 0); -- Only need 1 bit per segment for the oldest segments, since they are only used to remember whether there was a segment in that BX
+  signal trigger : std_logic_vector (WIDTH-1 downto 0);
+ 
 begin
 
   --------------------------------------------------------------------------------
@@ -222,6 +221,7 @@ begin
         ly_thresh => ly_thresh,
 
         dav_i => lyx_unit_dav,
+        bx_0_i => lyx_unit_dav,
         ly0   => ly0_unit,
         ly1   => ly1_unit,
         ly2   => ly2_unit,
@@ -231,9 +231,8 @@ begin
 
         dav_o => pat_unit_dav(I),
         pat_o => patterns_mux(I)
-
-        );
-
+      );
+        
   end generate;
 
   --------------------------------------------------------------------------------
@@ -247,29 +246,6 @@ begin
   process (clock) is
   begin
     if (rising_edge(clock)) then
-
-      if (patterns_mux_phase = 0) then
-        dav_peaking <= '1';
-        dav_demux   <= '1';
-      else
-        dav_peaking <= '0';
-        dav_demux   <= '0';
-      end if;
-
-      -- unfold the pattern unit multiplexer and assign the strip number
-      for I in 0 to NUM_SECTORS-1 loop
-        strips_demux(I+patterns_mux_phase*NUM_SECTORS).id    <= patterns_mux(I).id;
-        strips_demux(I+patterns_mux_phase*NUM_SECTORS).lc    <= patterns_mux(I).lc;
-        strips_demux(I+patterns_mux_phase*NUM_SECTORS).strip <= to_unsigned(I+patterns_mux_phase*NUM_SECTORS, STRIP_BITS);
-        
-      end loop;
-
-      -- copy the unfolded outputs to be stable for a 25 ns clock period since
-      -- the unfolder changes every clock cycle
-      if (patterns_mux_phase = 0) then
-        segments      <= strips_demux;
-        segments_last <= segments;
-      end if;
 
       --------------------------------------------------------------------------------
       -- Peak finding logic
@@ -324,21 +300,64 @@ begin
       --   lyc             ──────────────┴───┴────────────────────────────────────────
       --
       --------------------------------------------------------------------------------
-
-      if (dav_demux = '1') then
-        for I in segments_o'range loop
-          if DISABLE_PEAKING or segments(I).lc < segments_last(I).lc then
-            segments_o(I) <= segments_last(I);
-            trigger_o(I)  <= '1';
-          else
-            segments_o(I) <= zero(segments_o(I));
-            trigger_o(I)  <= '0';
-          end if;
+      
+      --TODO: Add dav for peaking
+      
+      if not DISABLE_PEAKING then
+        -- Need to store the pattern unit outputs for each 320 MHz clock
+        for I in 0 to NUM_SECTORS-1 loop
+          peaking_segments_current(I+patterns_mux_phase*NUM_SECTORS) <= patterns_mux(I);
         end loop;
+          
+        -- Peaking operates at BX frequency (40 MHz); Peaking logic is not very complex, so probably not worth to keep it multiplexed and reuse logic, since this would require multiplexing inputs/outputs
+        if patterns_mux_phase = 0 then --peaking_segments_current is fully updated for the BX, so can now do the peaking step
+          for I in peaking_segments_current'range loop
+            -- If we are triggered, then definitely output the old segment, and reset trigger
+            if trigger(I) = '1' then
+             segments_o(I).lc <= peaking_segments_old(I).lc;
+             segments_o(I).id <= peaking_segments_old(I).id;
+             trigger(I) <= '0';
+            -- Otherwise, if we have seen a segment in the last BX
+            elsif peaking_segments_oldest(I) = '0' and peaking_segments_old(I).lc > 0 then
+            -- And we no longer see a segment, then output the segment we saw 
+              if peaking_segments_current(I).lc = 0 then
+                segments_o(I).lc <= peaking_segments_old(I).lc;
+                segments_o(I).id <= peaking_segments_old(I).id;
+                trigger(I) <= '0';
+            -- And we still see the segment, then trigger to output in the next BX
+              else
+                segments_o(I).lc <= to_unsigned(0, LC_BITS);
+                trigger(I) <= '1';
+              end if;
+            -- Otherwise, nothing to output right now
+            else
+              segments_o(I).lc <= to_unsigned(0, LC_BITS);
+              trigger(I) <= '0';
+            end if;
+            
+            -- Update segments (old and oldest)
+            peaking_segments_oldest(I) <= '1' when peaking_segments_old(I).lc > 0 else '0';
+            peaking_segments_old(I) <= peaking_segments_current(I);
+         end loop;   
+        end if; -- 40 MHz clock
+      else -- No peaking
+        for I in 0 to NUM_SECTORS-1 loop
+          segments_o_accumulator(I+patterns_mux_phase*NUM_SECTORS).id <= patterns_mux(I).id;
+          segments_o_accumulator(I+patterns_mux_phase*NUM_SECTORS).lc <= patterns_mux(I).lc;
+        end loop;
+      end if; --Peaking
+      
+      -- Assign output strips (constant)
+      for I in segments_o_accumulator'range loop
+        segments_o_accumulator(I).strip <= to_unsigned(I, STRIP_BITS);
+      end loop;
+
+      dav_o <= '1' when patterns_mux_phase = 0 else '0';
+      
+      if DISABLE_PEAKING then
+        segments_o <= segments_o_accumulator when patterns_mux_phase = 0 else segments_o;
       end if;
-
-      dav_o <= dav_peaking;
-
+      
     end if;  -- rising_edge(clock)
 
   end process;

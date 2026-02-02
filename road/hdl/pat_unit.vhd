@@ -48,6 +48,9 @@ entity pat_unit is
     dav_i : in  std_logic;
     dav_o : out std_logic;
 
+    bx_0_i : in std_logic; -- Should be set high when starting to process a new BX's data (i.e. phase 0). Used in pat_unit_mux to know the latency of pat_unit.
+    bx_0_o : out std_logic;
+
     ly_thresh : in ly_thresh_prt;
 
     ly0 : in std_logic_vector (LY0_SPAN-1 downto 0);
@@ -252,6 +255,7 @@ begin
     if (rising_edge(clock)) then
 
       dav_o <= priority_dav;
+      bx_0_o <= priority_dav;
 
       if (EN_HC_COMPRESS) then
         if (best.id > 0 and best.lc > unsigned(ly_thresh(to_integer(best.id)-1))) then

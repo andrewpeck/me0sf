@@ -184,8 +184,7 @@ async def pat_unit_test(dut, test="SEGMENTS"):
 
     filename = "../log/pat_unit_%s.log" % test
     os.makedirs(os.path.dirname(filename), exist_ok=True)
-    with open(filename, "w+") as f:
-
+    with open(filename, "w+", encoding="utf-8") as f:
         f.write("\nIDs:\n")
         f.write(plotille.hist(id_cnts, bins=16))
 
@@ -213,6 +212,7 @@ def test_pat_unit():
         toplevel="pat_unit",  # top level HDL
         toplevel_lang="vhdl",
         #sim_args=["-do", '"set NumericStdNoWarnings 1;"'],
+        sim_args=["-noautoldlibpath"],
         parameters=parameters,
         gui=0)
 

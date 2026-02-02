@@ -23,45 +23,45 @@ from tb_common import (get_max_span_from_dut, get_segments_from_dut,
 #from get_sbits_from_root import (read_ntuple_stack, get_sbits_from_event)
 from read_ntuple import read_ntuple
 
-#@cocotb.test() # type: ignore
-#async def chamber_test_ff(dut, nloops=20):
-#   await chamber_test(dut, "FF", nloops)
-
-#@cocotb.test() # type: ignore
-#async def chamber_test_5a(dut, nloops=20):
-#   await chamber_test(dut, "5A", nloops)
-#
-#@cocotb.test() # type: ignore
-#async def chamber_test_walking1(dut, nloops=191):
-#   await chamber_test(dut, "WALKING1", nloops)
-#
-#@cocotb.test() # type: ignore
-#async def chamber_test_walkingf(dut, nloops=192):
-#   await chamber_test(dut, "WALKINGF", nloops)
-#
-#@cocotb.test() # type: ignore
-#async def chamber_test_xprt(dut, nloops=100):
-#   await chamber_test(dut, "XPRT", nloops)
-
-#@cocotb.test() # type: ignore
-#async def chamber_test_segs(dut, nloops=100):
-#   await chamber_test(dut, "SEGMENTS", nloops)
-#
-#@cocotb.test() # type: ignore
-#async def chamber_test_random(dut, nloops=100):
-#    await chamber_test(dut, "RANDOM", nloops)
-# 
-#@cocotb.test() # type: ignore
-#async def chamber_test_deghost(dut, nloops=20):
-#    await chamber_test(dut, "DEGHOST", nloops)   
-
-#@cocotb.test() # type: ignore
-#async def chamber_test_dat(dut, nloops=20):
-#   await chamber_test(dut, "TEST_DAT", nloops)
+@cocotb.test() # type: ignore
+async def chamber_test_ff(dut, nloops=20):
+   await chamber_test(dut, "FF", nloops)
 
 @cocotb.test() # type: ignore
-async def chamber_test_stack(dut, nloops=20):
-    await chamber_test(dut, "STACK_DAT", nloops)   
+async def chamber_test_5a(dut, nloops=20):
+   await chamber_test(dut, "5A", nloops)
+
+@cocotb.test() # type: ignore
+async def chamber_test_walking1(dut, nloops=191):
+   await chamber_test(dut, "WALKING1", nloops)
+
+@cocotb.test() # type: ignore
+async def chamber_test_walkingf(dut, nloops=192):
+   await chamber_test(dut, "WALKINGF", nloops)
+
+@cocotb.test() # type: ignore
+async def chamber_test_xprt(dut, nloops=100):
+   await chamber_test(dut, "XPRT", nloops)
+
+@cocotb.test() # type: ignore
+async def chamber_test_segs(dut, nloops=100):
+   await chamber_test(dut, "SEGMENTS", nloops)
+
+@cocotb.test() # type: ignore
+async def chamber_test_random(dut, nloops=100):
+    await chamber_test(dut, "RANDOM", nloops)
+ 
+@cocotb.test() # type: ignore
+async def chamber_test_deghost(dut, nloops=20):
+    await chamber_test(dut, "DEGHOST", nloops)   
+
+@cocotb.test() # type: ignore
+async def chamber_test_dat(dut, nloops=20):
+   await chamber_test(dut, "TEST_DAT", nloops)
+
+#@cocotb.test() # type: ignore
+#async def chamber_test_stack(dut, nloops=20):
+#    await chamber_test(dut, "STACK_DAT", nloops)   
 
 #@cocotb.test() # type: ignore
 #async def chamber_test_stack(dut, nloops=30):
@@ -114,8 +114,7 @@ async def chamber_test(dut, test, nloops=512, verbose=True):
     config.ly_thresh_patid = [7, 7, 7, 7, 7, 7, 7, 7, 7, 7, 5, 5, 4, 4, 4, 4, 4]
     config.cross_part_seg_width = dut.X_DEGHOST_EDGE_DIST.value # set to zero to disable x-partition deghosting
     config.disable_peaking = dut.disable_peaking.value
-
-    en_hc_compress = True #this is a generic, so need to set it here and in top level in FW
+    en_hc_compress = dut.en_hc_compress.value
 
     NUM_PARTITIONS = 8
     NULL = lambda : [[0 for _ in range(6)] for _ in range(8)]
@@ -139,8 +138,8 @@ async def chamber_test(dut, test, nloops=512, verbose=True):
 
     global LATENCY
     #if LATENCY is None:
-    #    LATENCY = ceil(meas_latency)+2-2-1 + 2 #another -2 from checking chunking changes # and bitonic sort optimization introduced this, weird...  #-1 #Peaking introduced this, need to investigate...
-    LATENCY = 10+2+2 
+        #LATENCY = ceil(meas_latency)+2-2-1 + 2 - 1 #another -2 from checking chunking changes # and bitonic sort optimization introduced this, weird...  #-1 #Peaking introduced this, need to investigate...
+    LATENCY = 11 if config.disable_peaking == True else 12
 
     # flush the buffers
     dut.sbits_i.value = NULL()
@@ -154,7 +153,7 @@ async def chamber_test(dut, test, nloops=512, verbose=True):
     queue = []
 
     for _ in range(LATENCY-1):
-        await RisingEdge(dut.dav_i)
+        #await RisingEdge(dut.dav_i)
         queue.append(NULL())
 
     # Find pattern sizes for use in converting the fitter output to global position
@@ -329,7 +328,7 @@ async def chamber_test(dut, test, nloops=512, verbose=True):
             popped_data = queue.pop(0)
 
             temp_zeros = [[[0]*192]*6]*8
-            sw_segments, new_config = process_chamber(chamber_data=popped_data,
+            sw_segments, config = process_chamber(chamber_data=popped_data,
                                           config=config, chamber_bx_data=temp_zeros)
 
             fw_segments = get_segments_from_dut(dut)
@@ -351,18 +350,18 @@ async def chamber_test(dut, test, nloops=512, verbose=True):
                     intercept = dut.segments_o[len(fw_segments)-1-i].intercept.value.signed_integer / (2**7)
                     fit_strip = dut.segments_o[len(fw_segments)-1-i].fit_strip.value.signed_integer / (2**5)
 
-                    print("FW slope: ", slope)
+                    #print("FW slope: ", slope)
 
-                    if loop >= (LATENCY-1):
-                        print("Simtrack slope: ", get_bending_angle_from_event(events[loop-(LATENCY)], sw_segments[i]))
-                    print("FW intercept: ", intercept)
+                    #if loop >= (LATENCY-1):
+                    #    print("Simtrack slope: ", get_bending_angle_from_event(events[loop-(LATENCY)], sw_segments[i]))
+                    #print("FW intercept: ", intercept)
 
                     my_seg = fw_segments[i]
                     L = pat_sbit_window_sizes[my_seg.id-1]/2
                     C = 2*my_seg.strip
                     x1 = fit_strip
                     global_strip_out = x1 + C - L
-                    print(f"GLOBAL STRIP_O: {global_strip_out}")
+                    #print(f"GLOBAL STRIP_O: {global_strip_out}")
 
             for i in range(max((len(sw_segments), len(fw_segments)))):
 
@@ -372,7 +371,7 @@ async def chamber_test(dut, test, nloops=512, verbose=True):
                     partition_cnts.append(fw_segments[i].partition)
 
                 err = "   "
-                if False:#loop > LATENCY+2:
+                if loop > LATENCY+2:
                     if sw_segments[i] != fw_segments[i]:
                         print(popped_data)
                         print(f"ERR seg {i}:")
@@ -408,6 +407,10 @@ async def chamber_test(dut, test, nloops=512, verbose=True):
         print("\n")
         # End temp printout
 
+        await RisingEdge(dut.clock)
+
+    # Having errors getting to the same initial phase state after the first test. Bit of a bandaid solution for now, TODO: understand this better and find a better solution (reset signal?)
+    for _ in range(7):
         await RisingEdge(dut.clock)
 
     filename = "../log/chamber_%s.log" % test
@@ -449,7 +452,6 @@ def test_chamber():
         os.path.join(rtl_dir, "pat_unit_mux.vhd"),
         os.path.join(rtl_dir, "deghost.vhd"),
         os.path.join(rtl_dir, "x_prt_deghost_qual.vhd"),
-        os.path.join(rtl_dir, "../../../xpm_VCOMP.vhd"),
         os.path.join(rtl_dir, "sbit_bram.vhd"),
         os.path.join(rtl_dir, "window_extract.vhd"),
         os.path.join(rtl_dir, "centroid_finder.vhd"),
@@ -460,7 +462,8 @@ def test_chamber():
         os.path.join(rtl_dir, "chamber_pulse_extension.vhd"),
         os.path.join(rtl_dir, "chamber.vhd")]
 
-    verilog_sources = [os.path.join(rtl_dir, "../../../xpm_memory.sv")]
+    xpm_verilog_sources = [os.path.join(rtl_dir, "../../../xpm_memory.sv")]
+    xpm_vhdl_sources = [os.path.join(rtl_dir, "../../../xpm_VCOMP.vhd")]
 
     #parameters = {"PULSE_EXTEND": 1, "DEADTIME": 0, "DISABLE_PEAKING": True}
     parameters = {"DISABLE_PEAKING": True, "X_DEGHOST_EDGE_DIST" : 2}
@@ -482,18 +485,29 @@ def test_chamber():
     sim = os.getenv("SIM", "questa")
     runner = get_runner(sim)
 
+    # First, compile XPM library for the BRAM macros.
     runner.build(
-        sources = vhdl_sources + verilog_sources,
+        hdl_library = "xpm",
+        sources = xpm_vhdl_sources + xpm_verilog_sources,
+        build_args = [VHDL("-2008")],
+        hdl_toplevel = None,
+        always = True
+    )
+
+    runner.build(
+        sources = vhdl_sources,
         parameters = parameters,
         build_args = [VHDL("-2008")],
         hdl_toplevel = "chamber",
         always = True
     )
 
+    speedup_args = ["-no_autoacc"]
+
     runner.test(
         hdl_toplevel="chamber",
         test_module="test_chamber",
-        test_args = ["-t", "100ps", "-suppress", "14408", "-no_autoacc", "-noautoldlibpath"],
+        test_args = ["-t", "100ps", "-suppress", "14408", "-noautoldlibpath"] + speedup_args,
         pre_cmd = ["set NumericStdNoWarnings 1;"],
         gui = 0
     )

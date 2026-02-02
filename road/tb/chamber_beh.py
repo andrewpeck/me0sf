@@ -117,6 +117,14 @@ def deghosting_clearance(segments : List[List[Segment]],
 
 def process_chamber(chamber_data, config : Config, chamber_bx_data):
 
+    # Pulse stretch if enabled
+    if config.pulse_stretch_bx > 0:
+        if config.pulse_stretch_bx != 2:
+            print("Pulse stretching only guaranteed to work for 0 or 2, can generalize this if desired.")
+            assert False
+
+        chamber_data = config.pulse_stretch(chamber_data)
+
     # gather segments from each partition
     # this will return a 8 x N list of segments
 

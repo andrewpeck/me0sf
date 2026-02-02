@@ -19,7 +19,7 @@ use ieee.numeric_std.all;
 
 entity chamber_pulse_extension is
   generic(
-    LENGTH : integer := 4
+    LENGTH : integer := 2
     );
   port(
     clock   : in  std_logic;

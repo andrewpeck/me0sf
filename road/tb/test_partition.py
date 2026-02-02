@@ -182,7 +182,7 @@ async def partition_test(dut, NLOOPS=1000, test="SEGMENTS"):
 
     filename = "../log/partition_%s.log" % test
     os.makedirs(os.path.dirname(filename), exist_ok=True)
-    with open(filename, "w+") as f:
+    with open(filename, "w+", encoding="utf-8") as f:
 
         f.write("Strips:\n")
         f.write(plotille.hist(strip_cnts, bins=int(192/4)))
@@ -221,7 +221,7 @@ def test_partition():
         parameters=parameters,
         toplevel="partition",  # top level HDL
         toplevel_lang="vhdl",
-        sim_args=["-do", "set NumericStdNoWarnings 1;"],
+        sim_args=["-noautoldlibpath", "-do", "set NumericStdNoWarnings 1;"],
         gui=0)
 
 if __name__ == "__main__":

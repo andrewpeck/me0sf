@@ -91,7 +91,7 @@ async def pat_unit_mux_test(dut, NLOOPS=500, test="WALKING1"):
 
     meas_latency = await measure_latency(dut, checkfn, setfn)
 
-    LATENCY = ceil(meas_latency)
+    LATENCY = ceil(meas_latency)-2
 
     #--------------------------------------------------------------------------------
     # Setup a fixed latency queue
@@ -190,7 +190,7 @@ async def pat_unit_mux_test(dut, NLOOPS=500, test="WALKING1"):
 
     filename = "../log/pat_unit_mux_%s.log" % test
     os.makedirs(os.path.dirname(filename), exist_ok=True)
-    with open(filename, "w+") as f:
+    with open(filename, "w+", encoding="utf-8") as f:
 
         f.write("Strips:\n")
         f.write(plotille.hist(strip_cnts, bins=int(192/4)))
@@ -227,7 +227,7 @@ def test_pat_unit_mux():
         compile_args=["-2008"],
         toplevel="pat_unit_mux",  # top level HDL
         toplevel_lang="vhdl",
-        sim_args=["-do", "set NumericStdNoWarnings 1;"],
+        sim_args=["-noautoldlibpath", "-do", "set NumericStdNoWarnings 1;"],
         parameters=parameters,
         gui=0)
 
