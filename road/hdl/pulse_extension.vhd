@@ -5,7 +5,7 @@ use ieee.numeric_std.all;
 
 entity pulse_extension is
   generic(
-    MAX : integer := 2
+    MAX : positive := 2
     );
   port(
     clock : in  std_logic;
@@ -23,7 +23,7 @@ begin
   process (clock) is
   begin
     if (rising_edge(clock)) then
-      sr <= sr(sr'length-2 downto 0) & d;
+      sr <= sr(sr'left-1 downto 0) & d;
     end if;
   end process;
 end behavioral;

@@ -69,7 +69,7 @@ async def chamber_test_dat(dut, nloops=20):
 
 LATENCY = None
  
-async def chamber_test(dut, test, nloops=512, verbose=True):
+async def chamber_test(dut, test, nloops=512, verbose=True, pad_null_bx=True):
 
     # Read root file if needed
     if test == "STACK_DAT":
@@ -106,6 +106,7 @@ async def chamber_test(dut, test, nloops=512, verbose=True):
     config.en_non_pointing = dut.EN_NON_POINTING.value
     config.max_span = get_max_span_from_dut(dut)
     config.width = dut.partition_gen[0].partition_inst.pat_unit_mux_inst.WIDTH.value
+    config.pulse_stretch_bx = dut.PULSE_EXTEND.value
     config.deghost_pre = dut.partition_gen[0].partition_inst.DEGHOST_PRE.value
     config.deghost_post = dut.partition_gen[0].partition_inst.DEGHOST_POST.value
     config.group_width = dut.partition_gen[0].partition_inst.S0_WIDTH.value
@@ -170,6 +171,7 @@ async def chamber_test(dut, test, nloops=512, verbose=True):
     istrip = 0
     iprt = 0
     loop = 0
+    bx_pad_counter = 0 # Used for padding with null BXs
 
     while loop < nloops:
 
@@ -317,9 +319,23 @@ async def chamber_test(dut, test, nloops=512, verbose=True):
             else:
                 chamber_data = NULL()
 
-            queue.append(chamber_data)
+            # Useful for testing pulse stretching and peaking. Inserts an all zero BX before and after data.
+            if pad_null_bx:
+                # Set data if phase == 0, else zeros
+                if bx_pad_counter == 0:
+                    queue.append(chamber_data)
+                    loop += 1
+                else:
+                    chamber_data = NULL()
+                    queue.append(NULL())
+
+                # Increment bx_pad_counter, and reset if max (=2)
+                bx_pad_counter = 0 if bx_pad_counter == 2 else bx_pad_counter + 1
+            else:
+                queue.append(chamber_data)
+                loop += 1
+
             dut.sbits_i.value = chamber_data
-            loop += 1
 
         # pop old data on dav_o
         if dut.dav_o_phase.value == 0:
@@ -466,7 +482,7 @@ def test_chamber():
     xpm_vhdl_sources = [os.path.join(rtl_dir, "../../../xpm_VCOMP.vhd")]
 
     #parameters = {"PULSE_EXTEND": 1, "DEADTIME": 0, "DISABLE_PEAKING": True}
-    parameters = {"DISABLE_PEAKING": True, "X_DEGHOST_EDGE_DIST" : 2}
+    parameters = {"DISABLE_PEAKING": True, "X_DEGHOST_EDGE_DIST" : 2, "PULSE_EXTEND" : 2}
 
     os.environ["SIM"] = "questa"
     #os.environ["COCOTB_RESULTS_FILE"] = f"../log/{module}.xml"

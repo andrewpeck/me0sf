@@ -13,7 +13,9 @@ def setup(dut):
     #dut.ly_thresh_i.value = [7, 7, 7, 7, 7, 7, 7, 7, 7, 7, 5, 5, 4, 4, 4, 4, 4]
     # start the clock
     c = Clock(dut.clock, 12, "ns")
+    c40 = Clock(dut.clock40, 12*8, "ns")
     cocotb.start_soon(c.start())
+    cocotb.start_soon(c40.start())
 
     # start the dav signal (high every 8th clock cycle)
     cocotb.start_soon(generate_dav(dut))
@@ -80,15 +82,12 @@ def get_segment_from_pat_unit(dut):
 
 
 async def generate_dav(dut):
-    "Generates a dav signal every 8th clock cycle"
+    "Generates a dav signal every 8th clock cycle, aligned with the 40 MHz clock."
     while True:
+        await RisingEdge(dut.clock40)
         dut.dav_i.value = 1
-        #dut.clock40.value = 1
         await RisingEdge(dut.clock)
         dut.dav_i.value = 0
-        #dut.clock40.value = 0
-        for _ in range(7):
-            await RisingEdge(dut.clock)
 
 async def monitor_dav(dut):
     await RisingEdge(dut.dav_o)

@@ -98,11 +98,11 @@ class Config:
     vectoring_enabled : bool = False
 
     # For pulse stretching, store 192-bit integer for sbit information as 3 64-bit np.uint64s. When calculating pulse streching, probably better to have the BXs and VFATs as the inner dimensions for better cache locality.
-    sbits_pulse_stretched = np.array((8, 6, 3, 3), dtype=np.uint64) # Used for sbits pulse stretching; dimensions = (partitions, layers, limbs, BXs)
+    sbits_pulse_stretched = np.zeros((8, 6, 3, 3), dtype=np.uint64) # Used for sbits pulse stretching; dimensions = (partitions, layers, limbs, BXs)
 
     # Helper function to convert a chamber array of 3 uint64 limbs to Python integers.
     # TODO: Rework everything to work in 3 unit64 limbs for better vectorization
-    def uint64x3_array_to_int(arr):
+    def uint64x3_array_to_int(self, arr):
         bytes_view = arr.view(np.uint8).reshape(*arr.shape[:2], 24) # View the 3 uint64 limbs as 24 bytes
         out = np.empty(arr.shape[:2], dtype=object) # Initialize output array
 
@@ -111,7 +111,8 @@ class Config:
             out[idx] = int.from_bytes(bytes_view[idx], byteorder="little", signed=False)
         return out
 
-    def int_array_to_uint64x3(arr):
+    def int_array_to_uint64x3(self, arr):
+        arr = np.asarray(arr) # Convert to numpy array if it is not already
         out = np.empty(arr.shape + (3,), dtype=np.uint64)
 
         for idx in np.ndindex(arr.shape):
@@ -125,7 +126,9 @@ class Config:
         # Assuming input data is Python integers, convert into 3 np.uint64 limbs
         new_data_limbs = self.int_array_to_uint64x3(new_data)
 
-        self.sbits_pulse_stretched = np.concatenate(self.sbits_pulse_stretched[:,:,:,1:], new_data_limbs) # Shift new data into buffer
+        self.sbits_pulse_stretched[..., 1:] = self.sbits_pulse_stretched[..., :-1] # Shift data to the right along BX axis
+        self.sbits_pulse_stretched[..., 0] = new_data_limbs # Insert new data
+
         stretched_data = np.bitwise_or.reduce(self.sbits_pulse_stretched, axis=3) # Bitwise OR along the BX axis to do the stretching
 
         stretched_data_ints = self.uint64x3_array_to_int(stretched_data)
