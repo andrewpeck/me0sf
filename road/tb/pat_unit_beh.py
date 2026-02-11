@@ -326,11 +326,11 @@ def pat_unit(data,
             print("\n", end="")
         print("\n", end="")
 
-        for (i,id) in enumerate(masked_data):
-            print(f"id={i+1}")
+        for (i,pid) in enumerate(masked_data):
+            print(f"pid={i+1}")
             for ly in range(6):
                 for bit in range(37):
-                    print(0x1 & (id[ly] >> bit), end="")
+                    print(0x1 & (pid[ly] >> bit), end="")
                 print("\n", end="")
             print("\n", end="")
 

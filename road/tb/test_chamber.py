@@ -17,26 +17,26 @@ from cocotb.clock import Clock
 
 from chamber_beh import process_chamber
 from datagen import datagen
-from subfunc import (Config, get_sbits_from_event, get_bending_angle_from_event)
+from subfunc import (Config, get_sbits_from_event, get_bending_angle_from_event, patdef_t)
 from tb_common import (get_max_span_from_dut, get_segments_from_dut,
-                       monitor_dav, setup, measure_latency)
+                       monitor_dav, setup, measure_latency, get_patlist_from_dut)
 #from get_sbits_from_root import (read_ntuple_stack, get_sbits_from_event)
 from read_ntuple import read_ntuple
 
 @cocotb.test() # type: ignore
-async def chamber_test_ff(dut, nloops=20):
+async def chamber_test_ff(dut, nloops=40):
    await chamber_test(dut, "FF", nloops)
 
 @cocotb.test() # type: ignore
-async def chamber_test_5a(dut, nloops=20):
+async def chamber_test_5a(dut, nloops=40):
    await chamber_test(dut, "5A", nloops)
 
 @cocotb.test() # type: ignore
-async def chamber_test_walking1(dut, nloops=191):
+async def chamber_test_walking1(dut, nloops=220):
    await chamber_test(dut, "WALKING1", nloops)
 
 @cocotb.test() # type: ignore
-async def chamber_test_walkingf(dut, nloops=192):
+async def chamber_test_walkingf(dut, nloops=220):
    await chamber_test(dut, "WALKINGF", nloops)
 
 @cocotb.test() # type: ignore
@@ -55,9 +55,9 @@ async def chamber_test_random(dut, nloops=100):
 async def chamber_test_deghost(dut, nloops=20):
     await chamber_test(dut, "DEGHOST", nloops)   
 
-@cocotb.test() # type: ignore
-async def chamber_test_dat(dut, nloops=20):
-   await chamber_test(dut, "TEST_DAT", nloops)
+#@cocotb.test() # type: ignore
+#async def chamber_test_dat(dut, nloops=20):
+#   await chamber_test(dut, "TEST_DAT", nloops)
 
 #@cocotb.test() # type: ignore
 #async def chamber_test_stack(dut, nloops=20):
@@ -69,8 +69,7 @@ async def chamber_test_dat(dut, nloops=20):
 
 LATENCY = None
  
-async def chamber_test(dut, test, nloops=512, verbose=True, pad_null_bx=True):
-
+async def chamber_test(dut, test, nloops=512, verbose=True, pad_null_bx=False):
     # Read root file if needed
     if test == "STACK_DAT":
        # if (os.path.exists("00001199.root")):
@@ -91,11 +90,10 @@ async def chamber_test(dut, test, nloops=512, verbose=True, pad_null_bx=True):
     '''
     #random.seed(56) # chloe's favorite number
 
-    # setup the dut and extract constants from it
-
+    # Need to run setup in every test, as the clock processes end when the previous coroutine completes
     setup(dut)
 
-    #cocotb.start_soon(monitor_dav(dut)) #TODO: Make dav_o depend on dav_i, rather than just being a cyclic signal. Then can bring this back.
+    cocotb.start_soon(monitor_dav(dut))
 
     await RisingEdge(dut.clock)
      
@@ -114,7 +112,10 @@ async def chamber_test(dut, test, nloops=512, verbose=True, pad_null_bx=True):
     config.ly_thresh_eta = [4, 5, 4, 5, 4, 5, 4, 5, 4, 5, 4, 5, 4, 5, 4]
     config.ly_thresh_patid = [7, 7, 7, 7, 7, 7, 7, 7, 7, 7, 5, 5, 4, 4, 4, 4, 4]
     config.cross_part_seg_width = dut.X_DEGHOST_EDGE_DIST.value # set to zero to disable x-partition deghosting
-    config.disable_peaking = dut.disable_peaking.value
+    config.initialize_patlist(get_patlist_from_dut(dut)) # Very important to initialize this, since the ly_spans need to be calculated before getting to pat_unit_mux's extract_window function. TODO: Reorganize this to ensure this is properly set and/or gets the correct default value when needed
+    if (dut.disable_peaking.value == 0):
+        config.start_peaking_manager()
+
     en_hc_compress = dut.en_hc_compress.value
 
     NUM_PARTITIONS = 8
@@ -140,7 +141,7 @@ async def chamber_test(dut, test, nloops=512, verbose=True, pad_null_bx=True):
     global LATENCY
     #if LATENCY is None:
         #LATENCY = ceil(meas_latency)+2-2-1 + 2 - 1 #another -2 from checking chunking changes # and bitonic sort optimization introduced this, weird...  #-1 #Peaking introduced this, need to investigate...
-    LATENCY = 11 if config.disable_peaking == True else 12
+    LATENCY = 11 # Latency does not depend on peaking, as it only represents the difference between FW and SW output, and peaking affects both
 
     # flush the buffers
     dut.sbits_i.value = NULL()
@@ -174,7 +175,6 @@ async def chamber_test(dut, test, nloops=512, verbose=True, pad_null_bx=True):
     bx_pad_counter = 0 # Used for padding with null BXs
 
     while loop < nloops:
-
         # push new data on dav_i
         if dut.dav_i_phase.value == 7:
 
@@ -387,7 +387,8 @@ async def chamber_test(dut, test, nloops=512, verbose=True, pad_null_bx=True):
                     partition_cnts.append(fw_segments[i].partition)
 
                 err = "   "
-                if loop > LATENCY+2:
+                latency_delay = LATENCY+2 if (not pad_null_bx) else (LATENCY+2)//3 # If we are padding with zero BXs, need to wait fewer loops before getting data out, since each loop processes 3 BXs
+                if latency_delay:
                     if sw_segments[i] != fw_segments[i]:
                         print(popped_data)
                         print(f"ERR seg {i}:")
@@ -482,7 +483,7 @@ def test_chamber():
     xpm_vhdl_sources = [os.path.join(rtl_dir, "../../../xpm_VCOMP.vhd")]
 
     #parameters = {"PULSE_EXTEND": 1, "DEADTIME": 0, "DISABLE_PEAKING": True}
-    parameters = {"DISABLE_PEAKING": True, "X_DEGHOST_EDGE_DIST" : 2, "PULSE_EXTEND" : 2}
+    parameters = {"DISABLE_PEAKING": False, "X_DEGHOST_EDGE_DIST" : 2, "PULSE_EXTEND" : 2}
 
     os.environ["SIM"] = "questa"
     #os.environ["COCOTB_RESULTS_FILE"] = f"../log/{module}.xml"

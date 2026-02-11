@@ -31,9 +31,14 @@ class patdef_t:
  
 class Config:
 
+    def __init__(self):
+        # For pulse stretching, store 192-bit integer for sbit information as 3 64-bit np.uint64s. When calculating pulse streching, probably better to have the BXs and VFATs as the inner dimensions for better cache locality.
+        # Initialize sbit storage here, so it is not shared between different Config objects, which causes following tests to still see old data that may interfere.
+        self.sbits_pulse_stretched = np.zeros((8, 6, 3, 3), dtype=np.uint64) # Used for sbits pulse stretching; dimensions = (partitions, layers, limbs, BXs)
+
     def start_peaking_manager(self):
         self.peaking_manager = Peaking_Manager()
-        self.peaking_enabled = True
+        self._peaking_enabled = True
 
     def start_vectoring_manager(self):
         self.vector_manager = Vector_Manager()
@@ -94,11 +99,15 @@ class Config:
     en_non_pointing : bool = False
     check_ids : bool = False
     pulse_stretch_bx : int = 0 # Number of BX to pulse stretch for, usually 0 or 2
-    peaking_enabled : bool = False
-    vectoring_enabled : bool = False
 
-    # For pulse stretching, store 192-bit integer for sbit information as 3 64-bit np.uint64s. When calculating pulse streching, probably better to have the BXs and VFATs as the inner dimensions for better cache locality.
-    sbits_pulse_stretched = np.zeros((8, 6, 3, 3), dtype=np.uint64) # Used for sbits pulse stretching; dimensions = (partitions, layers, limbs, BXs)
+    # This should only be modified by the start_peaking() function, so should not be modified outside the class
+    _peaking_enabled : bool = False
+
+    @property
+    def peaking_enabled(self):
+        return self._peaking_enabled
+
+    vectoring_enabled : bool = False # Vectoring not used, can be deleted later if no longer interested
 
     # Helper function to convert a chamber array of 3 uint64 limbs to Python integers.
     # TODO: Rework everything to work in 3 unit64 limbs for better vectorization

@@ -1,19 +1,20 @@
 import cocotb
 from cocotb.clock import Clock
-from cocotb.triggers import Edge, RisingEdge, Timer
+from cocotb.triggers import Edge, RisingEdge, ClockCycles, Timer
 from cocotb_test.simulator import run
 
 from constants import *
 from subfunc import *
 
+CLOCK_STEP = 12
 
 def setup(dut):
 
     # set layer count threshold
     #dut.ly_thresh_i.value = [7, 7, 7, 7, 7, 7, 7, 7, 7, 7, 5, 5, 4, 4, 4, 4, 4]
     # start the clock
-    c = Clock(dut.clock, 12, "ns")
-    c40 = Clock(dut.clock40, 12*8, "ns")
+    c = Clock(dut.clock, CLOCK_STEP, "ns")
+    c40 = Clock(dut.clock40, CLOCK_STEP*8, "ns")
     cocotb.start_soon(c.start())
     cocotb.start_soon(c40.start())
 
@@ -83,19 +84,19 @@ def get_segment_from_pat_unit(dut):
 
 async def generate_dav(dut):
     "Generates a dav signal every 8th clock cycle, aligned with the 40 MHz clock."
+    dut.dav_i.value = 0
+    await RisingEdge(dut.clock40)
     while True:
-        await RisingEdge(dut.clock40)
         dut.dav_i.value = 1
-        await RisingEdge(dut.clock)
+        await Timer(CLOCK_STEP, units="ns") # Wait 1 clock; Cannot use 320 MHz clock here, it was causing an issue that couldn't be resolved
         dut.dav_i.value = 0
+        await Timer(CLOCK_STEP*7, units="ns") # Wait 7 clocks
 
 async def monitor_dav(dut):
-    await RisingEdge(dut.dav_o)
-    await RisingEdge(dut.dav_o)
-    await RisingEdge(dut.dav_o)
+    await ClockCycles(dut.dav_o, 3) # Wait for 3 dav_o rising edges
     while True:
         await Edge(dut.segments_o[len(dut.segments_o) - 1]) # Only watching for a change on last segment in output list, since it is updated every clock now
-        await Timer(1, units="ns")
+        await Timer(CLOCK_STEP, units="ns") # Check value at the next clock, so the updated dav_o will be read
         assert dut.dav_o == 1
         await RisingEdge(dut.clock)
 

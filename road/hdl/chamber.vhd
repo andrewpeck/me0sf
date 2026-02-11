@@ -34,14 +34,14 @@ use ieee.fixed_pkg.all;
 
 entity chamber is
   generic (
-    DISABLE_PEAKING : boolean := true;  -- true to disable peaking logic; useful for simulation until the tb is updated
+    DISABLE_PEAKING : boolean := false;  -- true to disable peaking logic; useful for simulation until the tb is updated
     X_PRT_EN        : boolean := true;   -- true to enable x-prt segment finding
     EN_NON_POINTING : boolean := false;  -- true to enable x-prt segment finding on non-pointing muons
     NUM_SEGMENTS    : integer := 8;      -- number of output segments
     S0_WIDTH        : natural := 16;     -- chunk each partition into groups this size and choose only 1 segment from each group
     S1_REUSE        : natural := 4;      -- reuse sorters
     REG_OUTPUTS     : boolean := false;  -- true to  register outputs on the 40MHz clock
-    PULSE_EXTEND    : integer := 0;      -- how long pulses should be extended by
+    PULSE_EXTEND    : integer := 2;      -- how long pulses should be extended by
     --DEADTIME        : natural := 3;      -- deadtime in bx
     EN_HC_COMPRESS : boolean := true;   -- true to enable compression of hit count function (REQUIRED: minimum ly_thresh value is 4)
     X_DEGHOST_EDGE_DIST : natural := 2;  -- radius for cross partition deghosting
@@ -144,7 +144,7 @@ architecture behavioral of chamber is
   --------------------------------------------------------------------------------
 
   signal sbits_extend : chamber_t;
-  signal dav_extend   : std_logic := '0';
+  signal dav_extend   : std_logic;
 
   --------------------------------------------------------------------------------
   -- Segments
