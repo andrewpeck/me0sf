@@ -44,18 +44,35 @@ def pat_mux(partition_data, partition, config : Config, partition_bx_data):
     the MAX_SPAN of each pat_unit, and the partition width to return a list of the
     segments the pat_unit_mux.vhd would find
     """
+
     # todo : after extracting window the span is 37 or smaller
-    fn = lambda strip : pat_unit(data = extract_data_window(partition_data, strip, config.ly_spans),
-                                 bx_data = extract_bx_data_window(partition_bx_data, strip, max(config.ly_spans)), # TODO: Make variable ly spans work for bx data
+    # fn = lambda strip : pat_unit(data = extract_data_window(partition_data, strip, config.ly_spans),
+    #                              bx_data = extract_bx_data_window(partition_bx_data, strip, max(config.ly_spans)), # TODO: Make variable ly spans work for bx data
+    #                              config = config,
+    #                              ly_thresh_patid = config.ly_thresh_patid,
+    #                              ly_thresh_eta = config.ly_thresh_eta,
+    #                              strip = strip,
+    #                              partition = partition, 
+    #                              skip_centroids = config.skip_centroids,
+    #                              num_or = config.num_or)
+
+
+    #new_segs = [fn(x) for x in range(config.width)]
+
+    # Seems to be a bit faster to compute the data windows together first, probably better for caching
+    new_segs = []
+    data_windows_in = [extract_data_window(partition_data, strip, config.ly_spans) for strip in range(config.width)]
+    bx_data_in = [extract_bx_data_window(partition_bx_data, strip, max(config.ly_spans)) for strip in range(config.width)]
+    for strip in range(config.width):
+        new_segs.append(pat_unit(data = data_windows_in[strip],
+                                 bx_data = bx_data_in[strip], # TODO: Make variable ly spans work for bx data
                                  config = config,
                                  ly_thresh_patid = config.ly_thresh_patid,
                                  ly_thresh_eta = config.ly_thresh_eta,
                                  strip = strip,
                                  partition = partition, 
                                  skip_centroids = config.skip_centroids,
-                                 num_or = config.num_or)
-
-    new_segs = [fn(x) for x in range(config.width)]
+                                 num_or = config.num_or))
 
     if not config.peaking_enabled:
         return new_segs

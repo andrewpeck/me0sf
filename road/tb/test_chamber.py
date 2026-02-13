@@ -483,7 +483,7 @@ def test_chamber():
     xpm_vhdl_sources = [os.path.join(rtl_dir, "../../../xpm_VCOMP.vhd")]
 
     #parameters = {"PULSE_EXTEND": 1, "DEADTIME": 0, "DISABLE_PEAKING": True}
-    parameters = {"DISABLE_PEAKING": False, "X_DEGHOST_EDGE_DIST" : 2, "PULSE_EXTEND" : 2}
+    parameters = {"DISABLE_PEAKING": True, "X_DEGHOST_EDGE_DIST" : 2, "PULSE_EXTEND" : 2}
 
     os.environ["SIM"] = "questa"
     #os.environ["COCOTB_RESULTS_FILE"] = f"../log/{module}.xml"

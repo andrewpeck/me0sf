@@ -6,6 +6,9 @@ from typing import List
 from constants import *
 from subfunc import *
 
+# Constant
+PIDS = np.arange(1, 18, dtype=np.uint8)
+
 def mask_layer_data (data, mask):
     """
     AND together a list of layer masks with a list of layers
@@ -78,51 +81,6 @@ def pat_unit(data,
              verbose : bool = False,
              skip_centroids : bool = True):
 
-    # construct the dynamic_patlist (we do not use default PATLIST anymore)
-    # for robustness concern, other codes might use PATLIST, so we kept the default PATLIST in subfunc
-    # however, this could cause inconsistent issue, becareful! OR find a way to modify PATLIST
-    if config.patlist is None: 
-        factor = num_or / 2
-
-        pat_straight = patdef_t(17, create_pat_ly(-0.4 / factor, 0.4 / factor))
-        pat_l = patdef_t(16, create_pat_ly(0.2 / factor, 0.9 / factor))
-        pat_r = mirror_patdef(pat_l, pat_l.id - 1)
-        pat_l2 = patdef_t(14, create_pat_ly(0.9 / factor, 1.7 / factor))
-        pat_r2 = mirror_patdef(pat_l2, pat_l2.id - 1)
-        pat_l3 = patdef_t(12, create_pat_ly(1.4 / factor, 2.3 / factor))
-        pat_r3 = mirror_patdef(pat_l3, pat_l3.id - 1)
-        pat_l4 = patdef_t(10, create_pat_ly(2.0 / factor, 3.0 / factor))
-        pat_r4 = mirror_patdef(pat_l4, pat_l4.id - 1)
-        pat_l5 = patdef_t(8, create_pat_ly(2.7 / factor, 3.8 / factor))
-        pat_r5 = mirror_patdef(pat_l5, pat_l5.id - 1)
-        pat_l6 = patdef_t(6, create_pat_ly(3.5 / factor, 4.7 / factor))
-        pat_r6 = mirror_patdef(pat_l6, pat_l6.id - 1)
-        pat_l7 = patdef_t(4, create_pat_ly(4.3 / factor, 5.5 / factor))
-        pat_r7 = mirror_patdef(pat_l7, pat_l7.id - 1)
-        pat_l8 = patdef_t(2, create_pat_ly(5.4 / factor, 7.0 / factor))
-        pat_r8 = mirror_patdef(pat_l8, pat_l8.id - 1)
-
-        dynamic_patlist = (
-            pat_r8,
-            pat_l8, 
-            pat_r7,
-            pat_l7,
-            pat_r6,
-            pat_l6,
-            pat_r5,
-            pat_l5,
-            pat_r4,
-            pat_l4,
-            pat_r3,
-            pat_l3,
-            pat_r2,
-            pat_l2,
-            pat_r,
-            pat_l,
-            pat_straight)
-
-        config.initialize_patlist(dynamic_patlist)
-
     """
     takes in sample data for each layer and returns best segment
 
@@ -146,33 +104,30 @@ def pat_unit(data,
     ####################################################################################
 
 
-    hcs = [0]*17
-    lcs = [0]*17
-    pids = [0]*17
-
-    pids = np.arange(1, 18, dtype=np.uint8)
-    data_tiled = np.tile(data, (17, 1))
-
   #  spans = (37, 23, 9, 9, 23, 37)
   #  for pat in LAYER_MASK:
   #      for ly_i, ly in enumerate(pat):
   #         bin_str = format(ly, f"0{spans[ly_i]}b")
   #         print(' '*( ( (37 - len(bin_str)) // 2) ) + bin_str)
 
+    masked_data = np.bitwise_and(config.ly_mask, data)
 
-    masked_data = np.bitwise_and(config.ly_mask, data_tiled)
+    """ 
+    #HC IS DISABLED FOR NOW
 
     if light_hit_count:
         bit_count_arr = np.bitwise_count(np.vstack((masked_data[:,0], masked_data[:,5])).T)
     else:
         bit_count_arr = np.bitwise_count(masked_data)
 
-    # HC IS DISABLED FOR NOW
-    #hcs = np.sum(np.clip(bit_count_arr, a_min = None, a_max = 7), axis=1, dtype=np.uint16)
+    hcs = np.sum(np.clip(bit_count_arr, a_min = None, a_max = 7), axis=1, dtype=np.uint16)
+    """
     hcs = np.zeros((17,), dtype=np.uint16)
 
     lcs = np.count_nonzero(masked_data, axis=1).astype(np.uint32)
 
+    """
+    Vectoring is a possible alternative to peaking, but not being explored now. Could delete later.
     if config.vectoring_enabled:
         new_vectors = masked_data > 0
 
@@ -196,8 +151,9 @@ def pat_unit(data,
         #TODO: combine ^^ 2 of those lines in a function in vector_manager
         #TODO: create function in vector_manager to OR together the 3 vectors for a given partition, strip; call it here, and use that for LCs
         #TODO: only return segment if LC for central BX is highest. break ties somehow? (maybe with HC)
+    """
     
-    combined_segs = np.bitwise_or(np.bitwise_or(np.left_shift(lcs, np.uint8(11)), np.left_shift(hcs, np.uint(5))), pids)
+    combined_segs = np.bitwise_or(np.bitwise_or(np.left_shift(lcs, np.uint8(11)), np.left_shift(hcs, np.uint(5))), PIDS)
     best_pid = (np.sort(combined_segs))[-1] & 2**5-1
 
     #print(bxs)
@@ -265,14 +221,15 @@ def pat_unit(data,
     # best = max(seg_list) # type: ignore
 
     ####################################################################################
-    
+   
+
     # (7) apply a layer threshold - dependent on pattern id and eta partition
     ly_thresh_final = max(ly_thresh_patid[best.id-1], ly_thresh_eta[partition]) 
     if (best.lc < ly_thresh_final):
         best.reset()
 
     # (8) remove segments with large clusters for wide segments - ONLY NEEDED FOR PU200 - NOT USED AT THE MOEMENT
-
+    """
     cluster_size_max_limits = [3, 6, 9, 12, 15]
     n_hits_max_limits = [3, 6, 9, 12, 15]
     cluster_size_counts = calculate_cluster_size(data)
@@ -290,6 +247,8 @@ def pat_unit(data,
 
     best.max_cluster_size = max(cluster_size_counts)
     best.max_noise = max(n_hits_counts)
+    """
+
     '''
     best.nlayers_withcsg3 = n_layers_large_clusters[0]
     best.nlayers_withcsg5 = n_layers_large_clusters[1]
@@ -337,9 +296,7 @@ def pat_unit(data,
         # for seg in seg_list:
         #     print(seg)
 
-
-    best.hc=0
-    best.update_quality()
+    #best.update_quality()
 
     return best
 

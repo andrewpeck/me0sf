@@ -1,4 +1,7 @@
 # Functions, global variables, and classes used in multiple files
+
+from patlist_functions import *
+
 from itertools import islice
 from math import ceil, floor
 from typing import List
@@ -23,18 +26,14 @@ class Vector_Manager:
 
     def or_vectors(self, partition, strip):
         return np.bitwise_or(np.bitwise_or(self.vectors[partition,strip,0], self.vectors[partition,strip,1]), self.vectors[partition,strip,2])
-    
-class patdef_t:
-    def __init__(self, id, layer_list):
-        self.id = id
-        self.layers = layer_list
  
 class Config:
 
-    def __init__(self):
+    def __init__(self, patlist=DEFAULT_PATLIST):
         # For pulse stretching, store 192-bit integer for sbit information as 3 64-bit np.uint64s. When calculating pulse streching, probably better to have the BXs and VFATs as the inner dimensions for better cache locality.
         # Initialize sbit storage here, so it is not shared between different Config objects, which causes following tests to still see old data that may interfere.
         self.sbits_pulse_stretched = np.zeros((8, 6, 3, 3), dtype=np.uint64) # Used for sbits pulse stretching; dimensions = (partitions, layers, limbs, BXs)
+        self.initialize_patlist(patlist)
 
     def start_peaking_manager(self):
         self.peaking_manager = Peaking_Manager()
@@ -156,11 +155,6 @@ class Config:
     edge_distance : int = 2
     num_or : int = 2
 
-class hi_lo_t:
-    def __init__(self, hi, lo):
-        self.hi = hi
-        self.lo = lo
-
 class Mask:
     def __init__(self, mask, id):
         self.mask = mask
@@ -274,108 +268,6 @@ class Segment:
 
         if isinstance(other, Segment):
             return self.quality < other.quality
-
-def mirror_hi_lo(ly : hi_lo_t):
-    """"helper function for mirror_patdef, mirrors the hi and lo values"""
-    return hi_lo_t(ly.lo * (-1), ly.hi * (-1))
-
-def mirror_patdef(pat : patdef_t, id : int):
-    """takes in a pattern definition and an id and returns a mirrored pattern definition associated with that id"""
-    assert type(pat) == patdef_t, "pat input must be of the class patdef_t"
-    assert type(pat.layers[0]) == hi_lo_t, "each layer of pat must be of the class hi_lo_t"
-    assert type(id) == int, "id input must be an integer"
-
-    mirrored_ly = list(map(mirror_hi_lo, pat.layers))
-    mirrored_pat = patdef_t(id, mirrored_ly)
-    return mirrored_pat
-    
-
-def create_pat_ly(lower : float, upper : float):
-
-    """
-    takes in two boundary slopes and returns a list of hi lo pairs for each
-    layer to use when creating patterns
-    """
-
-    layer_list = [hi_lo_t(-1,-1)]*6
-
-    for i in range(6):
-
-        if i < 3:
-            hi = lower*(i-2.5)
-            lo = upper*(i-2.5)
-        else:
-            hi = upper*(i-2.5)
-            lo = lower*(i-2.5)
-
-        if abs(hi) < 0.1:
-            hi = 0
-        if abs(lo) < 0.1:
-            lo = 0 
-
-        layer_list[i] = hi_lo_t(ceil(hi), floor(lo))
-
-    return layer_list
-
-# discard anything below or equal to 8
-# for PATLIST initialization process
-# true patlist; only used for testing pat_unit.vhd emulator
-
-pat_straight = patdef_t(17, create_pat_ly(-0.4, 0.4))
-pat_l = patdef_t(16, create_pat_ly(0.2, 0.9))
-pat_r = mirror_patdef(pat_l, pat_l.id - 1)
-pat_l2 = patdef_t(14, create_pat_ly(0.9, 1.7))
-pat_r2 = mirror_patdef(pat_l2, pat_l2.id - 1)
-pat_l3 = patdef_t(12, create_pat_ly(1.4, 2.3))
-pat_r3 = mirror_patdef(pat_l3, pat_l3.id - 1)
-pat_l4 = patdef_t(10, create_pat_ly(2.0, 3.0))
-pat_r4 = mirror_patdef(pat_l4, pat_l4.id - 1)
-pat_l5 = patdef_t(8, create_pat_ly(2.7, 3.8))
-pat_r5 = mirror_patdef(pat_l5, pat_l5.id - 1)
-pat_l6 = patdef_t(6, create_pat_ly(3.5, 4.7))
-pat_r6 = mirror_patdef(pat_l6, pat_l6.id-1)
-pat_l7 = patdef_t(4, create_pat_ly(4.3, 5.5))
-pat_r7 = mirror_patdef(pat_l7, pat_l7.id-1)
-pat_l8 = patdef_t(2, create_pat_ly(5.4, 7.0))
-pat_r8 = mirror_patdef(pat_l8, pat_l8.id - 1)
-
-PATLIST = (
-    pat_straight,
-    pat_l,
-    pat_r,
-    pat_l2,
-    pat_r2,
-    pat_l3,
-    pat_r3,
-    pat_l4,
-    pat_r4,
-    pat_l5,
-    pat_r5,
-    pat_l6,
-    pat_r6,
-    pat_l7,
-    pat_r7,
-    pat_l8,
-    pat_r8)
-
-PATLIST_LUT = {
-    17: pat_straight,
-    16: pat_l,
-    15: pat_r,
-    14: pat_l2,
-    13: pat_r2,
-    12: pat_l3,
-    11: pat_r3,
-    10: pat_l4,
-    9: pat_r4,
-    8: pat_l5,
-    7: pat_r5,
-    6: pat_l6,
-    5: pat_r6,
-    4: pat_l7,
-    3: pat_r7,
-    2: pat_l8,
-    1: pat_r8}
 
 def count_ones(x):
     # """takes in an integer and counts how many ones are in that integer's binary form"""
