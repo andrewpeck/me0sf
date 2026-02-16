@@ -9,6 +9,7 @@ import cocotb
 from cocotb.clock import Clock
 from cocotb.triggers import RisingEdge
 from cocotb_test.simulator import run
+from cocotb.runner import get_runner, VHDL
 import apytypes as apy
 
 from fxpmath import Fxp
@@ -287,12 +288,31 @@ def test_fit():
     if sim == "xsim":
         opts = ["-2008"]
 
-    run(vhdl_sources=vhdl_sources,
-        module=module,
-        compile_args=opts,
-        toplevel="fit",
-        toplevel_lang="vhdl",
-        gui=0)
+    sim_config = os.getenv("SIM", "questa")
+    runner = get_runner(sim_config)
+
+    runner.build(
+        sources = vhdl_sources,
+        build_args = [VHDL("-2008")],
+        hdl_toplevel = "fit",
+        always = True
+    )
+
+    runner.test(
+        hdl_toplevel="fit",
+        test_module="test_fit",
+        test_args=["-noautoldlibpath", "-no_autoacc"],
+        pre_cmd = ["set NumericStdNoWarnings 1;"],
+        gui = 0
+    )
+
+#    run(vhdl_sources=vhdl_sources,
+#        module=module,
+#        compile_args=opts,
+#        sim_args=["-noautoldlibpath"],
+#        toplevel="fit",
+#        toplevel_lang="vhdl",
+#        gui=0)
 
 if __name__ == "__main__":
     test_fit()
