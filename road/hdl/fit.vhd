@@ -157,7 +157,7 @@ architecture behavioral of fit is
   signal slope_test : sfixed (15 downto -13) := (others => '0');
 
   signal slope_s10_mult : sfixed (7 downto -12);
-  signal slope_s11_x5 : sfixed (6 downto -2);
+  signal slope_s11_x5 : sfixed (6 downto -8);
   signal slope_s12_2p5 : sfixed (6 downto -8);
 
   signal slope_mult : sfixed(9 downto -6) := (others => '0');
@@ -348,7 +348,8 @@ begin
 
       slope_s12_2p5 <= resize(slope_s11_x5/2.0, slope_s12_2p5); 
       slope_s12 <= slope_s11;
-      intercept <= intercept_mult(6 downto -8);
+      --intercept <= intercept_mult(6 downto -8);
+      intercept <= resize(intercept_mult, intercept);
 
       -------------------------------------------------------------------------
       -- Stage 13: Output

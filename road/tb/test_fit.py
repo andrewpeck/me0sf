@@ -3,137 +3,162 @@ import math
 import os
 import random
 
-from fxpmath import Fxp
-
 import cocotb
 from cocotb.clock import Clock
 from cocotb.triggers import RisingEdge
-from cocotb_test.simulator import run
 from cocotb.runner import get_runner, VHDL
 import apytypes as apy
-
 from fxpmath import Fxp
 
-def reciprocal6(x: int, nbits: int) -> Fxp:
-    lut = {
-        1: 1.0,
-        2: 0.5,
-        3: 1.0 / 3.0,
-        4: 0.25,
-        5: 0.2,
-        6: 1.0 / 6.0
-    }
-    if x not in lut:
-        print(f"WARNING: invalid reciprocal6 lookup x={x}")
-        return Fxp(0.0, signed=True, n_word=nbits+1, n_frac=nbits, rounding='trunc')
+def reciprocal6(x):
+    if x < 1 or x > 6:
+        print(f'WARNING: x={x} out of range 1..6, returning 0')
+        return 0.0
 
-    return Fxp(lut[x], signed=True, n_word=nbits+1, n_frac=nbits, rounding='trunc')
+    if x == 1: return 1.00000000000000
+    if x == 2: return 0.50000000000000
+    if x == 3: return 0.33333333333333
+    if x == 4: return 0.25000000000000
+    if x == 5: return 0.20000000000000
+    if x == 6: return 0.16666666666667
+
+def reciprocal(x):
+    if x < 1 or x > 630:
+        print(f"WARNING: x={x} out of range 1..630, returning 0")
+        return 0.0
+
+    RECIP = [
+        1.00000000000000, 0.50000000000000, 0.33333333333333, 0.25000000000000, 0.20000000000000, 0.16666666666667, 0.14285714285714, 0.12500000000000, 0.11111111111111, 0.10000000000000, 0.09090909090909, 0.08333333333333, 0.07692307692308, 0.07142857142857, 0.06666666666667, 0.06250000000000, 0.05882352941176, 0.05555555555556, 0.05263157894737, 0.05000000000000, 0.04761904761905, 0.04545454545455, 0.04347826086957, 0.04166666666667, 0.04000000000000, 0.03846153846154, 0.03703703703704, 0.03571428571429, 0.03448275862069, 0.03333333333333,
+        0.03225806451613, 0.03125000000000, 0.03030303030303, 0.02941176470588, 0.02857142857143, 0.02777777777778, 0.02702702702703, 0.02631578947368, 0.02564102564103, 0.02500000000000, 0.02439024390244, 0.02380952380952, 0.02325581395349, 0.02272727272727, 0.02222222222222, 0.02173913043478, 0.02127659574468, 0.02083333333333, 0.02040816326531, 0.02000000000000, 0.01960784313725, 0.01923076923077, 0.01886792452830, 0.01851851851852, 0.01818181818182, 0.01785714285714, 0.01754385964912, 0.01724137931034, 0.01694915254237, 0.01666666666667,
+        0.01639344262295, 0.01612903225806, 0.01587301587302, 0.01562500000000, 0.01538461538462, 0.01515151515152, 0.01492537313433, 0.01470588235294, 0.01449275362319, 0.01428571428571, 0.01408450704225, 0.01388888888889, 0.01369863013699, 0.01351351351351, 0.01333333333333, 0.01315789473684, 0.01298701298701, 0.01282051282051, 0.01265822784810, 0.01250000000000, 0.01234567901235, 0.01219512195122, 0.01204819277108, 0.01190476190476, 0.01176470588235, 0.01162790697674, 0.01149425287356, 0.01136363636364, 0.01123595505618, 0.01111111111111,
+        0.01098901098901, 0.01086956521739, 0.01075268817204, 0.01063829787234, 0.01052631578947, 0.01041666666667, 0.01030927835052, 0.01020408163265, 0.01010101010101, 0.01000000000000, 0.00990099009901, 0.00980392156863, 0.00970873786408, 0.00961538461538, 0.00952380952381, 0.00943396226415, 0.00934579439252, 0.00925925925926, 0.00917431192661, 0.00909090909091, 0.00900900900901, 0.00892857142857, 0.00884955752212, 0.00877192982456, 0.00869565217391, 0.00862068965517, 0.00854700854701, 0.00847457627119, 0.00840336134454, 0.00833333333333,
+        0.00826446280992, 0.00819672131148, 0.00813008130081, 0.00806451612903, 0.00800000000000, 0.00793650793651, 0.00787401574803, 0.00781250000000, 0.00775193798450, 0.00769230769231, 0.00763358778626, 0.00757575757576, 0.00751879699248, 0.00746268656716, 0.00740740740741, 0.00735294117647, 0.00729927007299, 0.00724637681159, 0.00719424460432, 0.00714285714286, 0.00709219858156, 0.00704225352113, 0.00699300699301, 0.00694444444444, 0.00689655172414, 0.00684931506849, 0.00680272108844, 0.00675675675676, 0.00671140939597, 0.00666666666667,
+        0.00662251655629, 0.00657894736842, 0.00653594771242, 0.00649350649351, 0.00645161290323, 0.00641025641026, 0.00636942675159, 0.00632911392405, 0.00628930817610, 0.00625000000000, 0.00621118012422, 0.00617283950617, 0.00613496932515, 0.00609756097561, 0.00606060606061, 0.00602409638554, 0.00598802395210, 0.00595238095238, 0.00591715976331, 0.00588235294118, 0.00584795321637, 0.00581395348837, 0.00578034682081, 0.00574712643678, 0.00571428571429, 0.00568181818182, 0.00564971751412, 0.00561797752809, 0.00558659217877, 0.00555555555556,
+        0.00552486187845, 0.00549450549451, 0.00546448087432, 0.00543478260870, 0.00540540540541, 0.00537634408602, 0.00534759358289, 0.00531914893617, 0.00529100529101, 0.00526315789474, 0.00523560209424, 0.00520833333333, 0.00518134715026, 0.00515463917526, 0.00512820512821, 0.00510204081633, 0.00507614213198, 0.00505050505051, 0.00502512562814, 0.00500000000000, 0.00497512437811, 0.00495049504950, 0.00492610837438, 0.00490196078431, 0.00487804878049, 0.00485436893204, 0.00483091787440, 0.00480769230769, 0.00478468899522, 0.00476190476190,
+        0.00473933649289, 0.00471698113208, 0.00469483568075, 0.00467289719626, 0.00465116279070, 0.00462962962963, 0.00460829493088, 0.00458715596330, 0.00456621004566, 0.00454545454545, 0.00452488687783, 0.00450450450450, 0.00448430493274, 0.00446428571429, 0.00444444444444, 0.00442477876106, 0.00440528634361, 0.00438596491228, 0.00436681222707, 0.00434782608696, 0.00432900432900, 0.00431034482759, 0.00429184549356, 0.00427350427350, 0.00425531914894, 0.00423728813559, 0.00421940928270, 0.00420168067227, 0.00418410041841, 0.00416666666667,
+        0.00414937759336, 0.00413223140496, 0.00411522633745, 0.00409836065574, 0.00408163265306, 0.00406504065041, 0.00404858299595, 0.00403225806452, 0.00401606425703, 0.00400000000000, 0.00398406374502, 0.00396825396825, 0.00395256916996, 0.00393700787402, 0.00392156862745, 0.00390625000000, 0.00389105058366, 0.00387596899225, 0.00386100386100, 0.00384615384615, 0.00383141762452, 0.00381679389313, 0.00380228136882, 0.00378787878788, 0.00377358490566, 0.00375939849624, 0.00374531835206, 0.00373134328358, 0.00371747211896, 0.00370370370370,
+        0.00369003690037, 0.00367647058824, 0.00366300366300, 0.00364963503650, 0.00363636363636, 0.00362318840580, 0.00361010830325, 0.00359712230216, 0.00358422939068, 0.00357142857143, 0.00355871886121, 0.00354609929078, 0.00353356890459, 0.00352112676056, 0.00350877192982, 0.00349650349650, 0.00348432055749, 0.00347222222222, 0.00346020761246, 0.00344827586207, 0.00343642611684, 0.00342465753425, 0.00341296928328, 0.00340136054422, 0.00338983050847, 0.00337837837838, 0.00336700336700, 0.00335570469799, 0.00334448160535, 0.00333333333333,
+        0.00332225913621, 0.00331125827815, 0.00330033003300, 0.00328947368421, 0.00327868852459, 0.00326797385621, 0.00325732899023, 0.00324675324675, 0.00323624595469, 0.00322580645161, 0.00321543408360, 0.00320512820513, 0.00319488817891, 0.00318471337580, 0.00317460317460, 0.00316455696203, 0.00315457413249, 0.00314465408805, 0.00313479623824, 0.00312500000000, 0.00311526479751, 0.00310559006211, 0.00309597523220, 0.00308641975309, 0.00307692307692, 0.00306748466258, 0.00305810397554, 0.00304878048780, 0.00303951367781, 0.00303030303030,
+        0.00302114803625, 0.00301204819277, 0.00300300300300, 0.00299401197605, 0.00298507462687, 0.00297619047619, 0.00296735905045, 0.00295857988166, 0.00294985250737, 0.00294117647059, 0.00293255131965, 0.00292397660819, 0.00291545189504, 0.00290697674419, 0.00289855072464, 0.00289017341040, 0.00288184438040, 0.00287356321839, 0.00286532951289, 0.00285714285714, 0.00284900284900, 0.00284090909091, 0.00283286118980, 0.00282485875706, 0.00281690140845, 0.00280898876404, 0.00280112044818, 0.00279329608939, 0.00278551532033, 0.00277777777778,
+        0.00277008310249, 0.00276243093923, 0.00275482093664, 0.00274725274725, 0.00273972602740, 0.00273224043716, 0.00272479564033, 0.00271739130435, 0.00271002710027, 0.00270270270270, 0.00269541778976, 0.00268817204301, 0.00268096514745, 0.00267379679144, 0.00266666666667, 0.00265957446809, 0.00265251989390, 0.00264550264550, 0.00263852242744, 0.00263157894737, 0.00262467191601, 0.00261780104712, 0.00261096605744, 0.00260416666667, 0.00259740259740, 0.00259067357513, 0.00258397932817, 0.00257731958763, 0.00257069408740, 0.00256410256410,
+        0.00255754475703, 0.00255102040816, 0.00254452926209, 0.00253807106599, 0.00253164556962, 0.00252525252525, 0.00251889168766, 0.00251256281407, 0.00250626566416, 0.00250000000000, 0.00249376558603, 0.00248756218905, 0.00248138957816, 0.00247524752475, 0.00246913580247, 0.00246305418719, 0.00245700245700, 0.00245098039216, 0.00244498777506, 0.00243902439024, 0.00243309002433, 0.00242718446602, 0.00242130750605, 0.00241545893720, 0.00240963855422, 0.00240384615385, 0.00239808153477, 0.00239234449761, 0.00238663484487, 0.00238095238095,
+        0.00237529691211, 0.00236966824645, 0.00236406619385, 0.00235849056604, 0.00235294117647, 0.00234741784038, 0.00234192037471, 0.00233644859813, 0.00233100233100, 0.00232558139535, 0.00232018561485, 0.00231481481481, 0.00230946882217, 0.00230414746544, 0.00229885057471, 0.00229357798165, 0.00228832951945, 0.00228310502283, 0.00227790432802, 0.00227272727273, 0.00226757369615, 0.00226244343891, 0.00225733634312, 0.00225225225225, 0.00224719101124, 0.00224215246637, 0.00223713646532, 0.00223214285714, 0.00222717149220, 0.00222222222222,
+        0.00221729490022, 0.00221238938053, 0.00220750551876, 0.00220264317181, 0.00219780219780, 0.00219298245614, 0.00218818380744, 0.00218340611354, 0.00217864923747, 0.00217391304348, 0.00216919739696, 0.00216450216450, 0.00215982721382, 0.00215517241379, 0.00215053763441, 0.00214592274678, 0.00214132762313, 0.00213675213675, 0.00213219616205, 0.00212765957447, 0.00212314225053, 0.00211864406780, 0.00211416490486, 0.00210970464135, 0.00210526315789, 0.00210084033613, 0.00209643605870, 0.00209205020921, 0.00208768267223, 0.00208333333333,
+        0.00207900207900, 0.00207468879668, 0.00207039337474, 0.00206611570248, 0.00206185567010, 0.00205761316872, 0.00205338809035, 0.00204918032787, 0.00204498977505, 0.00204081632653, 0.00203665987780, 0.00203252032520, 0.00202839756592, 0.00202429149798, 0.00202020202020, 0.00201612903226, 0.00201207243461, 0.00200803212851, 0.00200400801603, 0.00200000000000, 0.00199600798403, 0.00199203187251, 0.00198807157058, 0.00198412698413, 0.00198019801980, 0.00197628458498, 0.00197238658777, 0.00196850393701, 0.00196463654224, 0.00196078431373,
+        0.00195694716243, 0.00195312500000, 0.00194931773879, 0.00194552529183, 0.00194174757282, 0.00193798449612, 0.00193423597679, 0.00193050193050, 0.00192678227360, 0.00192307692308, 0.00191938579655, 0.00191570881226, 0.00191204588910, 0.00190839694656, 0.00190476190476, 0.00190114068441, 0.00189753320683, 0.00189393939394, 0.00189035916824, 0.00188679245283, 0.00188323917137, 0.00187969924812, 0.00187617260788, 0.00187265917603, 0.00186915887850, 0.00186567164179, 0.00186219739292, 0.00185873605948, 0.00185528756957, 0.00185185185185,
+        0.00184842883549, 0.00184501845018, 0.00184162062615, 0.00183823529412, 0.00183486238532, 0.00183150183150, 0.00182815356490, 0.00182481751825, 0.00182149362477, 0.00181818181818, 0.00181488203267, 0.00181159420290, 0.00180831826401, 0.00180505415162, 0.00180180180180, 0.00179856115108, 0.00179533213645, 0.00179211469534, 0.00178890876565, 0.00178571428571, 0.00178253119430, 0.00177935943060, 0.00177619893428, 0.00177304964539, 0.00176991150442, 0.00176678445230, 0.00176366843034, 0.00176056338028, 0.00175746924429, 0.00175438596491,
+        0.00175131348511, 0.00174825174825, 0.00174520069808, 0.00174216027875, 0.00173913043478, 0.00173611111111, 0.00173310225303, 0.00173010380623, 0.00172711571675, 0.00172413793103, 0.00172117039587, 0.00171821305842, 0.00171526586621, 0.00171232876712, 0.00170940170940, 0.00170648464164, 0.00170357751278, 0.00170068027211, 0.00169779286927, 0.00169491525424, 0.00169204737733, 0.00168918918919, 0.00168634064081, 0.00168350168350, 0.00168067226891, 0.00167785234899, 0.00167504187605, 0.00167224080268, 0.00166944908180, 0.00166666666667,
+        0.00166389351082, 0.00166112956811, 0.00165837479270, 0.00165562913907, 0.00165289256198, 0.00165016501650, 0.00164744645799, 0.00164473684211, 0.00164203612479, 0.00163934426230, 0.00163666121113, 0.00163398692810, 0.00163132137031, 0.00162866449511, 0.00162601626016, 0.00162337662338, 0.00162074554295, 0.00161812297735, 0.00161550888530, 0.00161290322581, 0.00161030595813, 0.00160771704180, 0.00160513643660, 0.00160256410256, 0.00160000000000, 0.00159744408946, 0.00159489633174, 0.00159235668790, 0.00158982511924, 0.00158730158730,
+    ]
+
+    return RECIP[x-1]
+
+def fx(val, n_frac):
+    scale = 1 << n_frac
+    return round(val * scale) / scale
+
+def vhdl_exact_fit(ly_vals, valid_mask):
+
+    cnt0 = max(sum(1 for v in valid_mask if v), 1)
+    x_sum_1 = sum(i for i, v in enumerate(valid_mask) if v)
+    y_sum_1 = sum(ly_vals[i] for i, v in enumerate(valid_mask) if v)
 
 
-def vhdl_exact_fit(ly_vals, valid_mask):   
-    cnt = max(sum(valid_mask), 1)
-    
-    # Stage 1: raw sums x_sum, y_sum (integers)
-    x_sum = sum(i for i, v in enumerate(valid_mask) if v)
-    y_sum = sum(ly_vals[i] for i, v in enumerate(valid_mask) if v)
-    
-    # Stage 2: n_x and n_y arrays
-    n_x = [cnt * i if valid_mask[i] else 0 for i in range(6)]
-    n_y = [cnt * ly_vals[i] if valid_mask[i] else 0 for i in range(6)]
-    
-    # Stage 3: x_diff and y_diff
-    x_diff = [n_x[i] - x_sum if valid_mask[i] else 0 for i in range(6)]
-    y_diff = [n_y[i] - y_sum if valid_mask[i] else 0 for i in range(6)]
-    
-    # Stage 4: product and square arrays
-    product = [x_diff[i] * y_diff[i] for i in range(6)]
-    square = [x_diff[i] * x_diff[i] for i in range(6)]
+    n_x = [cnt0 * i if valid_mask[i] else 0 for i in range(6)]
+    n_y = [cnt0 * ly_vals[i] if valid_mask[i] else 0 for i in range(6)]
 
-    # Stage 5: product_sum and square_sum, only sum those where valid_mask=1
-    square_sum = 0
-    product_sum= 0
-    for i in range(6):
-        if valid_mask[i]:
-            product_sum += product[i]
-            square_sum += square[i]
-    
-    # Stage 6: reciprocal of square_sum (sfixed(1 downto -13))
-    if square_sum == 0:
-        square_recip = Fxp(0, signed=True, n_word=15, n_frac=13, rounding='trunc')
+    n_x = [cnt0 * i for i in range(6)]
+    n_y = [cnt0 * ly_vals[i] for i in range(6)]
+
+    x_sum_pipeline = [None] * 7
+    x_sum_pipeline[1] = x_sum_1
+    for i in range(2, 7):
+        x_sum_pipeline[i] = x_sum_pipeline[i-1]
+
+    y_sum_pipeline = [None] * 10
+    y_sum_pipeline[1] = y_sum_1
+    for i in range(2, 10):
+        y_sum_pipeline[i] = y_sum_pipeline[i-1]
+
+    cnt_pipeline = [None] * 10
+    cnt_pipeline[0] = cnt0
+
+    for i in range(1, 10):
+        cnt_pipeline[i] = cnt_pipeline[i-1]
+
+    valid_pipeline = [None] * 4
+    valid_pipeline[0] = any(valid_mask)
+    for i in range(1, 4):
+        valid_pipeline[i] = valid_pipeline[i-1]
+
+
+    x_diff = [(n_x[i] - x_sum_pipeline[1]) if valid_mask[i] else 0 for i in range(6)]
+    y_diff = [(n_y[i] - y_sum_pipeline[1]) if valid_mask[i] else 0 for i in range(6)]
+
+    x_diff = [(n_x[i] - x_sum_pipeline[1]) for i in range(6)]
+    y_diff = [(n_y[i] - y_sum_pipeline[1]) for i in range(6)]
+
+
+    product = [x_diff[i] * y_diff[i] if valid_mask[i] else 0 for i in range(6)]
+    square  = [x_diff[i] * x_diff[i] if valid_mask[i] else 0 for i in range(6)]
+
+    include = valid_pipeline[2]
+    if include:
+        product_sum_1 = sum(product[i] for i in range(6))
+        square_sum   = sum(square[i] for i in range(6))
     else:
-        square_recip = Fxp(1.0 / square_sum, signed=True, n_word=15, n_frac=13, rounding='trunc')
+        product_sum_1 = 0
+        square_sum = 0
 
-    #product_sum_fx = Fxp(product_sum, signed=True, n_word=14, n_frac=0) 
-    product_sum_fx = Fxp(product_sum, signed=True, n_word=15, n_frac=0) # After doubling resolution
+    product_sum_fx = fx(product_sum_1, 0)
 
+    if square_sum == 0:
+        square_sum_reciprocal = fx(0, 13)
+    else:
+        rec = reciprocal(square_sum)
+        square_sum_reciprocal = fx(rec, 13)
 
-    # Stage 7: slope_test = product_sum * square_recip (sfixed(15 downto -13))
-    slope_test = Fxp(product_sum_fx * square_recip, signed=True, n_word=29, n_frac=13, rounding='trunc')
-    
-    # Stage 8: slope = resize slope_test to sfixed(3 downto -6)
-    slope = Fxp(slope_test, signed=True, n_word=10, n_frac=6, rounding='trunc')
-    
-    # Stage 9: slope_mult = slope * x_sum_fixed (sfixed(5 downto 0))
-    x_sum_fx = Fxp(x_sum, signed=True, n_word=15, n_frac=7, rounding='trunc')
-    slope_mult = Fxp(slope * x_sum_fx, signed=True, n_word=16, n_frac=6, rounding='trunc')
-    
-    # Stage 10: slope_times_x = resize slope_mult to sfixed(7 downto -7)
-    slope_times_x = Fxp(slope_mult, signed=True, n_word=15, n_frac=7, rounding='trunc')
-    
-    # Stage 11: intercept_mult = reciprocal(cnt) * (y_sum_fx - slope_times_x)
-    
-    #y_sum_fx = Fxp(y_sum, signed=True, n_word=15, n_frac=7, rounding='trunc')
-    y_sum_fx = Fxp(y_sum, signed=True, n_word=16, n_frac=7, rounding='trunc') # After doubling resolution
-    diff_fx = y_sum_fx - slope_times_x
-    recip_fx = reciprocal6(cnt, 14)
-    intercept_mult = Fxp(recip_fx * diff_fx, signed=True, n_word=32, n_frac=21, rounding='trunc')
+    slope_test_raw = product_sum_fx * square_sum_reciprocal
 
-    
-    # Stage 12: intercept resize to sfixed(6 downto -8)
-    #intercept = Fxp(intercept_mult, signed=True, n_word=15, n_frac=8, rounding='trunc')
-    intercept = Fxp(intercept_mult, signed=True, n_word=16, n_frac=8, rounding='trunc') # After doubling resolution
-    
-    # Stage 13: slope * 5.0 (sfixed(7 downto -12))
-    slope_5x = Fxp(slope.get_val() * 5.0, signed=True, n_word=20, n_frac=12, rounding='trunc')
-    
-    # Stage 14: slope_5x / 2.0 resize to sfixed(6 downto -8)
-    slope_2p5 = Fxp(slope_5x.get_val() / 2.0, signed=True, n_word=15, n_frac=8, rounding='trunc')
-    
-    # Stage 15: strip_o = slope_2p5 + intercept (sfixed(6 downto -8))
-    #strip_o = Fxp(slope_2p5.get_val() + intercept.get_val(), signed=True, n_word=15, n_frac=8, rounding='trunc')
-    strip_o = Fxp(slope_2p5.get_val() + intercept.get_val(), signed=True, n_word=16, n_frac=8, rounding='trunc')  # After doubling resolution
+    slope_test = fx(slope_test_raw, 13)
+    slope = fx(slope_test, 6)
 
-    
-    # Return all fxp values if you want to inspect intermediate fixed-point numbers later
-    return slope, intercept, strip_o
+    x_sum_used = x_sum_pipeline[6]
+    x_sum_fx = fx(x_sum_used, 0)
+    slope_mult_raw = slope * x_sum_fx
+    slope_mult = fx(slope_mult_raw, 6)
+    slope_times_x = fx(slope_mult, 7)
 
+    slope_s9 = fx(slope, 6)
 
-#Perform a linear fit in the same way that it is performed in fit.vhd
-def fit_modified(x, y):
-    filtered = [(xi, yi) for xi, yi in zip(x, y) if not math.isnan(xi) and not math.isnan(yi)]
-    x_valid, y_valid = zip(*filtered)
-    x_sum = sum(x_valid)
-    y_sum = sum(y_valid)
-    n = len(x_valid)
+    cnt9 = cnt_pipeline[9]
+    y_sum9 = y_sum_pipeline[9]
+    y_sum_fx = fx(y_sum9, 7)
 
-    products = 0
-    squares = 0
-    for i in range(n):
-        xi = x_valid[i]
-        yi = y_valid[i]
-        products += (n * xi - x_sum) * (n * yi - y_sum)
-        squares += (n * xi - x_sum) ** 2
+    diff_fx_raw = y_sum_fx - slope_times_x
+    diff_fx = fx(diff_fx_raw, 7)
 
-    m = products / squares
-    m_fixed = apy.fx(m, int_bits=4, frac_bits=4)
-    b = (y_sum - m * x_sum) / n
-    b_fixed = apy.fx(b, int_bits=6, frac_bits=7)
-    return m_fixed, b_fixed
+    recip_cnt = reciprocal6(cnt9)
+    recip_cnt = fx(recip_cnt, 14)
 
-#Random data to feed into the fitter
+    intercept_mult_raw = recip_cnt * diff_fx
+    intercept_mult = fx(intercept_mult_raw, 21)
+
+    intercept = fx(intercept_mult, 8)
+
+    slope_s10_mult_raw = slope_s9 * 5.0
+    slope_s10_mult = fx(slope_s10_mult_raw, 12)
+    slope_div_by_2p0 = fx(slope_s10_mult / 2.0, 7)
+    slope_2p5 = fx(slope_div_by_2p0, 8)
+
+    strip_o = fx(slope_2p5 + intercept, 5)
+    slope_o = fx(slope_s9, 6)
+    intercept_o = fx(intercept, 7)
+
+    return slope_o, intercept_o, strip_o
+
 def rand_y():
     rand_m = random.randint(math.floor(-37 / 6), math.floor(37 / 6))
-    #rand_b = random.randint(-5, 5)
     rand_b = random.randint(-10, 10)
     return [math.floor(rand_m * (0 - 2.5) + rand_b + random.randint(-1, 1)),
             math.floor(rand_m * (1 - 2.5) + rand_b + random.randint(-1, 1)),
@@ -175,11 +200,13 @@ async def fit_tb(dut, NLOOPS=10000, verbose=False):
     for _ in range(LATENCY):
         await RisingEdge(dut.clock)
     data = []
+    valid_vector=[]
 
     # Place dummy data into the queue, to account for the latency
     for _ in range(LATENCY - 1):
         y = rand_y()
         data.append([0, 0, 0, 0, 0, 0])
+        valid_vector.append(0)
 
     failed_fits = 0
     failed_fits_intercept = 0
@@ -187,15 +214,10 @@ async def fit_tb(dut, NLOOPS=10000, verbose=False):
     failed_fits_slope = 0
 
     for iloop in range(NLOOPS):
-
-        # Set 5 or 6 layers valid (50% chance to 0 a random layer)
         if random.randint(0, 1) == 0: # Set all 6 layers valid
             valid_layers = 2**6 - 1 
         else: # Set a random layer to 0
             valid_layers = (2**6 - 1) ^ (2**random.randint(0, 5))
-
-        dut.valid_i.value = valid_layers
-
         y = rand_y()
 
         dut.ly0.value = y[0]
@@ -204,14 +226,17 @@ async def fit_tb(dut, NLOOPS=10000, verbose=False):
         dut.ly3.value = y[3]
         dut.ly4.value = y[4]
         dut.ly5.value = y[5]
+        dut.valid_i.value = valid_layers
 
         data.append(y)
+        valid_vector.append(valid_layers)
+        
         await RisingEdge(dut.clock)  # Synchronize with the clock
+        v = valid_vector.pop(0)
+        valid_mask = [(v >> i) & 1 for i in range(6)]
 
         this_data = data.pop(0)
-        
-        #Create random data, potentially with invalid layers
-        valid_mask = [(dut.valid_i.value.integer >> i) & 1 for i in range(6)]
+
         masked_data = [v if valid else float('NaN') for v, valid in zip(this_data, valid_mask)]
         m, b, key_s = vhdl_exact_fit(this_data, valid_mask)
 
@@ -254,7 +279,7 @@ async def fit_tb(dut, NLOOPS=10000, verbose=False):
         elif verbose == True:
             print_slope(slope, intercept, key_strip, m, b, key_s)
 
-        if iloop % 1000 == 0:
+        if iloop % 500 == 0:
             print("%d fits tested" % iloop)
             print(masked_data)
             print(valid_mask)
