@@ -9,6 +9,11 @@ from cocotb.triggers import RisingEdge
 from cocotb.runner import get_runner, VHDL
 import apytypes as apy
 from fxpmath import Fxp
+import numpy as np
+import matplotlib.pyplot as plt
+import matplotlib
+matplotlib.use("Agg")
+#from subfunc import llse_fit
 
 def reciprocal6(x):
     if x < 1 or x > 6:
@@ -59,56 +64,29 @@ def fx(val, n_frac):
 
 def vhdl_exact_fit(ly_vals, valid_mask):
 
-    cnt0 = max(sum(1 for v in valid_mask if v), 1)
-    x_sum_1 = sum(i for i, v in enumerate(valid_mask) if v)
-    y_sum_1 = sum(ly_vals[i] for i, v in enumerate(valid_mask) if v)
+    # See if there is at least 1 valid value in the input data, to avoid potential divisions by 0
+    if 1 not in valid_mask:
+        return 0, 0, 0
 
+    # Remove invalid data points
+    x = [i for i, valid in enumerate(valid_mask) if valid != 0]
+    y = [ly_val for ly_val, valid in zip(ly_vals, valid_mask) if valid != 0]
 
-    n_x = [cnt0 * i if valid_mask[i] else 0 for i in range(6)]
-    n_y = [cnt0 * ly_vals[i] if valid_mask[i] else 0 for i in range(6)]
+    valid_count = sum(valid_mask)
+    x_sum = sum(x)
+    y_sum = sum(y)
 
-    n_x = [cnt0 * i for i in range(6)]
-    n_y = [cnt0 * ly_vals[i] for i in range(6)]
+    n_x = [valid_count * xi for xi in x]
+    n_y = [valid_count * yi for yi in y]
 
-    x_sum_pipeline = [None] * 7
-    x_sum_pipeline[1] = x_sum_1
-    for i in range(2, 7):
-        x_sum_pipeline[i] = x_sum_pipeline[i-1]
+    x_diff = [n_xi - x_sum for n_xi in n_x]
+    y_diff = [n_yi - y_sum for n_yi in n_y]
 
-    y_sum_pipeline = [None] * 10
-    y_sum_pipeline[1] = y_sum_1
-    for i in range(2, 10):
-        y_sum_pipeline[i] = y_sum_pipeline[i-1]
+    product = [x_diffi * y_diffi for (x_diffi, y_diffi) in zip(x_diff, y_diff)]
+    square  = [x_diffi**2 for x_diffi in x_diff]
 
-    cnt_pipeline = [None] * 10
-    cnt_pipeline[0] = cnt0
-
-    for i in range(1, 10):
-        cnt_pipeline[i] = cnt_pipeline[i-1]
-
-    valid_pipeline = [None] * 4
-    valid_pipeline[0] = any(valid_mask)
-    for i in range(1, 4):
-        valid_pipeline[i] = valid_pipeline[i-1]
-
-
-    x_diff = [(n_x[i] - x_sum_pipeline[1]) if valid_mask[i] else 0 for i in range(6)]
-    y_diff = [(n_y[i] - y_sum_pipeline[1]) if valid_mask[i] else 0 for i in range(6)]
-
-    x_diff = [(n_x[i] - x_sum_pipeline[1]) for i in range(6)]
-    y_diff = [(n_y[i] - y_sum_pipeline[1]) for i in range(6)]
-
-
-    product = [x_diff[i] * y_diff[i] if valid_mask[i] else 0 for i in range(6)]
-    square  = [x_diff[i] * x_diff[i] if valid_mask[i] else 0 for i in range(6)]
-
-    include = valid_pipeline[2]
-    if include:
-        product_sum_1 = sum(product[i] for i in range(6))
-        square_sum   = sum(square[i] for i in range(6))
-    else:
-        product_sum_1 = 0
-        square_sum = 0
+    product_sum_1 = sum(product)
+    square_sum   = sum(square)
 
     product_sum_fx = fx(product_sum_1, 0)
 
@@ -123,7 +101,7 @@ def vhdl_exact_fit(ly_vals, valid_mask):
     slope_test = fx(slope_test_raw, 13)
     slope = fx(slope_test, 6)
 
-    x_sum_used = x_sum_pipeline[6]
+    x_sum_used = x_sum
     x_sum_fx = fx(x_sum_used, 0)
     slope_mult_raw = slope * x_sum_fx
     slope_mult = fx(slope_mult_raw, 6)
@@ -131,14 +109,12 @@ def vhdl_exact_fit(ly_vals, valid_mask):
 
     slope_s9 = fx(slope, 6)
 
-    cnt9 = cnt_pipeline[9]
-    y_sum9 = y_sum_pipeline[9]
-    y_sum_fx = fx(y_sum9, 7)
+    y_sum_fx = fx(y_sum, 7)
 
     diff_fx_raw = y_sum_fx - slope_times_x
     diff_fx = fx(diff_fx_raw, 7)
 
-    recip_cnt = reciprocal6(cnt9)
+    recip_cnt = reciprocal6(valid_count)
     recip_cnt = fx(recip_cnt, 14)
 
     intercept_mult_raw = recip_cnt * diff_fx
@@ -177,13 +153,13 @@ def print_slope(slope, intercept, key_strip, m, b, key_s):
 async def fit_tb(dut, NLOOPS=10000, verbose=False):
     """Test for priority encoder with randomized data on all inputs"""
 
+    random.seed(1802148680)
+
     cocotb.start_soon(Clock(dut.clock, 20, units="ns").start())  # Create a clock
 
     intercept_fracb = dut.B_FRAC_BITS.value
     slope_fracb = dut.M_FRAC_BITS.value
     strip_fracb = dut.STRIP_FRAC_BITS.value
-
-    x = range(6)  # layers 0-5, always the same
 
     # flush the pipeline
     dut.ly0.value = 1
@@ -213,6 +189,12 @@ async def fit_tb(dut, NLOOPS=10000, verbose=False):
     failed_fits_strip = 0
     failed_fits_slope = 0
 
+    true_slopes = []
+    slope_diffs = []
+
+    true_strips = []
+    strip_diffs = [] 
+
     for iloop in range(NLOOPS):
         if random.randint(0, 1) == 0: # Set all 6 layers valid
             valid_layers = 2**6 - 1 
@@ -240,16 +222,25 @@ async def fit_tb(dut, NLOOPS=10000, verbose=False):
         masked_data = [v if valid else float('NaN') for v, valid in zip(this_data, valid_mask)]
         m, b, key_s = vhdl_exact_fit(this_data, valid_mask)
 
+        x = [i for (i, valid) in enumerate(valid_mask) if valid != 0] #need to improve for lc<6?
+
+        if len(x) > 0:
+            mllse, bllse, msellse = llse_fit(x, [v for v,valid in zip(this_data, valid_mask) if valid != 0])
+            slope_diffs.append(m - mllse)
+            strip_diffs.append(mllse*2.5 + bllse - key_s)
+            true_slopes.append(mllse)
+            true_strips.append(mllse*2.5 + bllse)
+
         slope = dut.slope_o.value.signed_integer / (2**slope_fracb)
         intercept = dut.intercept_o.value.signed_integer / (2**intercept_fracb)
         key_strip = dut.strip_o.value.signed_integer / (2**strip_fracb)
-
+        
         #Define the maximum allowed discrepancy between python fit and fit.vhd
-        max_error_slope = 0.65
-        max_error_intercept = 2.0
+        max_error_slope = 0 #0.65
+        max_error_intercept = 0 #2.0
         max_error_strips = max_error_intercept + max_error_slope
 
-        if abs(b - intercept) >= max_error_intercept:
+        if abs(b - intercept) > max_error_intercept:
             print('FIT FAILED (intercept)')
             print(f"{iloop=}")
             print(masked_data)
@@ -258,7 +249,7 @@ async def fit_tb(dut, NLOOPS=10000, verbose=False):
             failed_fits += 1
             failed_fits_intercept += 1
 
-        elif abs(m - slope) >= max_error_slope:
+        elif abs(m - slope) > max_error_slope:
             print('FIT FAILED (slope)')
             print(f"{iloop=}")
             print(masked_data)
@@ -267,7 +258,7 @@ async def fit_tb(dut, NLOOPS=10000, verbose=False):
             failed_fits += 1
             failed_fits_slope += 1
 
-        elif abs(key_s - key_strip) >= max_error_strips:
+        elif abs(key_s - key_strip) > max_error_strips:
             print('FIT FAILED (strip)')
             print(f"{iloop=}")
             print(masked_data)
@@ -292,6 +283,23 @@ async def fit_tb(dut, NLOOPS=10000, verbose=False):
     print("%d slope fits failed" % failed_fits_slope)
     print("%d intercept fits failed" % failed_fits_intercept)
     print("%d strip fits failed" % failed_fits_strip)
+
+
+    print(f"Average slope error = {np.mean([abs(s) for s in slope_diffs])}")
+    print(f"Average strip error = {np.mean([abs(s) for s in strip_diffs])}")
+
+    plt.scatter(true_slopes, [abs(s) for s in slope_diffs], marker='.')
+    plt.xlabel("LLSE Slope")
+    plt.ylabel("Fit Error")
+    plt.savefig("slope_plot.pdf")
+
+    plt.clf()
+
+    plt.scatter(true_strips, [abs(s) for s in strip_diffs], marker='.')
+    plt.xlabel("LLSE Strip")
+    plt.ylabel("Fit Error")
+    plt.savefig("strip_plot.pdf")
+
 
 #Include all the paths and run the test
 def test_fit():

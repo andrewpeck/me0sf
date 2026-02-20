@@ -1,6 +1,7 @@
 # Functions, global variables, and classes used in multiple files
 
 from patlist_functions import *
+from test_fit import reciprocal6, reciprocal, fx, vhdl_exact_fit
 
 from itertools import islice
 from math import ceil, floor
@@ -232,15 +233,24 @@ class Segment:
         self.substrip = 0
         #print (self.centroid)
         if self.id !=0:
-            centroids = [cent-(max_span//2+1) for cent in self.centroid]
-            x = [i-2.5 for (i, cent) in enumerate(centroids) if cent !=-(max_span//2+1)] #need to improve for lc<6?
-            centroids = [cent for cent in centroids if cent !=-(max_span//2+1)]
+            x = [i-2.5 for (i, cent) in enumerate(self.centroid) if cent > 0] #need to improve for lc<6?
+            centroids = [(cent/2)-(max_span//2+1) for cent in self.centroid if cent > 0] # Divide by factor 2 for double resolution
             #print (x)
             #print (centroids)
-            fit = llse_fit(x, centroids)
-            self.bend_ang = fit[0] #m
-            self.substrip = fit[1] #b
-            self.mse = fit[2] #mse
+            fit_llse = llse_fit(x, centroids)
+            valid_mask = [1 if cent > 0 else 0 for cent in self.centroid]
+            fit = vhdl_exact_fit(self.centroid, valid_mask)
+
+            # Resolution factor used in find_centroid is currently 2.0, so need to adjust here to interpret the results correctly
+
+            self.bend_ang = fit[0] / 2.0 #m
+            #self.substrip = fit[1] #b
+            self.substrip = (fit[2] / 2.0) - (max_span//2+1) # b; Subtract the max_span due to offest adjustment
+            #self.mse = fit_llse[2] #mse
+            #self.mse = 0 # Fitter does not currently output a quality factor
+
+            #print(f"Slope diff = {abs(fit_llse[0]-self.bend_ang)}")
+
 
     def __str__(self):
 
@@ -334,7 +344,11 @@ def find_centroid(data : int):
     if len(ones)==0:
         return 0, ones
 
-    return ((1.0 * sum(ones)) / len(ones)), ones
+    resolution_factor = 2.0 # 1.0 = single strip resolution, 2.0 = half strip resolution, ...; FW is bit-retricted, so this must match the FW implementation
+    center_of_mass = (resolution_factor * sum(ones)) / len(ones)
+    rounded_center = round(center_of_mass) # FW outputs the nearest integer to the true value
+
+    return rounded_center, ones
 
 def generate_combinations(nbits : int):
     return (nbits, tuple(range(2**nbits)))

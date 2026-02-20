@@ -110,7 +110,16 @@ def pat_unit(data,
   #         bin_str = format(ly, f"0{spans[ly_i]}b")
   #         print(' '*( ( (37 - len(bin_str)) // 2) ) + bin_str)
 
+
     masked_data = np.bitwise_and(config.ly_mask, data)
+    lcs = np.count_nonzero(masked_data, axis=1)
+
+    # If no segment can ever be output, immediately return a null segment
+    if np.max(lcs) < 4:
+        return Segment(0,0)
+
+    lcs = lcs.astype(np.uint32) # Use uint32 type so later bitshifting works
+
 
     """ 
     #HC IS DISABLED FOR NOW
@@ -123,8 +132,6 @@ def pat_unit(data,
     hcs = np.sum(np.clip(bit_count_arr, a_min = None, a_max = 7), axis=1, dtype=np.uint16)
     """
     hcs = np.zeros((17,), dtype=np.uint16)
-
-    lcs = np.count_nonzero(masked_data, axis=1).astype(np.uint32)
 
     """
     Vectoring is a possible alternative to peaking, but not being explored now. Could delete later.
@@ -154,7 +161,7 @@ def pat_unit(data,
     """
     
     combined_segs = np.bitwise_or(np.bitwise_or(np.left_shift(lcs, np.uint8(11)), np.left_shift(hcs, np.uint(5))), PIDS)
-    best_pid = (np.sort(combined_segs))[-1] & 2**5-1
+    best_pid = np.argmax(combined_segs) + 1
 
     #print(bxs)
     # (5) process segments
@@ -170,19 +177,7 @@ def pat_unit(data,
 
     #print(best.bx)
 
-    # (4) process centroids
-    if skip_centroids:
-        centroid = [0 for _ in range(6)]
-        bx = -9999
-    else:
-        # We are not currently passing in a rectangular window to a pat_unit, but instead an "hourglass" shape that depends on the max span for each layer (rather than a global max span)
-        # So, centroids are offset depending on this, and needs to be corrected
-        centroid, bx = calculate_centroids(masked_data[best_pid-1], bx_data)
-        max_span = max(config.ly_spans)
-        offsets = [(max_span - ly_span)//2 for ly_span in config.ly_spans]
-        centroid = [(c+o) if c>0 else 0 for c, o in zip(centroid, offsets)]
-
-    best = Segment(lc=lcs[best_pid-1], hc=hcs[best_pid-1], id=best_pid, partition=partition, strip=strip, centroid=centroid, bx=bx)
+    best = Segment(lc=lcs[best_pid-1], hc=hcs[best_pid-1], id=best_pid, partition=partition, strip=strip)
 
 
     ####################################################################################
@@ -227,6 +222,22 @@ def pat_unit(data,
     ly_thresh_final = max(ly_thresh_patid[best.id-1], ly_thresh_eta[partition]) 
     if (best.lc < ly_thresh_final):
         best.reset()
+
+    # (4) process centroids, if a segment is found
+    if skip_centroids:
+        centroid = [0 for _ in range(6)]
+        bx = -9999
+    elif best.lc > 0:
+        # We are not currently passing in a rectangular window to a pat_unit, but instead an "hourglass" shape that depends on the max span for each layer (rather than a global max span)
+        # Centroids are offset depending on this, and needs to be corrected
+        centroid,  bx = calculate_centroids(masked_data[best_pid-1], bx_data)
+        max_span = max(config.ly_spans)
+        offsets = [2*(max_span - ly_span)//2 for ly_span in config.ly_spans] # Factor of 2 from double resolution
+        centroid = [(c+o) if c>0 else 0 for c, o in zip(centroid, offsets)]
+
+        best.centroid = centroid
+        best.bx = bx
+
 
     # (8) remove segments with large clusters for wide segments - ONLY NEEDED FOR PU200 - NOT USED AT THE MOEMENT
     """
