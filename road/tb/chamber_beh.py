@@ -235,6 +235,12 @@ def process_chamber(chamber_data, config : Config, chamber_bx_data):
 
     # print(segments)
 
+    # Fit segments and bending angle cut
+    for seg in segments:
+        seg.fit(config.pat_spans[seg.id-1])
+        if abs(seg.bend_ang) > config.bend_ang_cut:
+            seg.reset()
+
     return (segments, config)
 
 

@@ -59,8 +59,8 @@ package pat_pkg is
       strip : unsigned(7 downto 0);
       partition : unsigned(PARTITION_BITS-1 downto 0);
       intercept : sfixed(7-1 downto -7);
-      slope     : sfixed(4-1 downto -6);
-      fit_strip : sfixed(5-1 downto -5);
+      slope     : sfixed(3-1 downto -7); -- Widest pattern currently available has span 13 (PID=12), so highest slope is 13/6 ~2. Need 2+1 integer bits (since it is signed)
+      fit_strip : sfixed(11-1 downto -6); -- Need [0-191] in integer = 8 bits, give 5 bits of decimal precision (arbitrary for now, can change)
   end record segment_w_fit_t;
 
   type segment_w_fit_list_t is array(integer range <>) of segment_w_fit_t; 

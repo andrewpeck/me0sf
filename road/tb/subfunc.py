@@ -78,15 +78,40 @@ class Config:
         m_vec = np.array([self.set_high_bits(x) for x in m_vals])
         return m_vec
         # return Mask(m_vec, ly_pat.id)
-    
-    def calculate_ly_mask(self):
-        """create layer masks for patterns in patlist"""
-        self.ly_mask = np.array([self.get_ly_mask(pat, self.ly_spans) for pat in self.patlist], dtype=np.uint64)
+
+    # Computes the spans of all pattern windows, for use in shifting the coordinate origin for the substrip output by the fitter
+    def initialize_pat_spans(self, patlist):
+        pat_spans = []
+        # Highest high and lowest low for a pattern must be in either layer 0 or layer 5, so only need to check these 4 values
+        for pat in patlist:
+            high = max(pat.layers[0].hi, pat.layers[5].hi)
+            low = min(pat.layers[0].lo, pat.layers[5].lo)
+            pat_spans.append(high - low + 1)
+
+        return pat_spans
+
+    # Computes the offset for each [pid, ly] that is used in pat_unit to align sbit data for the centroid finder
+    def initialize_offset_LUT(self, patlist):
+        LUT = []
+        for pat, pat_span in zip(patlist, self.pat_spans):
+
+            max_span = self.ly_spans[0]//2 # Use one of the outer layers to get the max_span
+ 
+            shift_amount_left = [max_span - ly_span//2 for ly_span in self.ly_spans] # This shift will go from hourglass shape -> rectangular (i.e. origin is aligned for all layers)
+            shift_amount_right = max_span - pat_span//2 # This shift will get only the pattern bits, and is constant for all layers. Depends only on the pattern and max_span. Shifts the origin to the rightmost bit of the pattern mask.
+
+            LUT.append([left - shift_amount_right for left in shift_amount_left])
+        return LUT
+       
 
     def initialize_patlist(self, patlist):
         self.patlist = patlist
         self.calculate_ly_spans()
-        self.calculate_ly_mask()
+        """create layer masks for patterns in patlist"""
+        self.ly_mask = np.array([self.get_ly_mask(pat, self.ly_spans) for pat in self.patlist], dtype=np.uint64)
+        self.pat_spans = self.initialize_pat_spans(patlist)
+        self.offset_LUT = self.initialize_offset_LUT(patlist)
+ 
 
     patlist = None
     ly_mask = None
@@ -99,6 +124,7 @@ class Config:
     en_non_pointing : bool = False
     check_ids : bool = False
     pulse_stretch_bx : int = 0 # Number of BX to pulse stretch for, usually 0 or 2
+    bend_ang_cut = 1.0
 
     # This should only be modified by the start_peaking() function, so should not be modified outside the class
     _peaking_enabled : bool = False
@@ -228,16 +254,16 @@ class Segment:
 
         self.quality=quality
 
-    def fit(self, max_span=37):
+    def fit(self, pat_span):
         self.bend_ang = 0
         self.substrip = 0
         #print (self.centroid)
         if self.id !=0:
-            x = [i-2.5 for (i, cent) in enumerate(self.centroid) if cent > 0] #need to improve for lc<6?
-            centroids = [(cent/2)-(max_span//2+1) for cent in self.centroid if cent > 0] # Divide by factor 2 for double resolution
+            #x = [i-2.5 for (i, cent) in enumerate(self.centroid) if cent > 0] #need to improve for lc<6?
+            #centroids = [(cent/2)-(max_span//2+1) for cent in self.centroid if cent > 0] # Divide by factor 2 for double resolution
             #print (x)
             #print (centroids)
-            fit_llse = llse_fit(x, centroids)
+            #fit_llse = llse_fit(x, centroids)
             valid_mask = [1 if cent > 0 else 0 for cent in self.centroid]
             fit = vhdl_exact_fit(self.centroid, valid_mask)
 
@@ -245,7 +271,7 @@ class Segment:
 
             self.bend_ang = fit[0] / 2.0 #m
             #self.substrip = fit[1] #b
-            self.substrip = (fit[2] / 2.0) - (max_span//2+1) # b; Subtract the max_span due to offest adjustment
+            self.substrip = (fit[2] / 2.0) - pat_span//2 - 1 # b; Subtract pat_span//2 to shift origin to center of pattern window frame (aligned with segment's global integer strip so this and the substrip can be added together); Subtract another 1 to change form 1-indexing to 0-indexing
             #self.mse = fit_llse[2] #mse
             #self.mse = 0 # Fitter does not currently output a quality factor
 

@@ -687,13 +687,14 @@ def analysis(root_dat, hits, bx, bx_list, cross_part, verbose, pu, num_or):
                 bx_cham_seglist_final = []
 
                 for seg in segs:
+                    # Now fitting and doing bending angle cut in chamber_beh
                     # Fit, then final cuts
-                    seg.fit(config_chams[chamber_nr].max_span)
-                    if seg.mse is not None and seg.mse >= mse_th:
-                        seg.id = 0
-                    if pu == "200":
-                        if abs(seg.bend_ang) > 1: 
-                            seg.id = 0
+                    #seg.fit(config_chams[chamber_nr].max_span)
+                    #if seg.mse is not None and seg.mse >= mse_th:
+                    #    seg.id = 0
+                    #if pu == "200":
+                    #    if abs(seg.bend_ang) > 1: 
+                    #        seg.id = 0
                         #if seg.partition >= 9: 
                         #    if abs(seg.bend_ang) > 0.5: 
                         #        seg.id = 0
@@ -1416,6 +1417,8 @@ def analysis(root_dat, hits, bx, bx_list, cross_part, verbose, pu, num_or):
     print("Total number of matched online segs: %d\n"%temp_abcd)
 
     print(f"Total number of simtracks: {n_simtracks_total}")
+
+    sys.exit()
 
 
     plot_file = ROOT.TFile("output_plots_%s_bx%s_crosspart_%s_or%d.root"%(hits, bx, cross_part, num_or), "recreate")

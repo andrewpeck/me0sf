@@ -30,7 +30,8 @@ entity fit is
 
     STRIP_BITS : natural := 8;
     -- slope
-    -- max slope is ~40 strips / 6 layers = ~7 so give it 4 bits
+    -- max slope is ~40 strips / 6 layers = ~7 so give it 4 bits + 1 for sign +1 for double resolution
+    -- Using only up to PID=12, which has span=13 -> 2+1+1 = 4 bits
     M_INT_BITS  : natural := 4;
     M_FRAC_BITS : natural := 6;
 

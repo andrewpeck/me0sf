@@ -26,9 +26,9 @@ def parse_bx_data(bx_data, strip, max_span):
         parsed_bx_data = data_shifted[:max_span]
     else:
         shift = strip - max_span // 2
-        num_appended_nedded = shift + max_span - len(bx_data)
-        if num_appended_nedded > 0:
-            data_shifted = bx_data + [-9999 for _ in range(num_appended_nedded)]
+        num_appended_needed = shift + max_span - len(bx_data)
+        if num_appended_needed > 0:
+            data_shifted = bx_data + [-9999 for _ in range(num_appended_needed)]
         else:
             data_shifted = bx_data
         parsed_bx_data = data_shifted[shift:shift+max_span]

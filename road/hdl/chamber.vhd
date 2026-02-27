@@ -46,7 +46,7 @@ entity chamber is
     EN_HC_COMPRESS : boolean := true;   -- true to enable compression of hit count function (REQUIRED: minimum ly_thresh value is 4)
     X_DEGHOST_EDGE_DIST : natural := 2;  -- radius for cross partition deghosting
     SBIT_BRAM_PHASE : integer := 0;
-    BRAM_LATENCY : integer := 53;
+    BRAM_LATENCY : integer := 45;
     
     LY0_SPAN : natural := get_max_span(patdef_array);
     LY1_SPAN : natural := get_max_span(patdef_array);
@@ -71,10 +71,6 @@ entity chamber is
     sbits_i           : in  chamber_t;
     vfat_pretrigger_o : out std_logic_vector (23 downto 0);
     segments_o        : out segment_w_fit_list_t (NUM_SEGMENTS-1 downto 0);
-    
-    strip_o : out sfixed (5-1 downto -5);
-    intercept_o : out sfixed (7-1 downto -7);
-    slope_o : out sfixed (4-1 downto -6);
     
     dav_i             : in  std_logic;
     dav_o             : out std_logic
@@ -225,6 +221,20 @@ architecture behavioral of chamber is
   signal centroids_offset : centroids_offset_t;
   signal valid_hits : std_logic_vector (5 downto 0);
   
+  --------------------------------------------------------------------------------
+  -- Fitter
+  --------------------------------------------------------------------------------
+ 
+  -- Outputs from fitter module 
+  signal strip_o : sfixed (5-1 downto -5);
+  signal intercept_o : sfixed (7-1 downto -7);
+  signal slope_o : sfixed (4-1 downto -6);
+
+  -- Intermediary signals for the coordinate conversion
+  signal patspan_adjust : sfixed (5 downto 0);
+  signal fit_strip_div2 : sfixed (3 downto strip_o'low-1);
+  signal seg_strip_sfixed : sfixed (8 downto -6); 
+  
   -- Constants (per pattern, per layer) for the offsets for each pattern's sbits in each signal
   -- E.g. in this example, the centroid finders only receive the single bit in the place of the X per layer, but their true positions are offset
   -- from one another
@@ -269,6 +279,20 @@ architecture behavioral of chamber is
   end function;
   
   constant offsets : pat_ly_offsets_t := find_offsets(PATLIST);
+  
+  -- Prepare LUT for patspans, for use after the fitter to shift coordinates to full chamber frame
+  type patspan_LUT_t is array (0 to NUM_PATTERNS-1) of integer; 
+  function find_all_pat_spans (patlist : patdef_array_t) return patspan_LUT_t is
+    variable LUT : patspan_LUT_t;
+  begin
+    for pat_i in 0 to NUM_PATTERNS-1 loop
+      LUT(pat_i) := -1 * (get_pat_span(patlist(pat_i)) / 2 + 1); -- Divide by 2 for half the span, and subtract 1 to account for 1-based indexing of centroids
+    end loop;
+    
+    return LUT;
+  end function;
+  
+  constant PATSPAN_LUT : patspan_LUT_t := find_all_pat_spans(PATLIST);
   
   signal seg_fit_list_phase : unsigned (2 downto 0) := to_unsigned(3, 3); --TODO: Generalize this, might depend on some other phase(s)
 
@@ -614,25 +638,25 @@ begin
     
   offset_g : for i in 0 to 5 generate
     centroids_offset(i) <= ("0000" & centroids(i)) + to_unsigned(offsets(maximum(to_integer(seg_info_buffer(5).id)-1, 0))(i), centroids_offset(i)'length); -- Need the maximum for now, since PID indexes by 1
-    valid_hits(i) <= '0' when centroids(i) = to_unsigned(0, centroids(i)'length) else '1';
+    valid_hits(valid_hits'length-1-i) <= '0' when centroids(i) = to_unsigned(0, centroids(i)'length) else '1'; -- Flip direction, since centroids direction will be flipped
   end generate;
 
   --------------------------------------------------------------------------------
   -- Fitting
   --------------------------------------------------------------------------------
-
+  -- Need to flip direction of centroids (0->5, 1->4, ...)
   fitter_inst : entity work.fit
     generic map (
       STRIP_BITS => 8
     )
     port map (
       clock => clock,
-      ly0 => signed(centroids_offset(0)), --For now, zero padding, since input type is signed. TODO: should be changed to unsigned, since the origin is at the right, and all values are positive; NOTE: moved zero pad above, so "000" --> "0000"
-      ly1 => signed(centroids_offset(1)),
-      ly2 => signed(centroids_offset(2)),
-      ly3 => signed(centroids_offset(3)),
-      ly4 => signed(centroids_offset(4)),
-      ly5 => signed(centroids_offset(5)),
+      ly0 => signed(centroids_offset(5)), --For now, zero padding, since input type is signed. TODO: should be changed to unsigned, since the origin is at the right, and all values are positive; NOTE: moved zero pad above, so "000" --> "0000"
+      ly1 => signed(centroids_offset(4)),
+      ly2 => signed(centroids_offset(3)),
+      ly3 => signed(centroids_offset(2)),
+      ly4 => signed(centroids_offset(1)),
+      ly5 => signed(centroids_offset(0)),
       valid_i => valid_hits,
       strip_o => strip_o,
       intercept_o => intercept_o,
@@ -643,20 +667,24 @@ begin
   -- Outputs
   --------------------------------------------------------------------------------
 
+  -- Need to convert fitter strip output coordinate to full chamber frame, since its coordinates were based only on the pattern window it saw
+  patspan_adjust <= to_sfixed(to_signed(PATSPAN_LUT(maximum(0, to_integer(seg_info_buffer(seg_info_buffer'length-1).id) - 1)), 6), 6-1, 0); -- Gets the adjustment based on the size of the pattern window
+  fit_strip_div2 <= to_sfixed(to_slv(strip_o), strip_o'high-1, strip_o'low-1); -- Divides the fitter strip output by 2, since it was working in 2x resolution from the centroids
+  seg_strip_sfixed <= to_sfixed(signed('0'&seg_info_buffer(seg_info_buffer'length-1).strip), 8, -6); -- Convert the type, not actually doing anything to the signal here
+
   process (clock) is
   begin
     if rising_edge(clock) then
       -- Get segment info from seg_info_buffer
-      fit_segments(to_integer(seg_fit_list_phase)).lc <= seg_info_buffer(seg_info_buffer'length-1).lc;
+      fit_segments(to_integer(seg_fit_list_phase)).lc <= seg_info_buffer(seg_info_buffer'length-1).lc when abs(slope_o) < (1*2) else to_unsigned(0, LC_BITS); -- 1*2 for double resolution
       fit_segments(to_integer(seg_fit_list_phase)).id <= seg_info_buffer(seg_info_buffer'length-1).id;
       fit_segments(to_integer(seg_fit_list_phase)).strip <= seg_info_buffer(seg_info_buffer'length-1).strip;
       fit_segments(to_integer(seg_fit_list_phase)).partition <= seg_info_buffer(seg_info_buffer'length-1).partition;
       
       -- Get fit info from fitter output
       fit_segments(to_integer(seg_fit_list_phase)).intercept <= intercept_o;
-      fit_segments(to_integer(seg_fit_list_phase)).slope <= slope_o;
-      fit_segments(to_integer(seg_fit_list_phase)).fit_strip <= strip_o;
-
+      fit_segments(to_integer(seg_fit_list_phase)).slope <= to_sfixed(to_slv(slope_o), slope_o'high-1, slope_o'low-1); -- Shift decimal to the right by 1 to divide by 2, to shift from double resolution back to single
+      fit_segments(to_integer(seg_fit_list_phase)).fit_strip <= fit_strip_div2 + seg_strip_sfixed + patspan_adjust;
       
       seg_fit_list_phase <= seg_fit_list_phase + 1;
 

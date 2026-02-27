@@ -229,11 +229,11 @@ def pat_unit(data,
         bx = -9999
     elif best.lc > 0:
         # We are not currently passing in a rectangular window to a pat_unit, but instead an "hourglass" shape that depends on the max span for each layer (rather than a global max span)
-        # Centroids are offset depending on this, and needs to be corrected
-        centroid,  bx = calculate_centroids(masked_data[best_pid-1], bx_data)
-        max_span = max(config.ly_spans)
-        offsets = [2*(max_span - ly_span)//2 for ly_span in config.ly_spans] # Factor of 2 from double resolution
-        centroid = [(c+o) if c>0 else 0 for c, o in zip(centroid, offsets)]
+        
+        # Extract only the sbits part of the chosen pattern, to be input to the centroid finder
+        # Cannot simply used masked_data, since there are zeros to the right of the data that effectively shifts the coordinate frame's origin
+        extracted_sbits = [ly << shift_amount_ly if shift_amount_ly > 0 else ly >> abs(shift_amount_ly) for ly, shift_amount_ly in zip(masked_data[best_pid-1], config.offset_LUT[best_pid-1])]
+        centroid, bx = calculate_centroids(extracted_sbits, bx_data)
 
         best.centroid = centroid
         best.bx = bx

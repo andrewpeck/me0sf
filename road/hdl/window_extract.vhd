@@ -20,7 +20,7 @@
 -- Output: 6 std_logic_vectors of size 6. These are the sbits from the specified pattern.
 --
 -- From the strip center, finds where in the window the center of the desired pattern is (derived from sbit BRAM architecture).
--- From the PID, takes only the leftmost bit, and follwing 5 bits from each layer.
+-- From the PID, takes only the leftmost bit, and following 5 bits from each layer.
 -- Since patterns can have 1-6 bits, depending on PID and layer, this module also zeros bits that are not part of the pattern, and shifts the desired sbits
 -- such that they are centered. Odd sized layers (1, 3, 5) have an additional 0 to the right, that must be accounted for later. This is done since the size of these vectors
 -- must be constant.

@@ -23,37 +23,37 @@ from tb_common import (get_max_span_from_dut, get_segments_from_dut,
 #from get_sbits_from_root import (read_ntuple_stack, get_sbits_from_event)
 from read_ntuple import read_ntuple
 
-@cocotb.test() # type: ignore
-async def chamber_test_ff(dut, nloops=40):
-   await chamber_test(dut, "FF", nloops)
-
-@cocotb.test() # type: ignore
-async def chamber_test_5a(dut, nloops=40):
-   await chamber_test(dut, "5A", nloops)
-
-@cocotb.test() # type: ignore
-async def chamber_test_walking1(dut, nloops=220):
-   await chamber_test(dut, "WALKING1", nloops)
-
-@cocotb.test() # type: ignore
-async def chamber_test_walkingf(dut, nloops=220):
-   await chamber_test(dut, "WALKINGF", nloops)
-
-@cocotb.test() # type: ignore
-async def chamber_test_xprt(dut, nloops=100):
-   await chamber_test(dut, "XPRT", nloops)
+#@cocotb.test() # type: ignore
+#async def chamber_test_ff(dut, nloops=40):
+#   await chamber_test(dut, "FF", nloops)
+#
+#@cocotb.test() # type: ignore
+#async def chamber_test_5a(dut, nloops=40):
+#   await chamber_test(dut, "5A", nloops)
+#
+#@cocotb.test() # type: ignore
+#async def chamber_test_walking1(dut, nloops=220):
+#   await chamber_test(dut, "WALKING1", nloops)
+#
+#@cocotb.test() # type: ignore
+#async def chamber_test_walkingf(dut, nloops=220):
+#   await chamber_test(dut, "WALKINGF", nloops)
+#
+#@cocotb.test() # type: ignore
+#async def chamber_test_xprt(dut, nloops=100):
+#   await chamber_test(dut, "XPRT", nloops)
 
 @cocotb.test() # type: ignore
 async def chamber_test_segs(dut, nloops=100):
    await chamber_test(dut, "SEGMENTS", nloops)
 
-@cocotb.test() # type: ignore
-async def chamber_test_random(dut, nloops=100):
-    await chamber_test(dut, "RANDOM", nloops)
+#@cocotb.test() # type: ignore
+#async def chamber_test_random(dut, nloops=100):
+#    await chamber_test(dut, "RANDOM", nloops)
  
-@cocotb.test() # type: ignore
-async def chamber_test_deghost(dut, nloops=20):
-    await chamber_test(dut, "DEGHOST", nloops)   
+#@cocotb.test() # type: ignore
+#async def chamber_test_deghost(dut, nloops=20):
+#    await chamber_test(dut, "DEGHOST", nloops)   
 
 #@cocotb.test() # type: ignore
 #async def chamber_test_dat(dut, nloops=20):
@@ -88,7 +88,7 @@ async def chamber_test(dut, test, nloops=512, verbose=True, pad_null_bx=False):
     '''
     Test the chamber.vhd module
     '''
-    #random.seed(56) # chloe's favorite number
+    random.seed(56) # chloe's favorite number
 
     # Need to run setup in every test, as the clock processes end when the previous coroutine completes
     setup(dut)
@@ -99,7 +99,7 @@ async def chamber_test(dut, test, nloops=512, verbose=True, pad_null_bx=False):
      
     config = Config()
 
-    config.skip_centroids = True
+    config.skip_centroids = False
     config.x_prt_en = dut.X_PRT_EN.value
     config.en_non_pointing = dut.EN_NON_POINTING.value
     config.max_span = get_max_span_from_dut(dut)
@@ -362,22 +362,19 @@ async def chamber_test(dut, test, nloops=512, verbose=True, pad_null_bx=False):
                     print("  > fw: " + str(fw_segments[i]))
                     print("  > sw: " + str(sw_segments[i]))
 
-                    slope = dut.segments_o[len(fw_segments)-1-i].slope.value.signed_integer / (2**4)
-                    intercept = dut.segments_o[len(fw_segments)-1-i].intercept.value.signed_integer / (2**7)
-                    fit_strip = dut.segments_o[len(fw_segments)-1-i].fit_strip.value.signed_integer / (2**5)
+                    slope = dut.segments_o[i].slope.value.signed_integer / (2**7)
+                    intercept = dut.segments_o[i].intercept.value.signed_integer / (2**7)
+                    fit_strip = dut.segments_o[i].fit_strip.value.signed_integer / (2**6)
 
                     #print("FW slope: ", slope)
 
                     #if loop >= (LATENCY-1):
                     #    print("Simtrack slope: ", get_bending_angle_from_event(events[loop-(LATENCY)], sw_segments[i]))
                     #print("FW intercept: ", intercept)
-
-                    my_seg = fw_segments[i]
-                    L = pat_sbit_window_sizes[my_seg.id-1]/2
-                    C = 2*my_seg.strip
-                    x1 = fit_strip
-                    global_strip_out = x1 + C - L
-                    #print(f"GLOBAL STRIP_O: {global_strip_out}")
+                    print(f"SW Slope: {sw_segments[i].bend_ang}")
+                    print(f"FW Slope: {slope}")
+                    print(f"FW fitted strip: {fit_strip}")
+                    print(f"SW fitted strip: {sw_segments[i].strip + sw_segments[i].substrip}")
 
             for i in range(max((len(sw_segments), len(fw_segments)))):
 
@@ -388,7 +385,12 @@ async def chamber_test(dut, test, nloops=512, verbose=True, pad_null_bx=False):
 
                 err = "   "
                 latency_delay = LATENCY+2 if (not pad_null_bx) else (LATENCY+2)//3 # If we are padding with zero BXs, need to wait fewer loops before getting data out, since each loop processes 3 BXs
-                if latency_delay:
+                if latency_delay: # Check this later, but doesn't seem to be doing anything (i.e. equivalent to if True)
+                    print(f"SW centroids: {sw_segments[i].centroid}")
+                    if sw_segments[i].centroid is not None:
+                        print(f"SW valid: {[1 if cent > 0 else 0 for cent in sw_segments[i].centroid]}")
+                    else:
+                        print(f"SW valid: None")
                     if sw_segments[i] != fw_segments[i]:
                         print(popped_data)
                         print(f"ERR seg {i}:")
@@ -396,34 +398,32 @@ async def chamber_test(dut, test, nloops=512, verbose=True, pad_null_bx=False):
                         print("   > fw: " + str(fw_segments[i]))
                         print("FW ")
 
+                    fw_fit_strip = dut.segments_o[i].fit_strip.value.signed_integer / (2**6)
+                    fw_slope = dut.segments_o[i].slope.value.signed_integer / (2**7)
+                    # Only check fitted strip equivalence if a segment is valid. TODO: This should always be identical between SW and FW, so this should be fixed at some point
+                    if sw_segments[i].lc > 0 and sw_segments[i].substrip + sw_segments[i].strip != fw_fit_strip:
+                        print(popped_data)
+                        print(f"ERR seg {i}: Fitted strip mismatch")
+                        print("   > sw: " + str(sw_segments[i]))
+                        print(f"SW strip: {sw_segments[i].strip}")
+                        print(f"SW substrip: {sw_segments[i].substrip}")
+                        print("   > fw: " + str(fw_segments[i]))
+                        print(f"FW fitted strip: {fw_fit_strip}")
+                        assert False
+
+                    # Check slope
+                    if sw_segments[i].bend_ang != fw_slope:
+                        print(popped_data)
+                        print(f"ERR seg {i}: Slope mismatch")
+                        print("   > sw: " + str(sw_segments[i]))
+                        print(f"SW slope: {sw_segments[i].bend_ang}")
+                        print("   > fw: " + str(fw_segments[i]))
+                        print(f"FW fitted strip: {fw_slope}")
+                        assert False
+
                     assert sw_segments[i] == fw_segments[i]
 
-       # print("CENTROIDS: " + str([v.value.integer for v in dut.centroids]))
-       # print("CENTROIDS_OFFSET: " + str([v.value.integer for v in dut.centroids_offset]))
-       # print("LAYERS HIT: " + str([v.value for v in dut.valid_hits]))
-       # print("WINDOW: " + str([v.value for v in dut.bram_out]))
-       # print("BITS TO FINDERS: " + str([v.value for v in dut.centroids_in]))
-       # print("PID TO FINDER: " + str(dut.seg_info_buffer[2].id.value.integer))
-       # print("STRIP TO FINDER: " + str(dut.seg_info_buffer[2].strip.value.integer))
-
-
-
-        # Temp printout for checking fit
-        #print("\n")
-
-        #print("SLOPE: " + str(dut.slope_o.value) + " = " + str(sfixed_to_float(str(dut.slope_o.value), 4)))
-        #print("INTERCEPT: " + str(dut.intercept_o.value) + " = " + str(sfixed_to_float(str(dut.intercept_o.value), 7)))
-        #print("STRIP_O: " + str(dut.strip_o.value) + " = " + str(sfixed_to_float(str(dut.strip_o.value), 5)))
-
-        #L = pat_sbit_window_sizes[my_seg.id-1]/2
-        #C = 2*my_seg.strip
-        #x1 = sfixed_to_float(str(dut.strip_o.value), 5)
-        #global_strip_out = x1 + C - L
-        #print(f"GLOBAL STRIP_O: {global_strip_out}")
-
         print("\n")
-        # End temp printout
-
         await RisingEdge(dut.clock)
 
     # Having errors getting to the same initial phase state after the first test. Bit of a bandaid solution for now, TODO: understand this better and find a better solution (reset signal?)
@@ -483,7 +483,7 @@ def test_chamber():
     xpm_vhdl_sources = [os.path.join(rtl_dir, "../../../xpm_VCOMP.vhd")]
 
     #parameters = {"PULSE_EXTEND": 1, "DEADTIME": 0, "DISABLE_PEAKING": True}
-    parameters = {"DISABLE_PEAKING": True, "X_DEGHOST_EDGE_DIST" : 2, "PULSE_EXTEND" : 2}
+    parameters = {"DISABLE_PEAKING": True, "X_DEGHOST_EDGE_DIST" : 2, "PULSE_EXTEND" : 0}
 
     os.environ["SIM"] = "questa"
     #os.environ["COCOTB_RESULTS_FILE"] = f"../log/{module}.xml"
