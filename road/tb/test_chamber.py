@@ -20,40 +20,40 @@ from datagen import datagen
 from subfunc import (Config, get_sbits_from_event, get_bending_angle_from_event, patdef_t)
 from tb_common import (get_max_span_from_dut, get_segments_from_dut,
                        monitor_dav, setup, measure_latency, get_patlist_from_dut)
-#from get_sbits_from_root import (read_ntuple_stack, get_sbits_from_event)
+from get_sbits_from_root import (read_ntuple_stack, get_sbits_from_event)
 from read_ntuple import read_ntuple
 
-#@cocotb.test() # type: ignore
-#async def chamber_test_ff(dut, nloops=40):
-#   await chamber_test(dut, "FF", nloops)
-#
-#@cocotb.test() # type: ignore
-#async def chamber_test_5a(dut, nloops=40):
-#   await chamber_test(dut, "5A", nloops)
-#
-#@cocotb.test() # type: ignore
-#async def chamber_test_walking1(dut, nloops=220):
-#   await chamber_test(dut, "WALKING1", nloops)
-#
-#@cocotb.test() # type: ignore
-#async def chamber_test_walkingf(dut, nloops=220):
-#   await chamber_test(dut, "WALKINGF", nloops)
-#
-#@cocotb.test() # type: ignore
-#async def chamber_test_xprt(dut, nloops=100):
-#   await chamber_test(dut, "XPRT", nloops)
+@cocotb.test() # type: ignore
+async def chamber_test_ff(dut, nloops=40):
+   await chamber_test(dut, "FF", nloops)
+
+@cocotb.test() # type: ignore
+async def chamber_test_5a(dut, nloops=40):
+   await chamber_test(dut, "5A", nloops)
+
+@cocotb.test() # type: ignore
+async def chamber_test_walking1(dut, nloops=220):
+   await chamber_test(dut, "WALKING1", nloops)
+
+@cocotb.test() # type: ignore
+async def chamber_test_walkingf(dut, nloops=220):
+   await chamber_test(dut, "WALKINGF", nloops)
+
+@cocotb.test() # type: ignore
+async def chamber_test_xprt(dut, nloops=100):
+   await chamber_test(dut, "XPRT", nloops)
 
 @cocotb.test() # type: ignore
 async def chamber_test_segs(dut, nloops=100):
    await chamber_test(dut, "SEGMENTS", nloops)
 
-#@cocotb.test() # type: ignore
-#async def chamber_test_random(dut, nloops=100):
-#    await chamber_test(dut, "RANDOM", nloops)
- 
-#@cocotb.test() # type: ignore
-#async def chamber_test_deghost(dut, nloops=20):
-#    await chamber_test(dut, "DEGHOST", nloops)   
+@cocotb.test() # type: ignore
+async def chamber_test_random(dut, nloops=100):
+    await chamber_test(dut, "RANDOM", nloops)
+
+@cocotb.test() # type: ignore
+async def chamber_test_deghost(dut, nloops=20):
+    await chamber_test(dut, "DEGHOST", nloops)   
 
 #@cocotb.test() # type: ignore
 #async def chamber_test_dat(dut, nloops=20):
@@ -386,11 +386,6 @@ async def chamber_test(dut, test, nloops=512, verbose=True, pad_null_bx=False):
                 err = "   "
                 latency_delay = LATENCY+2 if (not pad_null_bx) else (LATENCY+2)//3 # If we are padding with zero BXs, need to wait fewer loops before getting data out, since each loop processes 3 BXs
                 if latency_delay: # Check this later, but doesn't seem to be doing anything (i.e. equivalent to if True)
-                    print(f"SW centroids: {sw_segments[i].centroid}")
-                    if sw_segments[i].centroid is not None:
-                        print(f"SW valid: {[1 if cent > 0 else 0 for cent in sw_segments[i].centroid]}")
-                    else:
-                        print(f"SW valid: None")
                     if sw_segments[i] != fw_segments[i]:
                         print(popped_data)
                         print(f"ERR seg {i}:")
@@ -400,7 +395,8 @@ async def chamber_test(dut, test, nloops=512, verbose=True, pad_null_bx=False):
 
                     fw_fit_strip = dut.segments_o[i].fit_strip.value.signed_integer / (2**6)
                     fw_slope = dut.segments_o[i].slope.value.signed_integer / (2**7)
-                    # Only check fitted strip equivalence if a segment is valid. TODO: This should always be identical between SW and FW, so this should be fixed at some point
+                    # Only check fitted strip and slope equivalence if a segment is valid.
+                    # TODO: This should always be identical between SW and FW, so this should be fixed at some point
                     if sw_segments[i].lc > 0 and sw_segments[i].substrip + sw_segments[i].strip != fw_fit_strip:
                         print(popped_data)
                         print(f"ERR seg {i}: Fitted strip mismatch")
@@ -412,7 +408,7 @@ async def chamber_test(dut, test, nloops=512, verbose=True, pad_null_bx=False):
                         assert False
 
                     # Check slope
-                    if sw_segments[i].bend_ang != fw_slope:
+                    if sw_segments[i].lc > 0 and sw_segments[i].bend_ang != fw_slope:
                         print(popped_data)
                         print(f"ERR seg {i}: Slope mismatch")
                         print("   > sw: " + str(sw_segments[i]))

@@ -1,7 +1,7 @@
 # Functions, global variables, and classes used in multiple files
 
 from patlist_functions import *
-from test_fit import reciprocal6, reciprocal, fx, vhdl_exact_fit
+from fit_func import reciprocal6, reciprocal, fx, vhdl_exact_fit
 
 from itertools import islice
 from math import ceil, floor
