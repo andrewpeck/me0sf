@@ -676,7 +676,7 @@ begin
   begin
     if rising_edge(clock) then
       -- Get segment info from seg_info_buffer
-      fit_segments(to_integer(seg_fit_list_phase)).lc <= seg_info_buffer(seg_info_buffer'length-1).lc when abs(slope_o) < (1*2) else to_unsigned(0, LC_BITS); -- 1*2 for double resolution
+      fit_segments(to_integer(seg_fit_list_phase)).lc <= seg_info_buffer(seg_info_buffer'length-1).lc when abs(slope_o) <= (1*2) else to_unsigned(0, LC_BITS); -- 1*2 for double resolution
       fit_segments(to_integer(seg_fit_list_phase)).id <= seg_info_buffer(seg_info_buffer'length-1).id;
       fit_segments(to_integer(seg_fit_list_phase)).strip <= seg_info_buffer(seg_info_buffer'length-1).strip;
       fit_segments(to_integer(seg_fit_list_phase)).partition <= seg_info_buffer(seg_info_buffer'length-1).partition;
