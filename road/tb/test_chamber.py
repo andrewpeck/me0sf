@@ -20,48 +20,48 @@ from datagen import datagen
 from subfunc import (Config, get_sbits_from_event, get_bending_angle_from_event, patdef_t)
 from tb_common import (get_max_span_from_dut, get_segments_from_dut,
                        monitor_dav, setup, measure_latency, get_patlist_from_dut)
-from get_sbits_from_root import (read_ntuple_stack, get_sbits_from_event)
+from get_sbits_from_root import (read_ntuple_stack_format, get_sbits_from_event_sim_format)
 from read_ntuple import read_ntuple
 
-@cocotb.test() # type: ignore
-async def chamber_test_ff(dut, nloops=40):
-   await chamber_test(dut, "FF", nloops)
-
-@cocotb.test() # type: ignore
-async def chamber_test_5a(dut, nloops=40):
-   await chamber_test(dut, "5A", nloops)
-
-@cocotb.test() # type: ignore
-async def chamber_test_walking1(dut, nloops=220):
-   await chamber_test(dut, "WALKING1", nloops)
-
-@cocotb.test() # type: ignore
-async def chamber_test_walkingf(dut, nloops=220):
-   await chamber_test(dut, "WALKINGF", nloops)
-
-@cocotb.test() # type: ignore
-async def chamber_test_xprt(dut, nloops=100):
-   await chamber_test(dut, "XPRT", nloops)
-
-@cocotb.test() # type: ignore
-async def chamber_test_segs(dut, nloops=100):
-   await chamber_test(dut, "SEGMENTS", nloops)
-
-@cocotb.test() # type: ignore
-async def chamber_test_random(dut, nloops=100):
-    await chamber_test(dut, "RANDOM", nloops)
-
-@cocotb.test() # type: ignore
-async def chamber_test_deghost(dut, nloops=20):
-    await chamber_test(dut, "DEGHOST", nloops)   
+#@cocotb.test() # type: ignore
+#async def chamber_test_ff(dut, nloops=40):
+#   await chamber_test(dut, "FF", nloops)
+#
+#@cocotb.test() # type: ignore
+#async def chamber_test_5a(dut, nloops=40):
+#   await chamber_test(dut, "5A", nloops)
+#
+#@cocotb.test() # type: ignore
+#async def chamber_test_walking1(dut, nloops=220):
+#   await chamber_test(dut, "WALKING1", nloops)
+#
+#@cocotb.test() # type: ignore
+#async def chamber_test_walkingf(dut, nloops=220):
+#   await chamber_test(dut, "WALKINGF", nloops)
+#
+#@cocotb.test() # type: ignore
+#async def chamber_test_xprt(dut, nloops=100):
+#   await chamber_test(dut, "XPRT", nloops)
+#
+#@cocotb.test() # type: ignore
+#async def chamber_test_segs(dut, nloops=100):
+#   await chamber_test(dut, "SEGMENTS", nloops)
+#
+#@cocotb.test() # type: ignore
+#async def chamber_test_random(dut, nloops=100):
+#    await chamber_test(dut, "RANDOM", nloops)
+#
+#@cocotb.test() # type: ignore
+#async def chamber_test_deghost(dut, nloops=20):
+#    await chamber_test(dut, "DEGHOST", nloops)   
 
 #@cocotb.test() # type: ignore
 #async def chamber_test_dat(dut, nloops=20):
 #   await chamber_test(dut, "TEST_DAT", nloops)
 
-#@cocotb.test() # type: ignore
-#async def chamber_test_stack(dut, nloops=20):
-#    await chamber_test(dut, "STACK_DAT", nloops)   
+@cocotb.test() # type: ignore
+async def chamber_test_stack(dut, nloops=500):
+    await chamber_test(dut, "STACK_DAT", nloops)   
 
 #@cocotb.test() # type: ignore
 #async def chamber_test_stack(dut, nloops=30):
@@ -78,8 +78,8 @@ async def chamber_test(dut, test, nloops=512, verbose=True, pad_null_bx=False):
        #     i_file_path = "../00001199.root"
        # else:
        #     raise Exception("Root file not found")
-        if (os.path.exists("../test_data/step3_noPU.root")): # Need ../ since the working directory is actually sim_build, a subdirectory of tb/
-            i_file_path = "../test_data/step3_noPU.root"
+        if (os.path.exists("../test_data/step3_pu200.root")): # Need ../ since the working directory is actually sim_build, a subdirectory of tb/
+            i_file_path = "../test_data/step3_pu200.root"
         else:
             raise Exception("Root file not found")
         #events = read_ntuple_stack(i_file_path)
@@ -307,7 +307,7 @@ async def chamber_test(dut, test, nloops=512, verbose=True, pad_null_bx=False):
                     print("Reached end of root file for given nloops. Repeating last entry.")
                     event = events[-1]
 
-                chamber_data = get_sbits_from_event(event)
+                chamber_data = get_sbits_from_event_sim_format(event)
 
             
             elif test=="PEAKING":
@@ -479,7 +479,8 @@ def test_chamber():
     xpm_vhdl_sources = [os.path.join(rtl_dir, "../../../xpm_VCOMP.vhd")]
 
     #parameters = {"PULSE_EXTEND": 1, "DEADTIME": 0, "DISABLE_PEAKING": True}
-    parameters = {"DISABLE_PEAKING": True, "X_DEGHOST_EDGE_DIST" : 2, "PULSE_EXTEND" : 0}
+    disable_peaking_param = False # Since the BRAM_LATENCY depends on whether peaking is enabled, should change this to a constant dependent on 2 parameters. For now do this.
+    parameters = {"DISABLE_PEAKING": disable_peaking_param, "X_DEGHOST_EDGE_DIST" : 2, "PULSE_EXTEND" : 2, "BRAM_LATENCY" : (45 + (8 if not disable_peaking_param else 0))}
 
     os.environ["SIM"] = "questa"
     #os.environ["COCOTB_RESULTS_FILE"] = f"../log/{module}.xml"
