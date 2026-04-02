@@ -41,7 +41,7 @@ entity sbit_bram is
     sbits_i  : in  chamber_w_virtual_t;
     wanted_strip : in unsigned (STRIP_BITS-1 downto 0);
     wanted_prt : in unsigned (PARTITION_BITS-1 downto 0);
-    my_out   : out sbit_window_t
+    bram_o   : out sbit_window_t
     );
 end sbit_bram;
 
@@ -58,25 +58,49 @@ constant WINDOW_SIZE : integer := 48;
 signal write_clock : std_logic := to_unsigned(COPY_ADDR_PHASE, 1)(0);
 
 type padded_prt_t is array (0 to 5) of
-  std_logic_vector (191+18*2 downto 0);
+  std_logic_vector (192+18*2-1 downto 0);
 type padded_data_t is array (0 to 14) of padded_prt_t;
+type padded_prts_t is array (0 to 5) of
+  std_logic_vector(192*8-1 downto 0);
+type padded_prts_arr_t is array (0 to 1) of padded_prts_t;
 
 signal padded_sbits : padded_data_t := (others => (others => (others => '0')));
+signal padded_prts_arr : padded_prts_arr_t;
 
 signal bx_addr_a : unsigned (3 downto 0) := to_unsigned(((SBIT_PHASE+7) / 8)*15, 4); -- Set to 15 if SBIT_PHASE is nonzero, so it will increment to 0
 signal bx_addr_b : unsigned (3 downto 0) := to_unsigned(15-LATENCY40, 4);
 signal copy_addr_a : unsigned (1 downto 0) := to_unsigned(3 - (SBIT_PHASE / 2), 2); -- Initialize to 2 so it will be 0 at first write
 signal full_addr_a : std_logic_vector (5 downto 0);
-signal full_addr_b : std_logic_vector (7 downto 0) := (others => '0');
+signal full_addr_b : std_logic_vector (10 downto 0) := (others => '0');
 signal wanted_bram_from_strip : std_logic_vector (1 downto 0) := "00";
 signal wanted_word_from_strip : std_logic_vector (1 downto 0) := "00";
-signal wanted_prt_reg, wanted_prt_reg2 : unsigned (PARTITION_BITS-1 downto 0) := "0000";
+signal wanted_prt_reg : std_logic_vector (PARTITION_BITS-1 downto 0) := "0000";
+signal real_cross_select : std_logic;
 
-signal global_phase : unsigned (2 downto 0) := to_unsigned(0, 3);
+type window_real_cross_t is array (0 to 1) of sbit_window_t;
+signal bram_o_real_cross : window_real_cross_t;
 
-type bram_o_chamber_t is array (0 to 14) of sbit_window_t;
-    
-signal bram_o : bram_o_chamber_t;
+signal global_phase : unsigned (2 downto 0) := to_unsigned(0, 3); 
+
+-- Function to reorganize data from array of partitions to slv. Also takes the lower 192 bits (from 192+36 bits) in each layer, in order to create the shifted copies.
+function to_slv(arr : padded_data_t) return padded_prts_arr_t is
+  variable slv_arr : padded_prts_arr_t;
+  variable prt_2 : integer;
+begin
+  for prt in 0 to arr'length-1 loop -- Partitions
+    prt_2 := prt/integer(2);
+    for ly in arr(0)'range loop -- Layers
+      slv_arr(prt mod 2)(ly)(192*(prt_2+1)-1 downto 192*prt_2) := arr(prt)(ly)(191 downto 0);
+    end loop;
+  end loop;
+
+  -- Set "dummy" 16th partition to 0s
+  for ly in 0 to 6-1 loop
+    slv_arr(1)(ly)(192*(7+1)-1 downto 192*7) := (others => '0');
+  end loop;
+
+  return slv_arr;
+end function;
 
 begin
 
@@ -90,18 +114,21 @@ begin
   assert SBIT_PHASE /= 7 or LATENCY320 /= 114
     report "SBIT_PHASE cannot be 7 if LATENCY320 = 114."
     severity failure;
-    
-  partition_bram_gen : for prt_I in 0 to 15-1 generate
+   
+  -- The BRAM macro only allows for 5 bits to select within a word (i.e factor of 32 difference between WIDTH_A and WIDTH_B). Ideally, we would have 6 (4 bits partition + 2 bits copies). So, we need to split the partitions. This is done by splitting the real and cross partitions, as this method is most consistent with the rest of the Segment Finder.
+
+  -- It is significantly simpler to create 16 partitions, where partition 16 is a "dummy" and just set to all 0s. It is possible to use less BRAM space by only using 15 partitions. This would require the window size to be changed from 48 -> 45. However, the (4 bits partition)(2 bits word) to select within a single word would need to be mixed in a convoluted way. 
+  partition_bram_gen : for prt_I in 0 to 1 generate
     layer_bram_gen : for ly_I in 0 to 6-1 generate
     begin
-          xpm_memory_sdpram_inst0 : xpm_memory_sdpram
+          xpm_memory_sdpram_inst_real_prt : xpm_memory_sdpram
             generic map (
-               ADDR_WIDTH_A => 6,               -- (4 bits for BX)(4 bits for partition)(2 bits for copies)
-               ADDR_WIDTH_B => 8,               -- (4 bits BX)(4 bits partition)(2 bits copies)(2 bits word)
-               BYTE_WRITE_WIDTH_A => 192,        -- DECIMAL
+               ADDR_WIDTH_A => 6,               -- (4 bits for BX)(2 bits for copies)
+               ADDR_WIDTH_B => 11,               -- (4 bits BX)(2 bits copies)(3 bits partition)(2 bits word)
+               BYTE_WRITE_WIDTH_A => 192*8,        -- DECIMAL
                CLOCKING_MODE => "independent_clock", -- String
                MEMORY_PRIMITIVE => "block",      -- String
-               MEMORY_SIZE => 12288,             -- DECIMAL
+               MEMORY_SIZE => 192*16*8*4,      -- Strips x BXs x Copies x Partitions = 98,304 bits ~= 12.3 kB
             --   RAM_DECOMP => "auto",            -- String
                READ_DATA_WIDTH_B => 48,         -- DECIMAL
                READ_LATENCY_B => 1,             -- DECIMAL
@@ -110,18 +137,17 @@ begin
                USE_MEM_INIT => 0,               -- DECIMAL
                USE_MEM_INIT_MMI => 0,           -- DECIMAL
                WAKEUP_TIME => "disable_sleep",  -- String
-               WRITE_DATA_WIDTH_A => 192,        -- DECIMAL
+               WRITE_DATA_WIDTH_A => 192*8,        -- DECIMAL
                WRITE_MODE_B => "no_change",     -- String
                WRITE_PROTECT => 0               -- DECIMAL
             )
             port map (
-               doutb => bram_o(prt_I)(ly_I),
+               doutb => bram_o_real_cross(prt_I)(ly_I),
                addra => full_addr_a,
                addrb => full_addr_b,
                clka => write_clock,
                clkb => clock320,
-               --dina => padded_sbits(prt_I)(ly_I)(padded_sbits(prt_I)(ly_I)'length-1 downto 36),
-              dina => padded_sbits(prt_I)(ly_I)(padded_sbits(prt_I)(ly_I)'length-1-36 downto 0),
+               dina => padded_prts_arr(prt_I)(ly_I),
                ena => '1',
                enb => '1',
                regceb => '1',                 -- 1-bit input: Clock Enable for the last register stage on the output data path.
@@ -139,7 +165,9 @@ begin
   end generate;
 
 full_addr_a <= std_logic_vector(bx_addr_a) & std_logic_vector(copy_addr_a);
-full_addr_b <= std_logic_vector(bx_addr_b) & wanted_bram_from_strip & wanted_word_from_strip;
+full_addr_b <= std_logic_vector(bx_addr_b) & wanted_bram_from_strip & wanted_prt_reg(wanted_prt_reg'high downto 1) & wanted_word_from_strip; -- Drop the LSB of wanted_prt, as it is used in the real or cross partition selection
+
+padded_prts_arr <= to_slv(padded_sbits); -- Organize data to be input to the BRAM. Just wiring, no logic here.
 
 process (clock320) begin
   if (rising_edge(clock320)) then
@@ -171,12 +199,13 @@ process (clock320) begin
       end loop;     
     end if;    
 
-    wanted_prt_reg2 <= wanted_prt;
-    wanted_prt_reg <= wanted_prt_reg2;
+    real_cross_select <= wanted_prt_reg(0);
+    wanted_prt_reg <= std_logic_vector(wanted_prt);
     wanted_word_from_strip <= std_logic_vector(to_unsigned(to_integer(wanted_strip) / 48, wanted_word_from_strip'length));
     wanted_bram_from_strip <= std_logic_vector(to_unsigned((to_integer(wanted_strip) / 12) mod 4, wanted_bram_from_strip'length));
-    my_out <= bram_o(to_integer(wanted_prt_reg));
-   end if;
+
+    bram_o <= bram_o_real_cross(0) when real_cross_select = '0' else bram_o_real_cross(1);
+  end if;
 end process;
 
 end Behavioral;

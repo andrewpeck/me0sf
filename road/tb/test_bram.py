@@ -47,7 +47,7 @@ async def bram_base(dut, test, nloops, verbose=False):
         print("Starting value of copy reg A state: " + str(dut.copy_addr_a.value))
 
     # Need to have all 0's for initialized values read in first BX
-    # Offset of 3 @ 320MHz + 1 BX (=N latency setting)
+    # Offset of 2 @ 320MHz + 1 BX (=N latency setting)
     q = [[[0 for _ in range(6)] for _ in range(15)] for _ in range(LATENCY320 + 10)]
     # Strip and partition queues must be offset, as addresses are registered from strip but not from partition
     # Constant offset of 3 BX, comes from pipelining address computation + 1 from BRAM interal read + 1 from output signal assignment
@@ -110,7 +110,7 @@ async def bram_base(dut, test, nloops, verbose=False):
                 print(f"Strip: {strip}, Partition: {prt}")
 
             # Format data out from FW
-            out_data = [ly.value.binstr for ly in dut.my_out]
+            out_data = [ly.value.binstr for ly in dut.bram_o]
 
             # Format data in from FIFO
             a = q.pop(0)
@@ -208,8 +208,8 @@ def test_bram(parameters):
 
 
 if __name__ == "__main__":
-    phases = [7]
-    latencies = [114]
+    phases = [0]
+    latencies = [0]
     
     # Run for each phase setting, for each latency setting
     parameters = []

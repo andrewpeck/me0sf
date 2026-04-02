@@ -46,7 +46,7 @@ entity chamber is
     EN_HC_COMPRESS : boolean := true;   -- true to enable compression of hit count function (REQUIRED: minimum ly_thresh value is 4)
     X_DEGHOST_EDGE_DIST : natural := 2;  -- radius for cross partition deghosting
     SBIT_BRAM_PHASE : integer := 0;
-    BRAM_LATENCY : integer := 45;
+    BRAM_LATENCY : integer := 45;--+8; -- Add 8 (1 BX) if peaking is enabled
     
     LY0_SPAN : natural := get_max_span(patdef_array);
     LY1_SPAN : natural := get_max_span(patdef_array);
@@ -61,16 +61,16 @@ entity chamber is
     clock             : in  std_logic;                     -- MUST BE 320MHZ
     clock40           : in  std_logic;                     -- MUST BE  40MHZ
 
-    ly_thresh_i         : in  ly_thresh_chamber; -- Layer threshold, 0 to 6
+--    ly_thresh_i         : in  ly_thresh_chamber; -- Layer threshold, 0 to 6
 
     -- synthesis translate_off
     dav_i_phase       : out natural range 0 to 7;
     dav_o_phase       : out natural range 0 to 7;
     -- synthesis translate_on
 
-    sbits_i           : in  chamber_t;
-    vfat_pretrigger_o : out std_logic_vector (23 downto 0);
-    segments_o        : out segment_w_fit_list_t (NUM_SEGMENTS-1 downto 0);
+--    sbits_i           : in  chamber_t;
+--    vfat_pretrigger_o : out std_logic_vector (23 downto 0);
+--    segments_o        : out segment_w_fit_list_t (NUM_SEGMENTS-1 downto 0);
     
     dav_i             : in  std_logic;
     dav_o             : out std_logic
@@ -88,20 +88,20 @@ architecture behavioral of chamber is
   --Used for testing, delete later. Allows to set all inputs to 0 and leave them hanging,
   --since there are not enough real I/O pins to use chamber as a top level entity.--
   --------------------------------------------------------------------------------
--- signal sbits_i : chamber_t;
--- attribute dont_touch : string;
--- attribute dont_touch of sbits_i : signal is "true";
---  
--- constant std_zeroed : std_logic_vector(192*6-1 downto 0) := (others => '0');
--- constant partition_zeroed : partition_t := convert(std_zeroed, sbits_i(0));
---  
--- signal vfat_pretrigger_o : std_logic_vector(23 downto 0);
--- attribute dont_touch of vfat_pretrigger_o : signal is "true";
--- 
--- signal segments_o        : segment_list_w_fit_t (NUM_SEGMENTS-1 downto 0);
--- attribute dont_touch of segments_o : signal is "true";
--- 
--- signal ly_thresh_i : ly_thresh_chamber;
+ signal sbits_i : chamber_t;
+ attribute dont_touch : string;
+ attribute dont_touch of sbits_i : signal is "true";
+  
+ constant std_zeroed : std_logic_vector(192*6-1 downto 0) := (others => '0');
+ constant partition_zeroed : partition_t := convert(std_zeroed, sbits_i(0));
+  
+ signal vfat_pretrigger_o : std_logic_vector(23 downto 0);
+ attribute dont_touch of vfat_pretrigger_o : signal is "true";
+ 
+ signal segments_o        : segment_w_fit_list_t (NUM_SEGMENTS-1 downto 0);
+ attribute dont_touch of segments_o : signal is "true";
+ 
+ signal ly_thresh_i : ly_thresh_chamber;
  
   --------------------------------------------------------------------------------
 
@@ -305,15 +305,15 @@ begin
   ly_thresh_compressed <= compress_ly_count(ly_thresh_i) when EN_HC_COMPRESS else ly_thresh_i;
 
 --set all thresholds to 4, for testing
---   process (clock) begin
---     if (rising_edge(clock)) then
---       for i in 0 to 15-1 loop
---         for j in 0 to NUM_PATTERNS-1 loop
---           ly_thresh_i(i)(j) <= "100";
---         end loop;
---       end loop;
---     end if;
---   end process;
+   process (clock) begin
+     if (rising_edge(clock)) then
+       for i in 0 to 15-1 loop
+         for j in 0 to NUM_PATTERNS-1 loop
+           ly_thresh_i(i)(j) <= "100";
+         end loop;
+       end loop;
+     end if;
+   end process;
 
   assert S1_REUSE = 1 or S1_REUSE = 2 or S1_REUSE = 4
     report "Only allowed values for s1 reuse are 1,2, and 4"
@@ -458,7 +458,7 @@ begin
       sbits_i  => bram_in,
       wanted_strip => seg_info_buffer(0).strip,
       wanted_prt => seg_info_buffer(0).partition,
-      my_out => bram_out
+      bram_o => bram_out
     );
 
   --------------------------------------------------------------------------------
