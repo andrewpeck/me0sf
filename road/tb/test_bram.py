@@ -5,6 +5,7 @@ import random
 import cocotb
 from cocotb.triggers import RisingEdge, FallingEdge
 from cocotb_test.simulator import run
+from cocotb.runner import get_runner, VHDL
 
 from constants import *
 from subfunc import *
@@ -167,26 +168,44 @@ def test_bram(parameters):
     vhdl_sources = [
         os.path.join(rtl_dir, "pat_types.vhd"),
         os.path.join(rtl_dir, "pat_pkg.vhd"),
-        os.path.join(rtl_dir, "../../../xpm_VCOMP.vhd"),
         os.path.join(rtl_dir, "sbit_bram.vhd")]
-
-    verilog_sources = [os.path.join(rtl_dir, "../../../xpm_memory.sv")]
 
     #parameters = {"LATENCY320" : latency, "SBIT_PHASE" : phase}
 
     os.environ["SIM"] = "questa"
-   
-    run(vhdl_sources=vhdl_sources,
-        verilog_sources=verilog_sources,
-        module=module,  # name of cocotb test module
-        vhdl_compile_args=["-2008"],
-        toplevel="sbit_bram",  # top level HDL
-        toplevel_lang="vhdl",
-        # sim_args=["-do", '"set NumericStdNoWarnings 1;"'],
-        sim_args=["-t", "ps", "-voptargs=\"-access=rw+/.\""], #voptargs arg might speed up sim
-        parameters=parameters,
-        sim_build = "sim_build/" + "_".join(("{}={}".format(*i) for i in parameters.items())),
-        gui=0)
+
+    xpm_sources = [os.path.join(rtl_dir, "../../../xpm_memory.sv"), os.path.join(rtl_dir, "../../../xpm_VCOMP.vhd")]
+
+    sim = os.getenv("SIM", "questa")
+    runner = get_runner(sim)
+
+    # First, compile XPM library for the BRAM macros.
+    runner.build(
+        hdl_library = "xpm",
+        sources = xpm_sources,
+        build_args = [VHDL("-2008")],
+        hdl_toplevel = None,
+        always = True
+    )
+
+    runner.build(
+        sources = vhdl_sources,
+        parameters = parameters,
+        build_args = [VHDL("-2008")],
+        hdl_toplevel = "sbit_bram",
+        always = True
+    )
+
+    speedup_args = ["-no_autoacc", "-voptargs=\"-access=rw+/.\""]
+
+    runner.test(
+        hdl_toplevel="sbit_bram",
+        test_module="test_bram",
+        test_args = ["-t", "ps", "-noautoldlibpath"] + speedup_args,
+        pre_cmd = ["set NumericStdNoWarnings 1;"],
+        gui = 0
+    )
+
 
 if __name__ == "__main__":
     phases = [7]
