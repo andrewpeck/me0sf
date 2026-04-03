@@ -55,7 +55,7 @@ constant PADDED_PHASE : integer := SBIT_PHASE mod 2;
 constant NUM_BRAMS : integer := 4;
 constant WINDOW_SIZE : integer := 48;
 
-signal write_clock : std_logic := to_unsigned(COPY_ADDR_PHASE, 1)(0);
+signal wr_en : std_logic := to_unsigned(COPY_ADDR_PHASE, 1)(0);
 
 type padded_prt_t is array (0 to 5) of
   std_logic_vector (192+18*2-1 downto 0);
@@ -126,7 +126,7 @@ begin
                ADDR_WIDTH_A => 6,               -- (4 bits for BX)(2 bits for copies)
                ADDR_WIDTH_B => 11,               -- (4 bits BX)(2 bits copies)(3 bits partition)(2 bits word)
                BYTE_WRITE_WIDTH_A => 192*8,        -- DECIMAL
-               CLOCKING_MODE => "independent_clock", -- String
+               CLOCKING_MODE => "common_clock", -- String
                MEMORY_PRIMITIVE => "block",      -- String
                MEMORY_SIZE => 192*16*8*4,      -- Strips x BXs x Copies x Partitions = 98,304 bits ~= 12.3 kB
             --   RAM_DECOMP => "auto",            -- String
@@ -145,10 +145,10 @@ begin
                doutb => bram_o_real_cross(prt_I)(ly_I),
                addra => full_addr_a,
                addrb => full_addr_b,
-               clka => write_clock,
+               clka => clock320,
                clkb => clock320,
                dina => padded_prts_arr(prt_I)(ly_I),
-               ena => '1',
+               ena => wr_en,
                enb => '1',
                regceb => '1',                 -- 1-bit input: Clock Enable for the last register stage on the output data path.
                rstb => '0',                     -- 1-bit input: Reset signal for the final port B output register stage. Synchronously resets output port
@@ -171,9 +171,8 @@ padded_prts_arr <= to_slv(padded_sbits); -- Organize data to be input to the BRA
 
 process (clock320) begin
   if (rising_edge(clock320)) then
-
-    -- Derive the write clock from the 320MHz clock, with phase depending on the phase of the incoming sbits
-    write_clock <= not write_clock;
+  
+    wr_en <= not wr_en; -- Toggle write enable at 160 MHz. This avoids annoying CDC to 160 MHz domain.
 
     -- Move BX addresses at 40 MHz, depending on phases
     global_phase <= global_phase + 1;
