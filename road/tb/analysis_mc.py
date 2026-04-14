@@ -303,8 +303,9 @@ def analysis(root_dat, hits, bx, bx_list, cross_part, verbose, pu, num_or):
 
     config = Config()
     config.num_outputs = 8
-    #config.deghost_pre = False
-    #config.deghost_post = False
+    config.deghost_pre = True
+    config.deghost_post = False
+    #config.pulse_stretch_bx = 2
     #config.cross_part_seg_width = 4
     #config.clearance_width = 2
     num_or_to_span = {2:37, 4:19, 8:11, 16:7}
@@ -331,8 +332,14 @@ def analysis(root_dat, hits, bx, bx_list, cross_part, verbose, pu, num_or):
     config_chams = [deepcopy(config) for _ in range(36)]
 
     # Determines how many and which BX offsets to look at
+    if config.pulse_stretch_bx > 0 and int(bx) > 1:
+        print("ERROR: Cannot mix input data pulse stretching and SW emulation pulse stretching. Set either config.pulse_stretch_bx to 0, or bx parameter to 1.")
+        sys.exit()
     bx_offset_windows = list(range(-2, 4)) if config.peaking_enabled else [0]
     bx_offset_0_index = bx_offset_windows.index(1) if config.peaking_enabled else bx_offset_windows.index(0)
+    # If doing SW emulation pulse stretching, shift central window to account for the 1 BX delay
+    if config.pulse_stretch_bx > 0:
+        bx_offset_0_index += 1
     #bx_offset_0_index = bx_offset_windows.index(2) # Use this for big decrease metric
     #bx_offset_0_index = bx_offset_windows.index(0) # Use this for any increase metric
 
