@@ -209,7 +209,7 @@ begin
       )
     port map (
       clock => clock,
-      dav_i => pats_dav,
+      dav_i => dav_s1,
       dav_o => priority_dav,
       dat_i => cand_slv,
       dat_o => best_slv,
@@ -238,10 +238,10 @@ begin
 --        );
 
   -- record -> slv for priority encoder
-  cand_to_slv : for I in 0 to NUM_PATTERNS-1 generate
-  begin
-    cand_slv(I) <= convert(pats(I), cand_slv(I));
-  end generate;
+--  cand_to_slv : for I in 0 to NUM_PATTERNS-1 generate
+--  begin
+--    cand_slv(I) <= convert(pats(I), cand_slv(I));
+--  end generate;
 
   -- slv -> record from priority encoder
   best <= convert(best_slv, best);
@@ -253,6 +253,12 @@ begin
   process (clock) is
   begin
     if (rising_edge(clock)) then
+    
+      -- Try adding a register for timing
+      for I in 0 to NUM_PATTERNS-1 loop
+          cand_slv(I) <= convert(pats(I), cand_slv(I));
+      end loop;
+      dav_s1 <= pats_dav;
 
       dav_o <= priority_dav;
       bx_0_o <= priority_dav;

@@ -33,7 +33,7 @@ use ieee.math_real.all;
 
 entity sbit_bram is
   generic (
-    LATENCY320 : integer := 0; --LATENCY320 + BX_ADDR_PHASE_WRITE MUST BE [0, 114], INCLUSIVE
+    LATENCY320 : integer := 0; --LATENCY320 + BX_ADDR_PHASE_WRITE MUST BE [0, 112], INCLUSIVE
     SBIT_PHASE : integer := 0  --MUST BE [0, 7], INCLUSIVE
   );
   port (
@@ -105,14 +105,14 @@ end function;
 begin
 
   -- Domain checks
-  assert LATENCY320 >= 0 and LATENCY320 <= 114
-   report "Latency320 for sbit BRAM must be in [0, 114], inclusive."
+  assert LATENCY320 >= 0 and LATENCY320 <= 112
+   report "Latency320 for sbit BRAM must be in [0, 112], inclusive."
    severity failure;
   assert SBIT_PHASE >= 0 and SBIT_PHASE <= 7
     report "SBIT_PHASE must be in [0, 7], inclusive."
     severity failure;
-  assert SBIT_PHASE /= 7 or LATENCY320 /= 114
-    report "SBIT_PHASE cannot be 7 if LATENCY320 = 114."
+  assert SBIT_PHASE /= 7 or LATENCY320 /= 112
+    report "SBIT_PHASE cannot be 7 if LATENCY320 = 112."
     severity failure;
    
   -- The BRAM macro only allows for 5 bits to select within a word (i.e factor of 32 difference between WIDTH_A and WIDTH_B). Ideally, we would have 6 (4 bits partition + 2 bits copies). So, we need to split the partitions. This is done by splitting the real and cross partitions, as this method is most consistent with the rest of the Segment Finder.

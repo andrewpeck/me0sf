@@ -45,8 +45,8 @@ entity chamber is
     --DEADTIME        : natural := 3;      -- deadtime in bx
     EN_HC_COMPRESS : boolean := true;   -- true to enable compression of hit count function (REQUIRED: minimum ly_thresh value is 4)
     X_DEGHOST_EDGE_DIST : natural := 2;  -- radius for cross partition deghosting
-    SBIT_BRAM_PHASE : integer := 0;
-    BRAM_LATENCY : integer := 45+8; -- Add 8 (1 BX) if peaking is enabled
+    SBIT_BRAM_PHASE : integer := 4;
+    BRAM_LATENCY : integer := 47+8; -- Add 8 (1 BX) if peaking is enabled
     
     LY0_SPAN : natural := get_max_span(patdef_array);
     LY1_SPAN : natural := get_max_span(patdef_array);
@@ -61,14 +61,13 @@ entity chamber is
     clock             : in  std_logic;                     -- MUST BE 320MHZ
     clock40           : in  std_logic;                     -- MUST BE  40MHZ
 
---    ly_thresh_i         : in  ly_thresh_chamber; -- Layer threshold, 0 to 6
-
     -- synthesis translate_off
     dav_i_phase       : out natural range 0 to 7;
     dav_o_phase       : out natural range 0 to 7;
     -- synthesis translate_on
 
 --    sbits_i           : in  chamber_t;
+--    ly_thresh_i         : in  ly_thresh_chamber; -- Layer threshold, 0 to 6
 --    vfat_pretrigger_o : out std_logic_vector (23 downto 0);
 --    segments_o        : out segment_w_fit_list_t (NUM_SEGMENTS-1 downto 0);
     
@@ -88,21 +87,18 @@ architecture behavioral of chamber is
   --Used for testing, delete later. Allows to set all inputs to 0 and leave them hanging,
   --since there are not enough real I/O pins to use chamber as a top level entity.--
   --------------------------------------------------------------------------------
- signal sbits_i : chamber_t;
- attribute dont_touch : string;
- attribute dont_touch of sbits_i : signal is "true";
+  signal sbits_i : chamber_t;
+  attribute dont_touch : string;
+  attribute dont_touch of sbits_i : signal is "true";
   
- constant std_zeroed : std_logic_vector(192*6-1 downto 0) := (others => '0');
- constant partition_zeroed : partition_t := convert(std_zeroed, sbits_i(0));
-  
- signal vfat_pretrigger_o : std_logic_vector(23 downto 0);
- attribute dont_touch of vfat_pretrigger_o : signal is "true";
+  signal vfat_pretrigger_o : std_logic_vector(23 downto 0);
+  attribute dont_touch of vfat_pretrigger_o : signal is "true";
  
- signal segments_o        : segment_w_fit_list_t (NUM_SEGMENTS-1 downto 0);
- attribute dont_touch of segments_o : signal is "true";
+  signal segments_o        : segment_w_fit_list_t (NUM_SEGMENTS-1 downto 0);
+  attribute dont_touch of segments_o : signal is "true";
  
- signal ly_thresh_i : ly_thresh_chamber;
- 
+  signal ly_thresh_i : ly_thresh_chamber := (others => (others => "100"));
+  attribute dont_touch of ly_thresh_i : signal is "true";
   --------------------------------------------------------------------------------
 
   constant NUM_PARTITIONS : integer := 8;
@@ -294,7 +290,7 @@ architecture behavioral of chamber is
   
   constant PATSPAN_LUT : patspan_LUT_t := find_all_pat_spans(PATLIST);
   
-  signal seg_fit_list_phase : unsigned (2 downto 0) := to_unsigned(3, 3); --TODO: Generalize this, might depend on some other phase(s)
+  signal seg_fit_list_phase : unsigned (2 downto 0) := to_unsigned(8 - (BRAM_LATENCY mod 8), 3); --TODO: Check this generalization, might depend on some other phase(s)
 
 begin
 
@@ -304,31 +300,20 @@ begin
 
   ly_thresh_compressed <= compress_ly_count(ly_thresh_i) when EN_HC_COMPRESS else ly_thresh_i;
 
---set all thresholds to 4, for testing
-   process (clock) begin
-     if (rising_edge(clock)) then
-       for i in 0 to 15-1 loop
-         for j in 0 to NUM_PATTERNS-1 loop
-           ly_thresh_i(i)(j) <= "100";
-         end loop;
-       end loop;
-     end if;
-   end process;
-
   assert S1_REUSE = 1 or S1_REUSE = 2 or S1_REUSE = 4
     report "Only allowed values for s1 reuse are 1,2, and 4"
     severity error;
 
   --Safety check to ensure compression works correctly
-  --process (clock) begin
-  --  if (rising_edge(clock)) then
-  --    for i in 0 to 15-1 loop
-  --      for j in 0 to ly_thresh_i'length-1 loop
-  --        assert not EN_HC_COMPRESS or unsigned(ly_thresh_i(i)(j)) >= 4 report "Minimum threshold cannot be below 4 if compression is enabled" severity error;
-  --      end loop;
-  --    end loop;
-  --  end if;
-  --end process;
+  process (clock) begin
+    if (rising_edge(clock)) then
+      for i in 0 to 15-1 loop
+        for j in 0 to ly_thresh_i'length-1 loop
+          assert not EN_HC_COMPRESS or unsigned(ly_thresh_i(i)(j)) >= 4 report "Minimum threshold cannot be below 4 if compression is enabled" severity error;
+        end loop;
+      end loop;
+    end if;
+  end process;
 
   -- synthesis translate_off
   dav_to_phase_i_mon : entity work.dav_to_phase
@@ -398,10 +383,8 @@ begin
         end generate;
 
       end generate;
-
       -- Pass sbits to BRAM
       bram_in(I) <= partition_or;
-
     end generate;
 
     process (clock) is

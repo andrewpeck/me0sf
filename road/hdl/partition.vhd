@@ -260,20 +260,13 @@ begin
   begin
     if (rising_edge(clock)) then
       dav_o <= dav_postghost;
-
+     
       for I in segments_o'range loop
         segments_o(I).lc        <= segments_postghost(I).lc;
         segments_o(I).id        <= segments_postghost(I).id;
         segments_o(I).strip     <= segments_postghost(I).strip;
         segments_o(I).partition <= to_unsigned(partition_num, 4);
       end loop;
-      
-      -- test function to print segments in partition, delete later
---     for I in segments_deghost'range loop
---       if (segments_deghost(I).id > 0) then
---         report "I am partition"&integer'image(partition_num)&". There is a segment centered at strip "&integer'image(to_integer(unsigned(segments_deghost(I).strip)));
---       end if;
---     end loop;
 
     end if;
   end process;

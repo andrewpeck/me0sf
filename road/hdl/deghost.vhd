@@ -31,6 +31,8 @@ architecture behavioral of deghost is
   begin
     return ((X mod W) <= D or (X mod W) >= (W-D-1));
   end;
+  
+  signal segments_reg : pat_unit_mux_list_t (WIDTH-1 downto 0);
 
 begin
 
@@ -39,10 +41,12 @@ begin
     if (rising_edge(clock)) then
       dav_o <= dav_i;
       
+      segments_reg <= segments_i;
+      
 
-      for I in segments_i'range loop
+      for I in segments_reg'range loop
 
-        segments_o(I) <= segments_i(I);
+        segments_o(I) <= segments_reg(I);
 
         if (GROUP_WIDTH > 0 and at_edge(I, GROUP_WIDTH, EDGE_DIST)) then
 
@@ -55,19 +59,19 @@ begin
               -- this comparator uses strip number though so I guess the bigger
               -- number should win.. it creates a bias toward the "right" side of
               -- the chamber.. but oh well :/
-              (segments_i(I) < segments_i(I+1))
+              (segments_reg(I) < segments_reg(I+1))
 
               and
 
               (not CHECK_STRIPS or
-               (segments_i(I+1).strip - segments_i(I).strip < 2))
+               (segments_reg(I+1).strip - segments_reg(I).strip < 2))
 
               and
 
               (not CHECK_IDS or
-               ((segments_i(I).id = segments_i(I+1).id) or
-                segments_i(I).id = segments_i(I+1).id + 2 or
-                segments_i(I).id + 2 = segments_i(I+1).id))) then
+               ((segments_reg(I).id = segments_reg(I+1).id) or
+                segments_reg(I).id = segments_reg(I+1).id + 2 or
+                segments_reg(I).id + 2 = segments_reg(I+1).id))) then
 
             segments_o(I) <= zero(segments_o(I));
 
@@ -84,19 +88,19 @@ begin
           -- then check -1 to the left
           if (I /= 0 and
 
-              (segments_i(I) < segments_i(I-1))
+              (segments_reg(I) < segments_reg(I-1))
 
               and
 
               (not CHECK_STRIPS or
-               (segments_i(I).strip - segments_i(I-1).strip) < 2)
+               (segments_reg(I).strip - segments_reg(I-1).strip) < 2)
 
               and
 
               (not CHECK_IDS or
-               ((segments_i(I).id = segments_i(I-1).id) or
-                segments_i(I).id = segments_i(I-1).id - 2 or
-                segments_i(I).id - 2 = segments_i(I-1).id))) then
+               ((segments_reg(I).id = segments_reg(I-1).id) or
+                segments_reg(I).id = segments_reg(I-1).id - 2 or
+                segments_reg(I).id - 2 = segments_reg(I-1).id))) then
 
             segments_o(I) <= zero(segments_o(I));
 

@@ -150,7 +150,7 @@ import pytest
 
 
 phases = [0, 1, 2, 3, 4, 5, 6, 7]
-latencies = [i for i in range(115)]
+latencies = [i for i in range(113)]
 
 # Run for each phase setting, for each latency setting
 parameters = []
