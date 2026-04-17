@@ -45,7 +45,7 @@ entity chamber is
     --DEADTIME        : natural := 3;      -- deadtime in bx
     EN_HC_COMPRESS : boolean := true;   -- true to enable compression of hit count function (REQUIRED: minimum ly_thresh value is 4)
     X_DEGHOST_EDGE_DIST : natural := 2;  -- radius for cross partition deghosting
-    SBIT_BRAM_PHASE : integer := 4;
+    SBIT_BRAM_PHASE : integer := 0;
     BRAM_LATENCY : integer := 47+8; -- Add 8 (1 BX) if peaking is enabled
     
     LY0_SPAN : natural := get_max_span(patdef_array);
@@ -66,10 +66,10 @@ entity chamber is
     dav_o_phase       : out natural range 0 to 7;
     -- synthesis translate_on
 
---    sbits_i           : in  chamber_t;
---    ly_thresh_i         : in  ly_thresh_chamber; -- Layer threshold, 0 to 6
---    vfat_pretrigger_o : out std_logic_vector (23 downto 0);
---    segments_o        : out segment_w_fit_list_t (NUM_SEGMENTS-1 downto 0);
+    sbits_i           : in  chamber_t;
+    ly_thresh_i         : in  ly_thresh_chamber; -- Layer threshold, 0 to 6
+    vfat_pretrigger_o : out std_logic_vector (23 downto 0);
+    segments_o        : out segment_w_fit_list_t (NUM_SEGMENTS-1 downto 0);
     
     dav_i             : in  std_logic;
     dav_o             : out std_logic
@@ -87,18 +87,18 @@ architecture behavioral of chamber is
   --Used for testing, delete later. Allows to set all inputs to 0 and leave them hanging,
   --since there are not enough real I/O pins to use chamber as a top level entity.--
   --------------------------------------------------------------------------------
-  signal sbits_i : chamber_t;
-  attribute dont_touch : string;
-  attribute dont_touch of sbits_i : signal is "true";
-  
-  signal vfat_pretrigger_o : std_logic_vector(23 downto 0);
-  attribute dont_touch of vfat_pretrigger_o : signal is "true";
- 
-  signal segments_o        : segment_w_fit_list_t (NUM_SEGMENTS-1 downto 0);
-  attribute dont_touch of segments_o : signal is "true";
- 
-  signal ly_thresh_i : ly_thresh_chamber := (others => (others => "100"));
-  attribute dont_touch of ly_thresh_i : signal is "true";
+--  signal sbits_i : chamber_t;
+--  attribute dont_touch : string;
+--  attribute dont_touch of sbits_i : signal is "true";
+--  
+--  signal vfat_pretrigger_o : std_logic_vector(23 downto 0);
+--  attribute dont_touch of vfat_pretrigger_o : signal is "true";
+-- 
+--  signal segments_o        : segment_w_fit_list_t (NUM_SEGMENTS-1 downto 0);
+--  attribute dont_touch of segments_o : signal is "true";
+-- 
+--  signal ly_thresh_i : ly_thresh_chamber := (others => (others => "100"));
+--  attribute dont_touch of ly_thresh_i : signal is "true";
   --------------------------------------------------------------------------------
 
   constant NUM_PARTITIONS : integer := 8;

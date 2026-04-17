@@ -23,34 +23,34 @@ from tb_common import (get_max_span_from_dut, get_segments_from_dut,
 from get_sbits_from_root import (read_ntuple_stack_format, get_sbits_from_event_sim_format)
 from read_ntuple import read_ntuple
 
-#@cocotb.test() # type: ignore
-#async def chamber_test_ff(dut, nloops=40):
-#   await chamber_test(dut, "FF", nloops)
-#
-#@cocotb.test() # type: ignore
-#async def chamber_test_5a(dut, nloops=40):
-#   await chamber_test(dut, "5A", nloops)
-#
+@cocotb.test() # type: ignore
+async def chamber_test_ff(dut, nloops=40):
+   await chamber_test(dut, "FF", nloops)
+
+@cocotb.test() # type: ignore
+async def chamber_test_5a(dut, nloops=20): # nloops=40
+   await chamber_test(dut, "5A", nloops)
+
 #@cocotb.test() # type: ignore
 #async def chamber_test_walking1(dut, nloops=220):
 #   await chamber_test(dut, "WALKING1", nloops)
-#
+
 #@cocotb.test() # type: ignore
 #async def chamber_test_walkingf(dut, nloops=220):
 #   await chamber_test(dut, "WALKINGF", nloops)
-#
+
 #@cocotb.test() # type: ignore
 #async def chamber_test_xprt(dut, nloops=100):
 #   await chamber_test(dut, "XPRT", nloops)
-#
+
 #@cocotb.test() # type: ignore
 #async def chamber_test_segs(dut, nloops=100):
 #   await chamber_test(dut, "SEGMENTS", nloops)
-#
+
 #@cocotb.test() # type: ignore
 #async def chamber_test_random(dut, nloops=100):
 #    await chamber_test(dut, "RANDOM", nloops)
-#
+
 #@cocotb.test() # type: ignore
 #async def chamber_test_deghost(dut, nloops=20):
 #    await chamber_test(dut, "DEGHOST", nloops)   
@@ -59,9 +59,9 @@ from read_ntuple import read_ntuple
 #async def chamber_test_dat(dut, nloops=20):
 #   await chamber_test(dut, "TEST_DAT", nloops)
 
-@cocotb.test() # type: ignore
-async def chamber_test_stack(dut, nloops=500):
-    await chamber_test(dut, "STACK_DAT", nloops)   
+#@cocotb.test() # type: ignore
+#async def chamber_test_stack(dut, nloops=500):
+#    await chamber_test(dut, "STACK_DAT", nloops)   
 
 #@cocotb.test() # type: ignore
 #async def chamber_test_stack(dut, nloops=30):
@@ -136,12 +136,11 @@ async def chamber_test(dut, test, nloops=512, verbose=True, pad_null_bx=False):
     def setfn(dut, x):
         dut.sbits_i.value = [[x for _ in range(6)] for _ in range(NUM_PARTITIONS)]
 
-    #meas_latency = await measure_latency(dut, checkfn, setfn)
-
     global LATENCY
-    #if LATENCY is None:
-        #LATENCY = ceil(meas_latency)+2-2-1 + 2 - 1 #another -2 from checking chunking changes # and bitonic sort optimization introduced this, weird...  #-1 #Peaking introduced this, need to investigate...
-    LATENCY = 11 # Latency does not depend on peaking, as it only represents the difference between FW and SW output, and peaking affects both
+    if LATENCY is None:
+        meas_latency = await measure_latency(dut, checkfn, setfn)
+        LATENCY = ceil(meas_latency)-3
+    #LATENCY = 12 # Latency does not depend on peaking, as it only represents the difference between FW and SW output, and peaking affects both
 
     # flush the buffers
     dut.sbits_i.value = NULL()
@@ -478,9 +477,8 @@ def test_chamber():
     xpm_verilog_sources = [os.path.join(rtl_dir, "../../../xpm_memory.sv")]
     xpm_vhdl_sources = [os.path.join(rtl_dir, "../../../xpm_VCOMP.vhd")]
 
-    #parameters = {"PULSE_EXTEND": 1, "DEADTIME": 0, "DISABLE_PEAKING": True}
     disable_peaking_param = False # Since the BRAM_LATENCY depends on whether peaking is enabled, should change this to a constant dependent on 2 parameters. For now do this.
-    parameters = {"DISABLE_PEAKING": disable_peaking_param, "X_DEGHOST_EDGE_DIST" : 2, "PULSE_EXTEND" : 2, "BRAM_LATENCY" : (45 + (8 if not disable_peaking_param else 0))}
+    parameters = {"DISABLE_PEAKING": disable_peaking_param, "X_DEGHOST_EDGE_DIST" : 2, "PULSE_EXTEND" : 2, "BRAM_LATENCY" : (47 + (8 if not disable_peaking_param else 0))}
 
     os.environ["SIM"] = "questa"
     #os.environ["COCOTB_RESULTS_FILE"] = f"../log/{module}.xml"

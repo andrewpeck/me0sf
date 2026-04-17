@@ -33,13 +33,17 @@ architecture behavioral of deghost is
   end;
   
   signal segments_reg : pat_unit_mux_list_t (WIDTH-1 downto 0);
+  signal dav_reg : std_logic;
 
 begin
+
+--  segments_reg <= segments_i;
 
   process (clock) is
   begin
     if (rising_edge(clock)) then
-      dav_o <= dav_i;
+      dav_reg <= dav_i;
+      dav_o <= dav_reg;
       
       segments_reg <= segments_i;
       
