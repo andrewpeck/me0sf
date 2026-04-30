@@ -1,7 +1,6 @@
 import cocotb
 from cocotb.clock import Clock
-from cocotb.triggers import Edge, RisingEdge, ClockCycles, Timer
-from cocotb_test.simulator import run
+from cocotb.triggers import RisingEdge, ClockCycles, Timer
 
 from constants import *
 from subfunc import *
@@ -92,11 +91,12 @@ async def generate_dav(dut):
         dut.dav_i.value = 0
         await Timer(CLOCK_STEP*7, units="ns") # Wait 7 clocks
 
+# Monitor DAV is currently broken with newest cocotb version, but not needed
 async def monitor_dav(dut):
     await ClockCycles(dut.dav_o, 3) # Wait for 3 dav_o rising edges
     while True:
-        await Edge(dut.segments_o[len(dut.segments_o) - 1]) # Only watching for a change on last segment in output list, since it is updated every clock now
-        await Timer(CLOCK_STEP, units="ns") # Check value at the next clock, so the updated dav_o will be read
+        await dut.segments_o[len(dut.segments_o) - 1].lc.value_change # Only watching for a change on last segment in output list, since it is updated every clock now
+        #await Timer(CLOCK_STEP, units="ns") # Check value at the next clock, so the updated dav_o will be read
         assert dut.dav_o == 1
         await RisingEdge(dut.clock)
 

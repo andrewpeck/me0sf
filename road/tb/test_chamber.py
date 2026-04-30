@@ -11,8 +11,7 @@ from math import ceil
 import cocotb
 import plotille
 from cocotb.triggers import RisingEdge
-from cocotb_test.simulator import run
-from cocotb.runner import get_runner, VHDL, Verilog
+from cocotb_tools.runner import get_runner, VHDL, Verilog
 from cocotb.clock import Clock
 
 from chamber_beh import process_chamber
@@ -93,7 +92,7 @@ async def chamber_test(dut, test, nloops=512, verbose=True, pad_null_bx=False):
     # Need to run setup in every test, as the clock processes end when the previous coroutine completes
     setup(dut)
 
-    cocotb.start_soon(monitor_dav(dut))
+    #cocotb.start_soon(monitor_dav(dut))
 
     await RisingEdge(dut.clock)
      
@@ -131,7 +130,7 @@ async def chamber_test(dut, test, nloops=512, verbose=True, pad_null_bx=False):
     # measure latency by putting some s-bits on a strip and waiting to see the output
     # subtract 3 to account for lc compression
     checkfn = lambda : dut.segments_o[0].lc.value.is_resolvable and \
-        dut.segments_o[0].lc.value.integer >= config.ly_thresh_patid[dut.segments_o[0].id.value.integer - 1] - 3*(en_hc_compress)
+        dut.segments_o[0].lc.value.to_unsigned() >= config.ly_thresh_patid[dut.segments_o[0].id.value.to_unsigned() - 1] - 3*(en_hc_compress)
 
     def setfn(dut, x):
         dut.sbits_i.value = [[x for _ in range(6)] for _ in range(NUM_PARTITIONS)]
@@ -361,9 +360,9 @@ async def chamber_test(dut, test, nloops=512, verbose=True, pad_null_bx=False):
                     print("  > fw: " + str(fw_segments[i]))
                     print("  > sw: " + str(sw_segments[i]))
 
-                    slope = dut.segments_o[i].slope.value.signed_integer / (2**7)
-                    intercept = dut.segments_o[i].intercept.value.signed_integer / (2**7)
-                    fit_strip = dut.segments_o[i].fit_strip.value.signed_integer / (2**6)
+                    slope = dut.segments_o[i].slope.value.to_signed() / (2**7)
+                    intercept = dut.segments_o[i].intercept.value.to_signed() / (2**7)
+                    fit_strip = dut.segments_o[i].fit_strip.value.to_signed() / (2**6)
 
                     #print("FW slope: ", slope)
 
@@ -392,8 +391,8 @@ async def chamber_test(dut, test, nloops=512, verbose=True, pad_null_bx=False):
                         print("   > fw: " + str(fw_segments[i]))
                         print("FW ")
 
-                    fw_fit_strip = dut.segments_o[i].fit_strip.value.signed_integer / (2**6)
-                    fw_slope = dut.segments_o[i].slope.value.signed_integer / (2**7)
+                    fw_fit_strip = dut.segments_o[i].fit_strip.value.to_signed() / (2**6)
+                    fw_slope = dut.segments_o[i].slope.value.to_signed() / (2**7)
                     # Only check fitted strip and slope equivalence if a segment is valid.
                     # TODO: This should always be identical between SW and FW, so this should be fixed at some point
                     if sw_segments[i].lc > 0 and sw_segments[i].substrip + sw_segments[i].strip != fw_fit_strip:
