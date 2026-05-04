@@ -18,6 +18,7 @@ use work.pat_types.all;
 
 package pat_pkg is
 
+  attribute w : natural;
 
   function count_ones(slv : std_logic_vector) return natural;
 
@@ -62,9 +63,18 @@ package pat_pkg is
       slope     : sfixed(3-1 downto -7); -- Widest pattern currently available has span 13 (PID=12), so highest slope is 13/6 ~2. Need 2+1 integer bits (since it is signed)
       fit_strip : sfixed(11-1 downto -6); -- Need [0-191] in integer = 8 bits, give 5 bits of decimal precision (arbitrary for now, can change)
   end record segment_w_fit_t;
+  attribute w of segment_w_fit_t : type is LC_BITS+PID_BITS+8+PARTITION_BITS+14+10+17;
 
   type segment_w_fit_list_t is array(integer range <>) of segment_w_fit_t; 
-                                                          
+
+  function convert(x: segment_w_fit_t; tpl: std_logic_vector)
+    return std_logic_vector;
+  procedure assign(
+    variable y : out std_logic_vector;
+    constant x : in std_logic_vector);
+  function convert(x: segment_w_fit_list_t; tpl: std_logic_vector)
+    return std_logic_vector;
+
   --------------------------------------------------------------------------------
   -- Build Parameters
   --------------------------------------------------------------------------------
@@ -130,6 +140,94 @@ package pat_pkg is
 end package pat_pkg;
 
 package body pat_pkg is
+
+  -- Functions to convert segments to slv, to interface with DAQ readout
+  function convert(x: segment_w_fit_t; tpl: std_logic_vector) return std_logic_vector is
+      variable y : std_logic_vector(tpl'range);
+      variable w : integer;
+      variable u : integer := tpl'left;
+  begin
+      if tpl'ascending then
+         w := x.lc'length;
+         y(u to u+w-1) := std_logic_vector(x.lc);
+         u := u + w;
+         w := x.id'length;
+         y(u to u+w-1) := std_logic_vector(x.id);
+         u := u + w;
+         w := x.strip'length;
+         y(u to u+w-1) := std_logic_vector(x.strip);
+         u := u + w;
+         w := x.partition'length;
+         y(u to u+w-1) := std_logic_vector(x.partition);
+         u := u + w;
+         w := x.intercept'length;
+	 y(u to u+w-1) := to_slv(x.intercept); -- Need the to_slv function for sfixed types (provided by package) to deal with negative indices
+         u := u + w;
+         w := x.slope'length;
+         y(u to u+w-1) := to_slv(x.slope);
+         u := u + w;
+         w := x.fit_strip'length;
+         y(u to u+w-1) := to_slv(x.fit_strip);
+      else
+         w := x.lc'length;
+         y(u downto u-w+1) := std_logic_vector(x.lc);
+         u := u - w;
+         w := x.id'length;
+         y(u downto u-w+1) := std_logic_vector(x.id);
+         u := u - w;
+         w := x.strip'length;
+         y(u downto u-w+1) := std_logic_vector(x.strip);
+         u := u - w;
+         w := x.partition'length;
+         y(u downto u-w+1) := std_logic_vector(x.partition);
+         u := u - w;
+         w := x.intercept'length;
+         y(u downto u-w+1) := to_slv(x.intercept);
+         u := u - w;
+         w := x.slope'length;
+         y(u downto u-w+1) := to_slv(x.slope);
+         u := u - w;
+         w := x.fit_strip'length;
+         y(u downto u-w+1) := to_slv(x.fit_strip);
+      end if;
+      return y;
+   end function convert;
+
+
+   procedure assign(
+      variable y : out std_logic_vector;
+      constant x : in std_logic_vector) is
+      variable tmp : std_logic_vector(y'range);
+   begin
+      for j in 0 to y'length-1 loop
+         y(y'low + j) := x(x'low + j);
+      end loop;
+   end procedure assign;
+
+
+   function convert(x: segment_w_fit_list_t; tpl: std_logic_vector) return std_logic_vector is
+      variable y : std_logic_vector(tpl'range);
+      constant W : natural := x(x'low).lc'length + x(x'low).id'length + x(x'low).strip'length + x(x'low).partition'length + x(x'low).intercept'length + x(x'low).slope'length + x(x'low).fit_strip'length;
+      variable a : integer;
+      variable b : integer;
+   begin
+      if y'ascending then
+         for i in 0 to x'length-1 loop
+            a := W*i + y'low + W - 1;
+            b := W*i + y'low;
+            assign(y(b to a), convert(x(i+x'low), y(b to a)));
+         end loop;
+      else
+         for i in 0 to x'length-1 loop
+            a := W*i + y'low + W - 1;
+            b := W*i + y'low;
+            assign(y(a downto b), convert(x(i+x'low), y(a downto b)));
+         end loop;
+      end if;
+      return y;
+   end function convert;
+
+
 
   function count_ones(slv : std_logic_vector) return natural is
     variable n_ones : natural := 0;
@@ -210,6 +308,8 @@ package body pat_pkg is
   function valid (seg : pat_unit_t) return boolean is
   begin return seg.lc /= 0; end;
   function valid (seg : pat_unit_mux_t) return boolean is
+  begin return seg.lc /= 0; end;
+  function valid (seg : segment_w_fit_t) return boolean is
   begin return seg.lc /= 0; end;
 
   --------------------------------------------------------------------------------

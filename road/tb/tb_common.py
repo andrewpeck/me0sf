@@ -23,14 +23,14 @@ def setup(dut):
 def get_segments_from_dut(dut):
 
     def convert_segment(segment):
-        lyc = segment.lc.value.integer
-        pid = segment.id.value.integer
+        lyc = segment.lc.value.to_unsigned()
+        pid = segment.id.value.to_unsigned()
         if hasattr(segment, "strip"):
-            strip = segment.strip.value.integer
+            strip = segment.strip.value.to_unsigned()
         else:
             strip = 0
         if hasattr(segment, "partition"):
-            partition = segment.partition.value.integer
+            partition = segment.partition.value.to_unsigned()
         else:
             partition = 0
         seg = Segment(lc=lyc, id=pid, strip=strip, partition=partition)
@@ -87,16 +87,16 @@ async def generate_dav(dut):
     await RisingEdge(dut.clock40)
     while True:
         dut.dav_i.value = 1
-        await Timer(CLOCK_STEP, units="ns") # Wait 1 clock; Cannot use 320 MHz clock here, it was causing an issue that couldn't be resolved
+        await Timer(CLOCK_STEP, unit="ns") # Wait 1 clock; Cannot use 320 MHz clock here, it was causing an issue that couldn't be resolved
         dut.dav_i.value = 0
-        await Timer(CLOCK_STEP*7, units="ns") # Wait 7 clocks
+        await Timer(CLOCK_STEP*7, unit="ns") # Wait 7 clocks
 
 # Monitor DAV is currently broken with newest cocotb version, but not needed
 async def monitor_dav(dut):
     await ClockCycles(dut.dav_o, 3) # Wait for 3 dav_o rising edges
     while True:
         await dut.segments_o[len(dut.segments_o) - 1].lc.value_change # Only watching for a change on last segment in output list, since it is updated every clock now
-        #await Timer(CLOCK_STEP, units="ns") # Check value at the next clock, so the updated dav_o will be read
+        #await Timer(CLOCK_STEP, unit="ns") # Check value at the next clock, so the updated dav_o will be read
         assert dut.dav_o == 1
         await RisingEdge(dut.clock)
 
