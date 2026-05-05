@@ -347,13 +347,6 @@ async def chamber_test(dut, test, nloops=512, verbose=True, pad_null_bx=False):
 
             fw_segments = get_segments_from_dut(dut)
 
-            #Add 3 to the FW segments' layer count, to account for LC compression
-            if (en_hc_compress):
-                for segment in fw_segments:
-                    if (segment.lc > 0):
-                        segment.lc += 3
-                        segment.update_quality()
-
             if verbose:
                 print(f'{loop}=')
                 for i in range(len(fw_segments)):

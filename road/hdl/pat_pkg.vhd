@@ -112,6 +112,7 @@ package pat_pkg is
   function valid (seg : segment_t) return boolean;
   function valid (seg : pat_unit_t) return boolean;
   function valid (seg : pat_unit_mux_t) return boolean;
+  function valid (seg : segment_w_fit_t) return boolean;
 
   -- mirror a pattern unit (left/right symmetry)
   function mirror_patdef (pat : patdef_t; id : natural) return patdef_t;

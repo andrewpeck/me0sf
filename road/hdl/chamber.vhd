@@ -197,6 +197,17 @@ architecture behavioral of chamber is
     return ly_thresh_compressed;
   end;
 
+  function decompress_ly_count (segments : segment_w_fit_list_t) return segment_w_fit_list_t is
+    variable tmp : segment_w_fit_list_t (segments'range) := segments;
+  begin
+    for I in 0 to tmp'length-1 loop
+      if segments(I).lc > 0 then
+        tmp(I).lc := segments(I).lc + 3;
+      end if;
+    end loop;
+    return tmp;
+  end;
+
   --------------------------------------------------------------------------------
   -- Sbit BRAM
   --------------------------------------------------------------------------------
@@ -672,7 +683,7 @@ begin
       seg_fit_list_phase <= seg_fit_list_phase + 1;
 
       dav_o             <= '1' when seg_fit_list_phase = "000" else '0';
-      segments_o <= fit_segments;
+      segments_o <= decompress_ly_count(fit_segments) when EN_HC_COMPRESS else fit_segments; -- Add 3 to LC if LC compression is enabled, and segment is valid
     end if;
   end process;
 
