@@ -7,7 +7,7 @@ import os
 import cocotb
 from cocotb.clock import Clock
 from cocotb.triggers import RisingEdge
-from cocotb.runner import get_runner, VHDL
+from cocotb_tools.runner import get_runner, VHDL
 
 import matplotlib.pyplot as plt
 import matplotlib
@@ -19,12 +19,14 @@ from subfunc import llse_fit
 def rand_y():
     rand_m = random.randint(math.floor(-37 / 6), math.floor(37 / 6))
     rand_b = random.randint(-10, 10)
-    return [math.floor(rand_m * (0 - 2.5) + rand_b + random.randint(-1, 1)),
+    vals = [math.floor(rand_m * (0 - 2.5) + rand_b + random.randint(-1, 1)),
             math.floor(rand_m * (1 - 2.5) + rand_b + random.randint(-1, 1)),
             math.floor(rand_m * (2 - 2.5) + rand_b + random.randint(-1, 1)),
             math.floor(rand_m * (3 - 2.5) + rand_b + random.randint(-1, 1)),
             math.floor(rand_m * (4 - 2.5) + rand_b + random.randint(-1, 1)),
             math.floor(rand_m * (5 - 2.5) + rand_b + random.randint(-1, 1))]
+    shift_vals = [val - min(min(vals), 0) for val in vals] # Ensure all values are positive
+    return shift_vals
 
 def print_slope(slope, intercept, key_strip, m, b, key_s):
     print("found y=%.3f x + %f (s=%f)" % (slope, intercept, key_strip))

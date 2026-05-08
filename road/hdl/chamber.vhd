@@ -631,7 +631,7 @@ begin
     );
     
   offset_g : for i in 0 to 5 generate
-    centroids_offset(i) <= ("0000" & centroids(i)) + to_unsigned(offsets(maximum(to_integer(seg_info_buffer(5).id)-1, 0))(i), centroids_offset(i)'length); -- Need the maximum for now, since PID indexes by 1
+    centroids_offset(i) <= ("000" & centroids(i)) + to_unsigned(offsets(maximum(to_integer(seg_info_buffer(5).id)-1, 0))(i), centroids_offset(i)'length); -- Need the maximum for now, since PID indexes by 1
     valid_hits(valid_hits'length-1-i) <= '0' when centroids(i) = to_unsigned(0, centroids(i)'length) else '1'; -- Flip direction, since centroids direction will be flipped
   end generate;
 
@@ -641,16 +641,16 @@ begin
   -- Need to flip direction of centroids (0->5, 1->4, ...)
   fitter_inst : entity work.fit
     generic map (
-      STRIP_BITS => 8
+      STRIP_BITS => 7
     )
     port map (
       clock => clock,
-      ly0 => signed(centroids_offset(5)), --For now, zero padding, since input type is signed. TODO: should be changed to unsigned, since the origin is at the right, and all values are positive; NOTE: moved zero pad above, so "000" --> "0000"
-      ly1 => signed(centroids_offset(4)),
-      ly2 => signed(centroids_offset(3)),
-      ly3 => signed(centroids_offset(2)),
-      ly4 => signed(centroids_offset(1)),
-      ly5 => signed(centroids_offset(0)),
+      ly0 => centroids_offset(5),
+      ly1 => centroids_offset(4),
+      ly2 => centroids_offset(3),
+      ly3 => centroids_offset(2),
+      ly4 => centroids_offset(1),
+      ly5 => centroids_offset(0),
       valid_i => valid_hits,
       strip_o => strip_o,
       intercept_o => intercept_o,

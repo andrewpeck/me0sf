@@ -28,7 +28,7 @@ entity fit is
 
     N_STAGES : natural := 13;
 
-    STRIP_BITS : natural := 8;
+    STRIP_BITS : natural := 7;
     -- slope
     -- max slope is ~40 strips / 6 layers = ~7 so give it 4 bits + 1 for sign +1 for double resolution
     -- Using only up to PID=12, which has span=13 -> 2+1+1 = 4 bits
@@ -50,12 +50,12 @@ entity fit is
 
   port (
     clock   : in std_logic;
-    ly0     : in signed (STRIP_BITS-1 downto 0);
-    ly1     : in signed (STRIP_BITS-1 downto 0);
-    ly2     : in signed (STRIP_BITS-1 downto 0);
-    ly3     : in signed (STRIP_BITS-1 downto 0);
-    ly4     : in signed (STRIP_BITS-1 downto 0);
-    ly5     : in signed (STRIP_BITS-1 downto 0);
+    ly0     : in unsigned (STRIP_BITS-1 downto 0);
+    ly1     : in unsigned (STRIP_BITS-1 downto 0);
+    ly2     : in unsigned (STRIP_BITS-1 downto 0);
+    ly3     : in unsigned (STRIP_BITS-1 downto 0);
+    ly4     : in unsigned (STRIP_BITS-1 downto 0);
+    ly5     : in unsigned (STRIP_BITS-1 downto 0);
     valid_i : in std_logic_vector(N_LAYERS-1 downto 0);
 
     strip_o     : out sfixed (STRIP_INT_BITS-1 downto -STRIP_FRAC_BITS);
@@ -70,7 +70,7 @@ architecture behavioral of fit is
   -- s0
   --------------------------------------------------------------------------------
 
-  type ly_array_t is array (integer range 0 to N_LAYERS-1) of signed (STRIP_BITS-1 downto 0);
+  type ly_array_t is array (integer range 0 to N_LAYERS-1) of unsigned (STRIP_BITS-1 downto 0);
   signal ly : ly_array_t := (others => (others => '0'));
   signal result : integer;
 
