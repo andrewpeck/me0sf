@@ -16,19 +16,19 @@ from cocotb.clock import Clock
 
 from chamber_beh import process_chamber
 from datagen import datagen
-from subfunc import (Config, get_sbits_from_event, get_bending_angle_from_event, patdef_t)
-from tb_common import (get_max_span_from_dut, get_segments_from_dut,
+from subfunc import (Config, Segment, get_sbits_from_event, get_bending_angle_from_event, patdef_t)
+from tb_common import (get_max_span_from_dut, get_segment_from_dut,
                        monitor_dav, setup, measure_latency, get_patlist_from_dut)
 from get_sbits_from_root import (read_ntuple_stack_format, get_sbits_from_event_sim_format)
 from read_ntuple import read_ntuple
 
-@cocotb.test() # type: ignore
-async def chamber_test_ff(dut, nloops=40):
-   await chamber_test(dut, "FF", nloops)
+#@cocotb.test() # type: ignore
+#async def chamber_test_ff(dut, nloops=40):
+#   await chamber_test(dut, "FF", nloops)
 
-@cocotb.test() # type: ignore
-async def chamber_test_5a(dut, nloops=20): # nloops=40
-   await chamber_test(dut, "5A", nloops)
+#@cocotb.test() # type: ignore
+#async def chamber_test_5a(dut, nloops=40):
+#   await chamber_test(dut, "5A", nloops)
 
 #@cocotb.test() # type: ignore
 #async def chamber_test_walking1(dut, nloops=220):
@@ -54,9 +54,9 @@ async def chamber_test_5a(dut, nloops=20): # nloops=40
 #async def chamber_test_deghost(dut, nloops=20):
 #    await chamber_test(dut, "DEGHOST", nloops)   
 
-#@cocotb.test() # type: ignore
-#async def chamber_test_dat(dut, nloops=20):
-#   await chamber_test(dut, "TEST_DAT", nloops)
+@cocotb.test() # type: ignore
+async def chamber_test_dat(dut, nloops=20):
+   await chamber_test(dut, "TEST_DAT", nloops)
 
 #@cocotb.test() # type: ignore
 #async def chamber_test_stack(dut, nloops=500):
@@ -129,8 +129,8 @@ async def chamber_test(dut, test, nloops=512, verbose=True, pad_null_bx=False):
 
     # measure latency by putting some s-bits on a strip and waiting to see the output
     # subtract 3 to account for lc compression
-    checkfn = lambda : dut.segments_o[0].lc.value.is_resolvable and \
-        dut.segments_o[0].lc.value.to_unsigned() >= config.ly_thresh_patid[dut.segments_o[0].id.value.to_unsigned() - 1] - 3*(en_hc_compress)
+    checkfn = lambda : dut.segment_o.lc.value.is_resolvable and \
+        dut.segment_o.lc.value.to_unsigned() >= config.ly_thresh_patid[dut.segment_o.id.value.to_unsigned() - 1] - 3*(en_hc_compress)
 
     def setfn(dut, x):
         dut.sbits_i.value = [[x for _ in range(6)] for _ in range(NUM_PARTITIONS)]
@@ -171,8 +171,15 @@ async def chamber_test(dut, test, nloops=512, verbose=True, pad_null_bx=False):
     iprt = 0
     loop = 0
     bx_pad_counter = 0 # Used for padding with null BXs
+    fw_segments = [Segment(0,0) for _ in range(8)] # Initialize to null segments, so the first dav_o doesn't break the script when initializing
+    fw_segments_i = 1
 
     while loop < nloops:
+
+        # Read the output segment, and collect into a list to combine segments for 1 BX
+        fw_segments[fw_segments_i] = get_segment_from_dut(dut)
+        fw_segments_i = fw_segments_i+1 if fw_segments_i<7 else 0
+
         # push new data on dav_i
         if dut.dav_i_phase.value == 7:
 
@@ -293,7 +300,8 @@ async def chamber_test(dut, test, nloops=512, verbose=True, pad_null_bx=False):
                 zeros = [0]*6
 
                 # Testing slope of fitter
-                chamber_data = [zeros, zeros, zeros, [2**0, 2**1, 2**2, 2**3, 2**4, 2**5], zeros, zeros, zeros, zeros] 
+                #chamber_data = [zeros, zeros, zeros, [2**0, 2**1, 2**2, 2**3, 2**4, 2**5], zeros, zeros, zeros, zeros]
+                chamber_data = [[1, 1, 1, 1, 1, 1], zeros, zeros, zeros, zeros, zeros, zeros, zeros]
 
                 # Testing hit count bug between SW vs FW
                 #chamber_data = [[3, 1, 1, 1, 1, 1], [1, 1, 1, 1, 1, 1], zeros, zeros, zeros, zeros, zeros, zeros]
@@ -336,7 +344,8 @@ async def chamber_test(dut, test, nloops=512, verbose=True, pad_null_bx=False):
             dut.sbits_i.value = chamber_data
 
         # pop old data on dav_o
-        if dut.dav_o_phase.value == 0:
+        if dut.dav_o.value == 1:
+            fw_segments_i = 0 # Reset FW segment index
 
             # gather emulator output
             popped_data = queue.pop(0)
@@ -345,17 +354,15 @@ async def chamber_test(dut, test, nloops=512, verbose=True, pad_null_bx=False):
             sw_segments, config = process_chamber(chamber_data=popped_data,
                                           config=config, chamber_bx_data=temp_zeros)
 
-            fw_segments = get_segments_from_dut(dut)
-
             if verbose:
                 print(f'{loop}=')
                 for i in range(len(fw_segments)):
                     print("  > fw: " + str(fw_segments[i]))
                     print("  > sw: " + str(sw_segments[i]))
 
-                    slope = dut.segments_o[i].slope.value.to_signed() / (2**7)
-                    intercept = dut.segments_o[i].intercept.value.to_signed() / (2**7)
-                    fit_strip = dut.segments_o[i].fit_strip.value.to_signed() / (2**6)
+                    slope = fw_segments[i].slope
+                    intercept = fw_segments[i].intercept
+                    fit_strip = fw_segments[i].fit_strip
 
                     #print("FW slope: ", slope)
 
@@ -384,8 +391,8 @@ async def chamber_test(dut, test, nloops=512, verbose=True, pad_null_bx=False):
                         print("   > fw: " + str(fw_segments[i]))
                         print("FW ")
 
-                    fw_fit_strip = dut.segments_o[i].fit_strip.value.to_signed() / (2**6)
-                    fw_slope = dut.segments_o[i].slope.value.to_signed() / (2**7)
+                    fw_fit_strip = fw_segments[i].fit_strip
+                    fw_slope = fw_segments[i].slope
                     # Only check fitted strip and slope equivalence if a segment is valid.
                     # TODO: This should always be identical between SW and FW, so this should be fixed at some point
                     if sw_segments[i].lc > 0 and sw_segments[i].substrip + sw_segments[i].strip != fw_fit_strip:

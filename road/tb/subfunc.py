@@ -198,7 +198,8 @@ class Segment:
                  substrip=None, bend_ang=None, mse = None, bx=-9999,
                  max_cluster_size = None, max_noise = None,
                  nlayers_withcsg3 = None, nlayers_withcsg5 = None, nlayers_withcsg10 = None, nlayers_withcsg15 = None,
-                 nlayers_withnoiseg3 = None, nlayers_withnoiseg5 = None, nlayers_withnoiseg10 = None, nlayers_withnoiseg15 = None):
+                 nlayers_withnoiseg3 = None, nlayers_withnoiseg5 = None, nlayers_withnoiseg10 = None, nlayers_withnoiseg15 = None,
+                 slope = None, fit_strip = None, intercept = None):
         self.hc = hc
         self.lc = lc
         self.id = id
@@ -219,6 +220,10 @@ class Segment:
         self.nlayers_withnoiseg5 = nlayers_withnoiseg5
         self.nlayers_withnoiseg10 = nlayers_withnoiseg10
         self.nlayers_withnoiseg15 = nlayers_withnoiseg15
+        self.slope = slope
+        self.fit_strip = fit_strip
+        self.intercept = intercept
+
         self.update_quality()
 
     def reset(self):

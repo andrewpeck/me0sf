@@ -69,7 +69,7 @@ entity chamber is
     sbits_i           : in  chamber_t;
     ly_thresh_i         : in  ly_thresh_chamber; -- Layer threshold, 0 to 6
     vfat_pretrigger_o : out std_logic_vector (23 downto 0);
-    segments_o        : out segment_w_fit_list_t (NUM_SEGMENTS-1 downto 0);
+    segment_o        : out segment_w_fit_t;
     
     dav_i             : in  std_logic;
     dav_o             : out std_logic
@@ -148,7 +148,7 @@ architecture behavioral of chamber is
   signal one_prt_sorted_segs : segment_list_t (NUM_FINDERS_DIV2*2 * NUM_SEGMENTS - 1 downto 0) := (others => null_pattern);  -- sort down to the number of output segments for each partition
   signal final_segs          : segment_list_t (NUM_SEGMENTS - 1 downto 0); 
   signal final_segs_phase    : unsigned (2 downto 0)                                           := (others => '0');
-  signal fit_segments : segment_w_fit_list_t (NUM_SEGMENTS-1 downto 0);
+  signal fit_segment : segment_w_fit_t;
 
   --------------------------------------------------------------------------------
   -- Pretriggers
@@ -197,14 +197,12 @@ architecture behavioral of chamber is
     return ly_thresh_compressed;
   end;
 
-  function decompress_ly_count (segments : segment_w_fit_list_t) return segment_w_fit_list_t is
-    variable tmp : segment_w_fit_list_t (segments'range) := segments;
+  function decompress_ly_count (segment : segment_w_fit_t) return segment_w_fit_t is
+    variable tmp : segment_w_fit_t := segment;
   begin
-    for I in 0 to tmp'length-1 loop
-      if segments(I).lc > 0 then
-        tmp(I).lc := segments(I).lc + 3;
+      if segment.lc > 0 then
+        tmp.lc := segment.lc + 3;
       end if;
-    end loop;
     return tmp;
   end;
 
@@ -670,20 +668,20 @@ begin
   begin
     if rising_edge(clock) then
       -- Get segment info from seg_info_buffer
-      fit_segments(to_integer(seg_fit_list_phase)).lc <= seg_info_buffer(seg_info_buffer'length-1).lc when abs(slope_o) <= (1*2) else to_unsigned(0, LC_BITS); -- 1*2 for double resolution
-      fit_segments(to_integer(seg_fit_list_phase)).id <= seg_info_buffer(seg_info_buffer'length-1).id;
-      fit_segments(to_integer(seg_fit_list_phase)).strip <= seg_info_buffer(seg_info_buffer'length-1).strip;
-      fit_segments(to_integer(seg_fit_list_phase)).partition <= seg_info_buffer(seg_info_buffer'length-1).partition;
+      fit_segment.lc <= seg_info_buffer(seg_info_buffer'length-1).lc when abs(slope_o) <= (1*2) else to_unsigned(0, LC_BITS); -- 1*2 for double resolution
+      fit_segment.id <= seg_info_buffer(seg_info_buffer'length-1).id;
+      fit_segment.strip <= seg_info_buffer(seg_info_buffer'length-1).strip;
+      fit_segment.partition <= seg_info_buffer(seg_info_buffer'length-1).partition;
       
       -- Get fit info from fitter output
-      fit_segments(to_integer(seg_fit_list_phase)).intercept <= intercept_o;
-      fit_segments(to_integer(seg_fit_list_phase)).slope <= to_sfixed(to_slv(slope_o), slope_o'high-1, slope_o'low-1); -- Shift decimal to the right by 1 to divide by 2, to shift from double resolution back to single
-      fit_segments(to_integer(seg_fit_list_phase)).fit_strip <= fit_strip_div2 + seg_strip_sfixed + patspan_adjust;
+      fit_segment.intercept <= intercept_o;
+      fit_segment.slope <= to_sfixed(to_slv(slope_o), slope_o'high-1, slope_o'low-1); -- Shift decimal to the right by 1 to divide by 2, to shift from double resolution back to single
+      fit_segment.fit_strip <= fit_strip_div2 + seg_strip_sfixed + patspan_adjust;
       
       seg_fit_list_phase <= seg_fit_list_phase + 1;
 
       dav_o             <= '1' when seg_fit_list_phase = "000" else '0';
-      segments_o <= decompress_ly_count(fit_segments) when EN_HC_COMPRESS else fit_segments; -- Add 3 to LC if LC compression is enabled, and segment is valid
+      segment_o <= decompress_ly_count(fit_segment) when EN_HC_COMPRESS else fit_segment; -- Add 3 to LC if LC compression is enabled, and segment is valid
     end if;
   end process;
 

@@ -20,6 +20,28 @@ def setup(dut):
     # start the dav signal (high every 8th clock cycle)
     cocotb.start_soon(generate_dav(dut))
 
+def get_segment_from_dut(dut):
+    segment = dut.segment_o
+    lyc = segment.lc.value.to_unsigned()
+    pid = segment.id.value.to_unsigned()
+    if hasattr(segment, "strip"):
+        strip = segment.strip.value.to_unsigned()
+    else:
+        strip = 0
+    if hasattr(segment, "partition"):
+        partition = segment.partition.value.to_unsigned()
+    else:
+        partition = 0
+
+    slope = segment.slope.value.to_signed() / (2**7)
+    intercept = segment.intercept.value.to_signed() / (2**7)
+    fit_strip = segment.fit_strip.value.to_signed() / (2**6)
+
+    seg = Segment(lc=lyc, id=pid, strip=strip, partition=partition, slope=slope, intercept=intercept, fit_strip=fit_strip)
+
+    return seg
+
+
 def get_segments_from_dut(dut):
 
     def convert_segment(segment):
