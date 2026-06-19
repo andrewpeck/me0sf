@@ -125,6 +125,8 @@ def process_chamber(chamber_data, config : Config, chamber_bx_data):
 
         chamber_data = config.pulse_stretch(chamber_data)
 
+    chamber_data = [[ly if i != 3 else 0 for i,ly in enumerate(prt)] for prt in chamber_data]
+
     # gather segments from each partition
     # this will return a 8 x N list of segments
 
@@ -156,6 +158,8 @@ def process_chamber(chamber_data, config : Config, chamber_bx_data):
                     data[finder][1] =                                chamber_data[finder//2+1][1]
                     data[finder][2] = chamber_data[finder//2][2]  |  chamber_data[finder//2+1][2]
                     data[finder][3] = chamber_data[finder//2][3]  |  chamber_data[finder//2+1][3]
+                    #data[finder][2] = chamber_data[finder//2+1][2]
+                    #data[finder][3] = chamber_data[finder//2][3]
                     data[finder][4] = chamber_data[finder//2][4]
                     data[finder][5] = chamber_data[finder//2][5]
 
