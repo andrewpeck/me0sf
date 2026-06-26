@@ -15,6 +15,19 @@ class Peaking_Manager:
     def __init__(self):
         self.segs = [[[None for _ in range(192)] for _ in range(15)] for _ in range(2)]
         self.trigger = np.zeros((15,192), dtype=bool) # partition, strip
+        self.delays = np.zeros((15,192), dtype=np.int16) # partition, strip
+
+        #self.three_seq_LUT ={(1, 1, 1): 0, (1, 1, 0): -1, (1, 0, 0): -1, (2, 2, 2): 0, (1, 2, 2): 0, (1, 1, 2): 0, (2, 2, 0): -1, (1, 2, 0): 0, (2, 0, 0): -1, (2, 2, 1): 0, (1, 2, 1): 0, (2, 1, 0): -1, (2, 1, 1): 0, (1, 0, 1): -1, (3, 3, 3): 0, (2, 3, 3): 0, (2, 2, 3): 0, (1, 3, 3): 0, (1, 2, 3): 1, (1, 1, 3): 1, (3, 3, 0): -1, (2, 3, 0): 0, (1, 3, 0): 0, (3, 0, 0): -1, (3, 3, 1): 0, (2, 3, 1): 0, (1, 3, 1): 0, (3, 1, 0): -1, (3, 1, 1): -1, (2, 0, 1): -1, (3, 3, 2): 0, (2, 3, 2): 0, (1, 3, 2): 0, (3, 2, 0): -1, (3, 2, 1): -1, (3, 2, 2): 0, (2, 1, 2): 0, (1, 0, 2): 1, (2, 0, 2) : -1} 
+
+
+        #self.three_seq_LUT = {(4, 4, 4): 0, (4, 4, 1): -1, (4, 1, 1): -1, (4, 4, 2): -1, (4, 2, 1): -1, (4, 2, 2): -1, (4, 4, 3): 0, (4, 3, 1): -1, (4, 3, 2): -1, (4, 3, 3): -1, (5, 5, 5): 0, (4, 5, 5): 0, (4, 4, 5): 0, (5, 5, 2): -1, (4, 5, 2): 0, (5, 2, 2): -1, (4, 1, 2): -1, (5, 5, 3): 0, (4, 5, 3): 0, (5, 3, 2): -1, (5, 3, 3): -1, (4, 2, 3): -1, (5, 5, 4): 0, (4, 5, 4): 0, (5, 4, 2): -1, (5, 4, 3): -1, (5, 4, 4): 0, (4, 3, 4): -1, (6, 6, 6): 0, (5, 6, 6): 0, (5, 5, 6): 0, (4, 6, 6): 0, (4, 5, 6): 1, (4, 4, 6): 1, (6, 6, 3): -1, (5, 6, 3): 0, (4, 6, 3): 0, (6, 3, 3): -1, (5, 2, 3): -1, (4, 1, 3): -1, (6, 6, 4): 0, (5, 6, 4): 0, (4, 6, 4): 0, (6, 4, 3): -1, (6, 4, 4): -1, (5, 3, 4): -1, (4, 2, 4): -1, (6, 6, 5): 0, (5, 6, 5): 0, (4, 6, 5): 0, (6, 5, 3): -1, (6, 5, 4): -1, (6, 5, 5): 0, (5, 4, 5): 0, (4, 3, 5): 1, (5, 5, 0) : -1, (4, 4, 0) : -1, (4, 0, 0) : -1, (5, 4, 0) : -1, (4, 5, 0) : -1, (6, 6, 0) : -1, (6, 5, 0) : -1, (5, 6, 0) : -1}
+        
+        # Bias late
+        #self.three_seq_LUT = {(4, 4, 4): 0, (4, 4, 1): -1, (4, 1, 1): -1, (4, 4, 2): -1, (4, 2, 1): -1, (4, 2, 2): -1, (4, 4, 3): 0, (4, 3, 1): -1, (4, 3, 2): -1, (4, 3, 3): -1, (5, 5, 5): 0, (4, 5, 5): 0, (4, 4, 5): 0, (5, 5, 2): -1, (4, 5, 2): 0, (5, 2, 2): -1, (4, 1, 2): -1, (5, 5, 3): 0, (4, 5, 3): 0, (5, 3, 2): -1, (5, 3, 3): -1, (4, 2, 3): -1, (5, 5, 4): 0, (4, 5, 4): 0, (5, 4, 2): -1, (5, 4, 3): -1, (5, 4, 4): 0, (4, 3, 4): 1, (6, 6, 6): 0, (5, 6, 6): 0, (5, 5, 6): 0, (4, 6, 6): 0, (4, 5, 6): 1, (4, 4, 6): 1, (6, 6, 3): -1, (5, 6, 3): 0, (4, 6, 3): 0, (6, 3, 3): -1, (5, 2, 3): -1, (4, 1, 3): -1, (6, 6, 4): 0, (5, 6, 4): 0, (4, 6, 4): 0, (6, 4, 3): -1, (6, 4, 4): -1, (5, 3, 4): -1, (4, 2, 4): 1, (6, 6, 5): 0, (5, 6, 5): 0, (4, 6, 5): 0, (6, 5, 3): -1, (6, 5, 4): -1, (6, 5, 5): 0, (5, 4, 5): 0, (4, 3, 5): 1, (5, 5, 0) : 0, (4, 4, 0) : 0, (4, 0, 0) : 0, (5, 4, 0) : 0, (4, 5, 0) : 0, (6, 6, 0) : -1, (6, 5, 0) : -1, (5, 6, 0) : 0, (6, 4, 0) : -1, (5, 0, 0) : -1, (4, 0, 4) : 0, (6, 0, 0) : -1, (4, 0, 5) : 1, (4, 0, 6) : 1, (5, 0, 4) : -1, (4, 6, 0) : 0, (6, 4, 5) : -1, (6, 0, 4) : -1, (6, 5, 6) : 0, (5, 0, 6) : 1, (5, 4, 6) : 1, (5, 0, 5) : -1, (6, 0, 5) : -1, (6, 0, 6) : -1}
+
+        # Adjusted based on N=[0,999] run
+        self.three_seq_LUT = {(4, 4, 4): 0, (4, 4, 1): -1, (4, 1, 1): -1, (4, 4, 2): -1, (4, 2, 1): -1, (4, 2, 2): -1, (4, 4, 3): 0, (4, 3, 1): -1, (4, 3, 2): -1, (4, 3, 3): -1, (5, 5, 5): 0, (4, 5, 5): 0, (4, 4, 5): 0, (5, 5, 2): -1, (4, 5, 2): 0, (5, 2, 2): -1, (4, 1, 2): -1, (5, 5, 3): 0, (4, 5, 3): 0, (5, 3, 2): -1, (5, 3, 3): -1, (4, 2, 3): -1, (5, 5, 4): 0, (4, 5, 4): 0, (5, 4, 2): -1, (5, 4, 3): -1, (5, 4, 4): 0, (4, 3, 4): 1, (6, 6, 6): 0, (5, 6, 6): 0, (5, 5, 6): 0, (4, 6, 6): 0, (4, 5, 6): 1, (4, 4, 6): 1, (6, 6, 3): -1, (5, 6, 3): 0, (4, 6, 3): 0, (6, 3, 3): -1, (5, 2, 3): -1, (4, 1, 3): -1, (6, 6, 4): 0, (5, 6, 4): 0, (4, 6, 4): 0, (6, 4, 3): -1, (6, 4, 4): 0, (5, 3, 4): -1, (4, 2, 4): 1, (6, 6, 5): 0, (5, 6, 5): 0, (4, 6, 5): 0, (6, 5, 3): -1, (6, 5, 4): 0, (6, 5, 5): 0, (5, 4, 5): 0, (4, 3, 5): 1, (5, 5, 0) : -1, (4, 4, 0) : -1, (4, 0, 0) : 0, (5, 4, 0) : 0, (4, 5, 0) : 0, (6, 6, 0) : -1, (6, 5, 0) : -1, (5, 6, 0) : 0, (6, 4, 0) : -1, (5, 0, 0) : -1, (4, 0, 4) : 0, (6, 0, 0) : -1, (4, 0, 5) : 1, (4, 0, 6) : 1, (5, 0, 4) : 0, (4, 6, 0) : 0, (6, 4, 5) : -1, (6, 0, 4) : 0, (6, 5, 6) : 0, (5, 0, 6) : 1, (5, 4, 6) : 1, (5, 0, 5) : 0, (6, 0, 5) : -1, (6, 0, 6) : -1}
+
 
 class Vector_Manager:
     def __init__(self):
@@ -35,8 +48,9 @@ class Config:
         # Initialize sbit storage here, so it is not shared between different Config objects, which causes following tests to still see old data that may interfere.
         self.sbits_pulse_stretched = np.zeros((8, 6, 3, 3), dtype=np.uint64) # Used for sbits pulse stretching; dimensions = (partitions, layers, limbs, BXs)
         self.initialize_patlist(patlist)
-
+        
     def start_peaking_manager(self):
+        self.old_segments = [Segment(0, 0) for _ in range(8)]
         self.peaking_manager = Peaking_Manager()
         self._peaking_enabled = True
 
@@ -223,10 +237,12 @@ class Segment:
         self.slope = slope
         self.fit_strip = fit_strip
         self.intercept = intercept
+        self.valid = True if lc > 0 else False
 
         self.update_quality()
 
     def reset(self):
+        self.valid = False
         self.hc = 0
         self.lc = 0
         self.id = 0
@@ -269,6 +285,8 @@ class Segment:
             #print (x)
             #print (centroids)
             #fit_llse = llse_fit(x, centroids)
+            if self.centroid is None:
+                print(self)
             valid_mask = [1 if cent > 0 else 0 for cent in self.centroid]
             fit = vhdl_exact_fit(self.centroid, valid_mask)
 
@@ -295,7 +313,8 @@ class Segment:
 
     def __eq__(self, other):
 
-        if (self.lc == 0 and other.lc == 0):
+        # If both are invalid, consider them equal
+        if (not self.valid and not other.valid):
             return True
 
         return self.quality == other.quality
@@ -303,9 +322,19 @@ class Segment:
     def __gt__(self, other):
 
         if isinstance(other, Segment):
+            # Compare valid flags first for faster comparisons on average
+            if self.valid and not other.valid:
+                return True
+            if not self.valid and other.valid:
+                return False
             return self.quality > other.quality
 
     def __lt__(self, other):
+        # Compare valid flags first for faster comparisons on average
+        if self.valid and not other.valid:
+            return False
+        if not self.valid and other.valid:
+            return True
 
         if isinstance(other, Segment):
             return self.quality < other.quality

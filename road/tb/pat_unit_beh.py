@@ -221,13 +221,13 @@ def pat_unit(data,
     # (7) apply a layer threshold - dependent on pattern id and eta partition
     ly_thresh_final = max(ly_thresh_patid[best.id-1], ly_thresh_eta[partition]) 
     if (best.lc < ly_thresh_final):
-        best.reset()
+        best.valid = False
 
     # (4) process centroids, if a segment is found
     if skip_centroids:
         centroid = [0 for _ in range(6)]
         bx = -9999
-    elif best.lc > 0:
+    elif best.valid:
         # We are not currently passing in a rectangular window to a pat_unit, but instead an "hourglass" shape that depends on the max span for each layer (rather than a global max span)
         
         # Extract only the sbits part of the chosen pattern, to be input to the centroid finder

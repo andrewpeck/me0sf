@@ -305,8 +305,8 @@ def analysis(root_dat, hits, bx, bx_list, cross_part, verbose, pu, num_or):
     config.num_outputs = 8
     config.deghost_pre = True
     config.deghost_post = False
-    #config.pulse_stretch_bx = 2
-    #config.cross_part_seg_width = 4
+    config.pulse_stretch_bx = 2
+    config.cross_part_seg_width = 4
     #config.clearance_width = 2
     num_or_to_span = {2:37, 4:19, 8:11, 16:7}
     config.max_span = num_or_to_span[num_or]
@@ -314,6 +314,7 @@ def analysis(root_dat, hits, bx, bx_list, cross_part, verbose, pu, num_or):
     config.group_width = 16
     config.start_peaking_manager()
     # config.start_vectoring_manager()
+    three_seq_tracker = {}
 
     if pu == "140":
         config.ly_thresh_patid : list[int] = [7, 7, 7, 7, 7, 7, 7, 7, 7, 7, 5, 5, 4, 4, 4, 4, 4]
@@ -335,8 +336,8 @@ def analysis(root_dat, hits, bx, bx_list, cross_part, verbose, pu, num_or):
     if config.pulse_stretch_bx > 0 and int(bx) > 1:
         print("ERROR: Cannot mix input data pulse stretching and SW emulation pulse stretching. Set either config.pulse_stretch_bx to 0, or bx parameter to 1.")
         sys.exit()
-    bx_offset_windows = list(range(-2, 4)) if config.peaking_enabled else [0]
-    bx_offset_0_index = bx_offset_windows.index(1) if config.peaking_enabled else bx_offset_windows.index(0)
+    bx_offset_windows = list(range(-2, 6)) if config.peaking_enabled else [0]
+    bx_offset_0_index = bx_offset_windows.index(3) if config.peaking_enabled else bx_offset_windows.index(0)
     # If doing SW emulation pulse stretching, shift central window to account for the 1 BX delay
     if config.pulse_stretch_bx > 0:
         bx_offset_0_index += 1
@@ -705,7 +706,7 @@ def analysis(root_dat, hits, bx, bx_list, cross_part, verbose, pu, num_or):
                         #if seg.partition >= 9: 
                         #    if abs(seg.bend_ang) > 0.5: 
                         #        seg.id = 0
-                    if seg.id == 0:
+                    if not seg.valid or seg.id == 0:
                         continue
                     #mse_collections.append(seg.mse)
                     #print(seg.mse)
@@ -713,6 +714,7 @@ def analysis(root_dat, hits, bx, bx_list, cross_part, verbose, pu, num_or):
                     #print(seg.bx)
 
                     # Assign segments in virtual partitions to real partitions
+                    seg.original_partition = seg.partition
                     if seg.partition % 2 != 0:
                         seg.partition = (seg.partition // 2) + 1
                     else:
@@ -821,13 +823,11 @@ def analysis(root_dat, hits, bx, bx_list, cross_part, verbose, pu, num_or):
             # If no match in the correct BX, look in other BXs
             if not seg_match:
                 for bx_i, bx_offset in enumerate(bx_offset_windows):
-
                     # Skip BX=0, since it was already checked
                     if bx_i == bx_offset_0_index:
                         continue
 
                     for (j,seg) in enumerate(seglist_final[offline_chamber][bx_i]):
-
                         # If this online segment has already matched to another offline segment, skip it
                         if seg in online_segs_matched[offline_chamber]:
                             continue
@@ -937,6 +937,13 @@ def analysis(root_dat, hits, bx, bx_list, cross_part, verbose, pu, num_or):
 
                 if abs(online_eta_partition - st_eta_partition)<=1 and abs(online_substrip - st_substrip) <= 5: # Match criteria for partition and strip
 
+                    three_seq = seg.three_seq
+                    if three_seq not in three_seq_tracker:
+                        three_seq_tracker[three_seq] = [0 for _ in range(len(bx_offset_windows))]
+                    
+                    three_seq_tracker[three_seq][bx_offset_0_index] += 1
+
+
                     # bending_angle_err = abs(offline_bending_angle) if (online_bending_angle == 0) else abs((offline_bending_angle - online_bending_angle)/online_bending_angle)
                     #if bending_angle_err < 0.4 or abs(online_bending_angle - st_bending_angle) <= 0.6: # match criteria for bending angle
 
@@ -972,6 +979,12 @@ def analysis(root_dat, hits, bx, bx_list, cross_part, verbose, pu, num_or):
                         online_quality = seg.quality
 
                         if abs(online_eta_partition - st_eta_partition)<=1 and abs(online_substrip - st_substrip) <= 5: # Match criteria for partition and strip
+
+                            three_seq = seg.three_seq
+                            if three_seq not in three_seq_tracker:
+                                three_seq_tracker[three_seq] = [0 for _ in range(len(bx_offset_windows))]
+                        
+                            three_seq_tracker[three_seq][bx_i] += 1
 
                             # bending_angle_err = abs(offline_bending_angle) if (online_bending_angle == 0) else abs((offline_bending_angle - online_bending_angle)/online_bending_angle)
                             #if bending_angle_err < 0.4 or abs(online_bending_angle - st_bending_angle) <= 0.6: # match criteria for bending angle
@@ -1424,6 +1437,8 @@ def analysis(root_dat, hits, bx, bx_list, cross_part, verbose, pu, num_or):
     print("Total number of matched online segs: %d\n"%temp_abcd)
 
     print(f"Total number of simtracks: {n_simtracks_total}")
+
+    print(three_seq_tracker)
 
     sys.exit()
 
@@ -4344,6 +4359,8 @@ if __name__ == "__main__":
         root_dat = read_ntuple(args.file_path)
     else:
         root_dat = read_ntuple(args.file_path, 0, int(args.nevents))
+
+    print(len(root_dat))
 
     if int(args.num_or) < 2:
         print ("At least 2 strips OR-ed together")

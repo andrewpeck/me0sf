@@ -125,7 +125,9 @@ def process_chamber(chamber_data, config : Config, chamber_bx_data):
 
         chamber_data = config.pulse_stretch(chamber_data)
 
-    chamber_data = [[ly if i != 3 else 0 for i,ly in enumerate(prt)] for prt in chamber_data]
+
+
+    #chamber_data = [[ly if i != 3 else 0 for i,ly in enumerate(prt)] for prt in chamber_data]
 
     # gather segments from each partition
     # this will return a 8 x N list of segments
@@ -241,11 +243,40 @@ def process_chamber(chamber_data, config : Config, chamber_bx_data):
 
     # Fit segments and bending angle cut
     for seg in segments:
+        if not seg.valid:
+            seg.reset()
+            continue
         seg.fit(config.pat_spans[seg.id-1])
         if abs(seg.bend_ang) > config.bend_ang_cut:
             seg.reset()
 
-    return (segments, config)
+    # Final spatial clearance
+    for i, seg in enumerate(segments):
+        if not seg.valid:
+            continue
+        for j, seg2 in enumerate(segments):
+            if i == j or not seg2.valid:
+                continue
+            if abs((seg.strip + seg.substrip) - (seg2.strip + seg2.substrip)) <= 5 and abs(seg.partition - seg2.partition) <= 1:
+                seg2.reset() # segments are already sorted, so don't need to compare quality
+
+    # Final temporal clearance
+    for seg in segments:
+        if not seg.valid:
+            continue
+        for seg2 in config.old_segments:
+            if not seg2.valid:
+                continue
+            if abs((seg.strip + seg.substrip) - (seg2.strip + seg2.substrip)) <= 5 and abs(seg.partition - seg2.partition) <= 1:
+                if seg2 > seg:
+                    seg.reset()
+                else:
+                    seg2.reset()
+
+    output_segments = sorted(config.old_segments, reverse=True) # Have to sort again in case some were reset
+
+    config.old_segments = segments # Save segments for temporal deghosting next BX
+    return (output_segments, config)
 
 
 def test_chamber_beh():
