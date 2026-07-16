@@ -20,10 +20,31 @@ def setup(dut):
     # start the dav signal (high every 8th clock cycle)
     cocotb.start_soon(generate_dav(dut))
 
+# Pat units do not get the 40 MHz clock, so need separate functions. Can unify this at some point
+def setup_pat_unit(dut):
+    c = Clock(dut.clock, CLOCK_STEP, "ns")
+    cocotb.start_soon(c.start())
+
+    cocotb.start_soon(generate_dav_pat_unit(dut))
+
+
+async def generate_dav_pat_unit(dut):
+    "Generates a dav signal every 8th clock cycle."
+    dut.dav_i.value = 0
+    await RisingEdge(dut.clock) # Align to 320 MHz clock
+    await Timer(1, unit="ns") # Add a small delay to ensure dav_i updates after all delta cycles. Without this, lyx_unit_dav in pat_unit_mux was taking the value of dav_i immediately, but there should be a 1 clock delay, as it is registered.
+    while True:
+        dut.dav_i.value = 1
+        await Timer(CLOCK_STEP, unit="ns") # Wait 1 clock; Cannot use 320 MHz clock here, it was causing an issue that couldn't be resolved
+        dut.dav_i.value = 0
+        await Timer(CLOCK_STEP*7, unit="ns") # Wait 7 clocks
+
 def get_segment_from_dut(dut):
     segment = dut.segment_o
     lyc = segment.lc.value.to_unsigned()
     pid = segment.id.value.to_unsigned()
+    valid = True if segment.valid.value else False
+
     if hasattr(segment, "strip"):
         strip = segment.strip.value.to_unsigned()
     else:
@@ -37,7 +58,7 @@ def get_segment_from_dut(dut):
     intercept = segment.intercept.value.to_signed() / (2**7)
     fit_strip = segment.fit_strip.value.to_signed() / (2**6)
 
-    seg = Segment(lc=lyc, id=pid, strip=strip, partition=partition, slope=slope, intercept=intercept, fit_strip=fit_strip)
+    seg = Segment(lc=lyc, id=pid, strip=strip, partition=partition, slope=slope, intercept=intercept, fit_strip=fit_strip, valid=valid)
 
     return seg
 
@@ -47,6 +68,8 @@ def get_segments_from_dut(dut):
     def convert_segment(segment):
         lyc = segment.lc.value.to_unsigned()
         pid = segment.id.value.to_unsigned()
+        valid = True if segment.valid.value == 1 else False
+
         if hasattr(segment, "strip"):
             strip = segment.strip.value.to_unsigned()
         else:
@@ -55,7 +78,8 @@ def get_segments_from_dut(dut):
             partition = segment.partition.value.to_unsigned()
         else:
             partition = 0
-        seg = Segment(lc=lyc, id=pid, strip=strip, partition=partition)
+        seg = Segment(lc=lyc, id=pid, strip=strip, partition=partition, valid=valid)
+
         return seg
 
     segs = [convert_segment(x) for x in dut.segments_o]

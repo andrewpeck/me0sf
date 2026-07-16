@@ -23,7 +23,7 @@ use work.pat_pkg.all;
 use work.patterns.all;
 
 
--- Each [] represents a "chunk" from intra-partition deghosting. Each chunk contains either one segment, or none (lc=0).
+-- Each [] represents a "chunk" from intra-partition deghosting. Each chunk contains either one segment, or none (valid='0').
 -- A chunk is represented by a segment.
 --   ...[][][]...   Real partition
 --     ...[]...     Virtual partition
@@ -80,6 +80,7 @@ architecture behavioral of x_prt_deghost_qual is
       for y in 0 to NUM_FINDERS-1 loop
         for x in 0 to N_SEGS_PRT+1 loop
           if (x = 0 or x = N_SEGS_PRT+1) then
+            cur_seg.valid := '0';
             cur_seg.lc := (others => '0');
             cur_seg.id := (others => '0');
             cur_seg.strip := (others => '0');
@@ -124,9 +125,9 @@ architecture behavioral of x_prt_deghost_qual is
     variable out_bits : std_logic_vector (0 to 5);
     
   begin
-    v_null := true when v_seg.lc = 0 else false;
+    v_null := true when v_seg.valid = '0' else false;
     for i in 0 to 5 loop
-      r_null := true when r_segs(i).lc = 0 else false;
+      r_null := true when r_segs(i).valid = '0' else false;
       
       diff := abs( ('0' & append_r(i) & signed(r_segs(i).strip(intra_chunk_bits-1 downto 0))) - ('0' & append_v(i) & signed(v_seg.strip(intra_chunk_bits-1 downto 0))) );
 
@@ -143,7 +144,7 @@ architecture behavioral of x_prt_deghost_qual is
   begin
     for i in 0 to 5 loop
       -- TODO: which to pick for ties?
-      out_bits(i) := '1' when (v_seg.lc & v_seg.id) > (r_segs(i).lc & r_segs(i).id) else '0';
+      out_bits(i) := '1' when (v_seg.valid & v_seg.lc & v_seg.id) > (r_segs(i).valid & r_segs(i).lc & r_segs(i).id) else '0';
     end loop;
       
     return out_bits;
@@ -234,10 +235,11 @@ begin
   mask <= get_mask(range_vectors_padded, better_vectors_padded);
   part_masking : for y in 0 to NUM_FINDERS-1 generate
     seg_masking : for x in 0 to N_SEGS_PRT-1 generate
+      segs_masked(y*N_SEGS_PRT + x).valid <= segs_i(y*N_SEGS_PRT + x).valid when (mask(y*N_SEGS_PRT + x) = '1') else '0';
       segs_masked(y*N_SEGS_PRT + x).id <= segs_i(y*N_SEGS_PRT + x).id;
       segs_masked(y*N_SEGS_PRT + x).partition <= segs_i(y*N_SEGS_PRT + x).partition;
       segs_masked(y*N_SEGS_PRT + x).strip <= segs_i(y*N_SEGS_PRT + x).strip;
-      segs_masked(y*N_SEGS_PRT + x).lc <= segs_i(y*N_SEGS_PRT + x).lc when (mask(y*N_SEGS_PRT + x) = '1') else "000";
+      segs_masked(y*N_SEGS_PRT + x).lc <= segs_i(y*N_SEGS_PRT + x).lc;
     end generate;
   end generate;
   

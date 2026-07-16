@@ -312,8 +312,8 @@ def analysis(root_dat, hits, bx, bx_list, cross_part, verbose, pu, num_or):
     config.max_span = num_or_to_span[num_or]
     config.num_or = num_or
     config.group_width = 16
-    config.start_peaking_manager()
-    # config.start_vectoring_manager()
+    config.start_tst_manager()
+    #config.start_peaking_manager()
     three_seq_tracker = {}
 
     if pu == "140":
@@ -336,8 +336,8 @@ def analysis(root_dat, hits, bx, bx_list, cross_part, verbose, pu, num_or):
     if config.pulse_stretch_bx > 0 and int(bx) > 1:
         print("ERROR: Cannot mix input data pulse stretching and SW emulation pulse stretching. Set either config.pulse_stretch_bx to 0, or bx parameter to 1.")
         sys.exit()
-    bx_offset_windows = list(range(-2, 6)) if config.peaking_enabled else [0]
-    bx_offset_0_index = bx_offset_windows.index(3) if config.peaking_enabled else bx_offset_windows.index(0)
+    bx_offset_windows = list(range(-2, 6)) if config.peaking_enabled or config.tst_enabled else [0]
+    bx_offset_0_index = bx_offset_windows.index(2) if config.peaking_enabled or config.tst_enabled else bx_offset_windows.index(0)
     # If doing SW emulation pulse stretching, shift central window to account for the 1 BX delay
     if config.pulse_stretch_bx > 0:
         bx_offset_0_index += 1
@@ -355,10 +355,9 @@ def analysis(root_dat, hits, bx, bx_list, cross_part, verbose, pu, num_or):
         if config.peaking_enabled:
             for conf in config_chams:
                 conf.start_peaking_manager()
-
-        if config.vectoring_enabled:
+        if config.tst_enabled:
             for conf in config_chams:
-                conf.start_vectoring_manager()
+                conf.start_tst_manager()
 
         frac_done = (ievent+1)/n_total_events
         if (frac_done - prev_frac_done) >= 0.05:

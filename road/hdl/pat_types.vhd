@@ -147,33 +147,36 @@ package pat_types is
    function zero(tpl: pat_unit_pre_t) return pat_unit_pre_t;
 
    type pat_unit_t is record
+      valid : std_logic;
       lc : unsigned(LC_BITS-1 downto 0);
       id : unsigned(PID_BITS-1 downto 0);
    end record pat_unit_t;
-   attribute w of pat_unit_t : type is LC_BITS+PID_BITS;
+   attribute w of pat_unit_t : type is 1+LC_BITS+PID_BITS;
    function width(x: pat_unit_t) return natural;
    function convert(x: pat_unit_t; tpl: std_logic_vector) return std_logic_vector;
    function convert(x: std_logic_vector; tpl: pat_unit_t) return pat_unit_t;
    function zero(tpl: pat_unit_t) return pat_unit_t;
 
    type pat_unit_mux_t is record
+      valid : std_logic;
       lc : unsigned(LC_BITS-1 downto 0);
       id : unsigned(PID_BITS-1 downto 0);
       strip : unsigned(STRIP_BITS-1 downto 0);
    end record pat_unit_mux_t;
-   attribute w of pat_unit_mux_t : type is LC_BITS+PID_BITS+STRIP_BITS;
+   attribute w of pat_unit_mux_t : type is 1+LC_BITS+PID_BITS+STRIP_BITS;
    function width(x: pat_unit_mux_t) return natural;
    function convert(x: pat_unit_mux_t; tpl: std_logic_vector) return std_logic_vector;
    function convert(x: std_logic_vector; tpl: pat_unit_mux_t) return pat_unit_mux_t;
    function zero(tpl: pat_unit_mux_t) return pat_unit_mux_t;
 
    type segment_t is record
+      valid : std_logic;
       lc : unsigned(LC_BITS-1 downto 0);
       id : unsigned(PID_BITS-1 downto 0);
       strip : unsigned(7 downto 0);
       partition : unsigned(PARTITION_BITS-1 downto 0);
    end record segment_t;
-   attribute w of segment_t : type is LC_BITS+PID_BITS+8+PARTITION_BITS;
+   attribute w of segment_t : type is 1+LC_BITS+PID_BITS+8+PARTITION_BITS;
    function width(x: segment_t) return natural;
    function convert(x: segment_t; tpl: std_logic_vector) return std_logic_vector;
    function convert(x: std_logic_vector; tpl: segment_t) return segment_t;
@@ -839,6 +842,7 @@ package body pat_types is
    function width(x: pat_unit_t) return natural is
       variable w : natural := 0;
    begin
+      w := w + width(x.valid);
       w := w + width(x.lc);
       w := w + width(x.id);
       return w;
@@ -849,12 +853,18 @@ package body pat_types is
       variable u : integer := tpl'left;
    begin
       if tpl'ascending then
+         w := width(x.valid);
+         y(u to u+w-1) := convert(x.valid, y(u to u+w-1));
+         u := u + w;
          w := width(x.lc);
          y(u to u+w-1) := convert(x.lc, y(u to u+w-1));
          u := u + w;
          w := width(x.id);
          y(u to u+w-1) := convert(x.id, y(u to u+w-1));
       else
+         w := width(x.valid);
+         y(u downto u-w+1) := convert(x.valid, y(u downto u-w+1));
+         u := u - w;
          w := width(x.lc);
          y(u downto u-w+1) := convert(x.lc, y(u downto u-w+1));
          u := u - w;
@@ -869,12 +879,18 @@ package body pat_types is
       variable u : integer := x'left;
    begin
       if x'ascending then
+         w := width(tpl.valid);
+         y.valid := convert(x(u to u+w-1), tpl.valid);
+         u := u + w;
          w := width(tpl.lc);
          y.lc := convert(x(u to u+w-1), tpl.lc);
          u := u + w;
          w := width(tpl.id);
          y.id := convert(x(u to u+w-1), tpl.id);
       else
+         w := width(tpl.valid);
+         y.valid := convert(x(u downto u-w+1), tpl.valid);
+         u := u - w;
          w := width(tpl.lc);
          y.lc := convert(x(u downto u-w+1), tpl.lc);
          u := u - w;
@@ -891,6 +907,7 @@ package body pat_types is
    function width(x: pat_unit_mux_t) return natural is
       variable w : natural := 0;
    begin
+      w := w + width(x.valid);
       w := w + width(x.lc);
       w := w + width(x.id);
       w := w + width(x.strip);
@@ -902,6 +919,9 @@ package body pat_types is
       variable u : integer := tpl'left;
    begin
       if tpl'ascending then
+         w := width(x.valid);
+         y(u to u+w-1) := convert(x.valid, y(u to u+w-1));
+         u := u + w;
          w := width(x.lc);
          y(u to u+w-1) := convert(x.lc, y(u to u+w-1));
          u := u + w;
@@ -911,6 +931,9 @@ package body pat_types is
          w := width(x.strip);
          y(u to u+w-1) := convert(x.strip, y(u to u+w-1));
       else
+         w := width(x.valid);
+         y(u downto u-w+1) := convert(x.valid, y(u downto u-w+1));
+         u := u - w;
          w := width(x.lc);
          y(u downto u-w+1) := convert(x.lc, y(u downto u-w+1));
          u := u - w;
@@ -928,6 +951,9 @@ package body pat_types is
       variable u : integer := x'left;
    begin
       if x'ascending then
+         w := width(tpl.valid);
+         y.valid := convert(x(u to u+w-1), tpl.valid);
+         u := u + w;
          w := width(tpl.lc);
          y.lc := convert(x(u to u+w-1), tpl.lc);
          u := u + w;
@@ -937,6 +963,9 @@ package body pat_types is
          w := width(tpl.strip);
          y.strip := convert(x(u to u+w-1), tpl.strip);
       else
+         w := width(tpl.valid);
+         y.valid := convert(x(u downto u-w+1), tpl.valid);
+         u := u - w;
          w := width(tpl.lc);
          y.lc := convert(x(u downto u-w+1), tpl.lc);
          u := u - w;
@@ -956,6 +985,7 @@ package body pat_types is
    function width(x: segment_t) return natural is
       variable w : natural := 0;
    begin
+      w := w + width(x.valid);
       w := w + width(x.lc);
       w := w + width(x.id);
       w := w + width(x.strip);
@@ -968,6 +998,9 @@ package body pat_types is
       variable u : integer := tpl'left;
    begin
       if tpl'ascending then
+         w := width(x.valid);
+         y(u to u+w-1) := convert(x.valid, y(u to u+w-1));
+         u := u + w;
          w := width(x.lc);
          y(u to u+w-1) := convert(x.lc, y(u to u+w-1));
          u := u + w;
@@ -980,6 +1013,9 @@ package body pat_types is
          w := width(x.partition);
          y(u to u+w-1) := convert(x.partition, y(u to u+w-1));
       else
+         w := width(x.valid);
+         y(u downto u-w+1) := convert(x.valid, y(u downto u-w+1));
+         u := u - w;
          w := width(x.lc);
          y(u downto u-w+1) := convert(x.lc, y(u downto u-w+1));
          u := u - w;
@@ -1000,6 +1036,9 @@ package body pat_types is
       variable u : integer := x'left;
    begin
       if x'ascending then
+         w := width(tpl.valid);
+         y.valid := convert(x(u to u+w-1), tpl.valid);
+         u := u + w;
          w := width(tpl.lc);
          y.lc := convert(x(u to u+w-1), tpl.lc);
          u := u + w;
@@ -1012,6 +1051,9 @@ package body pat_types is
          w := width(tpl.partition);
          y.partition := convert(x(u to u+w-1), tpl.partition);
       else
+         w := width(tpl.valid);
+         y.valid := convert(x(u downto u-w+1), tpl.valid);
+         u := u - w;
          w := width(tpl.lc);
          y.lc := convert(x(u downto u-w+1), tpl.lc);
          u := u - w;

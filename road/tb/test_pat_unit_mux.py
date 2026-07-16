@@ -6,7 +6,7 @@ from math import ceil
 import cocotb
 import plotille
 from cocotb.triggers import RisingEdge
-from cocotb_test.simulator import run
+from cocotb_tools.runner import get_runner, VHDL
 
 from datagen import datagen
 from pat_unit_mux_beh import pat_mux
@@ -44,6 +44,9 @@ async def pat_unit_mux_5s(dut):
 @cocotb.test() # type: ignore
 async def pat_unit_mux_ff(dut):
     await pat_unit_mux_test(dut, NLOOPS=20, test="FF")
+@cocotb.test() # type: ignore
+async def pat_unit_mux_ff(dut):
+    await pat_unit_mux_test(dut, NLOOPS=40, test="TEST_DAT")
 
 async def pat_unit_mux_test(dut, NLOOPS=500, test="WALKING1"):
 
@@ -57,6 +60,8 @@ async def pat_unit_mux_test(dut, NLOOPS=500, test="WALKING1"):
     config.initialize_patlist(get_patlist_from_dut(dut))
     config.skip_centroids = True
     config.width=dut.WIDTH.value
+    #if (dut.disable_peaking.value == 0):
+    config.start_tst_manager()
 
     en_hc_compress = True if dut.EN_HC_COMPRESS.value == 1 else False
 
@@ -66,8 +71,8 @@ async def pat_unit_mux_test(dut, NLOOPS=500, test="WALKING1"):
     # Setup and Flush the Pipeline
     #--------------------------------------------------------------------------------
     
-    setup(dut)
-    cocotb.start_soon(monitor_dav(dut))
+    setup_pat_unit(dut)
+    #cocotb.start_soon(monitor_dav(dut))
 
     set_dut_inputs(dut, [0 for _ in range(6)])
 
@@ -78,8 +83,7 @@ async def pat_unit_mux_test(dut, NLOOPS=500, test="WALKING1"):
     # Measure Latency
     #--------------------------------------------------------------------------------
 
-    checkfn = lambda : dut.segments_o[0].lc.value.is_resolvable and \
-        dut.segments_o[0].lc.value.integer >= config.ly_thresh_patid[dut.segments_o[0].id.value.integer-1] - 3*dut.EN_HC_COMPRESS.value
+    checkfn = lambda : dut.segments_o[0].valid.value.is_resolvable and dut.segments_o[0].valid.value == 1
 
     def setfn(dut, x):
         dut.ly0.value = x
@@ -91,7 +95,7 @@ async def pat_unit_mux_test(dut, NLOOPS=500, test="WALKING1"):
 
     meas_latency = await measure_latency(dut, checkfn, setfn)
 
-    LATENCY = ceil(meas_latency)-2
+    LATENCY = ceil(meas_latency)-4
 
     #--------------------------------------------------------------------------------
     # Setup a fixed latency queue
@@ -116,10 +120,8 @@ async def pat_unit_mux_test(dut, NLOOPS=500, test="WALKING1"):
 
     i = 0
     while i < NLOOPS:
-
         # push new data on dav_i
         if dut.dav_i_phase.value == 7:
-
             # (1) generate new random data
             # (2) push it onto the queue
             # (3) set the DUT inputs to the new data
@@ -139,10 +141,20 @@ async def pat_unit_mux_test(dut, NLOOPS=500, test="WALKING1"):
                 else:
                     new_data = [0x000000000000000000000000000000000000000000000000 for _ in range(6)]
             elif test=="SEGMENTS":
-                if i % 2 == 0:
-                    new_data = datagen(n_segs=2, n_noise=10, max_span=config.width)
+                new_data = datagen(n_segs=4, n_noise=8, max_span=config.width)
+
+                #if i % 2 == 0:
+                #    new_data = datagen(n_segs=2, n_noise=10, max_span=config.width)
+                #else:
+                #    new_data = [0 for _ in range(6)]
+            elif test=="TEST_DAT":
+                if i == 1:
+                    new_data = [2**64 for _ in range(6)]
+                #elif i == 2:
+                #    new_data = [0x000000000000000000000000000000000000000000000008 for _ in range(6)]
                 else:
-                    new_data = [0 for _ in range(6)]
+                    new_data = [0x000000000000000000000000000000000000000000000000 for _ in range(6)]
+
             else:
                 new_data = 0*[6]
                 raise Exception("Invalid test selected")
@@ -154,7 +166,7 @@ async def pat_unit_mux_test(dut, NLOOPS=500, test="WALKING1"):
             i += 1
 
         # pop old data on dav_o
-        if dut.dav_o_phase.value == 0:
+        if dut.dav_o.value == 1:
 
 
             # (1) pop old data from the head of the queue
@@ -177,9 +189,10 @@ async def pat_unit_mux_test(dut, NLOOPS=500, test="WALKING1"):
     
             if i > LATENCY+2:
                 for j in range(config.width):
-                    if fw_segments[j].id > 0:
+                    if fw_segments[j].valid or sw_segments[j].valid:
                         strip_cnts.append(j)
                         id_cnts.append(fw_segments[j].id)
+
                     if sw_segments[j] != fw_segments[j]:
                         print(f"loop={i} (strip={j}):")
                         print(" > sw: " + str(sw_segments[j]))
@@ -188,15 +201,15 @@ async def pat_unit_mux_test(dut, NLOOPS=500, test="WALKING1"):
 
         await RisingEdge(dut.clock)
 
-    filename = "../log/pat_unit_mux_%s.log" % test
-    os.makedirs(os.path.dirname(filename), exist_ok=True)
-    with open(filename, "w+", encoding="utf-8") as f:
-
-        f.write("Strips:\n")
-        f.write(plotille.hist(strip_cnts, bins=int(192/4)))
-
-        f.write("\nIDs:\n")
-        f.write(plotille.hist(id_cnts, bins=16))
+#    filename = "../log/pat_unit_mux_%s.log" % test
+#    os.makedirs(os.path.dirname(filename), exist_ok=True)
+#    with open(filename, "w+", encoding="utf-8") as f:
+#
+#        f.write("Strips:\n")
+#        f.write(plotille.hist(strip_cnts, bins=int(192/4)))
+#
+#        f.write("\nIDs:\n")
+#        f.write(plotille.hist(id_cnts, bins=16))
 
 
 def test_pat_unit_mux():
@@ -214,22 +227,31 @@ def test_pat_unit_mux():
         os.path.join(rtl_dir, "dav_to_phase.vhd"),
         os.path.join(rtl_dir, "pat_unit_mux.vhd")]
 
-    parameters = {}
-    parameters["MUX_FACTOR"] = 8
-    parameters["DEADTIME"]   = 0
-    parameters["DISABLE_PEAKING"] = True
+    parameters = {"DISABLE_PEAKING" : True}
 
     os.environ["SIM"] = "questa"
     #os.environ["COCOTB_RESULTS_FILE"] = f"../log/{module}.xml"
 
-    run(vhdl_sources=vhdl_sources,
-        module=module,  # name of cocotb test module
-        compile_args=["-2008"],
-        toplevel="pat_unit_mux",  # top level HDL
-        toplevel_lang="vhdl",
-        sim_args=["-noautoldlibpath", "-do", "set NumericStdNoWarnings 1;"],
-        parameters=parameters,
-        gui=0)
+    sim = os.getenv("SIM", "questa")
+    runner = get_runner(sim)
+
+    runner.build(
+        sources = vhdl_sources,
+        parameters = parameters,
+        build_args = [VHDL("-2008")],
+        hdl_toplevel = "pat_unit_mux",
+        always = True
+    )
+
+    speedup_args = ["-no_autoacc"]
+
+    runner.test(
+        hdl_toplevel="pat_unit_mux",
+        test_module="test_pat_unit_mux",
+        test_args = ["-noautoldlibpath"] + speedup_args,
+        pre_cmd = ["set NumericStdNoWarnings 1;"],
+        gui = 0
+    )
 
 if __name__ == "__main__":
     test_pat_unit_mux()

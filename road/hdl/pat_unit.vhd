@@ -42,7 +42,6 @@ entity pat_unit is
     );
 
   port(
-
     clock : in std_logic;
 
     dav_i : in  std_logic;
@@ -74,10 +73,217 @@ architecture behavioral of pat_unit is
 
   signal pats_dav     : std_logic := '0';
   signal priority_dav : std_logic := '0';
+  signal tst_dav      : std_logic_vector (16 downto 0) := (others => '0');
 
   signal best_slv : std_logic_vector (pat_unit_pre_t'w-1 downto 0);
   signal best     : pat_unit_pre_t;
+  signal best_with_valid : pat_unit_t;
   signal cand_slv : bus_array (0 to NUM_PATTERNS-1) (pat_unit_pre_t'w-1 downto 0);
+
+  signal seg_buffer : pat_unit_list_t (2*8+1-1 downto 0) := (others => null_pat_unit); -- Buffers segments, waiting to create a 3-sequence, then potentially output the oldest one. (Need 2*8+1 segments, +1 is to register the LUT. Might be possible to remove this 1 clk latency at some point.)
+
+  type three_sequence_t is array (2 downto 0) of unsigned (2 downto 0);
+  signal three_sequence : three_sequence_t := (others => (others => '0'));
+
+  signal lut_delay : unsigned (1 downto 0);
+  signal chosen_seg_valid : std_logic;
+
+  signal seg_trigger_arr : std_logic_vector (7 downto 0) := (others => '0');
+
+  type delay_arr_t is array (7 downto 0) of unsigned(1 downto 0);
+  signal delay_arr : delay_arr_t := (others => (others => '0'));
+  signal delay_pointer : unsigned (2 downto 0) := (others => '0');
+  signal delay : unsigned(1 downto 0);
+
+  function THREE_SEQ_LUT(TS : three_sequence_t) return unsigned is
+    variable delay : unsigned (1 downto 0);
+  begin
+    if TS(2) = 4 and TS(1) = 4 and TS(0) = 4 then
+      delay := to_unsigned(2, delay'length);
+    elsif TS(2) = 4 and TS(1) = 4 and TS(0) = 1 then
+      delay := to_unsigned(1, delay'length);
+    elsif TS(2) = 4 and TS(1) = 1 and TS(0) = 1 then
+      delay := to_unsigned(1, delay'length);
+    elsif TS(2) = 4 and TS(1) = 4 and TS(0) = 2 then
+      delay := to_unsigned(1, delay'length);
+    elsif TS(2) = 4 and TS(1) = 2 and TS(0) = 1 then
+      delay := to_unsigned(1, delay'length);
+    elsif TS(2) = 4 and TS(1) = 2 and TS(0) = 2 then
+      delay := to_unsigned(1, delay'length);
+    elsif TS(2) = 4 and TS(1) = 4 and TS(0) = 3 then
+      delay := to_unsigned(2, delay'length);
+    elsif TS(2) = 4 and TS(1) = 3 and TS(0) = 1 then
+      delay := to_unsigned(1, delay'length);
+    elsif TS(2) = 4 and TS(1) = 3 and TS(0) = 2 then
+      delay := to_unsigned(1, delay'length);
+    elsif TS(2) = 4 and TS(1) = 3 and TS(0) = 3 then
+      delay := to_unsigned(1, delay'length);
+    elsif TS(2) = 5 and TS(1) = 5 and TS(0) = 5 then
+      delay := to_unsigned(2, delay'length);
+    elsif TS(2) = 4 and TS(1) = 5 and TS(0) = 5 then
+      delay := to_unsigned(2, delay'length);
+    elsif TS(2) = 4 and TS(1) = 4 and TS(0) = 5 then
+      delay := to_unsigned(2, delay'length);
+    elsif TS(2) = 5 and TS(1) = 5 and TS(0) = 2 then
+      delay := to_unsigned(1, delay'length);
+    elsif TS(2) = 4 and TS(1) = 5 and TS(0) = 2 then
+      delay := to_unsigned(2, delay'length);
+    elsif TS(2) = 5 and TS(1) = 2 and TS(0) = 2 then
+      delay := to_unsigned(1, delay'length);
+    elsif TS(2) = 4 and TS(1) = 1 and TS(0) = 2 then
+      delay := to_unsigned(1, delay'length);
+    elsif TS(2) = 5 and TS(1) = 5 and TS(0) = 3 then
+      delay := to_unsigned(2, delay'length);
+    elsif TS(2) = 4 and TS(1) = 5 and TS(0) = 3 then
+      delay := to_unsigned(2, delay'length);
+    elsif TS(2) = 5 and TS(1) = 3 and TS(0) = 2 then
+      delay := to_unsigned(1, delay'length);
+    elsif TS(2) = 5 and TS(1) = 3 and TS(0) = 3 then
+      delay := to_unsigned(1, delay'length);
+    elsif TS(2) = 4 and TS(1) = 2 and TS(0) = 3 then
+      delay := to_unsigned(1, delay'length);
+    elsif TS(2) = 5 and TS(1) = 5 and TS(0) = 4 then
+      delay := to_unsigned(2, delay'length);
+    elsif TS(2) = 4 and TS(1) = 5 and TS(0) = 4 then
+      delay := to_unsigned(2, delay'length);
+    elsif TS(2) = 5 and TS(1) = 4 and TS(0) = 2 then
+      delay := to_unsigned(1, delay'length);
+    elsif TS(2) = 5 and TS(1) = 4 and TS(0) = 3 then
+      delay := to_unsigned(1, delay'length);
+    elsif TS(2) = 5 and TS(1) = 4 and TS(0) = 4 then
+      delay := to_unsigned(2, delay'length);
+    elsif TS(2) = 4 and TS(1) = 3 and TS(0) = 4 then
+      delay := to_unsigned(3, delay'length);
+    elsif TS(2) = 6 and TS(1) = 6 and TS(0) = 6 then
+      delay := to_unsigned(2, delay'length);
+    elsif TS(2) = 5 and TS(1) = 6 and TS(0) = 6 then
+      delay := to_unsigned(2, delay'length);
+    elsif TS(2) = 5 and TS(1) = 5 and TS(0) = 6 then
+      delay := to_unsigned(2, delay'length);
+    elsif TS(2) = 4 and TS(1) = 6 and TS(0) = 6 then
+      delay := to_unsigned(2, delay'length);
+    elsif TS(2) = 4 and TS(1) = 5 and TS(0) = 6 then
+      delay := to_unsigned(3, delay'length);
+    elsif TS(2) = 4 and TS(1) = 4 and TS(0) = 6 then
+      delay := to_unsigned(3, delay'length);
+    elsif TS(2) = 6 and TS(1) = 6 and TS(0) = 3 then
+      delay := to_unsigned(1, delay'length);
+    elsif TS(2) = 5 and TS(1) = 6 and TS(0) = 3 then
+      delay := to_unsigned(2, delay'length);
+    elsif TS(2) = 4 and TS(1) = 6 and TS(0) = 3 then
+      delay := to_unsigned(2, delay'length);
+    elsif TS(2) = 6 and TS(1) = 3 and TS(0) = 3 then
+      delay := to_unsigned(1, delay'length);
+    elsif TS(2) = 5 and TS(1) = 2 and TS(0) = 3 then
+      delay := to_unsigned(1, delay'length);
+    elsif TS(2) = 4 and TS(1) = 1 and TS(0) = 3 then
+      delay := to_unsigned(1, delay'length);
+    elsif TS(2) = 6 and TS(1) = 6 and TS(0) = 4 then
+      delay := to_unsigned(2, delay'length);
+    elsif TS(2) = 5 and TS(1) = 6 and TS(0) = 4 then
+      delay := to_unsigned(2, delay'length);
+    elsif TS(2) = 4 and TS(1) = 6 and TS(0) = 4 then
+      delay := to_unsigned(2, delay'length);
+    elsif TS(2) = 6 and TS(1) = 4 and TS(0) = 3 then
+      delay := to_unsigned(1, delay'length);
+    elsif TS(2) = 6 and TS(1) = 4 and TS(0) = 4 then
+      delay := to_unsigned(2, delay'length);
+    elsif TS(2) = 5 and TS(1) = 3 and TS(0) = 4 then
+      delay := to_unsigned(1, delay'length);
+    elsif TS(2) = 4 and TS(1) = 2 and TS(0) = 4 then
+      delay := to_unsigned(1, delay'length);
+    elsif TS(2) = 6 and TS(1) = 6 and TS(0) = 5 then
+      delay := to_unsigned(2, delay'length);
+    elsif TS(2) = 5 and TS(1) = 6 and TS(0) = 5 then
+      delay := to_unsigned(2, delay'length);
+    elsif TS(2) = 4 and TS(1) = 6 and TS(0) = 5 then
+      delay := to_unsigned(2, delay'length);
+    elsif TS(2) = 6 and TS(1) = 5 and TS(0) = 3 then
+      delay := to_unsigned(1, delay'length);
+    elsif TS(2) = 6 and TS(1) = 5 and TS(0) = 4 then
+      delay := to_unsigned(2, delay'length);
+    elsif TS(2) = 6 and TS(1) = 5 and TS(0) = 5 then
+      delay := to_unsigned(2, delay'length);
+    elsif TS(2) = 5 and TS(1) = 4 and TS(0) = 5 then
+      delay := to_unsigned(2, delay'length);
+    elsif TS(2) = 4 and TS(1) = 3 and TS(0) = 5 then
+      delay := to_unsigned(1, delay'length);
+    elsif TS(2) = 5 and TS(1) = 5 and TS(0) = 0 then
+      delay := to_unsigned(1, delay'length);
+    elsif TS(2) = 4 and TS(1) = 4 and TS(0) = 0 then
+      delay := to_unsigned(1, delay'length);
+    elsif TS(2) = 4 and TS(1) = 0 and TS(0) = 0 then
+      delay := to_unsigned(2, delay'length);
+    elsif TS(2) = 5 and TS(1) = 4 and TS(0) = 0 then
+      delay := to_unsigned(2, delay'length);
+    elsif TS(2) = 4 and TS(1) = 5 and TS(0) = 0 then
+      delay := to_unsigned(2, delay'length);
+    elsif TS(2) = 6 and TS(1) = 6 and TS(0) = 0 then
+      delay := to_unsigned(1, delay'length);
+    elsif TS(2) = 6 and TS(1) = 5 and TS(0) = 0 then
+      delay := to_unsigned(1, delay'length);
+    elsif TS(2) = 5 and TS(1) = 6 and TS(0) = 0 then
+      delay := to_unsigned(2, delay'length);
+    elsif TS(2) = 6 and TS(1) = 4 and TS(0) = 0 then
+      delay := to_unsigned(1, delay'length);
+    elsif TS(2) = 5 and TS(1) = 0 and TS(0) = 0 then
+      delay := to_unsigned(1, delay'length);
+    elsif TS(2) = 4 and TS(1) = 0 and TS(0) = 4 then
+      delay := to_unsigned(1, delay'length);
+    elsif TS(2) = 6 and TS(1) = 0 and TS(0) = 0 then
+      delay := to_unsigned(1, delay'length);
+    elsif TS(2) = 4 and TS(1) = 0 and TS(0) = 5 then
+      delay := to_unsigned(1, delay'length);
+    elsif TS(2) = 4 and TS(1) = 0 and TS(0) = 6 then
+      delay := to_unsigned(1, delay'length);
+    elsif TS(2) = 5 and TS(1) = 0 and TS(0) = 4 then
+      delay := to_unsigned(1, delay'length);
+    elsif TS(2) = 4 and TS(1) = 6 and TS(0) = 0 then
+      delay := to_unsigned(2, delay'length);
+    elsif TS(2) = 6 and TS(1) = 4 and TS(0) = 5 then
+      delay := to_unsigned(1, delay'length);
+    elsif TS(2) = 6 and TS(1) = 0 and TS(0) = 4 then
+      delay := to_unsigned(1, delay'length);
+    elsif TS(2) = 6 and TS(1) = 5 and TS(0) = 6 then
+      delay := to_unsigned(2, delay'length);
+    elsif TS(2) = 5 and TS(1) = 0 and TS(0) = 6 then
+      delay := to_unsigned(1, delay'length);
+    elsif TS(2) = 5 and TS(1) = 4 and TS(0) = 6 then
+      delay := to_unsigned(3, delay'length);
+    elsif TS(2) = 5 and TS(1) = 0 and TS(0) = 5 then
+      delay := to_unsigned(1, delay'length);
+    elsif TS(2) = 6 and TS(1) = 0 and TS(0) = 5 then
+      delay := to_unsigned(1, delay'length);
+    elsif TS(2) = 6 and TS(1) = 0 and TS(0) = 6 then
+      delay := to_unsigned(1, delay'length);
+    else
+      delay := to_unsigned(0, delay'length);
+    end if;
+
+    return delay;
+  end function;
+
+
+
+
+
+
+
+--  function THREE_SEQ_LUT(TS : three_sequence_t) return unsigned is
+--    variable delay : unsigned (1 downto 0);
+--  begin
+--    if TS(2) = 6 and TS(1) = 6 and TS(0) = 6 then
+--      delay := to_unsigned(2, delay'length);
+--    elsif TS(2) = 6 and TS(1) = 0 and TS(0) = 0 then
+--      delay := to_unsigned(1, delay'length);
+--    else
+--      delay := to_unsigned(0, delay'length);
+--    end if;
+--
+--    return delay;
+--  end function;
+
+-- Used to try to replace priority encoder with reduced bitonic sorting network. Did not see conclusive improvements, can check again and either remove this or replace encoder.
 --  signal cand_slv_expanded : std_logic_vector (NUM_PATTERNS*pat_unit_pre_t'w + 15*pat_unit_pre_t'w - 1 downto 0) := (others => '0');
 --  signal cand_slv_reduced : std_logic_vector (NUM_PATTERNS*(LC_BITS-1 + PID_BITS) + 105 - 1 downto 0);
   
@@ -245,41 +451,111 @@ begin
 
   -- slv -> record from priority encoder
   best <= convert(best_slv, best);
+  best_with_valid.lc <= best.lc;
+  best_with_valid.id <= best.id;
+  -- Compare against thresholds, set invalid if not met
+  best_with_valid.valid <= '1' when best.lc >= unsigned(ly_thresh(maximum(to_integer(best.id)-1, 0))) else '0'; -- Guard against indexing by -1 
 
   --------------------------------------------------------------------------------
-  -- Put a threshold, make sure the pattern is above some minimum layer cnt
+  -- 3-Sequence Triggering (3ST)
+  -- Temporal deghosting algorithm. When a valid segment is seen, ensures exactly 1 segment is output in the upcoming BXs, removing the ghosts due to pulse stretching.
   --------------------------------------------------------------------------------
+  three_sequence(2) <= seg_buffer(15).lc;
+  three_sequence(1) <= seg_buffer(7).lc;
+  three_sequence(0) <= best.lc;
+
+  lut_delay <= THREE_SEQ_LUT(three_sequence);
+
+  chosen_seg_valid <= '1' when (lut_delay = 1 and seg_buffer(15).valid = '1') or (lut_delay = 2 and seg_buffer(7).valid = '1') or (lut_delay = 3 and best_with_valid.valid = '1') else '0';
 
   process (clock) is
   begin
     if (rising_edge(clock)) then
-    
+
+      -- Advance buffers
+      seg_buffer(0) <= best_with_valid;
+      for I in 1 to seg_buffer'length-1 loop
+        seg_buffer(I) <= seg_buffer(I-1);
+      end loop;
+
+      for I in 1 to seg_trigger_arr'length-1 loop
+        seg_trigger_arr(I) <= seg_trigger_arr(I-1);
+      end loop;
+
+      -- Rising edge detector for segments. If there is a valid segment, output exactly 1 segment in the upcoming BXs, and only allow output again once valid has been low for at least 1 BX.
+      seg_trigger_arr(0) <= '1' when seg_buffer(15).valid = '0' and seg_buffer(7).valid = '1' else '0';
+
+      -- Get delay from LUT if triggered and chosen segment would be valid, or else from existing value in array
+      if seg_trigger_arr(7) = '1' and chosen_seg_valid = '1' then
+        delay <= lut_delay;
+      else
+        delay <= delay_arr(to_integer(delay_pointer)); 
+      end if;
+
+      -- Write back max(delay-1, 0). Key: 0 - idle/no output; 1 - output this BX; 2 - output next BX; 3 - output in 2 BXs
+      delay_arr((to_integer(delay_pointer) - 1) mod 8) <= delay - 1 when delay > 0 else to_unsigned(0, delay'length);
+
+      pat_o.valid <= seg_buffer(16).valid when delay = 1 else '0';
+      pat_o.lc <= seg_buffer(16).lc;
+      pat_o.id <= seg_buffer(16).id;
+
+
+      delay_pointer <= delay_pointer + 1;
+
+      -- DAV Signals
+
       -- Try adding a register for timing
       for I in 0 to NUM_PATTERNS-1 loop
           cand_slv(I) <= convert(pats(I), cand_slv(I));
       end loop;
       dav_s1 <= pats_dav;
 
-      dav_o <= priority_dav;
-      bx_0_o <= priority_dav;
 
-      if (EN_HC_COMPRESS) then
-        if (best.id > 0 and best.lc > unsigned(ly_thresh(to_integer(best.id)-1))) then
-          pat_o.lc <= unsigned(std_logic_vector(best.lc));
-          pat_o.id <= best.id;
-        else
-          pat_o <= zero(pat_o);
-        end if;
-      else
-        if (best.id > 0 and best.lc >= unsigned(ly_thresh(to_integer(best.id)-1))) then
-          pat_o.lc <= unsigned(std_logic_vector(best.lc));
-          pat_o.id <= best.id;
-        else
-          pat_o <= zero(pat_o);
-        end if;
-      end if;
+      tst_dav(0) <= priority_dav;
+      for I in 1 to tst_dav'length-1 loop
+        tst_dav(I) <= tst_dav(I-1);
+      end loop;
+
+      dav_o <= tst_dav(16);
+      bx_0_o <= tst_dav(16);
 
     end if;
   end process;
+
+
+
+
+--  process (clock) is
+--  begin
+--    if (rising_edge(clock)) then
+--    
+--      -- Try adding a register for timing
+--      for I in 0 to NUM_PATTERNS-1 loop
+--          cand_slv(I) <= convert(pats(I), cand_slv(I));
+--      end loop;
+--      dav_s1 <= pats_dav;
+--
+--      dav_o <= priority_dav;
+--      bx_0_o <= priority_dav;
+--
+--      pat_o.lc <= unsigned(std_logic_vector(best.lc));
+--      pat_o.id <= best.id;
+--
+--      if (EN_HC_COMPRESS) then
+--        if (best.id > 0 and best.lc > unsigned(ly_thresh(to_integer(best.id)-1))) then
+--          pat_o.valid <= '1';
+--        else
+--          pat_o.valid <= '0';
+--        end if;
+--      else
+--        if (best.id > 0 and best.lc >= unsigned(ly_thresh(to_integer(best.id)-1))) then
+--          pat_o.valid <= '1';
+--        else
+--          pat_o.valid <= '0';
+--        end if;
+--      end if;
+--
+--    end if;
+--  end process;
 
 end behavioral;

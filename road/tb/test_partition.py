@@ -5,7 +5,7 @@ from math import ceil
 
 import plotille
 from cocotb.triggers import RisingEdge
-from cocotb_test.simulator import run
+from cocotb_tools.runner import get_runner, VHDL
 
 from datagen import datagen
 from partition_beh import process_partition
@@ -39,8 +39,8 @@ async def partition_test_segs(dut):
 
 async def partition_test(dut, NLOOPS=1000, test="SEGMENTS"):
 
-    setup(dut)
-    cocotb.start_soon(monitor_dav(dut))
+    setup_pat_unit(dut)
+    #cocotb.start_soon(monitor_dav(dut))
 
     # random.seed(56)
 
@@ -52,10 +52,12 @@ async def partition_test(dut, NLOOPS=1000, test="SEGMENTS"):
     config.group_width = dut.S0_WIDTH.value
     config.deghost_pre = dut.DEGHOST_PRE.value
     config.deghost_post = dut.DEGHOST_POST.value
+    config.start_tst_manager()
 
     # initial inputs
     en_hc_compress = True if dut.EN_HC_COMPRESS.value == 1 else False
     dut.ly_thresh.value = [thresh-4 for thresh in config.ly_thresh_patid] if en_hc_compress else config.ly_thresh_patid # Since HC compression happens at a higher level in FW, need to take care of it here
+
     dut.partition_i.value = [0 for _ in range(6)]
 
     # flush the buffers
@@ -70,16 +72,14 @@ async def partition_test(dut, NLOOPS=1000, test="SEGMENTS"):
     #--------------------------------------------------------------------------------
     # Measure latency
     #--------------------------------------------------------------------------------
-    compress_adj = 3 if en_hc_compress else 0
-    checkfn = lambda : dut.segments_o[0].lc.value.is_resolvable and \
-        dut.segments_o[0].lc.value.integer >= config.ly_thresh_patid[dut.segments_o[0].id.value.integer - 1] - compress_adj
+    checkfn = lambda : dut.segments_o[0].valid.value.is_resolvable and dut.segments_o[0].valid.value == 1
 
     def setfn(dut, x):
         dut.partition_i.value = [x for _ in range(6)]
 
     meas_latency = await measure_latency(dut, checkfn, setfn)
 
-    LATENCY = ceil(meas_latency)-2
+    LATENCY = ceil(meas_latency)-4
 
     #--------------------------------------------------------------------------------
     # Event Loop
@@ -147,7 +147,7 @@ async def partition_test(dut, NLOOPS=1000, test="SEGMENTS"):
 
 
         # pop old data on dav_o
-        if dut.dav_o_phase.value == 0:
+        if dut.dav_o.value == 1:
 
             popped_data = queue.pop(0)
 
@@ -157,9 +157,6 @@ async def partition_test(dut, NLOOPS=1000, test="SEGMENTS"):
                                             partition_bx_data = [[0]*192]*6)
 
             fw_segments = get_segments_from_dut(dut)
-
-
-
 
             for j in range(max([len(fw_segments), len(sw_segments)])):
 
@@ -180,15 +177,15 @@ async def partition_test(dut, NLOOPS=1000, test="SEGMENTS"):
         # next clock cycle
         await RisingEdge(dut.clock)
 
-    filename = "../log/partition_%s.log" % test
-    os.makedirs(os.path.dirname(filename), exist_ok=True)
-    with open(filename, "w+", encoding="utf-8") as f:
-
-        f.write("Strips:\n")
-        f.write(plotille.hist(strip_cnts, bins=int(192/4)))
-
-        f.write("\nIDs:\n")
-        f.write(plotille.hist(id_cnts, bins=16))
+#    filename = "../log/partition_%s.log" % test
+#    os.makedirs(os.path.dirname(filename), exist_ok=True)
+#    with open(filename, "w+", encoding="utf-8") as f:
+#
+#        f.write("Strips:\n")
+#        f.write(plotille.hist(strip_cnts, bins=int(192/4)))
+#
+#        f.write("\nIDs:\n")
+#        f.write(plotille.hist(id_cnts, bins=16))
 
 
 def test_partition():
@@ -210,19 +207,28 @@ def test_partition():
                     os.path.join(rtl_dir, "partition.vhd")]
 
     # disable DEADTIME in the test bench since it is not emulated in the software
-    parameters = {"DEADTIME": 0, "DISABLE_PEAKING": True}
+    parameters = {"DISABLE_PEAKING": True, "NUM_SEGMENTS": 8, "S0_WIDTH" : 16}
 
-    os.environ["SIM"] = "questa"
-    #os.environ["COCOTB_RESULTS_FILE"] = f"../log/{module}.xml"
+    sim = os.getenv("SIM", "questa")
+    runner = get_runner(sim)
 
-    run(vhdl_sources=vhdl_sources,
-        module=module,  # name of cocotb test module
-        compile_args=["-2008"],
-        parameters=parameters,
-        toplevel="partition",  # top level HDL
-        toplevel_lang="vhdl",
-        sim_args=["-noautoldlibpath", "-do", "set NumericStdNoWarnings 1;"],
-        gui=0)
+    runner.build(
+        sources = vhdl_sources,
+        parameters = parameters,
+        build_args = [VHDL("-2008")],
+        hdl_toplevel = "partition",
+        always = True
+    )
+
+    speedup_args = ["-no_autoacc"]
+
+    runner.test(
+        hdl_toplevel="partition",
+        test_module="test_partition",
+        test_args = ["-noautoldlibpath"] + speedup_args,
+        pre_cmd = ["set NumericStdNoWarnings 1;"],
+        gui = 0
+    )
 
 if __name__ == "__main__":
     test_partition()

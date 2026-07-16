@@ -21,12 +21,12 @@ entity partition is
 
 
     DISABLE_PEAKING : boolean := false;
-    NUM_SEGMENTS   : integer := 4;
+    NUM_SEGMENTS   : integer := 8;
     PRT_WIDTH      : natural := PRT_WIDTH;  -- width of the partition (192)
-    S0_WIDTH       : natural := 8;          -- width of the pre-sorting regions
+    S0_WIDTH       : natural := 16;          -- width of the pre-sorting regions
     PAT_UNIT_REUSE : natural := 8;          --
     --DEADTIME       : natural := 3;          -- deadtime in bx
-    EN_HC_COMPRESS : boolean := true;
+    EN_HC_COMPRESS : boolean := false;
 
     DEGHOST_PRE  : boolean := true;     -- perform intra-partition ghost cancellation BEFORE sorting
     DEGHOST_POST : boolean := false;    -- perform intra-partition ghost cancellation AFTER sorting
@@ -262,6 +262,7 @@ begin
       dav_o <= dav_postghost;
      
       for I in segments_o'range loop
+        segments_o(I).valid     <= segments_postghost(I).valid;
         segments_o(I).lc        <= segments_postghost(I).lc;
         segments_o(I).id        <= segments_postghost(I).id;
         segments_o(I).strip     <= segments_postghost(I).strip;

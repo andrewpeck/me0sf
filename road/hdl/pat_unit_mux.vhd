@@ -41,7 +41,7 @@ entity pat_unit_mux is
     WIDTH   : natural        := PRT_WIDTH;
 
     --DEADTIME : natural := 3;            -- deadtime in bx
-    EN_HC_COMPRESS : boolean := true;
+    EN_HC_COMPRESS : boolean := False;
 
     -- Need padding for half the width of the pattern this is to handle the edges
     -- of the chamber where some virtual chamber of all zeroes exists... to be
@@ -49,7 +49,6 @@ entity pat_unit_mux is
     MUX_FACTOR : natural := 8
     );
   port(
-
     clock : in std_logic;
 
     ly_thresh : in ly_thresh_prt;
@@ -69,7 +68,7 @@ entity pat_unit_mux is
     ly4 : in std_logic_vector (WIDTH-1 downto 0);
     ly5 : in std_logic_vector (WIDTH-1 downto 0);
 
-    segments_o : out pat_unit_mux_list_t (WIDTH-1 downto 0) := (others => (lc => (others => '0'), id => (others => '0'), strip => (others => '0'))); -- Initialize to all '0's (zero function does not work without a declared signal of that type)
+    segments_o : out pat_unit_mux_list_t (WIDTH-1 downto 0) := (others => (valid => '0', lc => (others => '0'), id => (others => '0'), strip => (others => '0'))); -- Initialize to all '0's (zero function does not work without a declared signal of that type)
 
     trigger_o : out std_logic_vector (WIDTH-1 downto 0) := (others => '0')
 
@@ -214,7 +213,6 @@ begin
     pat_unit_inst : entity work.pat_unit
       generic map (VERBOSE => verbose, EN_HC_COMPRESS => EN_HC_COMPRESS)
       port map (
-
         clock => clock,
 
         ly_thresh => ly_thresh,
@@ -304,6 +302,7 @@ begin
 
       -- Store segments as they come out of the pat_units @ 320 MHz
       for I in 0 to NUM_SECTORS-1 loop
+        --segments_accumulator(I+((patterns_mux_phase-1) mod 8)*NUM_SECTORS) <= patterns_mux(I);
         segments_accumulator(I+patterns_mux_phase*NUM_SECTORS) <= patterns_mux(I);
       end loop;
 
@@ -318,13 +317,15 @@ begin
           for I in segments_accumulator'range loop
             -- If we are triggered, then definitely output the old segment, and reset trigger
             if trigger(I) = '1' then
+             segments_o(I).valid <= peaking_segments_old(I).valid;
              segments_o(I).lc <= peaking_segments_old(I).lc;
              segments_o(I).id <= peaking_segments_old(I).id;
              trigger(I) <= '0';
             -- Otherwise, if we have seen a segment in the last BX
-            elsif peaking_segments_oldest(I) = '0' and peaking_segments_old(I).lc > 0 then
+            elsif peaking_segments_oldest(I) = '0' and peaking_segments_old(I).valid /= '0' then
             -- And we no longer see a segment, then output the segment we saw 
-              if segments_accumulator(I).lc = 0 then
+              if segments_accumulator(I).valid = '0' then
+                segments_o(I).valid <= peaking_segments_old(I).valid;
                 segments_o(I).lc <= peaking_segments_old(I).lc;
                 segments_o(I).id <= peaking_segments_old(I).id;
             -- And we still see the segment, then trigger to output in the next BX
@@ -338,13 +339,14 @@ begin
             end if;
             
             -- Update segments (old and oldest)
-            peaking_segments_oldest(I) <= '1' when peaking_segments_old(I).lc > 0 else '0';
+            peaking_segments_oldest(I) <= '1' when peaking_segments_old(I).valid /= '0' else '0';
             peaking_segments_old(I) <= segments_accumulator(I);
          end loop;   
         end if; -- 40 MHz clock
       else -- End peaking
         for I in segments_o'range loop
-        -- Assign segments_o at 40 MHz
+          -- Only update segments_o every 8 clocks, so it is stable for 1 full BX. This is later used at the chamber level, to fill the seg_info_buffer, and the segments must be stable for 8 320 MHz clocks.
+          segments_o(I).valid <= segments_accumulator(I).valid when patterns_mux_phase = 0;
           segments_o(I).lc <= segments_accumulator(I).lc when patterns_mux_phase = 0;
           segments_o(I).id <= segments_accumulator(I).id when patterns_mux_phase = 0;
         end loop;

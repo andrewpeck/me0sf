@@ -6,26 +6,13 @@ from typing import List
 import cocotb
 import plotille
 from cocotb.triggers import RisingEdge
-from cocotb_test.simulator import run
+from cocotb_tools.runner import get_runner, VHDL
 
 from constants import *
 from datagen import datagen
 from pat_unit_beh import pat_unit
 from subfunc import *
 from tb_common import *
-
-
-async def monitor_dav(dut, latency):
-
-    # wait for the first edge to start monitoring
-    await RisingEdge(dut.dav_o)
-
-    while True:
-        await RisingEdge(dut.dav_i)
-        for i in range(latency+1):
-            assert dut.dav_o.value == 0, f"Is the latency setting wrong? found dav when we didn't expect it in clock {i} latency={latency}"
-            await RisingEdge(dut.clock)
-        assert dut.dav_o.value == 1, f"Is the latency setting wrong? did not find dav w/ latency={latency}"
 
 @cocotb.test() # type: ignore
 async def pat_unit_test_segments(dut):
@@ -41,7 +28,6 @@ async def pat_unit_test_seg(dut):
 
 
 async def pat_unit_test(dut, test="SEGMENTS"):
-
     random.seed(56)
 
     # constants
@@ -59,30 +45,24 @@ async def pat_unit_test(dut, test="SEGMENTS"):
 
     # set layer count threshold
     dut.ly_thresh.value = [i-4 for i in LY_THRESH] if en_hc_compress else LY_THRESH
-
-
  
     # set MAX_SPAN from firmware
     # should be a number approx 37
     MAX_SPAN = get_max_span_from_dut(dut)
 
-    setup(dut)
+    setup_pat_unit(dut)
 
     #--------------------------------------------------------------------------------
     # Measure Latency
     #--------------------------------------------------------------------------------
 
-    checkfn = lambda : dut.pat_o.lc.value.is_resolvable and \
-        dut.pat_o.lc.value.integer > 0
+    checkfn = lambda : dut.pat_o.valid.value.is_resolvable and dut.pat_o.valid.value == 1
 
     def setfn(dut, x):
         set_dut_inputs(dut, [x<<(getattr(dut, f"LY{i}_SPAN").value // 2) for i in range(6)])
-
     meas_latency = await measure_latency(dut, checkfn, setfn)
 
     LATENCY = ceil(meas_latency)+2
-
-    cocotb.start_soon(monitor_dav(dut,LATENCY))
 
     #-------------------------------------------------------------------------------
     #
@@ -182,11 +162,11 @@ async def pat_unit_test(dut, test="SEGMENTS"):
 
         assert sw_segment == fw_segment
 
-    filename = "../log/pat_unit_%s.log" % test
-    os.makedirs(os.path.dirname(filename), exist_ok=True)
-    with open(filename, "w+", encoding="utf-8") as f:
-        f.write("\nIDs:\n")
-        f.write(plotille.hist(id_cnts, bins=16))
+#    filename = "../log/pat_unit_%s.log" % test
+#    os.makedirs(os.path.dirname(filename), exist_ok=True)
+#    with open(filename, "w+", encoding="utf-8") as f:
+#        f.write("\nIDs:\n")
+#        f.write(plotille.hist(id_cnts, bins=16))
 
 
 def test_pat_unit():
@@ -205,16 +185,26 @@ def test_pat_unit():
     parameters = {}
 
     os.environ["SIM"] = "questa"
+    sim = os.getenv("SIM", "questa")
+    runner = get_runner(sim)
 
-    run(vhdl_sources=vhdl_sources,
-        module=module,  # name of cocotb test module
-        compile_args=["-2008"],
-        toplevel="pat_unit",  # top level HDL
-        toplevel_lang="vhdl",
-        #sim_args=["-do", '"set NumericStdNoWarnings 1;"'],
-        sim_args=["-noautoldlibpath"],
-        parameters=parameters,
-        gui=0)
+    runner.build(
+        sources = vhdl_sources,
+        parameters = parameters,
+        build_args = [VHDL("-2008")],
+        hdl_toplevel = "pat_unit",
+        always = True
+    )
+
+    speedup_args = ["-no_autoacc"]
+
+    runner.test(
+        hdl_toplevel="pat_unit",
+        test_module="test_pat_unit",
+        test_args = ["-noautoldlibpath"] + speedup_args,
+        pre_cmd = ["set NumericStdNoWarnings 1;"],
+        gui = 0
+    )
 
 
 if __name__ == "__main__":

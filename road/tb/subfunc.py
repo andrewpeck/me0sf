@@ -11,9 +11,10 @@ import numpy as np
 
 LAYER_MASK = None
 
-class Peaking_Manager:
+class TST_Manager:
     def __init__(self):
         self.segs = [[[None for _ in range(192)] for _ in range(15)] for _ in range(2)]
+        self.lcs = [[[0 for _ in range(192)] for _ in range(15)] for _ in range(2)] # Use this to track the LCs, so we can just set invalid segments to None. This significantly sepeds up simulation.
         self.trigger = np.zeros((15,192), dtype=bool) # partition, strip
         self.delays = np.zeros((15,192), dtype=np.int16) # partition, strip
 
@@ -26,20 +27,19 @@ class Peaking_Manager:
         #self.three_seq_LUT = {(4, 4, 4): 0, (4, 4, 1): -1, (4, 1, 1): -1, (4, 4, 2): -1, (4, 2, 1): -1, (4, 2, 2): -1, (4, 4, 3): 0, (4, 3, 1): -1, (4, 3, 2): -1, (4, 3, 3): -1, (5, 5, 5): 0, (4, 5, 5): 0, (4, 4, 5): 0, (5, 5, 2): -1, (4, 5, 2): 0, (5, 2, 2): -1, (4, 1, 2): -1, (5, 5, 3): 0, (4, 5, 3): 0, (5, 3, 2): -1, (5, 3, 3): -1, (4, 2, 3): -1, (5, 5, 4): 0, (4, 5, 4): 0, (5, 4, 2): -1, (5, 4, 3): -1, (5, 4, 4): 0, (4, 3, 4): 1, (6, 6, 6): 0, (5, 6, 6): 0, (5, 5, 6): 0, (4, 6, 6): 0, (4, 5, 6): 1, (4, 4, 6): 1, (6, 6, 3): -1, (5, 6, 3): 0, (4, 6, 3): 0, (6, 3, 3): -1, (5, 2, 3): -1, (4, 1, 3): -1, (6, 6, 4): 0, (5, 6, 4): 0, (4, 6, 4): 0, (6, 4, 3): -1, (6, 4, 4): -1, (5, 3, 4): -1, (4, 2, 4): 1, (6, 6, 5): 0, (5, 6, 5): 0, (4, 6, 5): 0, (6, 5, 3): -1, (6, 5, 4): -1, (6, 5, 5): 0, (5, 4, 5): 0, (4, 3, 5): 1, (5, 5, 0) : 0, (4, 4, 0) : 0, (4, 0, 0) : 0, (5, 4, 0) : 0, (4, 5, 0) : 0, (6, 6, 0) : -1, (6, 5, 0) : -1, (5, 6, 0) : 0, (6, 4, 0) : -1, (5, 0, 0) : -1, (4, 0, 4) : 0, (6, 0, 0) : -1, (4, 0, 5) : 1, (4, 0, 6) : 1, (5, 0, 4) : -1, (4, 6, 0) : 0, (6, 4, 5) : -1, (6, 0, 4) : -1, (6, 5, 6) : 0, (5, 0, 6) : 1, (5, 4, 6) : 1, (5, 0, 5) : -1, (6, 0, 5) : -1, (6, 0, 6) : -1}
 
         # Adjusted based on N=[0,999] run
-        self.three_seq_LUT = {(4, 4, 4): 0, (4, 4, 1): -1, (4, 1, 1): -1, (4, 4, 2): -1, (4, 2, 1): -1, (4, 2, 2): -1, (4, 4, 3): 0, (4, 3, 1): -1, (4, 3, 2): -1, (4, 3, 3): -1, (5, 5, 5): 0, (4, 5, 5): 0, (4, 4, 5): 0, (5, 5, 2): -1, (4, 5, 2): 0, (5, 2, 2): -1, (4, 1, 2): -1, (5, 5, 3): 0, (4, 5, 3): 0, (5, 3, 2): -1, (5, 3, 3): -1, (4, 2, 3): -1, (5, 5, 4): 0, (4, 5, 4): 0, (5, 4, 2): -1, (5, 4, 3): -1, (5, 4, 4): 0, (4, 3, 4): 1, (6, 6, 6): 0, (5, 6, 6): 0, (5, 5, 6): 0, (4, 6, 6): 0, (4, 5, 6): 1, (4, 4, 6): 1, (6, 6, 3): -1, (5, 6, 3): 0, (4, 6, 3): 0, (6, 3, 3): -1, (5, 2, 3): -1, (4, 1, 3): -1, (6, 6, 4): 0, (5, 6, 4): 0, (4, 6, 4): 0, (6, 4, 3): -1, (6, 4, 4): 0, (5, 3, 4): -1, (4, 2, 4): 1, (6, 6, 5): 0, (5, 6, 5): 0, (4, 6, 5): 0, (6, 5, 3): -1, (6, 5, 4): 0, (6, 5, 5): 0, (5, 4, 5): 0, (4, 3, 5): 1, (5, 5, 0) : -1, (4, 4, 0) : -1, (4, 0, 0) : 0, (5, 4, 0) : 0, (4, 5, 0) : 0, (6, 6, 0) : -1, (6, 5, 0) : -1, (5, 6, 0) : 0, (6, 4, 0) : -1, (5, 0, 0) : -1, (4, 0, 4) : 0, (6, 0, 0) : -1, (4, 0, 5) : 1, (4, 0, 6) : 1, (5, 0, 4) : 0, (4, 6, 0) : 0, (6, 4, 5) : -1, (6, 0, 4) : 0, (6, 5, 6) : 0, (5, 0, 6) : 1, (5, 4, 6) : 1, (5, 0, 5) : 0, (6, 0, 5) : -1, (6, 0, 6) : -1}
+        #self.three_seq_LUT = {(4, 4, 4): 0, (4, 4, 1): -1, (4, 1, 1): -1, (4, 4, 2): -1, (4, 2, 1): -1, (4, 2, 2): -1, (4, 4, 3): 0, (4, 3, 1): -1, (4, 3, 2): -1, (4, 3, 3): -1, (5, 5, 5): 0, (4, 5, 5): 0, (4, 4, 5): 0, (5, 5, 2): -1, (4, 5, 2): 0, (5, 2, 2): -1, (4, 1, 2): -1, (5, 5, 3): 0, (4, 5, 3): 0, (5, 3, 2): -1, (5, 3, 3): -1, (4, 2, 3): -1, (5, 5, 4): 0, (4, 5, 4): 0, (5, 4, 2): -1, (5, 4, 3): -1, (5, 4, 4): 0, (4, 3, 4): 1, (6, 6, 6): 0, (5, 6, 6): 0, (5, 5, 6): 0, (4, 6, 6): 0, (4, 5, 6): 1, (4, 4, 6): 1, (6, 6, 3): -1, (5, 6, 3): 0, (4, 6, 3): 0, (6, 3, 3): -1, (5, 2, 3): -1, (4, 1, 3): -1, (6, 6, 4): 0, (5, 6, 4): 0, (4, 6, 4): 0, (6, 4, 3): -1, (6, 4, 4): 0, (5, 3, 4): -1, (4, 2, 4): 1, (6, 6, 5): 0, (5, 6, 5): 0, (4, 6, 5): 0, (6, 5, 3): -1, (6, 5, 4): 0, (6, 5, 5): 0, (5, 4, 5): 0, (4, 3, 5): 1, (5, 5, 0) : -1, (4, 4, 0) : -1, (4, 0, 0) : 0, (5, 4, 0) : 0, (4, 5, 0) : 0, (6, 6, 0) : -1, (6, 5, 0) : -1, (5, 6, 0) : 0, (6, 4, 0) : -1, (5, 0, 0) : -1, (4, 0, 4) : 0, (6, 0, 0) : -1, (4, 0, 5) : 1, (4, 0, 6) : 1, (5, 0, 4) : 0, (4, 6, 0) : 0, (6, 4, 5) : -1, (6, 0, 4) : 0, (6, 5, 6) : 0, (5, 0, 6) : 1, (5, 4, 6) : 1, (5, 0, 5) : 0, (6, 0, 5) : -1, (6, 0, 6) : -1}
+
+        # Changed (A, 0, B) to output A always, since there is a difference in triggering between SW and FW if this occurs and either the middle or right value is selected
+        self.three_seq_LUT = {(4, 4, 4): 0, (4, 4, 1): -1, (4, 1, 1): -1, (4, 4, 2): -1, (4, 2, 1): -1, (4, 2, 2): -1, (4, 4, 3): 0, (4, 3, 1): -1, (4, 3, 2): -1, (4, 3, 3): -1, (5, 5, 5): 0, (4, 5, 5): 0, (4, 4, 5): 0, (5, 5, 2): -1, (4, 5, 2): 0, (5, 2, 2): -1, (4, 1, 2): -1, (5, 5, 3): 0, (4, 5, 3): 0, (5, 3, 2): -1, (5, 3, 3): -1, (4, 2, 3): -1, (5, 5, 4): 0, (4, 5, 4): 0, (5, 4, 2): -1, (5, 4, 3): -1, (5, 4, 4): 0, (4, 3, 4): 1, (6, 6, 6): 0, (5, 6, 6): 0, (5, 5, 6): 0, (4, 6, 6): 0, (4, 5, 6): 1, (4, 4, 6): 1, (6, 6, 3): -1, (5, 6, 3): 0, (4, 6, 3): 0, (6, 3, 3): -1, (5, 2, 3): -1, (4, 1, 3): -1, (6, 6, 4): 0, (5, 6, 4): 0, (4, 6, 4): 0, (6, 4, 3): -1, (6, 4, 4): 0, (5, 3, 4): -1, (4, 2, 4): -1, (6, 6, 5): 0, (5, 6, 5): 0, (4, 6, 5): 0, (6, 5, 3): -1, (6, 5, 4): 0, (6, 5, 5): 0, (5, 4, 5): 0, (4, 3, 5): -1, (5, 5, 0) : -1, (4, 4, 0) : -1, (4, 0, 0) : 0, (5, 4, 0) : 0, (4, 5, 0) : 0, (6, 6, 0) : -1, (6, 5, 0) : -1, (5, 6, 0) : 0, (6, 4, 0) : -1, (5, 0, 0) : -1, (4, 0, 4) : -1, (6, 0, 0) : -1, (4, 0, 5) : -1, (4, 0, 6) : -1, (5, 0, 4) : -1, (4, 6, 0) : 0, (6, 4, 5) : -1, (6, 0, 4) : -1, (6, 5, 6) : 0, (5, 0, 6) : -1, (5, 4, 6) : 1, (5, 0, 5) : -1, (6, 0, 5) : -1, (6, 0, 6) : -1}
 
 
-class Vector_Manager:
+        #self.three_seq_LUT = {(6, 0, 0) : -1, (6, 6, 6) : 0}
+
+class Peaking_Manager:
     def __init__(self):
-        self.vectors = np.zeros((15,192,3,17,6), dtype=np.uint32) # partition, strip, bx, pid, ly
-        self.lcs = np.zeros((15,192,3,17), dtype=np.uint8) # partition, strip, bx, pid
+        self.segs = [[[None for _ in range(192)] for _ in range(15)] for _ in range(2)]
+        self.trigger = np.zeros((15,192), dtype=bool) # partition, strip
 
-    def shift_regs(self, new_vectors, new_lcs, partition, strip):
-        self.vectors[partition, strip] = np.concatenate((self.vectors[partition,strip,1:], new_vectors[np.newaxis, :]))
-        self.lcs[partition, strip] = np.concatenate((self.lcs[partition,strip,1:], new_lcs[np.newaxis, :]))
-
-    def or_vectors(self, partition, strip):
-        return np.bitwise_or(np.bitwise_or(self.vectors[partition,strip,0], self.vectors[partition,strip,1]), self.vectors[partition,strip,2])
  
 class Config:
 
@@ -48,15 +48,15 @@ class Config:
         # Initialize sbit storage here, so it is not shared between different Config objects, which causes following tests to still see old data that may interfere.
         self.sbits_pulse_stretched = np.zeros((8, 6, 3, 3), dtype=np.uint64) # Used for sbits pulse stretching; dimensions = (partitions, layers, limbs, BXs)
         self.initialize_patlist(patlist)
+        #self.old_segments = [Segment(0, 0) for _ in range(8)] # Used for final clearance
         
     def start_peaking_manager(self):
-        self.old_segments = [Segment(0, 0) for _ in range(8)]
         self.peaking_manager = Peaking_Manager()
         self._peaking_enabled = True
 
-    def start_vectoring_manager(self):
-        self.vector_manager = Vector_Manager()
-        self.vectoring_enabled = True
+    def start_tst_manager(self): 
+        self.tst_manager = TST_Manager()
+        self._tst_enabled = True
 
     def calculate_ly_spans(self):
         max_spans = [0 for _ in range(6)]
@@ -142,12 +142,15 @@ class Config:
 
     # This should only be modified by the start_peaking() function, so should not be modified outside the class
     _peaking_enabled : bool = False
+    _tst_enabled : bool = False
 
     @property
     def peaking_enabled(self):
         return self._peaking_enabled
 
-    vectoring_enabled : bool = False # Vectoring not used, can be deleted later if no longer interested
+    @property
+    def tst_enabled(self):
+        return self._tst_enabled
 
     # Helper function to convert a chamber array of 3 uint64 limbs to Python integers.
     # TODO: Rework everything to work in 3 unit64 limbs for better vectorization
@@ -188,11 +191,11 @@ class Config:
     ly_thresh_eta : list[int] = [4, 5, 4, 5, 4, 5, 4, 5, 4, 5, 4, 5, 4, 5, 4]
 
     width : int = 192
-    group_width : int = 8
+    group_width : int = 16
     ghost_width : int = 1
     cross_part_seg_width : int = 4
     clearance_width: int = 0 # use 2 if you want to try this
-    num_outputs : int = 4
+    num_outputs : int = 8
     edge_distance : int = 2
     num_or : int = 2
 
@@ -213,7 +216,7 @@ class Segment:
                  max_cluster_size = None, max_noise = None,
                  nlayers_withcsg3 = None, nlayers_withcsg5 = None, nlayers_withcsg10 = None, nlayers_withcsg15 = None,
                  nlayers_withnoiseg3 = None, nlayers_withnoiseg5 = None, nlayers_withnoiseg10 = None, nlayers_withnoiseg15 = None,
-                 slope = None, fit_strip = None, intercept = None):
+                 slope = None, fit_strip = None, intercept = None, valid = None):
         self.hc = hc
         self.lc = lc
         self.id = id
@@ -237,7 +240,12 @@ class Segment:
         self.slope = slope
         self.fit_strip = fit_strip
         self.intercept = intercept
-        self.valid = True if lc > 0 else False
+
+        # If valid is provided, use that. Otherwise, set invalid if lc is 0.
+        if valid is not None:
+            self.valid = valid
+        else:
+            self.valid = True if lc > 0 else False
 
         self.update_quality()
 
@@ -294,7 +302,7 @@ class Segment:
 
             self.bend_ang = fit[0] / 2.0 #m
             #self.substrip = fit[1] #b
-            self.substrip = (fit[2] / 2.0) - pat_span//2 - 1 # b; Subtract pat_span//2 to shift origin to center of pattern window frame (aligned with segment's global integer strip so this and the substrip can be added together); Subtract another 1 to change form 1-indexing to 0-indexing
+            self.substrip = (fit[2] / 2.0) - pat_span//2 - 1 # b; Subtract pat_span//2 to shift origin to center of pattern window frame (aligned with segment's global integer strip so this and the substrip can be added together); Subtract another 1 to change from 1-indexing to 0-indexing
             #self.mse = fit_llse[2] #mse
             #self.mse = 0 # Fitter does not currently output a quality factor
 
@@ -303,10 +311,10 @@ class Segment:
 
     def __str__(self):
 
-        if (self.lc==0):
-            return "n/a"
+        #if not self.valid:
+        #    return "n/a"
 
-        return f"id={self.id}, lc={self.lc}, strip={self.strip}, prt={self.partition}, quality={self.quality}"
+        return f"valid={self.valid}, id={self.id}, lc={self.lc}, strip={self.strip}, prt={self.partition}, quality={self.quality}"
 
     def __repr__(self):
         return f"Seg {self.quality}"
@@ -316,6 +324,10 @@ class Segment:
         # If both are invalid, consider them equal
         if (not self.valid and not other.valid):
             return True
+
+        # If only one is valid, they must not be equal
+        if self.valid != other.valid:
+            return False
 
         return self.quality == other.quality
 

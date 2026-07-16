@@ -115,8 +115,8 @@ def pat_unit(data,
     lcs = np.count_nonzero(masked_data, axis=1)
 
     # If no segment can ever be output, immediately return a null segment
-    if np.max(lcs) < 4:
-        return Segment(0,0)
+    #if np.max(lcs) < 4:
+    #    return Segment(0,0)
 
     lcs = lcs.astype(np.uint32) # Use uint32 type so later bitshifting works
 
@@ -132,33 +132,6 @@ def pat_unit(data,
     hcs = np.sum(np.clip(bit_count_arr, a_min = None, a_max = 7), axis=1, dtype=np.uint16)
     """
     hcs = np.zeros((17,), dtype=np.uint16)
-
-    """
-    Vectoring is a possible alternative to peaking, but not being explored now. Could delete later.
-    if config.vectoring_enabled:
-        new_vectors = masked_data > 0
-
-        config.vector_manager.shift_regs(new_vectors, lcs, partition, strip)
-
-        # OR the 3 vectors together, for each PID
-        # ord_vectors = config.vector_manager.or_vectors(partition, strip)
-
-        # lcs = np.count_nonzero(ord_vectors, axis=1).astype(np.uint64)
-
-        # if np.count_nonzero(config.vector_manager.lcs[partition,strip,1]) > 0:
-        #     print(config.vector_manager.lcs[partition,strip])
-
-        # lcs = config.vector_manager.lcs[partition, strip, 1]
-
-        # Case of 2, 2, 2 and 3, 3: How to resolve? The current implementation will miss the 2,2,2 case ~=0.6% of cases
-        # for i in range(len(lcs)):
-        #     if not ((config.vector_manager.lcs[partition, strip, 1, i] >= config.vector_manager.lcs[partition, strip, 0, i]) and (config.vector_manager.lcs[partition, strip, 1, i] >= config.vector_manager.lcs[partition, strip, 2, i])):
-        #         lcs[i] = 0
-        
-        #TODO: combine ^^ 2 of those lines in a function in vector_manager
-        #TODO: create function in vector_manager to OR together the 3 vectors for a given partition, strip; call it here, and use that for LCs
-        #TODO: only return segment if LC for central BX is highest. break ties somehow? (maybe with HC)
-    """
     
     combined_segs = np.bitwise_or(np.bitwise_or(np.left_shift(lcs, np.uint8(11)), np.left_shift(hcs, np.uint(5))), PIDS)
     best_pid = np.argmax(combined_segs) + 1
@@ -178,7 +151,6 @@ def pat_unit(data,
     #print(best.bx)
 
     best = Segment(lc=lcs[best_pid-1], hc=hcs[best_pid-1], id=best_pid, partition=partition, strip=strip)
-
 
     ####################################################################################
     # masked_data = [mask_layer_data(x.mask, data) for x in LAYER_MASK]

@@ -74,115 +74,125 @@ def pat_mux(partition_data, partition, config : Config, partition_bx_data):
                                  skip_centroids = config.skip_centroids,
                                  num_or = config.num_or))
 
-    if not config.peaking_enabled:
+    if not (config.peaking_enabled or config.tst_enabled):
         return new_segs
+
+    # Three Sequence Triggering
+    if config.tst_enabled:
+
+        segs_oldest = config.tst_manager.segs[0][partition]
+        segs_old = config.tst_manager.segs[1][partition]
+
+        out_list = [Segment(0,0) for _ in range(config.width)]
+        for i in range(config.width):
+         # If there is a 0 in the middle, then we are guaranteed to not output in the right of the 3-seqeuence e.g. (1,0,1) will output either -1 or 0, but not +1.
+            # To speed up running, set Segments with lc=0 as None objects
+            # Could also save anything with <4 as only an integer (the LC), as they will never be output
     
+            if config.tst_manager.trigger[partition,i]:
+                config.tst_manager.trigger[partition,i] = False # Reset trigger. Note: it cannot fire again this BX, since oldest > 0
+           
+                segs_oldest_lc = config.tst_manager.lcs[0][partition][i]
+                segs_old_lc = config.tst_manager.lcs[1][partition][i]
+
+                #three_sequence = (0 if segs_oldest[i] is None else max(segs_oldest[i].lc-3, 0), 0 if segs_old[i] is None else max(segs_old[i].lc-3, 0), max(new_segs[i].lc-3, 0))
+                three_sequence = (segs_oldest_lc, segs_old_lc, new_segs[i].lc)
+    
+                if three_sequence not in config.tst_manager.three_seq_LUT:
+                    #print(f"3-seq not found in LUT: {three_sequence}")
+                    #input("Press Enter to continue...")
+   
+                    delay = 0
+                    invalid_seg = True
+                else:
+                    invalid_seg = False
+                    delay = config.tst_manager.three_seq_LUT[three_sequence] + 2 # So this is 1, 2, or 3
+    
+                if delay == 1:
+                    if segs_oldest[i] is None or not segs_oldest[i].valid:
+                        invalid_seg = True
+                    else:
+                        segs_oldest[i].three_seq = three_sequence
+                elif delay == 2:
+                    if segs_old[i] is None or not segs_old[i].valid:
+                        invalid_seg = True
+                    else:
+                        segs_old[i].three_seq = three_sequence
+                elif delay == 3:
+                    if not new_segs[i].valid:
+                        invalid_seg = True
+                    else:
+                        new_segs[i].three_seq = three_sequence
+    
+                if not invalid_seg:
+                    config.tst_manager.delays[partition,i] = delay
+    
+            if config.tst_manager.delays[partition,i] == 1:
+                out_list[i] = segs_oldest[i]
+            if config.tst_manager.delays[partition,i] > 0:
+                config.tst_manager.delays[partition,i] -= 1
+    
+            # Segment rising edge detector
+            segs_oldest_low = segs_oldest[i] is None
+            segs_old_high = segs_old[i] is not None
+            if segs_oldest_low and segs_old_high:
+                config.tst_manager.trigger[partition,i] = True
+
+        # Update the TST manager
+        config.tst_manager.lcs[0][partition] = config.tst_manager.lcs[1][partition]
+        config.tst_manager.lcs[1][partition] = [seg.lc for seg in new_segs]
+
+        config.tst_manager.segs[0][partition] = config.tst_manager.segs[1][partition]
+        config.tst_manager.segs[1][partition] = [seg if seg.valid else None for seg in new_segs] # Set invalid segments to None. The LCs are saved in the lcs array, so this cuts down a lot of memory, speeding up simulation significantly.
+
     # Peaking logic
-    
-    segs_oldest = config.peaking_manager.segs[0][partition]
-    segs_old = config.peaking_manager.segs[1][partition]
+    elif config.peaking_enabled:
+        segs_oldest = config.peaking_manager.segs[0][partition]
+        segs_old = config.peaking_manager.segs[1][partition]
 
-    #out_list = []
-
-    # LUT method
-    out_list = [Segment(0,0) for _ in range(config.width)]
-    for i in range(config.width):
-     # If there is a 0 in the middle, then we are guaranteed to not output in the right of the 3-seqeuence e.g. (1,0,1) will output either -1 or 0, but not +1.
-        # To speed up running, set Segments with lc=0 as None objects
-        # Could also save anything with <4 as only an integer (the LC), as they will never be output
-        segs_oldest_lc = 0 if segs_oldest[i] is None else segs_oldest[i].lc
-        segs_old_lc = 0 if segs_old[i] is None else segs_old[i].lc
-
-
-        if config.peaking_manager.trigger[partition,i]:
-            config.peaking_manager.trigger[partition,i] = False # Reset trigger. Note: it cannot fire again this BX, since oldest > 0
-       
-#            three_sequence = (0 if segs_oldest[i] is None else max(segs_oldest[i].lc-3, 0), 0 if segs_old[i] is None else max(segs_old[i].lc-3, 0), max(new_segs[i].lc-3, 0))
-            three_sequence = (segs_oldest_lc, segs_old_lc, new_segs[i].lc)
-
-            if three_sequence not in config.peaking_manager.three_seq_LUT:
-                print(f"3-seq not found in LUT: {three_sequence}")
-                input("Press Enter to continue...")
-
-                delay = 0
-                invalid_seg = True
-            else:
-                invalid_seg = False
-                delay = config.peaking_manager.three_seq_LUT[three_sequence] + 2 # So this is 1, 2, or 3
-
-            if delay == 1:
-                if segs_oldest[i] is None or not segs_oldest[i].valid:
-                    invalid_seg = True
-                else:
-                    segs_oldest[i].three_seq = three_sequence
-            elif delay == 2:
-                if segs_old[i] is None or not segs_old[i].valid:
-                    invalid_seg = True
-                else:
-                    segs_old[i].three_seq = three_sequence
-            elif delay == 3:
-                if not new_segs[i].valid:
-                    invalid_seg = True
-                else:
-                    new_segs[i].three_seq = three_sequence
-
-            if not invalid_seg:
-                config.peaking_manager.delays[partition,i] = delay
-
-        if config.peaking_manager.delays[partition,i] == 1:
-            out_list[i] = segs_oldest[i]
-        if config.peaking_manager.delays[partition,i] > 0:
-            config.peaking_manager.delays[partition,i] -= 1
-
-        # Segment rising edge detector
-        segs_oldest_low = segs_oldest[i] is None or not segs_oldest[i].valid
-        segs_old_high = segs_old[i] is not None and segs_old[i].valid
-        if segs_oldest_low and segs_old_high:
-            config.peaking_manager.trigger[partition,i] = True
-
+        out_list = []
     # Big increase metric
-#    for i in range(config.width):
-#        if config.peaking_manager.trigger[partition,i] == True:
-#            out_list.append(segs_old[i])
-#            config.peaking_manager.trigger[partition,i] = False
-#        elif segs_oldest[i] is None and segs_old[i] is not None:
-#            if not new_segs[i].valid:
-#                out_list.append(segs_old[i])
-#            else:
-#                config.peaking_manager.trigger[partition,i] = True
-#                out_list.append(Segment(0,0,0))
-#        else:
-#            out_list.append(Segment(0,0,0))
-
-    # Big decrease metric
-#    for i in range(config.width):
-#        if segs_old[i] is not None and new_segs[i].lc == 0:
-#            out_list.append(segs_oldest[i] if segs_oldest[i] is not None else segs_old[i])
-#        else:
-#            out_list.append(Segment(0,0,0,i,partition))
-
-#    # Any decrease metric
-#    for i in range(config.width):
-#        if segs_old[i] is not None and new_segs[i].lc < segs_old[i].lc:
-#            out_list.append(segs_old[i])
-#        else:
-#            out_list.append(Segment(0,0,0,i,partition))
-
-   # Any increase metric
-#    for i in range(config.width):
-#        if config.peaking_manager.trigger[partition,i] == True:
-#            out_list.append(segs_old[i])
-#            config.peaking_manager.trigger[partition,i] = False
-#        elif (segs_oldest[i] is None and segs_old[i] is not None) or (segs_oldest[i] is not None and segs_old[i] is not None and segs_oldest[i].lc < segs_old[i].lc):
-#            if new_segs[i].lc <= segs_old[i].lc:
-#                out_list.append(segs_old[i])
-#            else:
-#                config.peaking_manager.trigger[partition,i] = True
-#                out_list.append(Segment(0,0,0))
-#        else:
-#            out_list.append(Segment(0,0,0))
-
-
+        for i in range(config.width):
+            if config.peaking_manager.trigger[partition,i] == True:
+                out_list.append(segs_old[i])
+                config.peaking_manager.trigger[partition,i] = False
+            elif segs_oldest[i] is None and segs_old[i] is not None:
+                if not new_segs[i].valid:
+                    out_list.append(segs_old[i])
+                else:
+                    config.peaking_manager.trigger[partition,i] = True
+                    out_list.append(Segment(0,0,0))
+            else:
+                out_list.append(Segment(0,0,0))
+    
+        # Big decrease metric
+    #    for i in range(config.width):
+    #        if segs_old[i] is not None and new_segs[i].lc == 0:
+    #            out_list.append(segs_oldest[i] if segs_oldest[i] is not None else segs_old[i])
+    #        else:
+    #            out_list.append(Segment(0,0,0,i,partition))
+    
+    #    # Any decrease metric
+    #    for i in range(config.width):
+    #        if segs_old[i] is not None and new_segs[i].lc < segs_old[i].lc:
+    #            out_list.append(segs_old[i])
+    #        else:
+    #            out_list.append(Segment(0,0,0,i,partition))
+    
+       # Any increase metric
+    #    for i in range(config.width):
+    #        if config.peaking_manager.trigger[partition,i] == True:
+    #            out_list.append(segs_old[i])
+    #            config.peaking_manager.trigger[partition,i] = False
+    #        elif (segs_oldest[i] is None and segs_old[i] is not None) or (segs_oldest[i] is not None and segs_old[i] is not None and segs_oldest[i].lc < segs_old[i].lc):
+    #            if new_segs[i].lc <= segs_old[i].lc:
+    #                out_list.append(segs_old[i])
+    #            else:
+    #                config.peaking_manager.trigger[partition,i] = True
+    #                out_list.append(Segment(0,0,0))
+    #        else:
+    #            out_list.append(Segment(0,0,0))
+     
     # Smart metric
     # Needs to address 3,3 (Sequence: 0, 6, 6, 0) case
     # Currently outputs both -> ~3% increase in background (increase is from both background and signal)
@@ -194,10 +204,9 @@ def pat_mux(partition_data, partition, config : Config, partition_bx_data):
     #         out_list.append(segs_old[i])
     #         new_segs[i].lc = 0
 
-    # Update the peaking manager
-    config.peaking_manager.segs[0][partition] = config.peaking_manager.segs[1][partition]
-    #config.peaking_manager.segs[1][partition] = [seg if seg.lc > 0 else None for seg in new_segs]
-    config.peaking_manager.segs[1][partition] = [seg if seg.valid else None for seg in new_segs]
+        # Update the peaking manager
+        config.peaking_manager.segs[0][partition] = config.peaking_manager.segs[1][partition]
+        config.peaking_manager.segs[1][partition] = [seg if seg.lc > 0 else None for seg in new_segs]
    
     return out_list
 

@@ -55,6 +55,7 @@ package pat_pkg is
   type centroids_offset_t is array (0 to 5) of unsigned(6 downto 0); -- Max value is MAX_SPAN*2 = 37*2 = 74, so 7 bits
 
   type segment_w_fit_t is record
+      valid : std_logic;
       lc : unsigned(LC_BITS-1 downto 0);
       id : unsigned(PID_BITS-1 downto 0);
       strip : unsigned(7 downto 0);
@@ -63,7 +64,7 @@ package pat_pkg is
       slope     : sfixed(3-1 downto -7); -- Widest pattern currently available has span 13 (PID=12), so highest slope is 13/6 ~2. Need 2+1 integer bits (since it is signed)
       fit_strip : sfixed(11-1 downto -6); -- Need [0-191] in integer = 8 bits, give 5 bits of decimal precision (arbitrary for now, can change)
   end record segment_w_fit_t;
-  attribute w of segment_w_fit_t : type is LC_BITS+PID_BITS+8+PARTITION_BITS+14+10+17;
+  attribute w of segment_w_fit_t : type is 1+LC_BITS+PID_BITS+8+PARTITION_BITS+14+10+17;
 
   type segment_w_fit_list_t is array(integer range <>) of segment_w_fit_t; 
 
@@ -91,16 +92,19 @@ package pat_pkg is
      hc => (others => '0'));
 
   constant null_pat_unit : pat_unit_t :=
-    (lc    => (others => '0'),
+    (valid => '0',
+     lc    => (others => '0'),
      id    => (others => '0'));
 
   constant null_pat_unit_mux : pat_unit_mux_t :=
-    (lc    => (others => '0'),
+    (valid => '0',
+     lc    => (others => '0'),
      id    => (others => '0'),
      strip => (others => '0'));
 
   constant null_pattern : segment_t :=
-    (lc        => (others => '0'),
+    (valid     => '0',
+     lc        => (others => '0'),
      id        => (others => '0'),
      partition => (others => '0'),
      strip     => (others => '0'));
@@ -149,6 +153,9 @@ package body pat_pkg is
       variable u : integer := tpl'left;
   begin
       if tpl'ascending then
+         w := 1;
+         y(u to u+w-1)(u) := x.valid;
+         u := u + w;
          w := x.lc'length;
          y(u to u+w-1) := std_logic_vector(x.lc);
          u := u + w;
@@ -170,6 +177,9 @@ package body pat_pkg is
          w := x.fit_strip'length;
          y(u to u+w-1) := to_slv(x.fit_strip);
       else
+         w := 1;
+         y(u downto u-w+1)(u) := x.valid;
+         u := u - w;
          w := x.lc'length;
          y(u downto u-w+1) := std_logic_vector(x.lc);
          u := u - w;
@@ -208,7 +218,7 @@ package body pat_pkg is
 
    function convert(x: segment_w_fit_list_t; tpl: std_logic_vector) return std_logic_vector is
       variable y : std_logic_vector(tpl'range);
-      constant W : natural := x(x'low).lc'length + x(x'low).id'length + x(x'low).strip'length + x(x'low).partition'length + x(x'low).intercept'length + x(x'low).slope'length + x(x'low).fit_strip'length;
+      constant W : natural := 1 + x(x'low).lc'length + x(x'low).id'length + x(x'low).strip'length + x(x'low).partition'length + x(x'low).intercept'length + x(x'low).slope'length + x(x'low).fit_strip'length;
       variable a : integer;
       variable b : integer;
    begin
@@ -305,13 +315,13 @@ package body pat_pkg is
   end;
 
   function valid (seg : segment_t) return boolean is
-  begin return seg.lc /= 0; end;
+  begin return seg.valid /= '0'; end;
   function valid (seg : pat_unit_t) return boolean is
-  begin return seg.lc /= 0; end;
+  begin return seg.valid /= '0'; end;
   function valid (seg : pat_unit_mux_t) return boolean is
-  begin return seg.lc /= 0; end;
+  begin return seg.valid /= '0'; end;
   function valid (seg : segment_w_fit_t) return boolean is
-  begin return seg.lc /= 0; end;
+  begin return seg.valid /= '0'; end;
 
   --------------------------------------------------------------------------------
   -- Comparison function for pat_unit_mux types
@@ -397,13 +407,13 @@ package body pat_pkg is
 
   -- unit test function to check that the sorting operators are working correctly
   procedure check_pattern_operators (nil : boolean) is
-    variable ply0 : segment_t := (lc => to_unsigned(0, LC_BITS), id => to_unsigned(16#10#, PID_BITS), partition => (others => '0'), strip => (others => '0'));
-    variable ply1 : segment_t := (lc => to_unsigned(1, LC_BITS), id => to_unsigned(16#9#, PID_BITS), partition => (others => '0'), strip => (others => '0'));
-    variable ply2 : segment_t := (lc => to_unsigned(2, LC_BITS), id => to_unsigned(16#8#, PID_BITS), partition => (others => '0'), strip => (others => '0'));
+    variable ply0 : segment_t := (valid => '1', lc => to_unsigned(0, LC_BITS), id => to_unsigned(16#10#, PID_BITS), partition => (others => '0'), strip => (others => '0'));
+    variable ply1 : segment_t := (valid => '1', lc => to_unsigned(1, LC_BITS), id => to_unsigned(16#9#, PID_BITS), partition => (others => '0'), strip => (others => '0'));
+    variable ply2 : segment_t := (valid => '1', lc => to_unsigned(2, LC_BITS), id => to_unsigned(16#8#, PID_BITS), partition => (others => '0'), strip => (others => '0'));
 
-    variable pat0 : segment_t := (lc => to_unsigned(1, LC_BITS), id => to_unsigned(16#0#, PID_BITS), partition => (others => '0'), strip => (others => '0'));
-    variable pat1 : segment_t := (lc => to_unsigned(1, LC_BITS), id => to_unsigned(16#1#, PID_BITS), partition => (others => '0'), strip => (others => '0'));
-    variable pat2 : segment_t := (lc => to_unsigned(1, LC_BITS), id => to_unsigned(16#2#, PID_BITS), partition => (others => '0'), strip => (others => '0'));
+    variable pat0 : segment_t := (valid => '1', lc => to_unsigned(1, LC_BITS), id => to_unsigned(16#0#, PID_BITS), partition => (others => '0'), strip => (others => '0'));
+    variable pat1 : segment_t := (valid => '1', lc => to_unsigned(1, LC_BITS), id => to_unsigned(16#1#, PID_BITS), partition => (others => '0'), strip => (others => '0'));
+    variable pat2 : segment_t := (valid => '1', lc => to_unsigned(1, LC_BITS), id => to_unsigned(16#2#, PID_BITS), partition => (others => '0'), strip => (others => '0'));
   begin
 
     -- > testing
