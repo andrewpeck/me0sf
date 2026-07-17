@@ -52,16 +52,17 @@ def format_seg(hits_strip, hits_eta):
 
 if __name__ == "__main__":
     
-    tracks = read_stack_tracks("tracks_1199.root")
+    #tracks = read_stack_tracks("tracks_1199.root")
+    tracks = read_stack_tracks("247_tracks.root", 0, 10)
 
     params = ("trackInterceptX", "trackInterceptY", "trackSlopeX", "trackSlopeY")
 
-    sbits_root = sfr.read_ntuple_stack("digi_1199.root")
+    sbits_root = sfr.read_ntuple_stack_format("00000247.root", 0, 10)
 
     for i in range(2, 4):
         print(f"\n\n\nEVENT {i}")
         
-        sbits_ev = sfr.get_sbits_from_event(sbits_root[i])
+        sbits_ev = sfr.get_sbits_from_event_stack_format(sbits_root[i])
 
         for param in params:
             print(param + ": " + str(tracks[i][param]))

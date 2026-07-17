@@ -250,31 +250,31 @@ def process_chamber(chamber_data, config : Config, chamber_bx_data):
             seg.reset()
 
     # Final spatial clearance
-#    for i, seg in enumerate(segments):
-#        if not seg.valid:
-#            continue
-#        for j, seg2 in enumerate(segments):
-#            if i == j or not seg2.valid:
-#                continue
-#            if abs((seg.strip + seg.substrip) - (seg2.strip + seg2.substrip)) <= 5 and abs(seg.partition - seg2.partition) <= 1:
-#                seg2.reset() # segments are already sorted, so don't need to compare quality
-#
-#    # Final temporal clearance
-#    for seg in segments:
-#        if not seg.valid:
-#            continue
-#        for seg2 in config.old_segments:
-#            if not seg2.valid:
-#                continue
-#            if abs((seg.strip + seg.substrip) - (seg2.strip + seg2.substrip)) <= 5 and abs(seg.partition - seg2.partition) <= 1:
-#                if seg2 > seg:
-#                    seg.reset()
-#                else:
-#                    seg2.reset()
-#    output_segments = sorted(config.old_segments, reverse=True) # Have to sort again in case some were reset
+    for i, seg in enumerate(segments):
+        if not seg.valid:
+            continue
+        for j, seg2 in enumerate(segments):
+            if i == j or not seg2.valid:
+                continue
+            if abs((seg.strip + seg.substrip) - (seg2.strip + seg2.substrip)) <= 5 and abs(seg.partition - seg2.partition) <= 1:
+                seg2.reset() # segments are already sorted, so don't need to compare quality
+
+    # Final temporal clearance
+    for seg in segments:
+        if not seg.valid:
+            continue
+        for seg2 in config.old_segments:
+            if not seg2.valid:
+                continue
+            if abs((seg.strip + seg.substrip) - (seg2.strip + seg2.substrip)) <= 5 and abs(seg.partition - seg2.partition) <= 1:
+                if seg2 > seg:
+                    seg.reset()
+                else:
+                    seg2.reset()
+    output_segments = sorted(config.old_segments, reverse=True) # Have to sort again in case some were reset
 
     #*Need to uncomment line to initialize old_segments in Config __init__*
-    #config.old_segments = segments # Save segments for temporal deghosting next BX
+    config.old_segments = segments # Save segments for temporal deghosting next BX
     return (segments, config)
 
 

@@ -116,7 +116,7 @@ def pat_unit(data,
 
     # If no segment can ever be output, immediately return a null segment
     #if np.max(lcs) < 4:
-    #    return Segment(0,0)
+    #    return Segment(0,0, valid=False)
 
     lcs = lcs.astype(np.uint32) # Use uint32 type so later bitshifting works
 

@@ -48,7 +48,7 @@ class Config:
         # Initialize sbit storage here, so it is not shared between different Config objects, which causes following tests to still see old data that may interfere.
         self.sbits_pulse_stretched = np.zeros((8, 6, 3, 3), dtype=np.uint64) # Used for sbits pulse stretching; dimensions = (partitions, layers, limbs, BXs)
         self.initialize_patlist(patlist)
-        #self.old_segments = [Segment(0, 0) for _ in range(8)] # Used for final clearance
+        self.old_segments = [Segment(0, 0) for _ in range(8)] # Used for final clearance
         
     def start_peaking_manager(self):
         self.peaking_manager = Peaking_Manager()

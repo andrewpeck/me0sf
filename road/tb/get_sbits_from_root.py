@@ -60,7 +60,8 @@ def get_sbits_from_event_stack_format(event):
     hit_data = [[0 for _ in range(6)] for _ in range(8)]
 
     for tup in zip(event["digiStrip"], [e-1 for e in event["digiStripEta"]], event["digiStripChamber"]):
-        hit_data[tup[1]][tup[2]] |= 1 << (int(tup[0])//2)
+        if tup[0] >= 0:
+           hit_data[tup[1]][tup[2]] |= 1 << (int(tup[0])//2)
 
     return hit_data
 

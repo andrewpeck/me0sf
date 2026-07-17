@@ -66,10 +66,10 @@ entity chamber is
     dav_o_phase       : out natural range 0 to 7;
     -- synthesis translate_on
 
---    sbits_i           : in  chamber_t;
---    ly_thresh_i         : in  ly_thresh_chamber; -- Layer threshold, 0 to 6
---    vfat_pretrigger_o : out std_logic_vector (23 downto 0);
---    segment_o        : out segment_w_fit_t;
+    sbits_i           : in  chamber_t;
+    ly_thresh_i         : in  ly_thresh_chamber; -- Layer threshold, 0 to 6
+    vfat_pretrigger_o : out std_logic_vector (23 downto 0);
+    segment_o        : out segment_w_fit_t;
     
     dav_i             : in  std_logic;
     dav_o             : out std_logic
@@ -87,18 +87,18 @@ architecture behavioral of chamber is
   --Used for testing, delete later. Allows to set all inputs to 0 and leave them hanging,
   --since there are not enough real I/O pins to use chamber as a top level entity.--
   --------------------------------------------------------------------------------
-  signal sbits_i : chamber_t;
-  attribute dont_touch : string;
-  attribute dont_touch of sbits_i : signal is "true";
-  
-  signal vfat_pretrigger_o : std_logic_vector(23 downto 0);
-  attribute dont_touch of vfat_pretrigger_o : signal is "true";
- 
-  signal segment_o        : segment_w_fit_t;
-  attribute dont_touch of segment_o : signal is "true";
- 
-  signal ly_thresh_i : ly_thresh_chamber := (others => (others => "100"));
-  attribute dont_touch of ly_thresh_i : signal is "true";
+--  signal sbits_i : chamber_t;
+--  attribute dont_touch : string;
+--  attribute dont_touch of sbits_i : signal is "true";
+--  
+--  signal vfat_pretrigger_o : std_logic_vector(23 downto 0);
+--  attribute dont_touch of vfat_pretrigger_o : signal is "true";
+-- 
+--  signal segment_o        : segment_w_fit_t;
+--  attribute dont_touch of segment_o : signal is "true";
+-- 
+--  signal ly_thresh_i : ly_thresh_chamber := (others => (others => "100"));
+--  attribute dont_touch of ly_thresh_i : signal is "true";
   --------------------------------------------------------------------------------
 
   constant NUM_PARTITIONS : integer := 8;
@@ -215,7 +215,8 @@ architecture behavioral of chamber is
 
   type seg_info_buffer_t is array (0 to 5+FIT_DELAY) of segment_t;
 
-  signal seg_info_buffer : seg_info_buffer_t;
+  --signal seg_info_buffer : seg_info_buffer_t;
+  signal seg_info_buffer : segment_list_t (5+FIT_DELAY downto 0);
   
   --------------------------------------------------------------------------------
   -- Centroids
@@ -300,6 +301,47 @@ architecture behavioral of chamber is
   constant PATSPAN_LUT : patspan_LUT_t := find_all_pat_spans(PATLIST);
   
   signal seg_fit_list_phase : unsigned (2 downto 0) := to_unsigned(8 - (BRAM_LATENCY mod 8), 3); --TODO: Check this generalization, might depend on some other phase(s)
+
+  --------------------------------------------------------------------------------
+  -- Final Clearance
+  --------------------------------------------------------------------------------
+
+  signal final_clearance_segs : segment_list_t (15 downto 0); -- 2 BXs of segments -> length = 8*2 = 16
+
+  function final_clearance (segs : segment_list_t; phase : unsigned) return segment_list_t is
+    variable kill_mask : std_logic_vector (15 downto 0) := (others => '0');
+    variable strip_diff : integer range 0 to PRT_WIDTH-1; -- TODO: Try changing these to unsigneds, see if it helps resources
+    variable prt_diff : integer range 0 to 15-1;
+    variable output_segs : segment_list_t (segs'length-1 downto 0) := segs;
+  begin
+    -- Always active. If spatial comparisons, can skip quality comparison, since segments are sorted within a BX.
+    for I in 1 to 15 loop
+      strip_diff := to_integer(segs(0).strip) - to_integer(segs(I).strip);
+      prt_diff := to_integer(segs(0).partition) - to_integer(segs(I).partition);
+
+      if I <= 8 or phase <= (15-I) then -- First 8 comparators are always active. Other 7 depend on phase. I=9 -> phase <= 6, I=10 -> phase <= 5, ..., I=15 -> phase <= 0.
+        if abs(strip_diff) <= 5 and abs(prt_diff) <= 1 then -- If segments are nearby, cancel one.
+          if I <= 7 and phase <= (7-I) then -- Skip quality comparison, since this is an intra-BX comparison. I = 0 -> phase <= 7, I = 1 -> phase <= 6, ..., I = 7 -> phase <= 0.
+            kill_mask(I) := '1';
+          else
+            if segs(0) < segs(I) then
+              kill_mask(0) := '1';
+            else
+              kill_mask(I) := '1';
+            end if;
+          end if; 
+        end if;
+      end if;
+    end loop;
+
+    for I in segs'range loop
+      if kill_mask(I) = '1' then
+        output_segs(I).valid := '0';
+      end if;
+    end loop;
+
+    return output_segs;
+  end function;
 
 begin
 
@@ -597,9 +639,17 @@ begin
       bram_seg_select_phase <= to_unsigned(1, bram_seg_select_phase'length) when final_segs_dav = '1' else bram_seg_select_phase + 1; -- Set to phase=1 when DAV is high, since the current phase should be 0
 
       seg_info_buffer(0) <= final_segs(to_integer(bram_seg_select_phase));
-      for i in 1 to seg_info_buffer'length-1  loop
+      --for i in 1 to seg_info_buffer'length-1 loop
+      --  seg_info_buffer(i) <= seg_info_buffer(i-1);
+      --end loop;
+      for i in 1 to seg_info_buffer'length-1-16 loop
         seg_info_buffer(i) <= seg_info_buffer(i-1);
       end loop;
+
+      for i in seg_info_buffer'length-1-16+1 to seg_info_buffer'length-1 loop
+        seg_info_buffer(i) <= final_clearance_segs(i-1 - (seg_info_buffer'length-16-1)); -- final_clearance_segs is fixed length of 16
+      end loop;
+
     end if;
   end process;
 
@@ -664,11 +714,14 @@ begin
   fit_strip_div2 <= to_sfixed(to_slv(strip_o), strip_o'high-1, strip_o'low-1); -- Divides the fitter strip output by 2, since it was working in 2x resolution from the centroids
   seg_strip_sfixed <= to_sfixed(signed('0'&seg_info_buffer(seg_info_buffer'length-1).strip), 8, -6); -- Convert the type, not actually doing anything to the signal here
 
+  final_clearance_segs <= final_clearance(seg_info_buffer(seg_info_buffer'length-1 downto seg_info_buffer'length-1-16), seg_fit_list_phase);
+
   process (clock) is
   begin
     if rising_edge(clock) then
       -- Get segment info from seg_info_buffer
-      fit_segment.valid <= seg_info_buffer(seg_info_buffer'length-1).valid when abs(slope_o) <= (1*2) else '0'; -- 1*2 for double resolution
+      --fit_segment.valid <= seg_info_buffer(seg_info_buffer'length-1).valid when abs(slope_o) <= (1*2) else '0'; -- 1*2 for double resolution
+      fit_segment.valid <= final_clearance_segs(final_clearance_segs'length-1).valid when abs(slope_o) <= (1*2) else '0'; -- 1*2 for double resolution
       fit_segment.lc <= seg_info_buffer(seg_info_buffer'length-1).lc;
       fit_segment.id <= seg_info_buffer(seg_info_buffer'length-1).id;
       fit_segment.strip <= seg_info_buffer(seg_info_buffer'length-1).strip;
@@ -685,6 +738,13 @@ begin
       segment_o <= decompress_ly_count(fit_segment) when EN_HC_COMPRESS else fit_segment; -- Add 3 to LC if LC compression is enabled, and segment is valid
     end if;
   end process;
+
+  --------------------------------------------------------------------------------
+  -- Final Clearance
+  -- Spatial: Checks if any segments within a BX are within A strips and B partitions, and cancels the worse one.
+  -- Temporal: Checks if any segments between 2 BXs are within C strips and D partitions, and cancels the worse one. Breaks ties by picking the first one. 
+  --------------------------------------------------------------------------------
+
 
 
 --  clk40gen : if (REG_OUTPUTS) generate
