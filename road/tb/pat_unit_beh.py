@@ -211,8 +211,22 @@ def pat_unit(data,
         best.bx = bx
 
 
-    # (8) remove segments with large clusters for wide segments - ONLY NEEDED FOR PU200 - NOT USED AT THE MOEMENT
-    """
+    # (8) remove segments with layer gaps -- NOT USED AT THE MOEMENT
+    n_hits_counts = calculate_hits(data)
+    n_layers_nonzero_hits = []
+    for i,l in enumerate(n_hits_counts):
+        if l!=0:
+            n_layers_nonzero_hits.append(i)
+    n_gap = 0
+    for i,l in enumerate(n_layers_nonzero_hits):
+        if i==0:
+            continue
+        if (l - n_layers_nonzero_hits[i-1]) > 1:
+            n_gap += 1
+    #if n_gap > 0:
+    #    best.valid = False
+
+    # (9) remove segments with large clusters for wide segments -- NOT USED AT THE MOMENT
     cluster_size_max_limits = [3, 6, 9, 12, 15]
     n_hits_max_limits = [3, 6, 9, 12, 15]
     cluster_size_counts = calculate_cluster_size(data)
@@ -228,20 +242,13 @@ def pat_unit(data,
             if l > threshold:
                 n_layers_large_hits[i] += 1
 
-    best.max_cluster_size = max(cluster_size_counts)
-    best.max_noise = max(n_hits_counts)
-    """
+    max_cluster_size = max(cluster_size_counts)
+    max_noise = max(n_hits_counts)
+    mean_cluster_size = sum(cluster_size_counts)/len(cluster_size_counts)
+    mean_noise = sum(n_hits_counts)/len(n_hits_counts)
 
-    '''
-    best.nlayers_withcsg3 = n_layers_large_clusters[0]
-    best.nlayers_withcsg5 = n_layers_large_clusters[1]
-    best.nlayers_withcsg10 = n_layers_large_clusters[2]
-    best.nlayers_withcsg15 = n_layers_large_clusters[3]
-    best.nlayers_withnoiseg3 = n_layers_large_hits[0]
-    best.nlayers_withnoiseg5 = n_layers_large_hits[1]
-    best.nlayers_withnoiseg10 = n_layers_large_hits[2]
-    best.nlayers_withnoiseg15 = n_layers_large_hits[3]
-    '''
+    #if mean_cluster_size or mean_noise > 20:
+    #    best.valid = False
 
     #if n_layers_large_clusters[4] >= 1:
     #    best.reset()
