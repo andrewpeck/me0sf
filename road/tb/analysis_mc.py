@@ -440,12 +440,12 @@ def analysis(root_dat, hits, bx, bx_list, cross_part, verbose, pu, num_or):
         for i in range(0, n_track):
             if len(track_hit_index[i]) >= 4:
                 if track_type[i] == 13 or track_type[i] == -13:
-                    muon_hits = 0
-                    for index in track_hit_index[i]:
-                        if simhit_particle[index] == 13 or simhit_particle[index] == -13:
-                            muon_hits += 1
-                    if len(track_hit_index[i]) == muon_hits:
-                        me0_tracks.append(i)
+                    #muon_hits = 0
+                    #for index in track_hit_index[i]:
+                    #    if simhit_particle[index] == 13 or simhit_particle[index] == -13:
+                    #        muon_hits += 1
+                    #if len(track_hit_index[i]) == muon_hits:
+                    me0_tracks.append(i)
         n_me0_track = len(me0_tracks)
         me0_tracks = np.array(me0_tracks)
 
