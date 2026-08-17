@@ -211,22 +211,22 @@ def pat_unit(data,
         best.bx = bx
 
 
-    # (8) remove segments with layer gaps -- NOT USED AT THE MOEMENT
-    n_hits_counts = calculate_hits(data)
-    n_layers_nonzero_hits = []
-    for i,l in enumerate(n_hits_counts):
-        if l!=0:
-            n_layers_nonzero_hits.append(i)
-    n_gap = 0
-    for i,l in enumerate(n_layers_nonzero_hits):
-        if i==0:
-            continue
-        if (l - n_layers_nonzero_hits[i-1]) > 1:
-            n_gap += 1
+    # (8) remove segments with layer gaps -- does not work well, NOT USED AT THE MOEMENT
+    #n_hits_counts = calculate_hits(data)
+    #n_layers_nonzero_hits = []
+    #for i,l in enumerate(n_hits_counts):
+    #    if l!=0:
+    #        n_layers_nonzero_hits.append(i)
+    #n_gap = 0
+    #for i,l in enumerate(n_layers_nonzero_hits):
+    #    if i==0:
+    #        continue
+    #    if (l - n_layers_nonzero_hits[i-1]) > 1:
+    #        n_gap += 1
     #if n_gap > 0:
     #    best.valid = False
 
-    # (9) remove segments with large clusters for wide segments -- NOT USED AT THE MOMENT
+    # (9) remove segments with large clusters or large hit count for wide segments -- NOT USED AT THE MOMENT
     cluster_size_max_limits = [3, 6, 9, 12, 15]
     n_hits_max_limits = [3, 6, 9, 12, 15]
     cluster_size_counts = calculate_cluster_size(data)
@@ -247,22 +247,27 @@ def pat_unit(data,
     mean_cluster_size = sum(cluster_size_counts)/len(cluster_size_counts)
     mean_noise = sum(n_hits_counts)/len(n_hits_counts)
 
-    #if mean_cluster_size or mean_noise > 20:
+    #if mean_cluster_size > 9:
     #    best.valid = False
-
-    #if n_layers_large_clusters[4] >= 1:
-    #    best.reset()
-    #if partition >= 11:
-    #    if n_layers_large_clusters[4] >= 1:
-    #        best.reset()
-    #    if (best.lc - n_layers_large_clusters[0]) < 4:
-    #        best.reset()
+    #if n_layers_large_clusters[3] >= 1:
+    #    best.valid = False
     #if partition >= 9:
-    #    if (best.lc - n_layers_large_hits[2]) < 3:
-    #        best.reset()
-    #else:
-    #    if (best.lc - n_layers_large_hits[1]) < 3:
-    #        best.reset()
+    #    if n_layers_large_clusters[2] >= 1:
+    #        best.valid = False
+    #    if partition >= 11:
+    #       if (int(best.lc) - int(n_layers_large_clusters[1])) < 4:
+    #           best.valid = False
+
+    #if mean_noise > 9:
+    #    best.valid = False
+    #if n_layers_large_hits[3] >= 1:
+    #    best.valid = False
+    #if partition >= 9:
+    #    if n_layers_large_hits[2] >= 1:
+    #        best.valid = False
+    #    if partition >= 11:
+    #       if (int(best.lc) - int(n_layers_large_hits[1])) < 4:
+    #           best.valid = False
 
     #print("id is: " + str(best.id))
     #print("threshold is: " + str(ly_thresh[best.id]))
