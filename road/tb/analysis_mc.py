@@ -1439,8 +1439,6 @@ def analysis(root_dat, hits, bx, bx_list, cross_part, verbose, pu, num_or):
 
     print(three_seq_tracker)
 
-    sys.exit()
-
 
     plot_file = ROOT.TFile("output_plots_%s_bx%s_crosspart_%s_or%d.root"%(hits, bx, cross_part, num_or), "recreate")
     plot_file.cd()
